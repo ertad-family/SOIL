@@ -98,7 +98,7 @@ export default function DesignSystemDemo() {
               <div className="flex items-center gap-4 animate-fade-in-up stagger-1">
                 <span className="text-sm text-marble-600 dark:text-slate-400 font-ui uppercase tracking-wide">Theme:</span>
                 <Button
-                  variant={isDarkMode ? 'dark-secondary' : 'secondary'}
+                  variant={isDarkMode ? 'dark-secondary' : 'light-secondary'}
                   size="sm"
                   onClick={() => setIsDarkMode(!isDarkMode)}
                 >
@@ -127,10 +127,10 @@ export default function DesignSystemDemo() {
                 Roman aesthetics — marble textures, classical typography, and gold accents.
               </p>
               <div className="flex justify-center gap-4 mt-8 animate-fade-in-up stagger-2">
-                <Button variant={isDarkMode ? 'dark-primary' : 'cenotaph'} size="lg">
+                <Button variant={isDarkMode ? 'dark-primary' : 'light-primary'} size="lg">
                   Explore Components
                 </Button>
-                <Button variant={isDarkMode ? 'dark-outline' : 'outline'} size="lg">
+                <Button variant={isDarkMode ? 'dark-secondary' : 'light-secondary'} size="lg">
                   View Source
                 </Button>
               </div>
@@ -307,18 +307,14 @@ export default function DesignSystemDemo() {
             </h2>
 
             <div className="space-y-8">
-              {/* Light mode variants */}
+              {/* Light mode variants (new marble style) */}
               <div>
                 <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
-                  Light Mode Variants
+                  Light Mode Variants (Marble)
                 </h3>
-                <div className="flex flex-wrap gap-4 p-6 bg-marble-100 dark:bg-slate-800 rounded-md">
-                  <Button variant="primary">Primary</Button>
-                  <Button variant="secondary">Secondary</Button>
-                  <Button variant="ghost">Ghost</Button>
-                  <Button variant="outline">Outline</Button>
-                  <Button variant="destructive">Destructive</Button>
-                  <Button variant="link">Link</Button>
+                <div className="flex flex-wrap gap-4 p-6 bg-marble-100 rounded-md">
+                  <Button variant="light-primary">Primary</Button>
+                  <Button variant="light-secondary">Secondary</Button>
                 </div>
               </div>
 
@@ -335,19 +331,27 @@ export default function DesignSystemDemo() {
                 </div>
               </div>
 
-              {/* Special */}
+              {/* Sizes */}
               <div>
                 <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
-                  Special & Sizes
+                  Sizes
                 </h3>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Button variant="cenotaph">Cenotaph</Button>
-                  <Button size="sm">Small</Button>
-                  <Button size="md">Medium</Button>
-                  <Button size="lg">Large</Button>
-                  <Button isLoading>Loading</Button>
-                  <Button disabled>Disabled</Button>
-                  <Button rightIcon={<ArrowRight className="h-4 w-4" />}>With Icon</Button>
+                <div className="flex flex-wrap items-center gap-4 p-6 bg-marble-100 rounded-md">
+                  <Button variant="light-primary" size="sm">Small</Button>
+                  <Button variant="light-primary" size="md">Medium</Button>
+                  <Button variant="light-primary" size="lg">Large</Button>
+                </div>
+              </div>
+
+              {/* States */}
+              <div>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
+                  States
+                </h3>
+                <div className="flex flex-wrap items-center gap-4 p-6 bg-marble-100 rounded-md">
+                  <Button variant="light-primary" isLoading>Loading</Button>
+                  <Button variant="light-primary" disabled>Disabled</Button>
+                  <Button variant="light-primary" rightIcon={<ArrowRight className="h-4 w-4" />}>With Icon</Button>
                 </div>
               </div>
             </div>
@@ -509,7 +513,7 @@ export default function DesignSystemDemo() {
                   <p className="text-marble-600 dark:text-slate-400">Card content area</p>
                 </CardContent>
                 <CardFooter>
-                  <Button size="sm" variant={isDarkMode ? 'dark-primary' : 'primary'}>Action</Button>
+                  <Button size="sm" variant={isDarkMode ? 'dark-primary' : 'light-primary'}>Action</Button>
                 </CardFooter>
               </Card>
 
@@ -557,7 +561,7 @@ export default function DesignSystemDemo() {
             <div className="flex gap-4">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant={isDarkMode ? 'dark-primary' : 'primary'}>Open Light Dialog</Button>
+                  <Button variant={isDarkMode ? 'dark-primary' : 'light-primary'}>Open Light Dialog</Button>
                 </DialogTrigger>
                 <DialogContent variant="default">
                   <DialogHeader>
@@ -570,15 +574,15 @@ export default function DesignSystemDemo() {
                     <p className="text-marble-600">Dialog content goes here.</p>
                   </div>
                   <DialogFooter>
-                    <Button variant="secondary">Cancel</Button>
-                    <Button variant="primary">Confirm</Button>
+                    <Button variant="light-secondary">Cancel</Button>
+                    <Button variant="light-primary">Confirm</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant={isDarkMode ? 'dark-secondary' : 'secondary'}>Open Dark Dialog</Button>
+                  <Button variant={isDarkMode ? 'dark-secondary' : 'light-secondary'}>Open Dark Dialog</Button>
                 </DialogTrigger>
                 <DialogContent variant="dark">
                   <DialogHeader>
@@ -1005,7 +1009,7 @@ export default function DesignSystemDemo() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Button
-                    variant={isDarkMode ? 'dark-primary' : 'primary'}
+                    variant={isDarkMode ? 'dark-primary' : 'light-primary'}
                     onClick={() => toast({
                       title: 'Success!',
                       description: 'Your action was completed successfully.',
@@ -1015,7 +1019,7 @@ export default function DesignSystemDemo() {
                     Show Default Toast
                   </Button>
                   <Button
-                    variant={isDarkMode ? 'dark-secondary' : 'secondary'}
+                    variant={isDarkMode ? 'dark-secondary' : 'light-secondary'}
                     onClick={() => toast({
                       title: 'Warning',
                       description: 'Please review your input before continuing.',

@@ -7,16 +7,17 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  // Base styles - Modern carved stone aesthetic
+  // Base styles - Roman marble aesthetic
   [
-    'inline-flex items-center justify-center gap-2',
-    'font-ui font-medium tracking-wide uppercase',
-    'rounded-sm',
+    'inline-flex items-center justify-center gap-3',
+    'font-serif font-medium tracking-[0.2em] uppercase',
+    'rounded-[3px]',
     'transition-all duration-300 ease-out',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
     'disabled:pointer-events-none disabled:opacity-50',
     'active:translate-y-[1px]',
     'relative overflow-hidden',
+    'cursor-pointer',
   ],
   {
     variants: {
@@ -84,40 +85,68 @@ const buttonVariants = cva(
         ],
 
         // === Dark Mode Variants (SOIL Scientific) ===
+        // Dark Primary - Marble with gold inlay text (Concept 2 from buttons-demo)
         'dark-primary': [
-          'bg-gradient-to-b from-gold-400 via-gold-500 to-gold-600',
-          'text-slate-900 font-semibold',
-          'border border-gold-500/50',
-          'shadow-[0_2px_4px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]',
-          'hover:from-gold-300 hover:via-gold-400 hover:to-gold-500',
-          'hover:shadow-[0_4px_16px_rgba(196,161,90,0.4),inset_0_1px_0_rgba(255,255,255,0.3)]',
-          'active:from-gold-500 active:via-gold-600 active:to-gold-700',
-          'focus-visible:ring-gold-400 focus-visible:ring-offset-slate-900',
+          'bg-[linear-gradient(160deg,#f8f6f3_0%,#f2efe9_30%,#e8e4dd_45%,#f2efe9_55%,#f8f6f3_70%,#e8e4dd_85%,#f2efe9_100%)]',
+          'text-[#6b5a42] font-semibold',
+          'border border-[#d4cfc5]',
+          'shadow-[0_3px_8px_rgba(0,0,0,0.18),0_6px_20px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.9)]',
+          'hover:border-[#b8b0a3]',
+          'hover:shadow-[0_4px_12px_rgba(0,0,0,0.22),0_8px_28px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.9)]',
+          'active:shadow-[0_1px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.9)]',
+          'focus-visible:ring-[#8b7355] focus-visible:ring-offset-slate-900',
+          // Shine effect via btn-marble-shine class
+          'btn-marble-shine',
         ],
+        // Dark Secondary - Outline style (marble border on dark bg)
         'dark-secondary': [
-          'bg-gradient-to-b from-slate-600 via-slate-700 to-slate-800',
-          'text-marble-200 font-medium',
-          'border border-slate-500/50',
-          'shadow-[0_2px_4px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]',
-          'hover:from-slate-500 hover:via-slate-600 hover:to-slate-700',
-          'hover:shadow-[0_4px_8px_rgba(0,0,0,0.4)]',
-          'active:from-slate-700 active:via-slate-800 active:to-slate-900',
-          'focus-visible:ring-gold-400 focus-visible:ring-offset-slate-900',
+          'bg-transparent',
+          'text-[#f2efe9]',
+          'border-2 border-[#d4cfc5]',
+          'hover:bg-[#f2efe9] hover:text-[#2d2a26] hover:border-[#f2efe9]',
+          'active:bg-[#e8e4dd]',
+          'focus-visible:ring-[#d4cfc5] focus-visible:ring-offset-slate-900',
         ],
         'dark-ghost': [
-          'bg-transparent text-gold-400',
+          'bg-transparent text-[#d4cfc5]',
           'border border-transparent',
-          'hover:bg-slate-800 hover:border-slate-700',
-          'active:bg-slate-700',
-          'focus-visible:ring-gold-400 focus-visible:ring-offset-slate-900',
+          'hover:text-[#f2efe9]',
+          'after:absolute after:bottom-2 after:left-1/2 after:-translate-x-1/2',
+          'after:w-0 after:h-[1px] after:bg-[#f2efe9]',
+          'after:transition-all after:duration-300',
+          'hover:after:w-[60%]',
+          'focus-visible:ring-[#d4cfc5] focus-visible:ring-offset-slate-900',
         ],
         'dark-outline': [
-          'bg-transparent text-marble-200',
-          'border-2 border-slate-600',
-          'shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
-          'hover:bg-slate-800/50 hover:border-slate-500',
-          'active:bg-slate-700',
-          'focus-visible:ring-gold-400 focus-visible:ring-offset-slate-900',
+          'bg-transparent text-[#f2efe9]',
+          'border-2 border-[#d4cfc5]',
+          'hover:bg-[#f2efe9] hover:text-[#2d2a26] hover:border-[#f2efe9]',
+          'active:bg-[#e8e4dd]',
+          'focus-visible:ring-[#d4cfc5] focus-visible:ring-offset-slate-900',
+        ],
+
+        // === Light Mode Variants (for light backgrounds) ===
+        // Light Primary - Dark marble with shine (for light backgrounds)
+        'light-primary': [
+          'bg-[linear-gradient(135deg,#3d3a36_0%,#2d2a26_25%,#3d3a36_50%,#4a4640_75%,#2d2a26_100%)]',
+          'text-[#f2efe9] font-semibold',
+          'border border-transparent',
+          'shadow-[0_2px_4px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]',
+          'hover:bg-[linear-gradient(135deg,#4a4640_0%,#3d3a36_25%,#4a4640_50%,#5a5650_75%,#3d3a36_100%)]',
+          'hover:shadow-[0_4px_8px_rgba(0,0,0,0.35),0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]',
+          'active:shadow-[0_1px_2px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]',
+          'focus-visible:ring-[#4a4640] focus-visible:ring-offset-[#f2efe9]',
+          // Shine effect
+          'btn-marble-dark-shine',
+        ],
+        // Light Secondary - Outline style (dark border on light bg)
+        'light-secondary': [
+          'bg-transparent',
+          'text-[#2d2a26]',
+          'border-2 border-[#4a4640]',
+          'hover:bg-[#2d2a26] hover:text-[#f2efe9] hover:border-[#2d2a26]',
+          'active:bg-[#3d3a36]',
+          'focus-visible:ring-[#4a4640] focus-visible:ring-offset-[#f2efe9]',
         ],
 
         // === Cenotaph Special Variant - Premium gold with glow ===
@@ -133,10 +162,10 @@ const buttonVariants = cva(
         ],
       },
       size: {
-        sm: 'h-8 px-3 text-sm',
-        md: 'h-10 px-4 text-sm',
-        lg: 'h-12 px-6 text-base',
-        xl: 'h-14 px-8 text-lg',
+        sm: 'py-2.5 px-5 text-[10px]',
+        md: 'py-4 px-9 text-xs',
+        lg: 'py-5 px-12 text-[13px]',
+        xl: 'py-6 px-14 text-sm',
         icon: 'h-10 w-10 p-0',
         'icon-sm': 'h-8 w-8 p-0',
         'icon-lg': 'h-12 w-12 p-0',
