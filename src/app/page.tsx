@@ -459,36 +459,98 @@ export default function DesignSystemDemo() {
               Badges
             </h2>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
+              {/* Dark theme badges */}
               <div>
-                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-3">
-                  {isDarkMode ? 'Dark Mode Variants' : 'Light Mode Variants'}
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
+                  Dark Theme Variants (Marble)
                 </h3>
-                <div className="flex flex-wrap gap-3">
-                  <Badge variant={isDarkMode ? 'dark' : 'default'}>Default</Badge>
-                  <Badge variant={isDarkMode ? 'dark-gold' : 'gold'}>Gold</Badge>
-                  <Badge variant={isDarkMode ? 'dark-success' : 'success'}>Success</Badge>
-                  <Badge variant={isDarkMode ? 'dark-warning' : 'warning'}>Warning</Badge>
-                  <Badge variant={isDarkMode ? 'dark-error' : 'error'}>Error</Badge>
-                  <Badge variant={isDarkMode ? 'dark-info' : 'info'}>Info</Badge>
+                <div className="flex flex-wrap gap-3 p-6 bg-slate-800 rounded-md">
+                  <Badge variant="dark-marble">Default</Badge>
+                  <Badge variant="dark-outline">Outline</Badge>
+                  <Badge variant="dark-ghost">Ghost</Badge>
                 </div>
               </div>
+
+              {/* Dark theme semantic */}
               <div>
-                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-3">Solid Variants</h3>
-                <div className="flex flex-wrap gap-3">
-                  <Badge variant={isDarkMode ? 'dark-solid-gold' : 'solid-gold'}>Solid Gold</Badge>
-                  <Badge variant="solid-success">Solid Success</Badge>
-                  <Badge variant="solid-error">Solid Error</Badge>
-                  <Badge variant="verified">Verified</Badge>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
+                  Dark Theme Semantic
+                </h3>
+                <div className="flex flex-wrap gap-3 p-6 bg-slate-800 rounded-md">
+                  <Badge variant="dark-success">Success</Badge>
+                  <Badge variant="dark-warning">Warning</Badge>
+                  <Badge variant="dark-error">Error</Badge>
+                  <Badge variant="dark-verified">Verified</Badge>
                 </div>
               </div>
+
+              {/* Light theme badges */}
               <div>
-                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-3">Sizes</h3>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant={isDarkMode ? 'dark' : 'default'} size="sm">Small</Badge>
-                  <Badge variant={isDarkMode ? 'dark' : 'default'} size="md">Medium</Badge>
-                  <Badge variant={isDarkMode ? 'dark' : 'default'} size="lg">Large</Badge>
-                  <Badge variant={isDarkMode ? 'dark-gold' : 'gold'} dot>With Dot</Badge>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
+                  Light Theme Variants (Marble)
+                </h3>
+                <div className="flex flex-wrap gap-3 p-6 bg-marble-100 rounded-md">
+                  <Badge variant="light-marble">Default</Badge>
+                  <Badge variant="light-outline">Outline</Badge>
+                  <Badge variant="light-ghost">Ghost</Badge>
+                </div>
+              </div>
+
+              {/* Light theme semantic */}
+              <div>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">
+                  Light Theme Semantic
+                </h3>
+                <div className="flex flex-wrap gap-3 p-6 bg-marble-100 rounded-md">
+                  <Badge variant="light-success">Success</Badge>
+                  <Badge variant="light-warning">Warning</Badge>
+                  <Badge variant="light-error">Error</Badge>
+                  <Badge variant="light-verified">Verified</Badge>
+                </div>
+              </div>
+
+              {/* Sizes */}
+              <div>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">Sizes</h3>
+                <div className="flex flex-wrap items-center gap-3 p-6 bg-slate-800 rounded-md">
+                  <Badge variant="dark-marble" size="sm">Small</Badge>
+                  <Badge variant="dark-marble" size="md">Medium</Badge>
+                  <Badge variant="dark-marble" size="lg">Large</Badge>
+                </div>
+              </div>
+
+              {/* With Dot */}
+              <div>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">With Dot Indicator</h3>
+                <div className="flex flex-wrap items-center gap-3 p-6 bg-slate-800 rounded-md">
+                  <Badge variant="dark-marble" dot>Active</Badge>
+                  <Badge variant="dark-success" dot>Online</Badge>
+                  <Badge variant="dark-warning" dot>Pending</Badge>
+                  <Badge variant="dark-error" dot>Offline</Badge>
+                </div>
+              </div>
+
+              {/* Button + Badge alignment demo */}
+              <div>
+                <h3 className="text-sm font-medium text-marble-600 dark:text-slate-400 mb-4">Button + Badge Alignment</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="p-6 bg-slate-800 rounded-md">
+                    <p className="text-xs text-slate-400 mb-4 uppercase tracking-wide">Dark Theme</p>
+                    <div className="flex items-center gap-4">
+                      <Button variant="dark-primary" size="sm">Action</Button>
+                      <Badge variant="dark-marble">Status</Badge>
+                      <Badge variant="dark-verified">Verified</Badge>
+                    </div>
+                  </div>
+                  <div className="p-6 bg-marble-100 rounded-md">
+                    <p className="text-xs text-marble-500 mb-4 uppercase tracking-wide">Light Theme</p>
+                    <div className="flex items-center gap-4">
+                      <Button variant="light-primary" size="sm">Action</Button>
+                      <Badge variant="light-marble">Status</Badge>
+                      <Badge variant="light-verified">Verified</Badge>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
