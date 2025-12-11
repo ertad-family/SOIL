@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, Environment } from '@react-three/drei'
 import { Suspense } from 'react'
 import { Dodecahedron } from './Dodecahedron'
 
@@ -23,10 +23,11 @@ export function DodecahedronScene({ className }: DodecahedronSceneProps) {
           maxDistance={35}
         />
 
-        {/* Lighting - simple setup */}
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        <directionalLight position={[-5, -5, -10]} intensity={0.3} />
+        {/* Hemisphere + directional for bronze */}
+        <hemisphereLight args={['#ffffff', '#444444', 1]} />
+        <directionalLight position={[5, 10, 7]} intensity={2} />
+        <directionalLight position={[-5, -5, -5]} intensity={1} />
+        <directionalLight position={[0, 0, -5]} intensity={1} />
 
         {/* Background */}
         <color attach="background" args={['#0a0a0f']} />
