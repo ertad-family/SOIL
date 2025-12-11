@@ -1,9 +1,25 @@
 'use client'
 
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { Suspense, useCallback } from 'react'
+import { Suspense, useCallback, useRef } from 'react'
 import { Dodecahedron } from './Dodecahedron'
+import * as THREE from 'three'
+
+// Light that follows the camera
+function CameraLight() {
+  const { camera } = useThree()
+  const lightRef = useRef<THREE.DirectionalLight>(null)
+
+  useFrame(() => {
+    if (lightRef.current) {
+      // Position light relative to camera
+      lightRef.current.position.copy(camera.position)
+    }
+  })
+
+  return <directionalLight ref={lightRef} intensity={2} />
+}
 
 interface DodecahedronSceneProps {
   className?: string
@@ -30,10 +46,9 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           maxDistance={35}
         />
 
-        {/* Hemisphere + directional for bronze */}
-        <hemisphereLight args={['#ffffff', '#444444', 1]} />
-        <directionalLight position={[5, 10, 7]} intensity={2} />
-        <directionalLight position={[-5, -5, -5]} intensity={1} />
+        {/* Ambient + camera-following light for consistent bronze look */}
+        <ambientLight intensity={0.5} />
+        <CameraLight />
 
         {/* Background */}
         <color attach="background" args={['#0a0a0f']} />

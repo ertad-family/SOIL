@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useMemo, useState, useCallback } from 'react'
-import { useFrame, ThreeEvent } from '@react-three/fiber'
-import { useTexture, Text } from '@react-three/drei'
+import { useFrame, ThreeEvent, useThree } from '@react-three/fiber'
+import { useTexture, Text3D, Center } from '@react-three/drei'
 import * as THREE from 'three'
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg'
 
@@ -169,10 +169,120 @@ interface PortalProps {
   onPortalClick?: (faceId: number, section: string | null) => void
 }
 
+// Animation state stored per-face (persists across hover states)
+interface LabelAnimState {
+  currentAngle: number
+  velocity: number
+  initialized: boolean
+}
+
+// Animated label that swings to upright position like a pendulum
+interface PendulumLabelProps {
+  name: string
+  faceNormal: THREE.Vector3
+  animState: React.MutableRefObject<LabelAnimState>
+}
+
+function PendulumLabel({ name, faceNormal, animState }: PendulumLabelProps) {
+  const groupRef = useRef<THREE.Group>(null)
+  const { camera } = useThree()
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return
+
+    const state = animState.current
+
+    // Calculate target angle to make text upright relative to camera
+    // Strategy: find the "up" direction on the face plane that best aligns with world up
+    // as seen from camera perspective
+
+    // Get world up projected onto face plane
+    const worldUp = new THREE.Vector3(0, 1, 0)
+
+    // Project world up onto the face plane
+    let projectedUp = worldUp.clone()
+      .sub(faceNormal.clone().multiplyScalar(worldUp.dot(faceNormal)))
+
+    // If projection is too small (face is nearly horizontal), use camera's right vector
+    if (projectedUp.length() < 0.1) {
+      // For horizontal faces, use camera right to determine orientation
+      const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+      // Cross product of face normal and camera right gives "up" on face
+      projectedUp = new THREE.Vector3().crossVectors(faceNormal, cameraRight)
+    }
+
+    projectedUp.normalize()
+
+    // Now we need to find angle in face-local coordinates
+    // The face has been rotated so its normal points along local Z
+    // We need to find how much to rotate around Z to align local Y with projectedUp
+
+    // Transform projectedUp to face-local space
+    // Face quaternion rotates (0,0,1) to faceNormal
+    const faceQuat = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      faceNormal
+    )
+    const invFaceQuat = faceQuat.clone().invert()
+
+    // Transform projectedUp to face-local coordinates
+    const localUp = projectedUp.clone().applyQuaternion(invFaceQuat)
+
+    // Calculate angle from local Y axis (0, 1, 0) to localUp (in XY plane)
+    const targetAngle = Math.atan2(-localUp.x, localUp.y)
+
+    if (!state.initialized) {
+      // Start with some offset to create initial swing
+      state.currentAngle = targetAngle + Math.PI * 0.3
+      state.initialized = true
+    }
+
+    // Physics: damped harmonic oscillator
+    const stiffness = 15 // Spring stiffness
+    const damping = 4   // Damping factor
+
+    const angleDiff = targetAngle - state.currentAngle
+    const springForce = angleDiff * stiffness
+    const dampingForce = -state.velocity * damping
+
+    state.velocity += (springForce + dampingForce) * delta
+    state.currentAngle += state.velocity * delta
+
+    // Apply rotation around Z axis (face normal direction)
+    groupRef.current.rotation.z = state.currentAngle
+  })
+
+  return (
+    <group ref={groupRef} position={[0, 0, 0.25]}>
+      <Center>
+        <Text3D
+          font="/fonts/Cinzel/Cinzel SemiBold_Regular.json"
+          size={0.3}
+          height={0.03}
+          letterSpacing={0.05}
+          bevelEnabled
+          bevelSize={0.005}
+          bevelThickness={0.005}
+        >
+          {name}
+          <meshStandardMaterial color="#C9943D" metalness={0.8} roughness={0.3} />
+        </Text3D>
+      </Center>
+    </group>
+  )
+}
+
 // Interactive Portal component with hover/click
 function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
   const [hovered, setHovered] = useState(false)
   const groupRef = useRef<THREE.Group>(null)
+
+  // Persist animation state across hover on/off cycles
+  const labelAnimState = useRef<LabelAnimState>({
+    currentAngle: 0,
+    velocity: 0,
+    initialized: false,
+  })
 
   // Ring dimensions based on face data
   const outerRingRadius = PENTAGON_INSCRIBED_RADIUS
@@ -279,19 +389,9 @@ function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
         </>
       )}
 
-      {/* Label shown on hover */}
+      {/* Label shown on hover with pendulum animation */}
       {hovered && face.config?.name && (
-        <Text
-          position={[0, 0, 0.1]}
-          fontSize={0.3}
-          color="#C9943D"
-          anchorX="center"
-          anchorY="middle"
-          letterSpacing={0.1}
-          font="/fonts/Cinzel/static/Cinzel-SemiBold.ttf"
-        >
-          {face.config.name}
-        </Text>
+        <PendulumLabel name={face.config.name} faceNormal={face.normal} animState={labelAnimState} />
       )}
     </group>
   )
