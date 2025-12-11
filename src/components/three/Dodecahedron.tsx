@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
+import { useRef, useMemo, useState, useCallback } from 'react'
+import { useFrame, ThreeEvent } from '@react-three/fiber'
+import { useTexture, Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg'
 
@@ -153,6 +153,150 @@ interface FaceWithHole {
   holeRadius: number
 }
 
+// Props for Portal component
+interface PortalProps {
+  face: {
+    center: THREE.Vector3
+    normal: THREE.Vector3
+    holeRadius: number
+    config?: typeof FACE_CONFIG[number]
+  }
+  idx: number
+  textures: {
+    map: THREE.Texture
+    normalMap: THREE.Texture
+  }
+  onPortalClick?: (faceId: number, section: string | null) => void
+}
+
+// Interactive Portal component with hover/click
+function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
+  const [hovered, setHovered] = useState(false)
+  const groupRef = useRef<THREE.Group>(null)
+
+  // Ring dimensions based on face data
+  const outerRingRadius = PENTAGON_INSCRIBED_RADIUS
+  const innerRingRadius = face.holeRadius + INNER_RING_OFFSET
+
+  // Position rings slightly above face surface (along normal direction)
+  const RING_OFFSET = 0.03
+  const ringPos = useMemo(
+    () => face.center.clone().add(face.normal.clone().multiplyScalar(RING_OFFSET)),
+    [face.center, face.normal]
+  )
+
+  // Create rotation to align with face
+  const quaternion = useMemo(() => {
+    const up = new THREE.Vector3(0, 0, 1)
+    return new THREE.Quaternion().setFromUnitVectors(up, face.normal)
+  }, [face.normal])
+
+  // Calculate if inner ring fits between hole edge and outer ring
+  const innerRingOuterEdge = innerRingRadius + GROOVE_OFFSET
+  const outerRingInnerEdge = outerRingRadius - GROOVE_OFFSET
+  const gapBetweenRings = outerRingInnerEdge - innerRingOuterEdge
+  const showInnerRing = gapBetweenRings > MIN_GAP_BETWEEN_RINGS
+
+  // Hover handlers
+  const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation()
+    if (face.config?.active) {
+      setHovered(true)
+      document.body.style.cursor = 'pointer'
+    }
+  }, [face.config?.active])
+
+  const handlePointerOut = useCallback(() => {
+    setHovered(false)
+    document.body.style.cursor = 'auto'
+  }, [])
+
+  // Click handler
+  const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation()
+    if (face.config?.active && onPortalClick) {
+      onPortalClick(face.config.id, face.config.section)
+    }
+  }, [face.config, onPortalClick])
+
+  // Emissive color for hover state
+  const innerRingEmissive = hovered ? '#4a8a6a' : (face.config?.active ? '#2a4a3a' : '#000000')
+  const innerRingEmissiveIntensity = hovered ? 0.4 : (face.config?.active ? 0.1 : 0)
+
+  return (
+    <group ref={groupRef} position={ringPos} quaternion={quaternion}>
+      {/* Invisible hitbox for portal (circle in the hole) */}
+      <mesh
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        onClick={handleClick}
+      >
+        <circleGeometry args={[face.holeRadius, 32]} />
+        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* === OUTER RING (inscribed in pentagon) === */}
+      <mesh>
+        <torusGeometry args={[outerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+        <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
+      </mesh>
+      <mesh>
+        <torusGeometry args={[outerRingRadius, RING_WIDTH, 8, 32]} />
+        <meshStandardMaterial
+          map={textures.map}
+          normalMap={textures.normalMap}
+          metalness={0.9}
+          roughness={0.2}
+        />
+      </mesh>
+      <mesh>
+        <torusGeometry args={[outerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+        <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
+      </mesh>
+
+      {/* === INNER RING (at hole edge) === */}
+      {showInnerRing && (
+        <>
+          <mesh>
+            <torusGeometry args={[innerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+            <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
+          </mesh>
+          <mesh>
+            <torusGeometry args={[innerRingRadius, RING_WIDTH, 8, 32]} />
+            <meshStandardMaterial
+              map={textures.map}
+              normalMap={textures.normalMap}
+              metalness={0.9}
+              roughness={0.2}
+              emissive={innerRingEmissive}
+              emissiveIntensity={innerRingEmissiveIntensity}
+            />
+          </mesh>
+          <mesh>
+            <torusGeometry args={[innerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+            <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
+          </mesh>
+        </>
+      )}
+
+      {/* Label shown on hover */}
+      {hovered && face.config?.name && (
+        <Text
+          position={[0, 0, 0.1]}
+          fontSize={0.3}
+          color="#C9943D"
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.1}
+          font="/fonts/Cinzel/static/Cinzel-SemiBold.ttf"
+        >
+          {face.config.name}
+        </Text>
+      )}
+    </group>
+  )
+}
+
 // Create hollow dodecahedron with holes using CSG
 // Takes pre-computed faces with hole radii to ensure consistency
 function createHollowDodecahedronWithHoles(
@@ -198,7 +342,11 @@ function createHollowDodecahedronWithHoles(
   return result.geometry
 }
 
-export function Dodecahedron() {
+interface DodecahedronProps {
+  onPortalClick?: (faceId: number, section: string | null) => void
+}
+
+export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
   const groupRef = useRef<THREE.Group>(null)
 
   // Load only color and normal textures, control metalness/roughness manually
@@ -222,19 +370,11 @@ export function Dodecahedron() {
   // This ensures CSG and ring rendering use the same data
   const facesWithHoles = useMemo(() => {
     const faces = getDodecahedronFaceCenters(RADIUS)
-    const result = faces.map((face, idx) => ({
+    return faces.map((face, idx) => ({
       ...face,
       holeRadius: FACE_CONFIG[idx]?.holeRadius ?? 1.0,
       config: FACE_CONFIG[idx]
     }))
-    // Debug: log face data
-    console.log('Faces with holes:', result.map((f, i) => ({
-      idx: i,
-      holeRadius: f.holeRadius,
-      innerRing: f.holeRadius + INNER_RING_OFFSET,
-      showInner: (PENTAGON_INSCRIBED_RADIUS - GROOVE_OFFSET) - (f.holeRadius + INNER_RING_OFFSET + GROOVE_OFFSET) > MIN_GAP_BETWEEN_RINGS
-    })))
-    return result
   }, [])
 
   // Create hollow geometry with holes (CSG operation)
@@ -251,109 +391,50 @@ export function Dodecahedron() {
   })
 
   return (
-    <group ref={groupRef}>
-      {/* Main dodecahedron with holes - bronze material */}
-      <mesh geometry={holedGeometry}>
-        <meshStandardMaterial
-          map={textures.map}
-          normalMap={textures.normalMap}
-          metalness={0.9}
-          roughness={0.1}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+    <>
+      <group ref={groupRef}>
+        {/* Main dodecahedron with holes - bronze material */}
+        <mesh geometry={holedGeometry}>
+          <meshStandardMaterial
+            map={textures.map}
+            normalMap={textures.normalMap}
+            metalness={0.9}
+            roughness={0.1}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
 
-      {/* Portal rings - 2 rings per face: outer (inscribed in pentagon) and inner (at hole edge) */}
-      {/* Each ring is "inset" with darker grooves on both sides */}
-      {facesWithHoles.map((face, idx) => {
-        // Ring dimensions based on face data
-        const outerRingRadius = PENTAGON_INSCRIBED_RADIUS
-        const innerRingRadius = face.holeRadius + INNER_RING_OFFSET
+        {/* Interactive portals with hover/click */}
+        {facesWithHoles.map((face, idx) => (
+          <Portal
+            key={`portal-${idx}`}
+            face={face}
+            idx={idx}
+            textures={textures}
+            onPortalClick={onPortalClick}
+          />
+        ))}
 
-        // Position rings slightly above face surface (along normal direction)
-        const RING_OFFSET = 0.03
-        const ringPos = face.center.clone().add(face.normal.clone().multiplyScalar(RING_OFFSET))
+        {/* Vertex spheres */}
+        {vertices.map((vertex, idx) => {
+          const config = SPHERE_CONFIG[idx]
+          const pos = vertex.clone().normalize().multiplyScalar(vertex.length() + 0.15)
 
-        // Create rotation to align with face
-        const up = new THREE.Vector3(0, 0, 1)
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(up, face.normal)
-
-        // Calculate if inner ring fits between hole edge and outer ring
-        // Inner ring outer edge: innerRingRadius + GROOVE_OFFSET
-        // Outer ring inner edge: outerRingRadius - GROOVE_OFFSET
-        const innerRingOuterEdge = innerRingRadius + GROOVE_OFFSET
-        const outerRingInnerEdge = outerRingRadius - GROOVE_OFFSET
-        const gapBetweenRings = outerRingInnerEdge - innerRingOuterEdge
-        const showInnerRing = gapBetweenRings > MIN_GAP_BETWEEN_RINGS
-
-        return (
-          <group key={`rings-${idx}`} position={ringPos} quaternion={quaternion}>
-            {/* === OUTER RING (inscribed in pentagon) === */}
-            <mesh>
-              <torusGeometry args={[outerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
-              <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.8} />
-            </mesh>
-            <mesh>
-              <torusGeometry args={[outerRingRadius, RING_WIDTH, 8, 32]} />
+          return (
+            <mesh key={`sphere-${idx}`} position={pos}>
+              <sphereGeometry args={[0.25, 16, 16]} />
               <meshStandardMaterial
                 map={textures.map}
                 normalMap={textures.normalMap}
-                metalness={0.9}
-                roughness={0.2}
+                metalness={1}
+                roughness={0.4}
+                emissive={config?.active ? '#2a4a3a' : '#000000'}
+                emissiveIntensity={config?.active ? 0.15 : 0}
               />
             </mesh>
-            <mesh>
-              <torusGeometry args={[outerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
-              <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.8} />
-            </mesh>
-
-            {/* === INNER RING (at hole edge) === */}
-            {showInnerRing && (
-              <>
-                <mesh>
-                  <torusGeometry args={[innerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
-                  <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.8} />
-                </mesh>
-                <mesh>
-                  <torusGeometry args={[innerRingRadius, RING_WIDTH, 8, 32]} />
-                  <meshStandardMaterial
-                    map={textures.map}
-                    normalMap={textures.normalMap}
-                    metalness={0.9}
-                    roughness={0.2}
-                    emissive={face.config?.active ? '#2a4a3a' : '#000000'}
-                    emissiveIntensity={face.config?.active ? 0.1 : 0}
-                  />
-                </mesh>
-                <mesh>
-                  <torusGeometry args={[innerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
-                  <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.8} />
-                </mesh>
-              </>
-            )}
-          </group>
-        )
-      })}
-
-      {/* Vertex spheres */}
-      {vertices.map((vertex, idx) => {
-        const config = SPHERE_CONFIG[idx]
-        const pos = vertex.clone().normalize().multiplyScalar(vertex.length() + 0.15)
-
-        return (
-          <mesh key={`sphere-${idx}`} position={pos}>
-            <sphereGeometry args={[0.25, 16, 16]} />
-            <meshStandardMaterial
-              map={textures.map}
-              normalMap={textures.normalMap}
-              metalness={1}
-              roughness={0.4}
-              emissive={config?.active ? '#2a4a3a' : '#000000'}
-              emissiveIntensity={config?.active ? 0.15 : 0}
-            />
-          </mesh>
-        )
-      })}
-    </group>
+          )
+        })}
+      </group>
+    </>
   )
 }
