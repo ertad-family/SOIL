@@ -174,16 +174,16 @@ interface LabelAnimState {
   currentAngle: number
   velocity: number
   initialized: boolean
+  lastSettledAngle: number | null  // Store angle when label settled/hidden
 }
 
 // Animated label that swings to upright position like a pendulum
 interface PendulumLabelProps {
   name: string
-  faceNormal: THREE.Vector3
   animState: React.MutableRefObject<LabelAnimState>
 }
 
-function PendulumLabel({ name, faceNormal, animState }: PendulumLabelProps) {
+function PendulumLabel({ name, animState }: PendulumLabelProps) {
   const groupRef = useRef<THREE.Group>(null)
   const { camera } = useThree()
 
@@ -192,61 +192,89 @@ function PendulumLabel({ name, faceNormal, animState }: PendulumLabelProps) {
 
     const state = animState.current
 
-    // Calculate target angle to make text upright relative to camera
-    // Strategy: find the "up" direction on the face plane that best aligns with world up
-    // as seen from camera perspective
+    // Get the WORLD normal of this face
+    // The label's parent (Portal group) has local Z pointing along face normal
+    // We need to transform local Z to world space using the full world matrix
+    const parent = groupRef.current.parent
+    if (!parent) return
 
-    // Get world up projected onto face plane
+    // Force update world matrix to get current rotation
+    parent.updateWorldMatrix(true, false)
+
+    // Get world direction of local Z axis (face normal in world space)
+    const worldNormal = new THREE.Vector3(0, 0, 1)
+    worldNormal.transformDirection(parent.matrixWorld)
+
+    // Calculate target angle to make text upright relative to world "up"
     const worldUp = new THREE.Vector3(0, 1, 0)
 
-    // Project world up onto the face plane
-    let projectedUp = worldUp.clone()
-      .sub(faceNormal.clone().multiplyScalar(worldUp.dot(faceNormal)))
+    // Project world up onto the face plane (in world space)
+    let targetUpWorld = worldUp.clone()
+      .sub(worldNormal.clone().multiplyScalar(worldUp.dot(worldNormal)))
 
-    // If projection is too small (face is nearly horizontal), use camera's right vector
-    if (projectedUp.length() < 0.1) {
-      // For horizontal faces, use camera right to determine orientation
-      const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
-      // Cross product of face normal and camera right gives "up" on face
-      projectedUp = new THREE.Vector3().crossVectors(faceNormal, cameraRight)
+    const isHorizontalFace = targetUpWorld.length() < 0.1
+
+    // If projection is too small (face is nearly horizontal), use camera direction
+    if (isHorizontalFace) {
+      const cameraDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion)
+      const right = new THREE.Vector3().crossVectors(cameraDir, worldNormal).normalize()
+      targetUpWorld = new THREE.Vector3().crossVectors(worldNormal, right)
     }
 
-    projectedUp.normalize()
+    targetUpWorld.normalize()
 
-    // Now we need to find angle in face-local coordinates
-    // The face has been rotated so its normal points along local Z
-    // We need to find how much to rotate around Z to align local Y with projectedUp
+    // Get current "up" direction of the label in world space
+    // The label's local Y axis transformed to world
+    const currentUpWorld = new THREE.Vector3(0, 1, 0)
+    currentUpWorld.transformDirection(parent.matrixWorld)
 
-    // Transform projectedUp to face-local space
-    // Face quaternion rotates (0,0,1) to faceNormal
-    const faceQuat = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 0, 1),
-      faceNormal
-    )
-    const invFaceQuat = faceQuat.clone().invert()
+    // Get current "right" direction for signed angle calculation
+    const currentRightWorld = new THREE.Vector3(1, 0, 0)
+    currentRightWorld.transformDirection(parent.matrixWorld)
 
-    // Transform projectedUp to face-local coordinates
-    const localUp = projectedUp.clone().applyQuaternion(invFaceQuat)
+    // Calculate signed angle between currentUpWorld and targetUpWorld around worldNormal
+    // Project both onto the face plane (they should already be, but ensure it)
+    const dot = currentUpWorld.dot(targetUpWorld)
+    const cross = new THREE.Vector3().crossVectors(currentUpWorld, targetUpWorld)
+    const sign = cross.dot(worldNormal) < 0 ? -1 : 1
 
-    // Calculate angle from local Y axis (0, 1, 0) to localUp (in XY plane)
-    const targetAngle = Math.atan2(-localUp.x, localUp.y)
+    // Angle needed to rotate from current to target
+    const targetAngle = sign * Math.acos(Math.min(1, Math.max(-1, dot)))
 
+    // Initialize on first frame of hover
     if (!state.initialized) {
-      // Start with some offset to create initial swing
-      state.currentAngle = targetAngle + Math.PI * 0.3
+      if (state.lastSettledAngle !== null) {
+        // Re-hover: start from saved position
+        state.currentAngle = state.lastSettledAngle
+      } else {
+        // First hover ever: start with swing animation
+        state.currentAngle = targetAngle + Math.PI * 0.3
+      }
       state.initialized = true
     }
 
-    // Physics: damped harmonic oscillator
-    const stiffness = 15 // Spring stiffness
-    const damping = 4   // Damping factor
+    // Calculate shortest angle difference (handle wrap-around at ±π)
+    let angleDiff = targetAngle - state.currentAngle
+    // Normalize to [-π, π] for shortest path
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2
 
-    const angleDiff = targetAngle - state.currentAngle
+    // Physics: damped harmonic oscillator - ALWAYS runs to track "floor"
+    const stiffness = 12 // Spring stiffness (slightly softer)
+    const damping = 5    // Damping factor (more damping to prevent jitter)
+
     const springForce = angleDiff * stiffness
     const dampingForce = -state.velocity * damping
 
     state.velocity += (springForce + dampingForce) * delta
     state.currentAngle += state.velocity * delta
+
+    // Normalize currentAngle to [-π, π] to prevent drift
+    while (state.currentAngle > Math.PI) state.currentAngle -= Math.PI * 2
+    while (state.currentAngle < -Math.PI) state.currentAngle += Math.PI * 2
+
+    // Always save current angle for next hover
+    state.lastSettledAngle = state.currentAngle
 
     // Apply rotation around Z axis (face normal direction)
     groupRef.current.rotation.z = state.currentAngle
@@ -282,6 +310,7 @@ function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
     currentAngle: 0,
     velocity: 0,
     initialized: false,
+    lastSettledAngle: null,
   })
 
   // Ring dimensions based on face data
@@ -311,6 +340,9 @@ function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
   const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     if (face.config?.active) {
+      // Reset initialized to trigger new swing animation, but keep current angle
+      labelAnimState.current.initialized = false
+      labelAnimState.current.velocity = 0
       setHovered(true)
       document.body.style.cursor = 'pointer'
     }
@@ -391,7 +423,7 @@ function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
 
       {/* Label shown on hover with pendulum animation */}
       {hovered && face.config?.name && (
-        <PendulumLabel name={face.config.name} faceNormal={face.normal} animState={labelAnimState} />
+        <PendulumLabel name={face.config.name} animState={labelAnimState} />
       )}
     </group>
   )
