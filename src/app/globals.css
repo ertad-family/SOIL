@@ -1,0 +1,862 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================
+   SOIL Design System - Roman Heritage (Modernized)
+   Global Styles & CSS Variables
+   =========================================== */
+
+@layer base {
+  /* -----------------------------------------
+     CSS Custom Properties
+     ----------------------------------------- */
+  :root {
+    /* Light mode (Cenotaphery - Warm Marble) */
+    --background: 30 20% 99%;          /* marble-50 */
+    --foreground: 20 10% 14%;          /* marble-950 */
+
+    --card: 30 25% 98%;                /* marble-100 */
+    --card-foreground: 20 10% 14%;     /* marble-950 */
+
+    --muted: 30 20% 93%;               /* marble-200 */
+    --muted-foreground: 25 12% 50%;    /* marble-600 */
+
+    --border: 30 18% 88%;              /* marble-300 */
+    --input: 30 18% 88%;               /* marble-300 */
+
+    --primary: 38 55% 51%;             /* gold-500 */
+    --primary-foreground: 30 20% 99%;  /* white */
+
+    --secondary: 30 20% 93%;           /* marble-200 */
+    --secondary-foreground: 20 10% 14%;
+
+    --accent: 38 55% 51%;              /* gold-500 */
+    --accent-foreground: 20 10% 14%;
+
+    --ring: 38 55% 51%;                /* gold-500 */
+
+    /* Semantic */
+    --success: 140 25% 45%;
+    --warning: 38 55% 51%;
+    --error: 5 45% 52%;
+    --info: 205 25% 48%;
+  }
+
+  .dark {
+    /* Dark mode (SOIL Scientific - Slate) */
+    --background: 222 47% 11%;         /* slate-900 */
+    --foreground: 30 25% 98%;          /* marble-100 */
+
+    --card: 217 33% 17%;               /* slate-800 */
+    --card-foreground: 30 25% 98%;     /* marble-100 */
+
+    --muted: 217 33% 22%;              /* slate-700 */
+    --muted-foreground: 215 20% 65%;   /* slate-400 */
+
+    --border: 217 33% 25%;             /* slate-700 */
+    --input: 217 33% 25%;
+
+    --primary: 40 60% 55%;             /* gold-400 */
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 22%;
+    --secondary-foreground: 30 25% 98%;
+
+    --accent: 40 60% 55%;              /* gold-400 */
+    --accent-foreground: 222 47% 11%;
+
+    --ring: 40 60% 55%;
+
+    /* Semantic (slightly brighter for dark mode) */
+    --success: 140 30% 50%;
+    --warning: 40 60% 55%;
+    --error: 5 50% 55%;
+    --info: 205 30% 55%;
+  }
+
+  /* -----------------------------------------
+     Base HTML Styles
+     ----------------------------------------- */
+  * {
+    @apply border-marble-300;
+  }
+
+  .dark * {
+    @apply border-slate-700;
+  }
+
+  html {
+    @apply antialiased scroll-smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-marble-50 text-marble-950 font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1, "liga" 1;
+  }
+
+  .dark body {
+    @apply bg-slate-900 text-marble-100;
+  }
+
+  /* -----------------------------------------
+     Typography - Modernized
+     Cinzel for display, Outfit for UI, Source Sans for body
+     ----------------------------------------- */
+  h1, h2, h3,
+  .heading {
+    @apply font-serif tracking-wide;
+  }
+
+  h4, h5, h6,
+  .subheading {
+    @apply font-ui font-medium tracking-tight;
+  }
+
+  h1 { @apply text-5xl md:text-6xl font-semibold; }
+  h2 { @apply text-4xl md:text-5xl font-semibold; }
+  h3 { @apply text-2xl md:text-3xl font-medium; }
+  h4 { @apply text-xl md:text-2xl; }
+  h5 { @apply text-lg md:text-xl; }
+  h6 { @apply text-base md:text-lg; }
+
+  /* UI Text - uses geometric sans */
+  .text-ui {
+    @apply font-ui;
+  }
+
+  /* -----------------------------------------
+     Links
+     ----------------------------------------- */
+  a {
+    @apply text-gold-600 transition-colors duration-fast;
+  }
+
+  a:hover {
+    @apply text-gold-700;
+  }
+
+  .dark a {
+    @apply text-gold-400;
+  }
+
+  .dark a:hover {
+    @apply text-gold-300;
+  }
+
+  /* -----------------------------------------
+     Selection
+     ----------------------------------------- */
+  ::selection {
+    @apply bg-gold-200 text-marble-950;
+  }
+
+  .dark ::selection {
+    @apply bg-gold-700 text-marble-50;
+  }
+
+  /* -----------------------------------------
+     Focus States
+     ----------------------------------------- */
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-marble-50;
+  }
+
+  .dark :focus-visible {
+    @apply ring-gold-400 ring-offset-slate-900;
+  }
+}
+
+@layer components {
+  /* -----------------------------------------
+     Staggered Fade In Animation
+     ----------------------------------------- */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Toast animations - smooth slide in/out */
+  .animate-slide-up {
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-fade-out {
+    animation: fadeOut 0.25s ease-out forwards;
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+
+  /* Stagger delays */
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+  .stagger-6 { animation-delay: 0.6s; }
+  .stagger-7 { animation-delay: 0.7s; }
+  .stagger-8 { animation-delay: 0.8s; }
+
+  /* -----------------------------------------
+     Roman Divider - Decorative separator
+     ----------------------------------------- */
+  .divider-roman {
+    @apply relative flex items-center justify-center py-8;
+  }
+
+  .divider-roman::before,
+  .divider-roman::after {
+    content: '';
+    @apply flex-1 h-px;
+    background: linear-gradient(90deg, transparent, theme('colors.gold.400'), transparent);
+  }
+
+  .divider-roman::before {
+    @apply mr-6;
+  }
+
+  .divider-roman::after {
+    @apply ml-6;
+  }
+
+  /* -----------------------------------------
+     Marble Texture Overlay (Subtle Noise)
+     ----------------------------------------- */
+  .marble-texture {
+    @apply relative;
+  }
+
+  .marble-texture::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-[0.025];
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  /* -----------------------------------------
+     Page Background with subtle gradient
+     ----------------------------------------- */
+  .bg-page-light {
+    background: linear-gradient(180deg,
+      theme('colors.marble.50') 0%,
+      theme('colors.marble.100') 50%,
+      theme('colors.marble.50') 100%
+    );
+  }
+
+  .bg-page-dark {
+    background: linear-gradient(180deg,
+      theme('colors.slate.900') 0%,
+      #0f172a 50%,
+      theme('colors.slate.900') 100%
+    );
+  }
+
+  /* -----------------------------------------
+     Hero Section with dramatic lighting
+     ----------------------------------------- */
+  .hero-glow {
+    @apply relative overflow-hidden;
+  }
+
+  .hero-glow::before {
+    content: '';
+    @apply absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none;
+    background: radial-gradient(ellipse at center,
+      theme('colors.gold.400/0.08') 0%,
+      transparent 60%
+    );
+  }
+
+  .dark .hero-glow::before {
+    background: radial-gradient(ellipse at center,
+      theme('colors.gold.500/0.12') 0%,
+      transparent 60%
+    );
+  }
+
+  /* -----------------------------------------
+     Gold Accent Borders
+     ----------------------------------------- */
+  .gold-accent-left {
+    @apply relative;
+  }
+
+  .gold-accent-left::before {
+    content: '';
+    @apply absolute left-0 top-2 bottom-2 w-1 rounded-full;
+    background: linear-gradient(180deg,
+      theme('colors.gold.400') 0%,
+      theme('colors.gold.600') 100%
+    );
+  }
+
+  .gold-accent-top {
+    @apply relative;
+  }
+
+  .gold-accent-top::before {
+    content: '';
+    @apply absolute top-0 left-4 right-4 h-1 rounded-full;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      theme('colors.gold.500') 20%,
+      theme('colors.gold.500') 80%,
+      transparent 100%
+    );
+  }
+
+  /* Corner accent - Roman tablet style */
+  .corner-accent {
+    @apply relative;
+  }
+
+  .corner-accent::before {
+    content: '';
+    @apply absolute top-0 left-0 w-8 h-8 pointer-events-none;
+    border-top: 2px solid theme('colors.gold.500');
+    border-left: 2px solid theme('colors.gold.500');
+  }
+
+  .corner-accent::after {
+    content: '';
+    @apply absolute bottom-0 right-0 w-8 h-8 pointer-events-none;
+    border-bottom: 2px solid theme('colors.gold.500');
+    border-right: 2px solid theme('colors.gold.500');
+  }
+
+  /* -----------------------------------------
+     Card Variants - Modernized
+     ----------------------------------------- */
+  .card {
+    @apply bg-white/80 backdrop-blur-sm border border-marble-200 rounded-lg;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  .card-elevated {
+    @apply bg-white border border-marble-200 rounded-lg;
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.04),
+      0 12px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-cenotaph {
+    @apply bg-gradient-to-br from-marble-50 to-marble-100 rounded-lg overflow-hidden;
+    @apply corner-accent;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .dark .card {
+    @apply bg-slate-800/80 backdrop-blur-sm border-slate-700;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .dark .card-elevated {
+    @apply bg-slate-800 border-slate-600;
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.25),
+      0 12px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .card-cenotaph {
+    @apply bg-gradient-to-br from-slate-800 to-slate-900;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  /* Interactive card hover */
+  .card-interactive {
+    @apply transition-all duration-300 ease-out cursor-pointer;
+  }
+
+  .card-interactive:hover {
+    @apply -translate-y-1;
+    box-shadow:
+      0 8px 16px rgba(0, 0, 0, 0.08),
+      0 20px 40px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .card-interactive:hover {
+    box-shadow:
+      0 8px 16px rgba(0, 0, 0, 0.3),
+      0 20px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  /* -----------------------------------------
+     Glass Effect - Frosted
+     ----------------------------------------- */
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-white/20;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .dark .glass {
+    @apply bg-slate-800/60 border-white/5;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  /* -----------------------------------------
+     Text Gradients
+     ----------------------------------------- */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #F6DFB3 0%, #C9943D 40%, #845F23 100%);
+  }
+
+  .text-gradient-gold-dark {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #E2B055 0%, #C9943D 50%, #A67A2E 100%);
+  }
+
+  /* -----------------------------------------
+     Gold Shimmer Animation
+     ----------------------------------------- */
+  .shimmer-gold {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer-gold::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      theme('colors.gold.400/0.3') 50%,
+      transparent 100%
+    );
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* -----------------------------------------
+     Glow Effects
+     ----------------------------------------- */
+  .glow-gold {
+    box-shadow:
+      0 0 20px theme('colors.gold.500/0.3'),
+      0 0 40px theme('colors.gold.500/0.15');
+  }
+
+  .glow-gold-subtle {
+    box-shadow: 0 0 30px theme('colors.gold.500/0.15');
+  }
+
+  .glow-gold-hover {
+    @apply transition-shadow duration-300;
+  }
+
+  .glow-gold-hover:hover {
+    box-shadow:
+      0 0 20px theme('colors.gold.500/0.3'),
+      0 0 40px theme('colors.gold.500/0.15');
+  }
+
+  /* -----------------------------------------
+     Focus Ring Utility
+     ----------------------------------------- */
+  .focus-ring {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-marble-50;
+  }
+
+  .dark .focus-ring {
+    @apply ring-gold-400 ring-offset-slate-900;
+  }
+
+  /* -----------------------------------------
+     Interactive Base
+     ----------------------------------------- */
+  .interactive {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive:hover {
+    @apply -translate-y-0.5;
+  }
+
+  .interactive:active {
+    @apply translate-y-0;
+  }
+
+  /* -----------------------------------------
+     Button Base Styles - Carved Stone Feel
+     ----------------------------------------- */
+  .btn {
+    @apply inline-flex items-center justify-center;
+    @apply font-ui font-medium text-sm tracking-wide;
+    @apply rounded-md px-5 py-2.5;
+    @apply transition-all duration-200 ease-out;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-b from-gold-400 to-gold-500 text-marble-950;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-primary:hover {
+    @apply from-gold-500 to-gold-600;
+    box-shadow:
+      0 2px 8px rgba(201, 148, 61, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-primary:active {
+    @apply from-gold-500 to-gold-500;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-secondary {
+    @apply bg-marble-100 border border-marble-300 text-marble-700;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .btn-secondary:hover {
+    @apply bg-marble-200 border-marble-400 text-marble-900;
+  }
+
+  .btn-secondary:active {
+    @apply bg-marble-200;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-gold-600;
+  }
+
+  .btn-ghost:hover {
+    @apply bg-gold-50 text-gold-700;
+  }
+
+  .btn-ghost:active {
+    @apply bg-gold-100;
+  }
+
+  .dark .btn-primary {
+    @apply from-gold-500 to-gold-600 text-slate-900;
+  }
+
+  .dark .btn-primary:hover {
+    @apply from-gold-400 to-gold-500;
+    box-shadow:
+      0 2px 12px rgba(201, 148, 61, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .btn-secondary {
+    @apply bg-slate-700 border-slate-600 text-marble-200;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .dark .btn-secondary:hover {
+    @apply bg-slate-600 border-slate-500 text-marble-100;
+  }
+
+  .dark .btn-ghost {
+    @apply text-gold-400;
+  }
+
+  .dark .btn-ghost:hover {
+    @apply bg-slate-800 text-gold-300;
+  }
+
+  /* -----------------------------------------
+     Input Base Styles - Modern Underline
+     ----------------------------------------- */
+  .input {
+    @apply w-full px-4 py-3;
+    @apply bg-marble-50/50 border border-marble-200 rounded-lg;
+    @apply text-marble-950 placeholder:text-marble-400;
+    @apply font-ui text-sm;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-500/20;
+    @apply focus:bg-white;
+  }
+
+  .dark .input {
+    @apply bg-slate-800/50 border-slate-600;
+    @apply text-marble-100 placeholder:text-slate-500;
+    @apply focus:border-gold-500 focus:ring-gold-500/20;
+    @apply focus:bg-slate-800;
+  }
+
+  /* Minimal underline style variant */
+  .input-minimal {
+    @apply w-full px-0 py-3;
+    @apply bg-transparent border-0 border-b-2 border-marble-200 rounded-none;
+    @apply text-marble-950 placeholder:text-marble-400;
+    @apply font-ui text-sm;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:border-gold-500;
+  }
+
+  .dark .input-minimal {
+    @apply border-slate-600 text-marble-100 placeholder:text-slate-500;
+    @apply focus:border-gold-400;
+  }
+
+  /* -----------------------------------------
+     Section Layouts
+     ----------------------------------------- */
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  .section-sm {
+    @apply py-8 md:py-12;
+  }
+
+  .container-content {
+    @apply max-w-content mx-auto px-4 md:px-6 lg:px-8;
+  }
+
+  .container-wide {
+    @apply max-w-wide mx-auto px-4 md:px-6 lg:px-8;
+  }
+
+  .container-prose {
+    @apply max-w-prose mx-auto px-4;
+  }
+
+  /* -----------------------------------------
+     Badge - Modernized
+     ----------------------------------------- */
+  .badge {
+    @apply inline-flex items-center gap-1.5;
+    @apply px-2.5 py-1 rounded-full;
+    @apply font-ui text-xs font-medium tracking-wide uppercase;
+  }
+
+  .badge-gold {
+    @apply bg-gold-100 text-gold-800 border border-gold-200;
+  }
+
+  .dark .badge-gold {
+    @apply bg-gold-900/30 text-gold-300 border-gold-700;
+  }
+
+  /* -----------------------------------------
+     Laurel Decoration (Roman motif)
+     ----------------------------------------- */
+  .laurel-left::before,
+  .laurel-right::after {
+    content: '❧';
+    @apply text-gold-400 text-lg;
+  }
+
+  .laurel-left::before {
+    @apply mr-3;
+  }
+
+  .laurel-right::after {
+    @apply ml-3 scale-x-[-1] inline-block;
+  }
+}
+
+@layer utilities {
+  /* -----------------------------------------
+     CMDK Override - Remove default borders
+     ----------------------------------------- */
+  [cmdk-input-wrapper],
+  [cmdk-input-wrapper] *,
+  [cmdk-root],
+  [cmdk-root] *,
+  [cmdk-list],
+  [cmdk-group] {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  [cmdk-input]:focus,
+  [cmdk-input]:focus-visible {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    ring: none !important;
+  }
+
+  /* -----------------------------------------
+     Custom Scrollbar
+     ----------------------------------------- */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.marble.400') theme('colors.marble.100');
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: theme('colors.marble.100');
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: theme('colors.marble.400');
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.marble.500');
+  }
+
+  .dark .scrollbar-thin {
+    scrollbar-color: theme('colors.slate.600') theme('colors.slate.800');
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-track {
+    background: theme('colors.slate.800');
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: theme('colors.slate.600');
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.slate.500');
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* -----------------------------------------
+     Animation Delays
+     ----------------------------------------- */
+  .animation-delay-0 { animation-delay: 0ms; }
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+  .animation-delay-600 { animation-delay: 600ms; }
+  .animation-delay-700 { animation-delay: 700ms; }
+  .animation-delay-800 { animation-delay: 800ms; }
+
+  /* -----------------------------------------
+     Line Clamp
+     ----------------------------------------- */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* -----------------------------------------
+     Text Balance (for headings)
+     ----------------------------------------- */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* -----------------------------------------
+     Roman Numeral List Style
+     ----------------------------------------- */
+  .list-roman {
+    list-style-type: upper-roman;
+  }
+
+  .list-roman-lower {
+    list-style-type: lower-roman;
+  }
+
+  /* -----------------------------------------
+     Transition Utilities
+     ----------------------------------------- */
+  .transition-transform-shadow {
+    @apply transition-all duration-300 ease-out;
+    transition-property: transform, box-shadow;
+  }
+}
