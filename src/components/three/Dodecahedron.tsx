@@ -682,13 +682,25 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
     normalMap: '/textures/Metal047A_1K-JPG/Metal047A_1K-JPG_NormalGL.jpg',
   })
 
+  // Load Metal015 textures for vertex spheres
+  const sphereTextures = useTexture({
+    map: '/textures/Metal015_1K-JPG/Metal015_1K-JPG_Color.jpg',
+    normalMap: '/textures/Metal015_1K-JPG/Metal015_1K-JPG_NormalGL.jpg',
+    roughnessMap: '/textures/Metal015_1K-JPG/Metal015_1K-JPG_Roughness.jpg',
+    metalnessMap: '/textures/Metal015_1K-JPG/Metal015_1K-JPG_Metalness.jpg',
+  })
+
   // Configure texture wrapping
   useMemo(() => {
     Object.values(textures).forEach(tex => {
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping
       tex.repeat.set(2, 2)
     })
-  }, [textures])
+    Object.values(sphereTextures).forEach(tex => {
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+      tex.repeat.set(1, 1)
+    })
+  }, [textures, sphereTextures])
 
   // Get vertices for spheres
   const vertices = useMemo(() => getDodecahedronVertices(RADIUS), [])
@@ -765,10 +777,12 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
             <mesh key={`sphere-${idx}`} position={pos}>
               <sphereGeometry args={[0.25, 16, 16]} />
               <meshStandardMaterial
-                map={textures.map}
-                normalMap={textures.normalMap}
+                map={sphereTextures.map}
+                normalMap={sphereTextures.normalMap}
+                roughnessMap={sphereTextures.roughnessMap}
+                metalnessMap={sphereTextures.metalnessMap}
                 metalness={1}
-                roughness={0.4}
+                roughness={0.3}
                 emissive={config?.active ? '#2a4a3a' : '#000000'}
                 emissiveIntensity={config?.active ? 0.15 : 0}
               />
