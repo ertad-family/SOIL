@@ -12,25 +12,29 @@ import {
   TestimonialsSliderSection,
   ScopeSection,
   GetInvolvedSection,
-  AboutSection,
 } from '@/components/sections'
 
 // ============================================================================
-// TEMPORARY FOOTER (will be replaced with wireframe landscape)
+// FOOTER - Black marble with subtle sheen
 // ============================================================================
-function TemporaryFooter() {
+function Footer() {
   return (
-    <footer className="border-t border-slate-700/50 bg-slate-900">
-      <div className="max-w-content mx-auto px-6 py-12">
-        <div className="flex flex-col items-center gap-4">
-          <div className="font-serif text-xl tracking-wider text-slate-400">
-            S<span className="text-gold-400">·</span>O<span className="text-gold-400">·</span>I
-            <span className="text-gold-400">·</span>L
+    <footer className="relative bg-marble-950 overflow-hidden">
+      {/* Subtle marble sheen overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-800/10 via-transparent to-gold-500/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(196,161,90,0.03)_0%,_transparent_50%)] pointer-events-none" />
+
+      <div className="max-w-content mx-auto px-6 py-16 relative z-10">
+        <div className="flex flex-col items-center gap-6">
+          <div className="font-serif text-2xl tracking-wider text-marble-300">
+            S<span className="text-gold-500">·</span>O<span className="text-gold-500">·</span>I
+            <span className="text-gold-500">·</span>L
           </div>
-          <p className="font-ui text-sm uppercase tracking-widest text-slate-500">
+          <p className="font-ui text-sm uppercase tracking-widest text-marble-500">
             Social Organizational Intelligence Lab
           </p>
-          <p className="text-xs text-slate-600">© 2025 SOIL. All rights reserved.</p>
+          <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold-500/30 to-transparent" />
+          <p className="text-xs text-marble-600">© 2025 SOIL. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -78,12 +82,17 @@ export default function LandingPage() {
           <PartnersSection />
           <CommunitySection />
           <TestimonialsSliderSection />
+
+          {/* Decorative divider between Testimonials and Ecosystem */}
+          <div className="divider-roman py-12 md:py-16">
+            <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">✦</span>
+          </div>
+
           <ScopeSection />
           <GetInvolvedSection />
-          <AboutSection />
         </main>
 
-        <TemporaryFooter />
+        <Footer />
       </div>
     </div>
   )

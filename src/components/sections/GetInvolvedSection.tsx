@@ -29,8 +29,11 @@ const audiences = [
 
 export function GetInvolvedSection() {
   return (
-    <section className="py-16 md:py-24 animate-fade-in-up">
-      <div className="max-w-content mx-auto px-6">
+    <section className="py-16 md:py-24 animate-fade-in-up relative overflow-hidden">
+      {/* Gradient transition from slate to black marble */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-marble-950 pointer-events-none" />
+
+      <div className="max-w-content mx-auto px-6 relative z-10">
         <SectionLabel>get involved</SectionLabel>
         <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-12 text-marble-100">
           Join the Movement
