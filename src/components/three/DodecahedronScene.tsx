@@ -2,11 +2,165 @@
 
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { Suspense, useCallback, useRef, useEffect } from 'react'
+import { Suspense, useCallback, useRef, useEffect, useState } from 'react'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
-import { Dodecahedron } from './Dodecahedron'
+import { Dodecahedron, type PortalClickData } from './Dodecahedron'
 import { VoidEnvironment } from './VoidEnvironment'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import * as THREE from 'three'
+
+// Animation state for camera fly-through
+interface FlyThroughState {
+  isAnimating: boolean
+  startTime: number
+  startPos: THREE.Vector3
+  targetPortalCenter: THREE.Vector3
+  targetPortalNormal: THREE.Vector3
+  phase: 'idle' | 'flythrough' | 'fadeout'
+  targetFaceId: number
+  targetSection: string | null
+  onComplete: ((faceId: number, section: string | null) => void) | null
+  // Waypoints for smooth path
+  waypoints: {
+    portalApproach: THREE.Vector3  // Point just outside portal
+    portalEntry: THREE.Vector3     // Point at portal
+    inside: THREE.Vector3          // Point inside dodecahedron
+  } | null
+}
+
+// Easing: smooth acceleration then deceleration, but NO stop in middle
+// Using sine easing for very smooth continuous motion
+function easeInOutSine(t: number): number {
+  return -(Math.cos(Math.PI * t) - 1) / 2
+}
+
+// Easing for fade (smooth in-out)
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
+// Animation durations (seconds)
+const FLYTHROUGH_DURATION = 2.2  // Total flight time (approach + enter combined)
+const FADEOUT_DURATION = 0.4    // Fog fills screen after entering
+
+// Camera animator component - handles fly-through animation
+interface CameraAnimatorProps {
+  flyState: React.MutableRefObject<FlyThroughState>
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
+  onFadeProgress: (progress: number) => void
+}
+
+function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimatorProps) {
+  const { camera } = useThree()
+
+  useFrame((state) => {
+    const fs = flyState.current
+    if (!fs.isAnimating || fs.phase === 'idle') return
+
+    // Initialize waypoints on first frame
+    if (fs.startTime === 0) {
+      fs.startTime = state.clock.elapsedTime
+      fs.startPos.copy(camera.position)
+
+      // Calculate waypoints for the journey
+      fs.waypoints = {
+        portalApproach: fs.targetPortalCenter.clone()
+          .add(fs.targetPortalNormal.clone().multiplyScalar(3)),
+        portalEntry: fs.targetPortalCenter.clone()
+          .add(fs.targetPortalNormal.clone().multiplyScalar(0.3)),
+        inside: fs.targetPortalCenter.clone()
+          .sub(fs.targetPortalNormal.clone().multiplyScalar(2)),
+      }
+    }
+
+    const elapsed = state.clock.elapsedTime - fs.startTime
+
+    // Disable orbit controls during animation
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false
+    }
+
+    if (fs.phase === 'flythrough' && fs.waypoints) {
+      // Single continuous flight with three segments blended together
+      const t = Math.min(elapsed / FLYTHROUGH_DURATION, 1)
+
+      // Blend between waypoints using smooth step functions
+      // Segment 1: start → approach (t: 0 to 0.5)
+      // Segment 2: approach → entry (t: 0.5 to 0.75)
+      // Segment 3: entry → inside (t: 0.75 to 1.0)
+
+      let pos: THREE.Vector3
+
+      if (t < 0.5) {
+        // First half: start → approach point
+        const segmentT = t / 0.5
+        const segmentEased = easeInOutSine(segmentT)
+        pos = new THREE.Vector3().lerpVectors(fs.startPos, fs.waypoints.portalApproach, segmentEased)
+      } else if (t < 0.75) {
+        // Middle: approach → entry (through portal)
+        const segmentT = (t - 0.5) / 0.25
+        const segmentEased = easeInOutSine(segmentT)
+        pos = new THREE.Vector3().lerpVectors(fs.waypoints.portalApproach, fs.waypoints.portalEntry, segmentEased)
+      } else {
+        // Final: entry → inside
+        const segmentT = (t - 0.75) / 0.25
+        const segmentEased = easeInOutSine(segmentT)
+        pos = new THREE.Vector3().lerpVectors(fs.waypoints.portalEntry, fs.waypoints.inside, segmentEased)
+      }
+
+      camera.position.copy(pos)
+
+      // Camera lookAt logic:
+      // - Before entering portal (t < 0.75): look at portal center
+      // - After entering (t >= 0.75): look in direction of movement (away from portal)
+      if (t < 0.75) {
+        // Approaching and entering: look at portal
+        camera.lookAt(fs.targetPortalCenter)
+      } else {
+        // Inside: look in the direction we're flying (opposite to portal normal)
+        // This prevents the 180° flip - we continue looking forward
+        const lookAhead = pos.clone().sub(fs.targetPortalNormal.clone().multiplyScalar(5))
+        camera.lookAt(lookAhead)
+      }
+
+      // Start fade when entering portal (at 70% of flight)
+      if (t > 0.7) {
+        const fadeT = (t - 0.7) / 0.3 // 0→1 over last 30%
+        onFadeProgress(fadeT * 0.5) // Fade to 50% during flight
+      }
+
+      if (t >= 1) {
+        fs.phase = 'fadeout'
+        fs.startTime = state.clock.elapsedTime
+      }
+    } else if (fs.phase === 'fadeout') {
+      // Fog fills the screen completely
+      const t = Math.min(elapsed / FADEOUT_DURATION, 1)
+      const eased = easeInOutCubic(t)
+
+      // Continue fade from 50% to 100%
+      onFadeProgress(0.5 + eased * 0.5)
+
+      if (t >= 1) {
+        // Animation complete - trigger callback
+        fs.phase = 'idle'
+        fs.isAnimating = false
+
+        // Re-enable controls
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true
+        }
+
+        // Call completion callback
+        if (fs.onComplete) {
+          fs.onComplete(fs.targetFaceId, fs.targetSection)
+        }
+      }
+    }
+  })
+
+  return null
+}
 
 // Key light that follows camera with offset (prevents frontal overexposure)
 function KeyLight() {
@@ -73,11 +227,60 @@ interface DodecahedronSceneProps {
 }
 
 export function DodecahedronScene({ className, onPortalClick }: DodecahedronSceneProps) {
-  // Default handler logs to console if no callback provided
-  const handlePortalClick = useCallback((faceId: number, section: string | null) => {
-    console.log(`Portal clicked: Face ${faceId}, Section: ${section}`)
-    onPortalClick?.(faceId, section)
+  // Ref for OrbitControls (to disable during animation)
+  const controlsRef = useRef<OrbitControlsImpl | null>(null)
+
+  // Fade overlay opacity (0 = transparent, 1 = fully purple fog)
+  const [fadeOpacity, setFadeOpacity] = useState(0)
+
+  // Track if we're navigating (to pause dodecahedron rotation)
+  const [isNavigating, setIsNavigating] = useState(false)
+
+  // Fly-through animation state (ref to avoid re-renders during animation)
+  const flyStateRef = useRef<FlyThroughState>({
+    isAnimating: false,
+    startTime: 0,
+    startPos: new THREE.Vector3(),
+    targetPortalCenter: new THREE.Vector3(),
+    targetPortalNormal: new THREE.Vector3(),
+    phase: 'idle',
+    targetFaceId: 0,
+    targetSection: null,
+    onComplete: null,
+    waypoints: null,
+  })
+
+  // Handle portal click - starts fly-through animation
+  // Portal now passes world coordinates directly
+  const handlePortalClick = useCallback((data: PortalClickData) => {
+    console.log(`Portal clicked: Face ${data.faceId}, Section: ${data.section}`)
+
+    // Don't start new animation if already animating
+    if (flyStateRef.current.isAnimating) return
+
+    // Stop dodecahedron rotation during navigation
+    setIsNavigating(true)
+
+    // Initialize animation state with world coordinates from Portal
+    const fs = flyStateRef.current
+    fs.isAnimating = true
+    fs.phase = 'flythrough'
+    fs.startTime = 0 // Will be set on first frame
+    fs.waypoints = null // Will be created on first frame
+    fs.targetPortalCenter.copy(data.worldCenter)
+    fs.targetPortalNormal.copy(data.worldNormal)
+    fs.targetFaceId = data.faceId
+    fs.targetSection = data.section
+    fs.onComplete = onPortalClick ?? null
+
+    // Reset fade
+    setFadeOpacity(0)
   }, [onPortalClick])
+
+  // Handle fade progress updates from CameraAnimator
+  const handleFadeProgress = useCallback((progress: number) => {
+    setFadeOpacity(progress)
+  }, [])
 
   return (
     <div className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -86,10 +289,18 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
         gl={{ antialias: true, alpha: false }}
       >
         <OrbitControls
+          ref={controlsRef}
           enableDamping
           dampingFactor={0.05}
           minDistance={8}
           maxDistance={35}
+        />
+
+        {/* Camera animator - handles fly-through */}
+        <CameraAnimator
+          flyState={flyStateRef}
+          controlsRef={controlsRef}
+          onFadeProgress={handleFadeProgress}
         />
 
         {/* Multi-point lighting for metallic reflections */}
@@ -122,7 +333,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           />
 
           {/* Main dodecahedron */}
-          <Dodecahedron onPortalClick={handlePortalClick} />
+          <Dodecahedron onPortalClick={handlePortalClick} isNavigating={isNavigating} />
         </Suspense>
 
         {/* Post-processing effects */}
@@ -135,6 +346,28 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           />
         </EffectComposer>
       </Canvas>
+
+      {/* Fog transition overlay: purple → white-gold (subtle inner glow) */}
+      {fadeOpacity > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            // Transition from purple at edges to warm white-gold center
+            // Center: warm white with subtle gold glow (#FFFAF0 - floral white)
+            // Middle ring: soft lavender-gold blend
+            // Outer: purple fading to dark
+            background: `radial-gradient(circle at center,
+              rgba(255, 250, 240, ${fadeOpacity}) 0%,
+              rgba(255, 248, 230, ${fadeOpacity * 0.95}) 15%,
+              rgba(245, 235, 210, ${fadeOpacity * 0.9}) 30%,
+              rgba(201, 180, 150, ${fadeOpacity * 0.8}) 50%,
+              rgba(160, 140, 170, ${fadeOpacity * 0.6}) 70%,
+              rgba(80, 70, 100, ${fadeOpacity * 0.4}) 85%,
+              rgba(10, 10, 15, ${fadeOpacity * 0.3}) 100%)`,
+            transition: 'opacity 0.1s ease-out',
+          }}
+        />
+      )}
 
       {/* SOIL Logo - static overlay below the scene */}
       <div

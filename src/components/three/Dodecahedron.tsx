@@ -182,6 +182,14 @@ interface FaceWithHole {
   config?: typeof FACE_CONFIG[number]
 }
 
+// Forward declaration for PortalClickData (defined later, used here)
+interface PortalClickDataInternal {
+  faceId: number
+  section: string | null
+  worldCenter: THREE.Vector3
+  worldNormal: THREE.Vector3
+}
+
 // Props for Portal component
 interface PortalProps {
   face: FaceWithHole
@@ -189,7 +197,7 @@ interface PortalProps {
     map: THREE.Texture
     normalMap: THREE.Texture
   }
-  onPortalClick?: (faceId: number, section: string | null) => void
+  onPortalClick?: (data: PortalClickDataInternal) => void
 }
 
 // Animation state stored per-face (persists across hover states)
@@ -563,11 +571,24 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
     document.body.style.cursor = 'auto'
   }, [])
 
-  // Click handler
+  // Click handler - computes world coordinates of portal
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
-    if (face.config?.active && onPortalClick) {
-      onPortalClick(face.config.id, face.config.section)
+    if (face.config?.active && onPortalClick && groupRef.current) {
+      // Get world position and normal from the portal group
+      const worldCenter = new THREE.Vector3()
+      groupRef.current.getWorldPosition(worldCenter)
+
+      // Get world normal by transforming local Z axis (portal faces along Z)
+      const worldNormal = new THREE.Vector3(0, 0, 1)
+      worldNormal.applyQuaternion(groupRef.current.getWorldQuaternion(new THREE.Quaternion()))
+
+      onPortalClick({
+        faceId: face.config.id,
+        section: face.config.section,
+        worldCenter,
+        worldNormal,
+      })
     }
   }, [face.config, onPortalClick])
 
@@ -762,11 +783,20 @@ function InnerFog() {
   )
 }
 
-interface DodecahedronProps {
-  onPortalClick?: (faceId: number, section: string | null) => void
+// Data passed when a portal is clicked
+export interface PortalClickData {
+  faceId: number
+  section: string | null
+  worldCenter: THREE.Vector3  // Portal center in world coordinates
+  worldNormal: THREE.Vector3  // Portal normal in world coordinates
 }
 
-export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
+interface DodecahedronProps {
+  onPortalClick?: (data: PortalClickData) => void
+  isNavigating?: boolean // When true, stops rotation for camera animation
+}
+
+export function Dodecahedron({ onPortalClick, isNavigating = false }: DodecahedronProps) {
   const groupRef = useRef<THREE.Group>(null)
 
   // Load only color and normal textures, control metalness/roughness manually
@@ -817,9 +847,9 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
     [facesWithHoles]
   )
 
-  // Very slow idle rotation (5x slower)
+  // Very slow idle rotation (5x slower) - paused during navigation
   useFrame((_, delta) => {
-    if (groupRef.current) {
+    if (groupRef.current && !isNavigating) {
       groupRef.current.rotation.y += delta * 0.03
     }
   })
