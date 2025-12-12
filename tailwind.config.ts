@@ -14,9 +14,14 @@ const config: Config = {
       // Cinzel (display) + Outfit (UI) + Source Sans 3 (body)
       // ===========================================
       fontFamily: {
+        // Sora for headings - geometric, modern
+        display: ['var(--font-sora)', 'system-ui', 'sans-serif'],
+        // Manrope for body text - humanist, readable
+        sans: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
+        // Cinzel for logo and decorative elements (Roman heritage)
         serif: ['var(--font-cinzel)', 'Trajan Pro', 'Times New Roman', 'serif'],
-        sans: ['var(--font-source-sans)', 'system-ui', 'sans-serif'],
-        ui: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        // Manrope also for UI (consistent with body)
+        ui: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Consolas', 'monospace'],
       },
 
@@ -197,16 +202,16 @@ const config: Config = {
       },
 
       // ===========================================
-      // BORDER RADIUS - Roman-inspired clean lines
-      // Subtle radius, not overly rounded
+      // BORDER RADIUS
       // ===========================================
       borderRadius: {
         'none': '0',
-        'sm':   '4px',
-        'DEFAULT': '6px',
-        'md':   '8px',
-        'lg':   '12px',
-        'xl':   '16px',
+        'sm':   '8px',
+        'DEFAULT': '12px',
+        'md':   '16px',
+        'lg':   '20px',
+        'xl':   '25px',
+        '2xl':  '32px',
         'full': '9999px',
       },
 
@@ -298,8 +303,8 @@ const config: Config = {
       // ===========================================
       maxWidth: {
         'prose':   '65ch',
-        'content': '1200px',
-        'wide':    '1440px',
+        'content': '1440px',
+        'wide':    '1840px',
       },
 
       // ===========================================

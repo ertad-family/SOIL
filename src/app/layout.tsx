@@ -1,28 +1,28 @@
 import type { Metadata } from 'next'
-import { Cinzel, Source_Sans_3, Outfit } from 'next/font/google'
+import { Cinzel, Sora, Manrope } from 'next/font/google'
 import './globals.css'
 
-// Roman-inspired serif for headings - used sparingly for maximum impact
+// Sora - geometric sans-serif for headings (clean, modern)
+const sora = Sora({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sora',
+  display: 'swap',
+})
+
+// Manrope - humanist sans-serif for body text (readable, friendly)
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
+// Cinzel - Roman-inspired serif for logo and decorative elements
 const cinzel = Cinzel({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-cinzel',
-  display: 'swap',
-})
-
-// Modern readable sans-serif for body text
-const sourceSans = Source_Sans_3({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-source-sans',
-  display: 'swap',
-})
-
-// Modern geometric sans for UI elements - creates tension with classical serif
-const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-outfit',
   display: 'swap',
 })
 
@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cinzel.variable} ${sourceSans.variable} ${outfit.variable}`}
+      className={`${sora.variable} ${manrope.variable} ${cinzel.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-marble-50 text-marble-950 font-sans antialiased">

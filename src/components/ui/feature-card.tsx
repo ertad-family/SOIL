@@ -64,7 +64,7 @@ export function FeatureCard({
   )
 
   const titleClasses = cn(
-    'font-serif text-lg md:text-xl font-medium mb-2',
+    'font-display text-lg md:text-xl font-medium mb-2',
     {
       'text-marble-950': variant === 'default' || variant === 'highlighted',
       'text-marble-100': variant === 'dark' || variant === 'dark-highlighted',

@@ -212,7 +212,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'font-serif text-xl font-medium leading-none tracking-wide',
+      'font-display text-xl font-medium leading-none tracking-wide',
       isDarkVariant(variant) ? 'text-marble-100' : 'text-marble-950',
       className
     )}
