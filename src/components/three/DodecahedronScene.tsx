@@ -47,7 +47,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
         />
 
         {/* Ambient + camera-following light for consistent bronze look */}
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={0.6} />
         <CameraLight />
 
         {/* Background */}

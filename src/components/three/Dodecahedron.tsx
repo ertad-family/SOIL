@@ -79,14 +79,22 @@ function getDodecahedronVertices(radius: number): THREE.Vector3[] {
   return uniqueVertices
 }
 
+// Face data returned from getDodecahedronFaceCenters
+interface FaceData {
+  center: THREE.Vector3
+  normal: THREE.Vector3
+  vertices: THREE.Vector3[] // 5 vertices sorted by angle around center
+}
+
 // Get face centers of dodecahedron (12 pentagonal faces)
 // DodecahedronGeometry with detail=0 has 36 triangles = 12 faces × 3 triangles per face
 // Triangles are stored sequentially per face, so we take every 3 triangles as one face
-function getDodecahedronFaceCenters(radius: number): { center: THREE.Vector3; normal: THREE.Vector3 }[] {
+// Returns vertices sorted by angle around center for proper polygon rendering
+function getDodecahedronFaceCenters(radius: number): FaceData[] {
   const geometry = new THREE.DodecahedronGeometry(radius, 0)
   const positionAttr = geometry.getAttribute('position')
 
-  const faces: { center: THREE.Vector3; normal: THREE.Vector3 }[] = []
+  const faces: FaceData[] = []
   const TRIANGLES_PER_FACE = 3
   const VERTICES_PER_TRIANGLE = 3
 
@@ -94,22 +102,26 @@ function getDodecahedronFaceCenters(radius: number): { center: THREE.Vector3; no
   for (let faceIdx = 0; faceIdx < 12; faceIdx++) {
     const baseIdx = faceIdx * TRIANGLES_PER_FACE * VERTICES_PER_TRIANGLE
 
+    // Collect unique vertices for this face
+    const faceVertices: THREE.Vector3[] = []
+    const seenKeys = new Set<string>()
+
+    for (let i = 0; i < TRIANGLES_PER_FACE * VERTICES_PER_TRIANGLE; i++) {
+      const x = positionAttr.getX(baseIdx + i)
+      const y = positionAttr.getY(baseIdx + i)
+      const z = positionAttr.getZ(baseIdx + i)
+      const key = `${x.toFixed(4)},${y.toFixed(4)},${z.toFixed(4)}`
+
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key)
+        faceVertices.push(new THREE.Vector3(x, y, z))
+      }
+    }
+
     // Get first triangle vertices to compute proper normal
-    const v0 = new THREE.Vector3(
-      positionAttr.getX(baseIdx),
-      positionAttr.getY(baseIdx),
-      positionAttr.getZ(baseIdx)
-    )
-    const v1 = new THREE.Vector3(
-      positionAttr.getX(baseIdx + 1),
-      positionAttr.getY(baseIdx + 1),
-      positionAttr.getZ(baseIdx + 1)
-    )
-    const v2 = new THREE.Vector3(
-      positionAttr.getX(baseIdx + 2),
-      positionAttr.getY(baseIdx + 2),
-      positionAttr.getZ(baseIdx + 2)
-    )
+    const v0 = faceVertices[0]
+    const v1 = faceVertices[1]
+    const v2 = faceVertices[2]
 
     // Compute proper normal from triangle edges (cross product)
     const edge1 = new THREE.Vector3().subVectors(v1, v0)
@@ -122,16 +134,31 @@ function getDodecahedronFaceCenters(radius: number): { center: THREE.Vector3; no
       normal.negate()
     }
 
-    // Compute face center as average of all 9 vertices
+    // Compute face center as average of unique vertices
     const center = new THREE.Vector3()
-    for (let i = 0; i < TRIANGLES_PER_FACE * VERTICES_PER_TRIANGLE; i++) {
-      center.x += positionAttr.getX(baseIdx + i)
-      center.y += positionAttr.getY(baseIdx + i)
-      center.z += positionAttr.getZ(baseIdx + i)
+    for (const v of faceVertices) {
+      center.add(v)
     }
-    center.divideScalar(TRIANGLES_PER_FACE * VERTICES_PER_TRIANGLE)
+    center.divideScalar(faceVertices.length)
 
-    faces.push({ center, normal })
+    // Sort vertices by angle around center (for proper polygon winding)
+    // Project vertices onto the face plane and compute angles
+    const alignQuat = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      normal
+    )
+    const inverseQuat = alignQuat.clone().invert()
+
+    const sortedVertices = faceVertices
+      .map(v => {
+        const local = v.clone().sub(center).applyQuaternion(inverseQuat)
+        const angle = Math.atan2(local.y, local.x)
+        return { vertex: v, angle }
+      })
+      .sort((a, b) => a.angle - b.angle)
+      .map(item => item.vertex)
+
+    faces.push({ center, normal, vertices: sortedVertices })
   }
 
   geometry.dispose()
@@ -146,22 +173,18 @@ function getDodecahedronFaceCenters(radius: number): { center: THREE.Vector3; no
   return faces
 }
 
-// Face data with hole radius attached
+// Face data with hole radius and config attached
 interface FaceWithHole {
   center: THREE.Vector3
   normal: THREE.Vector3
+  vertices: THREE.Vector3[] // 5 vertices of the pentagon face
   holeRadius: number
+  config?: typeof FACE_CONFIG[number]
 }
 
 // Props for Portal component
 interface PortalProps {
-  face: {
-    center: THREE.Vector3
-    normal: THREE.Vector3
-    holeRadius: number
-    config?: typeof FACE_CONFIG[number]
-  }
-  idx: number
+  face: FaceWithHole
   textures: {
     map: THREE.Texture
     normalMap: THREE.Texture
@@ -300,8 +323,162 @@ function PendulumLabel({ name, animState }: PendulumLabelProps) {
   )
 }
 
+// Props for SketchFace component
+interface SketchFaceProps {
+  vertices: THREE.Vector3[] // 5 real vertices from dodecahedron face
+  center: THREE.Vector3
+  normal: THREE.Vector3
+  initialTextureIndex: number // Starting texture index (for variety between faces)
+}
+
+// Available cyberpunk SVG textures
+const CYBERPUNK_TEXTURES = [
+  '/assets/cyberpunk1.svg',
+  '/assets/cyberpunk2.svg',
+  '/assets/cyberpunk3.svg',
+  '/assets/cyberpunk4.svg',
+  '/assets/cyberpunk5.svg',
+]
+
+// Create BufferGeometry from real pentagon vertices
+function createPentagonFromVertices(vertices: THREE.Vector3[], center: THREE.Vector3, normal: THREE.Vector3): THREE.BufferGeometry {
+  // Offset vertices slightly along normal to prevent z-fighting
+  const offset = normal.clone().multiplyScalar(0.02)
+
+  // Create triangles from center to edges (fan triangulation)
+  const positions: number[] = []
+  const centerOffset = center.clone().add(offset)
+
+  for (let i = 0; i < 5; i++) {
+    const v1 = vertices[i].clone().add(offset)
+    const v2 = vertices[(i + 1) % 5].clone().add(offset)
+
+    // Triangle: center, v1, v2
+    positions.push(centerOffset.x, centerOffset.y, centerOffset.z)
+    positions.push(v1.x, v1.y, v1.z)
+    positions.push(v2.x, v2.y, v2.z)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.computeVertexNormals()
+
+  return geometry
+}
+
+// Cyberpunk sketch for inactive portals using SVG texture
+// Randomly switches textures every 1-3 seconds with glitch effect
+function SketchFace({ vertices, center, normal, initialTextureIndex }: SketchFaceProps) {
+  // Load ALL textures upfront so we can switch between them
+  const allTextures = useTexture(CYBERPUNK_TEXTURES)
+
+  // State for current texture and glitch effect
+  const [currentTextureIdx, setCurrentTextureIdx] = useState(initialTextureIndex % CYBERPUNK_TEXTURES.length)
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null)
+
+  // Animation state
+  const animState = useRef({
+    nextSwitchTime: Math.random() * 2 + 1, // First switch in 1-3 seconds
+    elapsedTime: 0,
+    isGlitching: false,
+    glitchEndTime: 0,
+    baseOpacity: 0.7,
+  })
+
+  // Create pentagon geometry from real vertices
+  const pentagonGeometry = useMemo(
+    () => createPentagonFromVertices(vertices, center, normal),
+    [vertices, center, normal]
+  )
+
+  // Calculate rotation to align with face
+  const quaternion = useMemo(() => {
+    const up = new THREE.Vector3(0, 0, 1)
+    return new THREE.Quaternion().setFromUnitVectors(up, normal)
+  }, [normal])
+
+  // Position slightly above face to prevent z-fighting
+  const position = useMemo(
+    () => center.clone().add(normal.clone().multiplyScalar(0.02)),
+    [center, normal]
+  )
+
+  // Animation loop for texture switching and glitch effect
+  useFrame((_, delta) => {
+    const state = animState.current
+    state.elapsedTime += delta
+
+    // Check if it's time to switch texture
+    if (state.elapsedTime >= state.nextSwitchTime) {
+      // Start glitch effect
+      state.isGlitching = true
+      state.glitchEndTime = state.elapsedTime + 0.3 // Glitch for 0.3 seconds
+
+      // Pick a new random texture (different from current)
+      let newIdx = currentTextureIdx
+      while (newIdx === currentTextureIdx) {
+        newIdx = Math.floor(Math.random() * CYBERPUNK_TEXTURES.length)
+      }
+      setCurrentTextureIdx(newIdx)
+
+      // Schedule next switch (1-3 seconds from now)
+      state.nextSwitchTime = state.elapsedTime + Math.random() * 2 + 1
+    }
+
+    // Apply glitch effect to material
+    if (materialRef.current) {
+      if (state.isGlitching && state.elapsedTime < state.glitchEndTime) {
+        // Intense glitching during transition
+        const glitchIntensity = Math.random()
+        if (glitchIntensity < 0.3) {
+          materialRef.current.opacity = 0.1
+        } else if (glitchIntensity < 0.5) {
+          materialRef.current.opacity = 0.9
+        } else {
+          materialRef.current.opacity = 0.4 + Math.random() * 0.4
+        }
+      } else {
+        // Normal state with occasional subtle glitch
+        state.isGlitching = false
+        const glitchChance = Math.random()
+        if (glitchChance < 0.01) {
+          materialRef.current.opacity = 0.3 + Math.random() * 0.3
+        } else if (glitchChance < 0.03) {
+          materialRef.current.opacity = 0.5 + Math.random() * 0.3
+        } else {
+          // Smooth return to base opacity
+          materialRef.current.opacity += (state.baseOpacity - materialRef.current.opacity) * 0.1
+        }
+      }
+    }
+  })
+
+  const planeSize = 3.5
+
+  return (
+    <group>
+      {/* Black pentagon background */}
+      <mesh geometry={pentagonGeometry}>
+        <meshBasicMaterial color="#0a0a0f" side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* SVG texture on a circular plane */}
+      <mesh position={position} quaternion={quaternion}>
+        <circleGeometry args={[planeSize / 2, 32]} />
+        <meshBasicMaterial
+          ref={materialRef}
+          map={allTextures[currentTextureIdx]}
+          transparent
+          opacity={0.7}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 // Interactive Portal component with hover/click
-function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
+function Portal({ face, textures, onPortalClick }: PortalProps) {
   const [hovered, setHovered] = useState(false)
   const groupRef = useRef<THREE.Group>(null)
 
@@ -367,64 +544,71 @@ function Portal({ face, idx, textures, onPortalClick }: PortalProps) {
 
   return (
     <group ref={groupRef} position={ringPos} quaternion={quaternion}>
-      {/* Invisible hitbox for portal (circle in the hole) */}
-      <mesh
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-        onClick={handleClick}
-      >
-        <circleGeometry args={[face.holeRadius, 32]} />
-        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* === OUTER RING (inscribed in pentagon) === */}
-      <mesh>
-        <torusGeometry args={[outerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
-        <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
-      </mesh>
-      <mesh>
-        <torusGeometry args={[outerRingRadius, RING_WIDTH, 8, 32]} />
-        <meshStandardMaterial
-          map={textures.map}
-          normalMap={textures.normalMap}
-          metalness={0.9}
-          roughness={0.2}
-        />
-      </mesh>
-      <mesh>
-        <torusGeometry args={[outerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
-        <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
-      </mesh>
-
-      {/* === INNER RING (at hole edge) === */}
-      {showInnerRing && (
+      {/* === ACTIVE PORTAL: hitbox, rings, label === */}
+      {face.config?.active && (
         <>
+          {/* Invisible hitbox for portal (circle in the hole) */}
+          <mesh
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+            onClick={handleClick}
+          >
+            <circleGeometry args={[face.holeRadius, 32]} />
+            <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+          </mesh>
+
+          {/* === OUTER RING (inscribed in pentagon) === */}
           <mesh>
-            <torusGeometry args={[innerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+            <torusGeometry args={[outerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
             <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
           </mesh>
           <mesh>
-            <torusGeometry args={[innerRingRadius, RING_WIDTH, 8, 32]} />
+            <torusGeometry args={[outerRingRadius, RING_WIDTH, 8, 32]} />
             <meshStandardMaterial
               map={textures.map}
               normalMap={textures.normalMap}
               metalness={0.9}
               roughness={0.2}
-              emissive={innerRingEmissive}
-              emissiveIntensity={innerRingEmissiveIntensity}
             />
           </mesh>
           <mesh>
-            <torusGeometry args={[innerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+            <torusGeometry args={[outerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
             <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
           </mesh>
+
+          {/* === INNER RING (at hole edge) === */}
+          {showInnerRing && (
+            <>
+              <mesh>
+                <torusGeometry args={[innerRingRadius + GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+                <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
+              </mesh>
+              <mesh>
+                <torusGeometry args={[innerRingRadius, RING_WIDTH, 8, 32]} />
+                <meshStandardMaterial
+                  map={textures.map}
+                  normalMap={textures.normalMap}
+                  metalness={0.9}
+                  roughness={0.2}
+                  emissive={innerRingEmissive}
+                  emissiveIntensity={innerRingEmissiveIntensity}
+                />
+              </mesh>
+              <mesh>
+                <torusGeometry args={[innerRingRadius - GROOVE_OFFSET, GROOVE_WIDTH, 8, 32]} />
+                <meshStandardMaterial color="#4a3528" metalness={0.6} roughness={0.7} />
+              </mesh>
+            </>
+          )}
+
+          {/* Label shown on hover with pendulum animation */}
+          {hovered && face.config?.name && (
+            <PendulumLabel name={face.config.name} animState={labelAnimState} />
+          )}
         </>
       )}
 
-      {/* Label shown on hover with pendulum animation */}
-      {hovered && face.config?.name && (
-        <PendulumLabel name={face.config.name} animState={labelAnimState} />
-      )}
+      {/* INACTIVE PORTALS: SketchFace is rendered separately in main group */}
     </group>
   )
 }
@@ -452,8 +636,12 @@ function createHollowDodecahedronWithHoles(
   // Subtract inner from outer to create shell
   let result = evaluator.evaluate(outerBrush, innerBrush, SUBTRACTION)
 
-  // Subtract cylinder for each face to create holes
+  // Subtract cylinder for each ACTIVE face to create holes
+  // Inactive faces keep the solid surface for sketch overlay
   for (const face of faces) {
+    // Skip inactive faces - no hole for them
+    if (!face.config?.active) continue
+
     const cylinderGeo = new THREE.CylinderGeometry(face.holeRadius, face.holeRadius, outerRadius, 32)
     const cylinderBrush = new Brush(cylinderGeo)
 
@@ -500,10 +688,12 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
 
   // Get face centers and attach hole radii from config
   // This ensures CSG and ring rendering use the same data
-  const facesWithHoles = useMemo(() => {
+  const facesWithHoles = useMemo((): FaceWithHole[] => {
     const faces = getDodecahedronFaceCenters(RADIUS)
     return faces.map((face, idx) => ({
-      ...face,
+      center: face.center,
+      normal: face.normal,
+      vertices: face.vertices,
       holeRadius: FACE_CONFIG[idx]?.holeRadius ?? 1.0,
       config: FACE_CONFIG[idx]
     }))
@@ -536,16 +726,28 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
           />
         </mesh>
 
-        {/* Interactive portals with hover/click */}
+        {/* Interactive portals with hover/click (active faces only) */}
         {facesWithHoles.map((face, idx) => (
           <Portal
             key={`portal-${idx}`}
             face={face}
-            idx={idx}
             textures={textures}
             onPortalClick={onPortalClick}
           />
         ))}
+
+        {/* Sketch faces for inactive portals - rendered in main group for correct rotation */}
+        {facesWithHoles
+          .filter(face => !face.config?.active)
+          .map((face, idx) => (
+            <SketchFace
+              key={`sketch-${idx}`}
+              vertices={face.vertices}
+              center={face.center}
+              normal={face.normal}
+              initialTextureIndex={idx}
+            />
+          ))}
 
         {/* Vertex spheres */}
         {vertices.map((vertex, idx) => {
