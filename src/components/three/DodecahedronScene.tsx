@@ -253,7 +253,7 @@ function SceneFog() {
     // Linear fog: starts at 80 units, fully opaque at 200 units
     // Pushed back to see more of the Tuscan landscape
     // Color: deep dark blue (#000510)
-    scene.fog = new THREE.Fog('#000510', 80, 200)
+    scene.fog = new THREE.Fog('#000510', 80, 240)
 
     return () => {
       scene.fog = null
