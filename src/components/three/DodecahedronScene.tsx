@@ -285,7 +285,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
   return (
     <div className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas
-        camera={{ position: [0, 0, 18], fov: 50 }}
+        camera={{ position: [0, 8, 18], fov: 50 }}
         gl={{ antialias: true, alpha: false }}
       >
         <OrbitControls
@@ -294,6 +294,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           dampingFactor={0.05}
           minDistance={8}
           maxDistance={35}
+          target={[0, 8, 0]}
         />
 
         {/* Camera animator - handles fly-through */}
@@ -331,8 +332,10 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
             particleCount={50}
           />
 
-          {/* Main dodecahedron */}
-          <Dodecahedron onPortalClick={handlePortalClick} isNavigating={isNavigating} />
+          {/* Main dodecahedron - raised to sit above the landscape */}
+          <group position={[0, 8, 0]}>
+            <Dodecahedron onPortalClick={handlePortalClick} isNavigating={isNavigating} />
+          </group>
         </Suspense>
 
         {/* Post-processing effects */}
