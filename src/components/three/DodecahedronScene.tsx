@@ -325,10 +325,9 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
         <SceneFog />
 
         <Suspense fallback={null}>
-          {/* Void environment: grid + golden particles */}
+          {/* Void environment: Tuscan landscape + golden particles */}
           <VoidEnvironment
-            gridSize={200}
-            gridDivisions={13}
+            landscapeSize={200}
             particleCount={50}
           />
 

@@ -4,8 +4,9 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { FACE_CONFIG, RADIUS, getDodecahedronFaceCenters } from './Dodecahedron'
+import { TuscanLandscape } from './TuscanLandscape'
 
-// Dim white color for grid lines
+// Dim white color for grid lines (kept for reference)
 const GRID_COLOR = '#888888' // Light gray
 
 // Get active portals (faces with holes that particles can pass through)
@@ -358,25 +359,23 @@ export function VoidParticles({ count = 50, spread = 60 }: VoidParticlesProps) {
 }
 
 interface VoidEnvironmentProps {
-  gridSize?: number
-  gridDivisions?: number
+  landscapeSize?: number
   particleCount?: number
-  showGrid?: boolean
+  showLandscape?: boolean
   showParticles?: boolean
 }
 
 // Complete void environment component
 export function VoidEnvironment({
-  gridSize = 200,
-  gridDivisions = 13, // ~15 units per cell (3x larger than before)
+  landscapeSize = 200,
   particleCount = 50,
-  showGrid = true,
+  showLandscape = true,
   showParticles = true,
 }: VoidEnvironmentProps) {
   return (
     <group>
-      {showGrid && (
-        <VoidGrid size={gridSize} divisions={gridDivisions} />
+      {showLandscape && (
+        <TuscanLandscape size={landscapeSize} />
       )}
       {showParticles && (
         <VoidParticles count={particleCount} spread={50} />
