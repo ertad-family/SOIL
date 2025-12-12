@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useCallback } from 'react'
 import { useFrame, ThreeEvent, useThree } from '@react-three/fiber'
-import { useTexture, Text3D, Center } from '@react-three/drei'
+import { useTexture, Text3D, Center, MeshTransmissionMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg'
 
@@ -213,7 +213,7 @@ function PendulumLabel({ name, animState }: PendulumLabelProps) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
-    const state = animState.current
+    const labelState = animState.current
 
     // Get the WORLD normal of this face
     // The label's parent (Portal group) has local Z pointing along face normal
@@ -265,19 +265,19 @@ function PendulumLabel({ name, animState }: PendulumLabelProps) {
     const targetAngle = sign * Math.acos(Math.min(1, Math.max(-1, dot)))
 
     // Initialize on first frame of hover
-    if (!state.initialized) {
-      if (state.lastSettledAngle !== null) {
+    if (!labelState.initialized) {
+      if (labelState.lastSettledAngle !== null) {
         // Re-hover: start from saved position
-        state.currentAngle = state.lastSettledAngle
+        labelState.currentAngle = labelState.lastSettledAngle
       } else {
         // First hover ever: start with swing animation
-        state.currentAngle = targetAngle + Math.PI * 0.3
+        labelState.currentAngle = targetAngle + Math.PI * 0.3
       }
-      state.initialized = true
+      labelState.initialized = true
     }
 
     // Calculate shortest angle difference (handle wrap-around at ±π)
-    let angleDiff = targetAngle - state.currentAngle
+    let angleDiff = targetAngle - labelState.currentAngle
     // Normalize to [-π, π] for shortest path
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2
@@ -287,20 +287,20 @@ function PendulumLabel({ name, animState }: PendulumLabelProps) {
     const damping = 5    // Damping factor (more damping to prevent jitter)
 
     const springForce = angleDiff * stiffness
-    const dampingForce = -state.velocity * damping
+    const dampingForce = -labelState.velocity * damping
 
-    state.velocity += (springForce + dampingForce) * delta
-    state.currentAngle += state.velocity * delta
+    labelState.velocity += (springForce + dampingForce) * delta
+    labelState.currentAngle += labelState.velocity * delta
 
     // Normalize currentAngle to [-π, π] to prevent drift
-    while (state.currentAngle > Math.PI) state.currentAngle -= Math.PI * 2
-    while (state.currentAngle < -Math.PI) state.currentAngle += Math.PI * 2
+    while (labelState.currentAngle > Math.PI) labelState.currentAngle -= Math.PI * 2
+    while (labelState.currentAngle < -Math.PI) labelState.currentAngle += Math.PI * 2
 
     // Always save current angle for next hover
-    state.lastSettledAngle = state.currentAngle
+    labelState.lastSettledAngle = labelState.currentAngle
 
     // Apply rotation around Z axis (face normal direction)
-    groupRef.current.rotation.z = state.currentAngle
+    groupRef.current.rotation.z = labelState.currentAngle
   })
 
   return (
@@ -608,6 +608,27 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
             </>
           )}
 
+          {/* Glassmorphism cover on hover - fills the hole with blur effect */}
+          {hovered && (
+            <mesh position={[0, 0, 0.01]}>
+              <circleGeometry args={[face.holeRadius, 64]} />
+              <MeshTransmissionMaterial
+                backside={false}
+                samples={8}
+                resolution={256}
+                transmission={0.95}
+                roughness={0.3}
+                thickness={0.5}
+                ior={1.5}
+                chromaticAberration={0.02}
+                anisotropy={0.1}
+                distortion={0.1}
+                distortionScale={0.2}
+                color="#1a3a4a"
+              />
+            </mesh>
+          )}
+
           {/* Label shown on hover with pendulum animation */}
           {hovered && face.config?.name && (
             <PendulumLabel name={face.config.name} animState={labelAnimState} />
@@ -739,7 +760,7 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
           <meshStandardMaterial
             map={textures.map}
             normalMap={textures.normalMap}
-            metalness={0.9}
+            metalness={0.95}
             roughness={0.1}
             side={THREE.DoubleSide}
           />
@@ -781,8 +802,8 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
                 normalMap={sphereTextures.normalMap}
                 roughnessMap={sphereTextures.roughnessMap}
                 metalnessMap={sphereTextures.metalnessMap}
-                metalness={1}
-                roughness={0.3}
+                metalness={0.7}
+                roughness={0.4}
                 emissive={config?.active ? '#2a4a3a' : '#000000'}
                 emissiveIntensity={config?.active ? 0.15 : 0}
               />
