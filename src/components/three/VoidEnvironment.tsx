@@ -330,8 +330,8 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
     }
   })
 
-  // Glow sprite size (much larger than original mesh for soft glow effect)
-  const glowSize = size * 25
+  // Glow sprite size (larger than original mesh for soft glow effect)
+  const glowSize = size * 12
 
   return (
     <sprite ref={spriteRef} position={position} scale={[glowSize, glowSize, 1]}>
