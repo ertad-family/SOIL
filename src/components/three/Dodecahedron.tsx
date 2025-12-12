@@ -204,10 +204,12 @@ interface LabelAnimState {
 interface PendulumLabelProps {
   name: string
   animState: React.MutableRefObject<LabelAnimState>
+  opacity: number  // For fade animation
 }
 
-function PendulumLabel({ name, animState }: PendulumLabelProps) {
+function PendulumLabel({ name, animState, opacity }: PendulumLabelProps) {
   const groupRef = useRef<THREE.Group>(null)
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null)
   const { camera } = useThree()
 
   useFrame((_, delta) => {
@@ -316,7 +318,14 @@ function PendulumLabel({ name, animState }: PendulumLabelProps) {
           bevelThickness={0.005}
         >
           {name}
-          <meshStandardMaterial color="#C9943D" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial
+            ref={materialRef}
+            color="#C9943D"
+            metalness={0.8}
+            roughness={0.3}
+            transparent
+            opacity={opacity}
+          />
         </Text3D>
       </Center>
     </group>
@@ -487,6 +496,7 @@ function SketchFace({ vertices, center, normal, initialTextureIndex }: SketchFac
 // Interactive Portal component with hover/click
 function Portal({ face, textures, onPortalClick }: PortalProps) {
   const [hovered, setHovered] = useState(false)
+  const [fadeOpacity, setFadeOpacity] = useState(0)
   const groupRef = useRef<THREE.Group>(null)
 
   // Persist animation state across hover on/off cycles
@@ -495,6 +505,22 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
     velocity: 0,
     initialized: false,
     lastSettledAngle: null,
+  })
+
+  // Target opacity based on hover state
+  const targetOpacity = hovered ? 1 : 0
+
+  // Animate fade in/out
+  useFrame((_, delta) => {
+    const speed = 5 // Fade speed (higher = faster)
+    const diff = targetOpacity - fadeOpacity
+
+    if (Math.abs(diff) > 0.001) {
+      const step = Math.sign(diff) * Math.min(Math.abs(diff), speed * delta)
+      setFadeOpacity(prev => Math.max(0, Math.min(1, prev + step)))
+    } else if (fadeOpacity !== targetOpacity) {
+      setFadeOpacity(targetOpacity)
+    }
   })
 
   // Ring dimensions based on face data
@@ -608,30 +634,34 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
             </>
           )}
 
-          {/* Glassmorphism cover on hover - fills the hole with blur effect */}
-          {hovered && (
+          {/* Glassmorphism cover - always rendered, fades in/out */}
+          {(hovered || fadeOpacity > 0) && (
             <mesh position={[0, 0, 0.01]}>
               <circleGeometry args={[face.holeRadius, 64]} />
               <MeshTransmissionMaterial
                 backside={false}
                 samples={8}
                 resolution={256}
-                transmission={0.95}
+                transmission={0.95 * fadeOpacity}
                 roughness={0.3}
-                thickness={0.5}
+                thickness={0.5 * fadeOpacity}
                 ior={1.5}
                 chromaticAberration={0.02}
                 anisotropy={0.1}
-                distortion={0.1}
+                distortion={0.1 * fadeOpacity}
                 distortionScale={0.2}
                 color="#1a3a4a"
               />
             </mesh>
           )}
 
-          {/* Label shown on hover with pendulum animation */}
-          {hovered && face.config?.name && (
-            <PendulumLabel name={face.config.name} animState={labelAnimState} />
+          {/* Label - always rendered when has opacity, fades in/out */}
+          {(hovered || fadeOpacity > 0) && face.config?.name && (
+            <PendulumLabel
+              name={face.config.name}
+              animState={labelAnimState}
+              opacity={fadeOpacity}
+            />
           )}
         </>
       )}
@@ -803,7 +833,7 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
                 roughnessMap={sphereTextures.roughnessMap}
                 metalnessMap={sphereTextures.metalnessMap}
                 metalness={0.6}
-                roughness={0.8}
+                roughness={0.85}
                 emissive={config?.active ? '#2a4a3a' : '#000000'}
                 emissiveIntensity={config?.active ? 0.15 : 0}
               />
