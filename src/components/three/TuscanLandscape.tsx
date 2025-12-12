@@ -13,64 +13,61 @@ function clamp(val: number, min: number, max: number): number {
   return Math.min(Math.max(val, min), max)
 }
 
-// Height function for Tuscan landscape matching Gladiator scene:
-// Camera looks at terrain that DESCENDS into a valley, then RISES to a distant hill (with house)
-// The road follows this U-shape through the landscape
+// Height function for Tuscan landscape matching the reference image
+// Reference: Val d'Orcia / Terrapille - road on LEFT, hill with house on RIGHT
+// Dodecahedron position: RIGHT side of frame, on the rolling hills
 function getTerrainHeight(x: number, z: number): number {
-  // Base terrain: U-shaped valley along Z axis
-  // z > 0 (near camera): starts high
-  // z ~ -30 to -50: valley bottom
-  // z < -70: rises again to distant hill
+  // Main terrain profile:
+  // - Left side (x < 0): Lower, where the road runs
+  // - Right side (x > 0): Higher rolling hills where dodecahedron sits
+  // - Far distance (z < -50): Rises to hill with "house"
 
-  // Main U-shape profile along Z (the valley)
-  // Parabola-like shape: high near camera, low in middle, high in distance
-  const valleyCenter = -40 // Center of valley
-  const valleyDepth = 8    // How deep the valley goes
-  const valleyWidth = 60   // Width of valley transition
+  // Base slope: terrain rises from left to right
+  const leftToRightSlope = x * 0.08
 
-  // Smooth valley profile using cosine
-  const distFromValleyCenter = z - valleyCenter
-  const valleyProfile = Math.cos(Math.PI * clamp(distFromValleyCenter / valleyWidth, -1, 1)) * 0.5 + 0.5
-  const valleyHeight = -valleyDepth * (1 - valleyProfile)
+  // Rolling hills - more prominent on the right side
+  const hillScale = 0.03
+  const rollingHills = Math.sin(x * hillScale + 0.5) * Math.cos(z * hillScale * 0.7) * 8
+    * (1 + clamp(x / 50, 0, 1)) // More amplitude on right
 
-  // Side hills (X axis) - hills on left and right sides
-  const sideHillScale = 0.025
-  const sideHills = Math.sin(x * sideHillScale * 2 + 0.3) * 6 * Math.abs(x / 50)
+  // Valley where the road goes (left side, x around -20 to -40)
+  const roadValleyCenter = -30
+  const roadValleyWidth = 25
+  const distFromRoadValley = Math.abs(x - roadValleyCenter)
+  const roadValley = distFromRoadValley < roadValleyWidth
+    ? -Math.cos((distFromRoadValley / roadValleyWidth) * Math.PI * 0.5) * 4
+    : 0
 
-  // Distant hill (where the "house" would be) - rises more in the far distance
+  // Distant hill (where farmhouse would be) - rises in far distance, more on right
   const distantHillStart = -60
   const distantHillHeight = z < distantHillStart
-    ? Math.pow(Math.abs(z - distantHillStart) / 40, 1.5) * 10
+    ? Math.pow(Math.abs(z - distantHillStart) / 50, 1.3) * 12 * (1 + clamp(x / 40, 0, 1))
     : 0
 
   // Small undulations for natural feel
-  const scale2 = 0.04
-  const scale3 = 0.08
-  const smallUndulation = Math.sin(x * scale2 + 1.3) * Math.cos(z * scale2 * 1.1 + 0.7) * 2
-  const fineDetail = Math.sin(x * scale3 * 1.2 + z * scale3 * 0.8) * 1
-
-  // Slight depression along the road path (x near 0) so road sits in a natural groove
-  const roadGroove = Math.exp(-x * x / 150) * 1.5
+  const smallWaves = Math.sin(x * 0.05 + 1.3) * Math.cos(z * 0.04 + 0.7) * 2
+  const fineDetail = Math.sin(x * 0.1 + z * 0.08) * 0.8
 
   // Combine all height components
-  let height = valleyHeight + sideHills + distantHillHeight + smallUndulation + fineDetail - roadGroove
+  const height = leftToRightSlope + rollingHills + roadValley + distantHillHeight + smallWaves + fineDetail
 
   return height
 }
 
-
-// Road path control points - iconic S-curve from Gladiator
-// The road winds through the hills, cypress trees line it
+// Road path control points - matching reference image
+// Road is on the LEFT side of the frame, winding from foreground up to distant hill
 const ROAD_CONTROL_POINTS = [
-  new THREE.Vector3(8, 0, 50),     // Start (foreground, slightly right)
-  new THREE.Vector3(3, 0, 35),     // Coming toward viewer
-  new THREE.Vector3(-5, 0, 20),    // First curve left
-  new THREE.Vector3(-2, 0, 5),     // Straighten
-  new THREE.Vector3(5, 0, -15),    // Curve right
-  new THREE.Vector3(0, 0, -35),    // Back toward center
-  new THREE.Vector3(-8, 0, -55),   // Curve left into distance
-  new THREE.Vector3(-5, 0, -80),   // Continue
-  new THREE.Vector3(0, 0, -110),   // Disappears into fog
+  new THREE.Vector3(-20, 0, 60),    // Start: foreground, left side
+  new THREE.Vector3(-25, 0, 45),    // Coming from bottom-left
+  new THREE.Vector3(-30, 0, 30),    // Slight curve
+  new THREE.Vector3(-28, 0, 15),    // Winding up
+  new THREE.Vector3(-32, 0, 0),     // Continuing
+  new THREE.Vector3(-28, 0, -20),   // Curve right slightly
+  new THREE.Vector3(-25, 0, -40),   // Into middle distance
+  new THREE.Vector3(-20, 0, -60),   // Curving toward center-right
+  new THREE.Vector3(-10, 0, -80),   // Heading to distant hill
+  new THREE.Vector3(5, 0, -100),    // Approaching farmhouse area
+  new THREE.Vector3(15, 0, -120),   // Up to the hill
 ]
 
 // Create the road curve for tree positioning
@@ -78,24 +75,24 @@ function createRoadCurve(): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(ROAD_CONTROL_POINTS)
 }
 
-// Cypress tree positions - ALONG THE ROAD like in Gladiator
-// Trees are placed on alternating sides of the road at specific distances
+// Cypress tree positions - along the LEFT side of the road (matching reference)
+// In the reference, cypresses line the road on its left edge
 function getTreePositionsAlongRoad(roadCurve: THREE.CatmullRomCurve3): { x: number; z: number; scale: number }[] {
   const positions: { x: number; z: number; scale: number }[] = []
 
-  // Tree placement along the road - like the iconic Gladiator scene
-  // Format: [t position along curve (0-1), side (1=right, -1=left), distance from road]
+  // Trees only on the LEFT side of the road (side = -1)
+  // This matches the reference image where cypresses are on the left edge of the road
   const treePlacements = [
-    { t: 0.15, side: -1, dist: 6, scale: 1.0 },   // First tree, left side, close
-    { t: 0.22, side: 1, dist: 5, scale: 0.95 },   // Right side
-    { t: 0.30, side: -1, dist: 7, scale: 0.92 },  // Left side
-    { t: 0.38, side: 1, dist: 6, scale: 0.88 },   // Right side
-    { t: 0.48, side: -1, dist: 5, scale: 0.85 },  // Left side - the curve
-    { t: 0.55, side: 1, dist: 6, scale: 0.82 },   // Right side
-    { t: 0.65, side: -1, dist: 7, scale: 0.78 },  // Left, getting distant
-    { t: 0.72, side: 1, dist: 5, scale: 0.72 },   // Right
-    { t: 0.80, side: -1, dist: 6, scale: 0.65 },  // Left, far
-    { t: 0.88, side: 1, dist: 7, scale: 0.58 },   // Right, very far (in fog)
+    { t: 0.08, side: -1, dist: 4, scale: 1.0 },   // First tree, closest
+    { t: 0.15, side: -1, dist: 5, scale: 0.98 },
+    { t: 0.22, side: -1, dist: 4, scale: 0.95 },
+    { t: 0.30, side: -1, dist: 5, scale: 0.92 },
+    { t: 0.38, side: -1, dist: 4, scale: 0.88 },
+    { t: 0.46, side: -1, dist: 5, scale: 0.84 },
+    { t: 0.54, side: -1, dist: 4, scale: 0.78 },
+    { t: 0.62, side: -1, dist: 5, scale: 0.72 },
+    { t: 0.70, side: -1, dist: 4, scale: 0.65 },  // Getting distant
+    { t: 0.78, side: -1, dist: 5, scale: 0.55 },  // Far
   ]
 
   for (const placement of treePlacements) {
@@ -158,7 +155,6 @@ function createTerrainGeometry(size: number, segments: number): THREE.BufferGeom
 
 // Generate Italian Cypress tree wireframe
 // Cupressus sempervirens - COLUMNAR shape (tall narrow cylinder), NOT conical
-// These trees are like tall green columns/pillars
 function createCypressGeometry(height: number, radius: number): THREE.BufferGeometry {
   const positions: number[] = []
 
@@ -167,8 +163,7 @@ function createCypressGeometry(height: number, radius: number): THREE.BufferGeom
   const trunkRadius = radius * 0.15
 
   // Cypress crown is a narrow cylinder with rounded top
-  // Much narrower than a conical fir tree
-  const crownRadius = radius * 0.4 // Narrow columnar shape
+  const crownRadius = radius * 0.4
   const radialSegments = 6
   const heightSegments = 8
 
@@ -188,21 +183,17 @@ function createCypressGeometry(height: number, radius: number): THREE.BufferGeom
     const x = Math.cos(angle) * crownRadius
     const z = Math.sin(angle) * crownRadius
 
-    // Vertical line from base of crown to near top
     positions.push(x, trunkHeight, z)
     positions.push(x, trunkHeight + crownHeight * 0.85, z)
   }
 
-  // Crown - horizontal rings at different heights (cylindrical, not tapered)
+  // Crown - horizontal rings at different heights
   for (let h = 0; h <= heightSegments; h++) {
     const t = h / heightSegments
     const ringY = trunkHeight + t * crownHeight
 
-    // Cypress columns are almost the same width throughout
-    // Only taper slightly at the very top (last 20%)
     let ringRadius = crownRadius
     if (t > 0.8) {
-      // Rounded top - taper in the last 20%
       const topT = (t - 0.8) / 0.2
       ringRadius = crownRadius * (1 - topT * 0.7)
     }
@@ -220,7 +211,7 @@ function createCypressGeometry(height: number, radius: number): THREE.BufferGeom
     }
   }
 
-  // Top point (cypress comes to a soft point)
+  // Top point
   const topY = trunkHeight + crownHeight
   for (let i = 0; i < radialSegments; i++) {
     const angle = (i / radialSegments) * Math.PI * 2
@@ -241,34 +232,32 @@ function createCypressGeometry(height: number, radius: number): THREE.BufferGeom
 // Generate winding road as parallel edge lines
 function createRoadGeometry(roadCurve: THREE.CatmullRomCurve3, width: number): THREE.BufferGeometry {
   const positions: number[] = []
-  const points = roadCurve.getPoints(100) // 100 segments for smooth curve
+  const points = roadCurve.getPoints(120)
 
   for (let i = 0; i < points.length - 1; i++) {
     const p1 = points[i]
     const p2 = points[i + 1]
 
-    // Get terrain height at road position (road follows terrain)
-    const y1 = getTerrainHeight(p1.x, p1.z) + 0.2 // Slightly above terrain
+    const y1 = getTerrainHeight(p1.x, p1.z) + 0.2
     const y2 = getTerrainHeight(p2.x, p2.z) + 0.2
 
-    // Calculate perpendicular direction for road width
     const tangent = new THREE.Vector3().subVectors(p2, p1).normalize()
     const perp = new THREE.Vector3(-tangent.z, 0, tangent.x).multiplyScalar(width / 2)
 
-    // Left edge line segment
+    // Left edge
     positions.push(
       p1.x + perp.x, y1, p1.z + perp.z,
       p2.x + perp.x, y2, p2.z + perp.z
     )
 
-    // Right edge line segment
+    // Right edge
     positions.push(
       p1.x - perp.x, y1, p1.z - perp.z,
       p2.x - perp.x, y2, p2.z - perp.z
     )
 
-    // Cross-hatching every 10 segments for dirt road texture
-    if (i % 10 === 0) {
+    // Cross-hatching for texture
+    if (i % 8 === 0) {
       positions.push(
         p1.x + perp.x, y1, p1.z + perp.z,
         p1.x - perp.x, y1, p1.z - perp.z
@@ -283,20 +272,20 @@ function createRoadGeometry(roadCurve: THREE.CatmullRomCurve3, width: number): T
 }
 
 interface TuscanLandscapeProps {
-  size?: number           // Total terrain size (default: 200)
-  segments?: number       // Grid segments (default: 50)
-  treeCount?: number      // Number of trees to show (default: 10, max: 10)
-  roadWidth?: number      // Road width (default: 3)
-  lineColor?: string      // Color for terrain/trees (default: '#888888')
-  roadColor?: string      // Color for road (default: '#aaaaaa')
-  baseOpacity?: number    // Base opacity (default: 0.4)
+  size?: number
+  segments?: number
+  treeCount?: number
+  roadWidth?: number
+  lineColor?: string
+  roadColor?: string
+  baseOpacity?: number
 }
 
 export function TuscanLandscape({
-  size = 200,
-  segments = 50,
+  size = 250,
+  segments = 60,
   treeCount = 10,
-  roadWidth = 3,
+  roadWidth = 3.5,
   lineColor = LINE_COLOR,
   roadColor = ROAD_COLOR,
   baseOpacity = 0.4,
@@ -305,29 +294,25 @@ export function TuscanLandscape({
   const roadRef = useRef<THREE.LineSegments>(null)
   const treeRefs = useRef<(THREE.LineSegments | null)[]>([])
 
-  // Create road curve (shared between road geometry and tree positioning)
   const roadCurve = useMemo(() => createRoadCurve(), [])
 
-  // Generate terrain geometry (memoized)
   const terrainGeometry = useMemo(
     () => createTerrainGeometry(size, segments),
     [size, segments]
   )
 
-  // Generate road geometry (memoized)
   const roadGeometry = useMemo(
     () => createRoadGeometry(roadCurve, roadWidth),
     [roadCurve, roadWidth]
   )
 
-  // Generate tree geometries with positions along the road (memoized)
   const trees = useMemo(() => {
     const treePositions = getTreePositionsAlongRoad(roadCurve)
     const visibleTrees = treePositions.slice(0, Math.min(treeCount, 10))
 
     return visibleTrees.map((pos) => {
-      const baseHeight = 12  // Tall cypress trees
-      const baseRadius = 1.5 // Narrow
+      const baseHeight = 12
+      const baseRadius = 1.5
       const height = baseHeight * pos.scale
       const radius = baseRadius * pos.scale
 
@@ -342,7 +327,6 @@ export function TuscanLandscape({
     })
   }, [roadCurve, treeCount])
 
-  // Animate subtle opacity pulsing (matching original VoidGrid behavior)
   useFrame((state) => {
     const opacity = 0.3 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1
 
@@ -353,20 +337,20 @@ export function TuscanLandscape({
 
     if (roadRef.current) {
       const material = roadRef.current.material as THREE.LineBasicMaterial
-      material.opacity = opacity + 0.15 // Road more visible
+      material.opacity = opacity + 0.15
     }
 
     treeRefs.current.forEach((treeRef) => {
       if (treeRef) {
         const material = treeRef.material as THREE.LineBasicMaterial
-        material.opacity = opacity + 0.1 // Trees slightly more visible
+        material.opacity = opacity + 0.1
       }
     })
   })
 
   return (
     <group position={[0, -15, 0]}>
-      {/* Terrain (rolling hills) */}
+      {/* Terrain */}
       <lineSegments ref={terrainRef} geometry={terrainGeometry}>
         <lineBasicMaterial
           color={lineColor}
@@ -375,7 +359,7 @@ export function TuscanLandscape({
         />
       </lineSegments>
 
-      {/* Winding road */}
+      {/* Road */}
       <lineSegments ref={roadRef} geometry={roadGeometry}>
         <lineBasicMaterial
           color={roadColor}
@@ -384,7 +368,7 @@ export function TuscanLandscape({
         />
       </lineSegments>
 
-      {/* Cypress trees along the road */}
+      {/* Cypress trees */}
       {trees.map((tree, idx) => (
         <lineSegments
           key={idx}
