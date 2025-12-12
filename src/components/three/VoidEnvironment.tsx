@@ -9,12 +9,16 @@ import { TuscanLandscape } from './TuscanLandscape'
 // Dim white color for grid lines (kept for reference)
 const GRID_COLOR = '#888888' // Light gray
 
+// Dodecahedron vertical offset (must match DodecahedronScene.tsx)
+const DODECAHEDRON_Y_OFFSET = 8
+
 // Get active portals (faces with holes that particles can pass through)
+// Portal centers are offset to match dodecahedron position
 const ACTIVE_PORTALS = (() => {
   const faces = getDodecahedronFaceCenters(RADIUS)
   return faces
     .map((face, idx) => ({
-      center: face.center,
+      center: face.center.clone().add(new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)),
       normal: face.normal,
       config: FACE_CONFIG[idx],
     }))
@@ -106,6 +110,14 @@ interface GlowingSphereProps {
 // Dodecahedron surface radius (where portals are)
 const DODECA_SURFACE = RADIUS * 0.8 // Approximate distance to face centers
 
+// Dodecahedron center position (with Y offset)
+const DODECA_CENTER = new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)
+
+// Helper to get distance from dodecahedron center
+function getDistFromDodecaCenter(pos: THREE.Vector3): number {
+  return pos.distanceTo(DODECA_CENTER)
+}
+
 function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
   const meshRef = useRef<THREE.Mesh>(null)
 
@@ -123,7 +135,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
     targetVel: new THREE.Vector3(),
     nextActionTime: Math.random() * 5 + 2,
     // Navigation state: 'wandering' | 'approaching' | 'entering' | 'inside' | 'exiting' | 'leaving'
-    navState: position.length() < DODECA_SURFACE ? 'inside' : 'wandering',
+    navState: getDistFromDodecaCenter(position) < DODECA_SURFACE ? 'inside' : 'wandering',
     targetPortal: assignedPortal.current,
   })
 
@@ -135,7 +147,9 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
 
       const time = frameState.clock.elapsedTime
       const s = state.current
-      const distFromCenter = s.pos.length()
+      const distFromCenter = getDistFromDodecaCenter(s.pos)
+      // Vector from dodecahedron center to particle (for push calculations)
+      const fromCenter = s.pos.clone().sub(DODECA_CENTER)
 
       // State machine for visitor navigation through portals
       if (s.navState === 'wandering') {
@@ -158,7 +172,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
 
         // Keep away from dodecahedron surface
         if (distFromCenter < DODECA_SURFACE + 5) {
-          const pushOut = s.pos.clone().normalize().multiplyScalar(0.02)
+          const pushOut = fromCenter.clone().normalize().multiplyScalar(0.02)
           s.vel.add(pushOut)
         }
 
@@ -203,7 +217,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
 
         // Keep inside dodecahedron - soft boundary
         if (distFromCenter > DODECA_SURFACE - 1.5) {
-          const pushIn = s.pos.clone().normalize().multiplyScalar(-0.03)
+          const pushIn = fromCenter.clone().normalize().multiplyScalar(-0.03)
           s.vel.add(pushIn)
         }
 
@@ -260,9 +274,9 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       // Update position
       s.pos.add(s.vel.clone().multiplyScalar(clampedDelta * 60))
 
-      // Soft boundary - keep in general area
+      // Soft boundary - keep in general area around dodecahedron
       if (distFromCenter > 60) {
-        const pushBack = s.pos.clone().normalize().multiplyScalar(-0.015 * (distFromCenter - 60))
+        const pushBack = fromCenter.clone().normalize().multiplyScalar(-0.015 * (distFromCenter - 60))
         s.vel.add(pushBack)
       }
 
@@ -312,22 +326,23 @@ export function VoidParticles({ count = 50, spread = 60 }: VoidParticlesProps) {
 
       if (isInside) {
         // Inside dodecahedron (radius ~4-5 from center)
+        // Position is relative to dodecahedron center (which has Y offset)
         const r = Math.random() * 3 + 1
         const theta = Math.random() * Math.PI * 2
         const phi = Math.acos(2 * Math.random() - 1)
         position = new THREE.Vector3(
           r * Math.sin(phi) * Math.cos(theta),
-          r * Math.sin(phi) * Math.sin(theta),
+          r * Math.sin(phi) * Math.sin(theta) + DODECAHEDRON_Y_OFFSET,
           r * Math.cos(phi)
         )
       } else {
-        // Outside - distributed in space
+        // Outside - distributed in space around dodecahedron
         const r = Math.random() * spread + 15 // Start outside dodecahedron
         const theta = Math.random() * Math.PI * 2
         const phi = Math.acos(2 * Math.random() - 1)
         position = new THREE.Vector3(
           r * Math.sin(phi) * Math.cos(theta),
-          r * Math.sin(phi) * Math.sin(theta) - 5,
+          r * Math.sin(phi) * Math.sin(theta) + DODECAHEDRON_Y_OFFSET - 5,
           r * Math.cos(phi)
         )
       }

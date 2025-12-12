@@ -8,31 +8,56 @@ import * as THREE from 'three'
 const LINE_COLOR = '#888888'
 const ROAD_COLOR = '#aaaaaa'
 
-// Height function for rolling Tuscan hills
-// Based on the Gladiator scene: gentle rolling hills with clear undulations
+// Helper for clamping
+function clamp(val: number, min: number, max: number): number {
+  return Math.min(Math.max(val, min), max)
+}
+
+// Height function for Tuscan landscape matching Gladiator scene:
+// Camera looks at terrain that DESCENDS into a valley, then RISES to a distant hill (with house)
+// The road follows this U-shape through the landscape
 function getTerrainHeight(x: number, z: number): number {
-  // Larger scale waves for prominent Tuscan hills
-  const scale1 = 0.015 // Very large rolling hills
-  const scale2 = 0.04  // Medium undulation
-  const scale3 = 0.08  // Smaller details
+  // Base terrain: U-shaped valley along Z axis
+  // z > 0 (near camera): starts high
+  // z ~ -30 to -50: valley bottom
+  // z < -70: rises again to distant hill
 
-  let height = 0
+  // Main U-shape profile along Z (the valley)
+  // Parabola-like shape: high near camera, low in middle, high in distance
+  const valleyCenter = -40 // Center of valley
+  const valleyDepth = 8    // How deep the valley goes
+  const valleyWidth = 60   // Width of valley transition
 
-  // Main rolling hills - more prominent amplitude
-  height += Math.sin(x * scale1 + 0.5) * Math.cos(z * scale1 * 0.8) * 12
-  // Secondary undulation
-  height += Math.sin(x * scale2 + 1.3) * Math.cos(z * scale2 * 1.1 + 0.7) * 4
-  // Fine detail ripples
-  height += Math.sin(x * scale3 * 1.2 + z * scale3 * 0.8) * 1.5
+  // Smooth valley profile using cosine
+  const distFromValleyCenter = z - valleyCenter
+  const valleyProfile = Math.cos(Math.PI * clamp(distFromValleyCenter / valleyWidth, -1, 1)) * 0.5 + 0.5
+  const valleyHeight = -valleyDepth * (1 - valleyProfile)
 
-  // Slight depression along the road path (x near 0)
-  const roadInfluence = Math.exp(-x * x / 200) * 2
-  height -= roadInfluence
+  // Side hills (X axis) - hills on left and right sides
+  const sideHillScale = 0.025
+  const sideHills = Math.sin(x * sideHillScale * 2 + 0.3) * 6 * Math.abs(x / 50)
 
-  // NO edge fade - hills continue to the fog naturally
+  // Distant hill (where the "house" would be) - rises more in the far distance
+  const distantHillStart = -60
+  const distantHillHeight = z < distantHillStart
+    ? Math.pow(Math.abs(z - distantHillStart) / 40, 1.5) * 10
+    : 0
+
+  // Small undulations for natural feel
+  const scale2 = 0.04
+  const scale3 = 0.08
+  const smallUndulation = Math.sin(x * scale2 + 1.3) * Math.cos(z * scale2 * 1.1 + 0.7) * 2
+  const fineDetail = Math.sin(x * scale3 * 1.2 + z * scale3 * 0.8) * 1
+
+  // Slight depression along the road path (x near 0) so road sits in a natural groove
+  const roadGroove = Math.exp(-x * x / 150) * 1.5
+
+  // Combine all height components
+  let height = valleyHeight + sideHills + distantHillHeight + smallUndulation + fineDetail - roadGroove
 
   return height
 }
+
 
 // Road path control points - iconic S-curve from Gladiator
 // The road winds through the hills, cypress trees line it
