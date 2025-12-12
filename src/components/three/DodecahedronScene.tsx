@@ -1,8 +1,12 @@
 'use client'
 
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, useFont } from '@react-three/drei'
 import { Suspense, useCallback, useRef, useEffect, useState } from 'react'
+
+// Preload the font used by Text3D in portal labels
+// This prevents black screen flash when first hovering over a portal
+useFont.preload('/fonts/Cinzel/Cinzel SemiBold_Regular.json')
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { Dodecahedron, type PortalClickData } from './Dodecahedron'
 import { VoidEnvironment } from './VoidEnvironment'
@@ -438,6 +442,15 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
         >
           S<span style={{ color: '#C9943D' }}>·</span>O<span style={{ color: '#C9943D' }}>·</span>I<span style={{ color: '#C9943D' }}>·</span>L
         </h1>
+      </div>
+
+      {/* Navigation hint */}
+      <div
+        className="absolute bottom-8 right-8 pointer-events-none select-none text-right"
+        style={{ color: '#666666', fontSize: '11px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+      >
+        <div>DRAG TO ROTATE</div>
+        <div>DOUBLE-CLICK PORTAL TO ENTER</div>
       </div>
     </div>
   )
