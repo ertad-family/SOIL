@@ -8,19 +8,46 @@ import { Dodecahedron } from './Dodecahedron'
 import { VoidEnvironment } from './VoidEnvironment'
 import * as THREE from 'three'
 
-// Light that follows the camera
-function CameraLight() {
+// Key light that follows camera with offset (prevents frontal overexposure)
+function KeyLight() {
   const { camera } = useThree()
   const lightRef = useRef<THREE.DirectionalLight>(null)
 
   useFrame(() => {
     if (lightRef.current) {
-      // Position light relative to camera
+      // Get camera's right and up vectors in world space
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion)
+
+      // Position light offset from camera: right +5, up +8 (upper-right)
       lightRef.current.position.copy(camera.position)
+        .add(right.multiplyScalar(5))
+        .add(up.multiplyScalar(8))
     }
   })
 
-  return <directionalLight ref={lightRef} intensity={2} />
+  return <directionalLight ref={lightRef} intensity={1.2} color="#fff5e6" />
+}
+
+// Fill light on the opposite side for softer shadows
+function FillLight() {
+  const { camera } = useThree()
+  const lightRef = useRef<THREE.DirectionalLight>(null)
+
+  useFrame(() => {
+    if (lightRef.current) {
+      // Get camera's left and down vectors
+      const left = new THREE.Vector3(-1, 0, 0).applyQuaternion(camera.quaternion)
+      const down = new THREE.Vector3(0, -1, 0).applyQuaternion(camera.quaternion)
+
+      // Position light offset: left +6, down +3 (lower-left)
+      lightRef.current.position.copy(camera.position)
+        .add(left.multiplyScalar(6))
+        .add(down.multiplyScalar(3))
+    }
+  })
+
+  return <directionalLight ref={lightRef} intensity={0.4} color="#e6f0ff" />
 }
 
 // Setup fog in the scene
@@ -65,9 +92,20 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           maxDistance={35}
         />
 
-        {/* Ambient + camera-following light for consistent bronze look */}
-        <ambientLight intensity={0.6} />
-        <CameraLight />
+        {/* Multi-point lighting for metallic reflections */}
+        <ambientLight intensity={0.2} />
+        <KeyLight />
+        <FillLight />
+
+        {/* Fixed point lights close to object for visible specular highlights */}
+        {/* Top-right warm key light */}
+        <pointLight position={[5, 6, 4]} intensity={60} color="#fff5e6" distance={20} decay={2} />
+        {/* Left cool fill */}
+        <pointLight position={[-5, 2, 3]} intensity={30} color="#e6f0ff" distance={20} decay={2} />
+        {/* Bottom accent */}
+        <pointLight position={[0, -5, 5]} intensity={25} color="#ffd699" distance={15} decay={2} />
+        {/* Back rim light */}
+        <pointLight position={[2, 3, -6]} intensity={40} color="#ffcc80" distance={20} decay={2} />
 
         {/* Background */}
         <color attach="background" args={['#0a0a0f']} />

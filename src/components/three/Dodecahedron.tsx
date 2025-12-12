@@ -760,8 +760,8 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
           <meshStandardMaterial
             map={textures.map}
             normalMap={textures.normalMap}
-            metalness={0.95}
-            roughness={0.1}
+            metalness={1}
+            roughness={0.3}
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -802,8 +802,8 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
                 normalMap={sphereTextures.normalMap}
                 roughnessMap={sphereTextures.roughnessMap}
                 metalnessMap={sphereTextures.metalnessMap}
-                metalness={0.7}
-                roughness={0.4}
+                metalness={0.6}
+                roughness={0.8}
                 emissive={config?.active ? '#2a4a3a' : '#000000'}
                 emissiveIntensity={config?.active ? 0.15 : 0}
               />
