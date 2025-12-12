@@ -88,8 +88,43 @@ export function VoidGrid({
   )
 }
 
-// SOIL Gold color from logo interpuncts
-const SOIL_GOLD = new THREE.Color('#C9943D')
+// Create glow texture for particles (soft radial gradient)
+function createGlowTexture(): THREE.CanvasTexture {
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+
+  // Radial gradient: bright center fading to transparent
+  const gradient = ctx.createRadialGradient(
+    size / 2, size / 2, 0,      // Inner circle (center)
+    size / 2, size / 2, size / 2 // Outer circle (edge)
+  )
+
+  // Gold color with alpha falloff - very bright core, soft glow
+  gradient.addColorStop(0, 'rgba(255, 220, 150, 1)')      // Bright warm white core
+  gradient.addColorStop(0.1, 'rgba(255, 200, 100, 0.8)')  // Gold
+  gradient.addColorStop(0.3, 'rgba(201, 148, 61, 0.4)')   // SOIL gold
+  gradient.addColorStop(0.6, 'rgba(201, 148, 61, 0.1)')   // Fading
+  gradient.addColorStop(1, 'rgba(201, 148, 61, 0)')       // Transparent edge
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, size, size)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
+// Shared glow texture (created once)
+let glowTexture: THREE.CanvasTexture | null = null
+function getGlowTexture(): THREE.CanvasTexture {
+  if (!glowTexture) {
+    glowTexture = createGlowTexture()
+  }
+  return glowTexture
+}
 
 // Simple 3D noise function (based on sin combinations for organic movement)
 function noise3D(x: number, y: number, z: number): number {
@@ -119,7 +154,10 @@ function getDistFromDodecaCenter(pos: THREE.Vector3): number {
 }
 
 function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
-  const meshRef = useRef<THREE.Mesh>(null)
+  const spriteRef = useRef<THREE.Sprite>(null)
+
+  // Get shared glow texture
+  const texture = useMemo(() => getGlowTexture(), [])
 
   // Pick a random portal for this particle to use
   const assignedPortal = useRef(getRandomPortal())
@@ -140,7 +178,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
   })
 
   useFrame((frameState, delta) => {
-    if (meshRef.current) {
+    if (spriteRef.current) {
       // Clamp delta to prevent huge jumps when tab loses focus
       // Browser throttles RAF when tab is inactive, causing large delta on return
       const clampedDelta = Math.min(delta, 0.1) // Max 100ms per frame
@@ -281,27 +319,30 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       }
 
       // Apply position
-      meshRef.current.position.copy(s.pos)
+      spriteRef.current.position.copy(s.pos)
 
-      // Pulsing emissive intensity - brighter when inside
-      const material = meshRef.current.material as THREE.MeshStandardMaterial
-      const basePulse = Math.sin(time * 2 + seed) * 0.5
-      const insideBoost = s.navState === 'inside' ? 1.5 : 0
-      const randomFlicker = Math.random() < 0.02 ? Math.random() * 2 : 0
-      material.emissiveIntensity = 2 + basePulse + insideBoost + randomFlicker
+      // Pulsing opacity - brighter when inside
+      const material = spriteRef.current.material as THREE.SpriteMaterial
+      const basePulse = Math.sin(time * 2 + seed) * 0.15
+      const insideBoost = s.navState === 'inside' ? 0.3 : 0
+      const randomFlicker = Math.random() < 0.02 ? Math.random() * 0.3 : 0
+      material.opacity = 0.6 + basePulse + insideBoost + randomFlicker
     }
   })
 
+  // Glow sprite size (much larger than original mesh for soft glow effect)
+  const glowSize = size * 25
+
   return (
-    <mesh ref={meshRef} position={position}>
-      <sphereGeometry args={[size, 12, 12]} />
-      <meshStandardMaterial
-        color={SOIL_GOLD}
-        emissive={SOIL_GOLD}
-        emissiveIntensity={2.5}
-        toneMapped={false}
+    <sprite ref={spriteRef} position={position} scale={[glowSize, glowSize, 1]}>
+      <spriteMaterial
+        map={texture}
+        transparent
+        opacity={0.7}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
-    </mesh>
+    </sprite>
   )
 }
 
