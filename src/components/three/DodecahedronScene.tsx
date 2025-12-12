@@ -14,6 +14,7 @@ interface FlyThroughState {
   isAnimating: boolean
   startTime: number
   startPos: THREE.Vector3
+  startQuaternion: THREE.Quaternion  // Camera rotation at start (for smooth turn)
   targetPortalCenter: THREE.Vector3
   targetPortalNormal: THREE.Vector3
   phase: 'idle' | 'flythrough' | 'fadeout'
@@ -43,6 +44,24 @@ function easeInOutCubic(t: number): number {
 const FLYTHROUGH_DURATION = 2.2  // Total flight time (approach + enter combined)
 const FADEOUT_DURATION = 0.4    // Fog fills screen after entering
 
+// Component to track camera position and rotation continuously (for smooth animation start)
+interface CameraTrackerProps {
+  cameraPositionRef: React.MutableRefObject<THREE.Vector3>
+  cameraQuaternionRef: React.MutableRefObject<THREE.Quaternion>
+}
+
+function CameraTracker({ cameraPositionRef, cameraQuaternionRef }: CameraTrackerProps) {
+  const { camera } = useThree()
+
+  useFrame(() => {
+    // Continuously track camera position and rotation so we always have the latest
+    cameraPositionRef.current.copy(camera.position)
+    cameraQuaternionRef.current.copy(camera.quaternion)
+  })
+
+  return null
+}
+
 // Camera animator component - handles fly-through animation
 interface CameraAnimatorProps {
   flyState: React.MutableRefObject<FlyThroughState>
@@ -57,10 +76,10 @@ function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimato
     const fs = flyState.current
     if (!fs.isAnimating || fs.phase === 'idle') return
 
-    // Initialize waypoints on first frame
+    // Initialize waypoints on first frame of animation
+    // NOTE: startPos should already be set by handlePortalClick using cameraPositionRef
     if (fs.startTime === 0) {
       fs.startTime = state.clock.elapsedTime
-      fs.startPos.copy(camera.position)
 
       // Calculate waypoints for the journey
       fs.waypoints = {
@@ -110,18 +129,36 @@ function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimato
 
       camera.position.copy(pos)
 
-      // Camera lookAt logic:
-      // - Before entering portal (t < 0.75): look at portal center
-      // - After entering (t >= 0.75): look in direction of movement (away from portal)
+      // Camera rotation logic:
+      // Smoothly interpolate from starting rotation to looking at portal
+      // This prevents the jarring "snap" when animation starts
+
+      // Calculate target quaternion (looking at portal)
+      const targetQuaternion = new THREE.Quaternion()
+      const tempCamera = camera.clone()
+
       if (t < 0.75) {
-        // Approaching and entering: look at portal
-        camera.lookAt(fs.targetPortalCenter)
+        // Approaching and entering: look at portal center
+        tempCamera.position.copy(pos)
+        tempCamera.lookAt(fs.targetPortalCenter)
+        targetQuaternion.copy(tempCamera.quaternion)
       } else {
         // Inside: look in the direction we're flying (opposite to portal normal)
         // This prevents the 180° flip - we continue looking forward
         const lookAhead = pos.clone().sub(fs.targetPortalNormal.clone().multiplyScalar(5))
-        camera.lookAt(lookAhead)
+        tempCamera.position.copy(pos)
+        tempCamera.lookAt(lookAhead)
+        targetQuaternion.copy(tempCamera.quaternion)
       }
+
+      // Smoothly interpolate rotation
+      // Use faster interpolation at the start (first 20%) to turn toward portal
+      // then slower for the rest of the journey
+      const rotationT = t < 0.2
+        ? easeInOutSine(t / 0.2)  // Quick turn in first 20%
+        : 1  // After that, always look at target
+
+      camera.quaternion.slerpQuaternions(fs.startQuaternion, targetQuaternion, rotationT)
 
       // Start fade when entering portal (at 70% of flight)
       if (t > 0.7) {
@@ -231,6 +268,11 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
   // Ref for OrbitControls (to disable during animation)
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
 
+  // Continuously tracked camera position and rotation (updated every frame by CameraTracker)
+  // This allows us to capture the exact camera state at the moment of click
+  const cameraPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 8, 18))
+  const cameraQuaternionRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
+
   // Fade overlay opacity (0 = transparent, 1 = fully purple fog)
   const [fadeOpacity, setFadeOpacity] = useState(0)
 
@@ -242,6 +284,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
     isAnimating: false,
     startTime: 0,
     startPos: new THREE.Vector3(),
+    startQuaternion: new THREE.Quaternion(),
     targetPortalCenter: new THREE.Vector3(),
     targetPortalNormal: new THREE.Vector3(),
     phase: 'idle',
@@ -259,6 +302,12 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
     // Don't start new animation if already animating
     if (flyStateRef.current.isAnimating) return
 
+    // IMPORTANT: Disable OrbitControls IMMEDIATELY to prevent damping
+    // from moving the camera between click and first animation frame
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false
+    }
+
     // Stop dodecahedron rotation during navigation
     setIsNavigating(true)
 
@@ -268,6 +317,10 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
     fs.phase = 'flythrough'
     fs.startTime = 0 // Will be set on first frame
     fs.waypoints = null // Will be created on first frame
+    // IMPORTANT: Capture camera position AND rotation NOW, not on first animation frame
+    // This prevents the "jump" caused by OrbitControls damping and sudden lookAt change
+    fs.startPos.copy(cameraPositionRef.current)
+    fs.startQuaternion.copy(cameraQuaternionRef.current)
     fs.targetPortalCenter.copy(data.worldCenter)
     fs.targetPortalNormal.copy(data.worldNormal)
     fs.targetFaceId = data.faceId
@@ -297,6 +350,9 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           maxDistance={35}
           target={[0, 8, 0]}
         />
+
+        {/* Track camera position and rotation continuously for smooth animation start */}
+        <CameraTracker cameraPositionRef={cameraPositionRef} cameraQuaternionRef={cameraQuaternionRef} />
 
         {/* Camera animator - handles fly-through */}
         <CameraAnimator
@@ -329,7 +385,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
         <Suspense fallback={null}>
           {/* Void environment: Tuscan landscape + golden particles */}
           <VoidEnvironment
-            landscapeSize={200}
+            landscapeSize={500}
             particleCount={50}
           />
 
