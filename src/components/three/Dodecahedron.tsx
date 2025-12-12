@@ -38,7 +38,7 @@ export const SPHERE_CONFIG = [
   })),
 ]
 
-const RADIUS = 4
+export const RADIUS = 4
 const WALL_THICKNESS = 0.15 // Thin walls like original artifact
 
 // For a regular dodecahedron, the inscribed circle radius of each pentagonal face
@@ -90,7 +90,7 @@ interface FaceData {
 // DodecahedronGeometry with detail=0 has 36 triangles = 12 faces × 3 triangles per face
 // Triangles are stored sequentially per face, so we take every 3 triangles as one face
 // Returns vertices sorted by angle around center for proper polygon rendering
-function getDodecahedronFaceCenters(radius: number): FaceData[] {
+export function getDodecahedronFaceCenters(radius: number): FaceData[] {
   const geometry = new THREE.DodecahedronGeometry(radius, 0)
   const positionAttr = geometry.getAttribute('position')
 
@@ -338,6 +338,13 @@ const CYBERPUNK_TEXTURES = [
   '/assets/cyberpunk3.svg',
   '/assets/cyberpunk4.svg',
   '/assets/cyberpunk5.svg',
+  '/assets/cyberpunk6.svg',
+  '/assets/cyberpunk7.svg',
+  '/assets/cyberpunk8.svg',
+  '/assets/cyberpunk9.svg',
+  '/assets/cyberpunk10.svg',
+  '/assets/cyberpunk11.svg',
+  '/assets/cyberpunk12.svg',
 ]
 
 // Create BufferGeometry from real pentagon vertices
@@ -378,7 +385,7 @@ function SketchFace({ vertices, center, normal, initialTextureIndex }: SketchFac
 
   // Animation state
   const animState = useRef({
-    nextSwitchTime: Math.random() * 2 + 1, // First switch in 1-3 seconds
+    nextSwitchTime: Math.random() * 3 + 2, // First switch in 1-3 seconds
     elapsedTime: 0,
     isGlitching: false,
     glitchEndTime: 0,

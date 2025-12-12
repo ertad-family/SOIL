@@ -2,8 +2,10 @@
 
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { Suspense, useCallback, useRef } from 'react'
+import { Suspense, useCallback, useRef, useEffect } from 'react'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { Dodecahedron } from './Dodecahedron'
+import { VoidEnvironment } from './VoidEnvironment'
 import * as THREE from 'three'
 
 // Light that follows the camera
@@ -19,6 +21,23 @@ function CameraLight() {
   })
 
   return <directionalLight ref={lightRef} intensity={2} />
+}
+
+// Setup fog in the scene
+function SceneFog() {
+  const { scene } = useThree()
+
+  useEffect(() => {
+    // Linear fog: starts at 30 units, fully opaque at 100 units
+    // Color: deep dark blue (#000510)
+    scene.fog = new THREE.Fog('#000510', 30, 120)
+
+    return () => {
+      scene.fog = null
+    }
+  }, [scene])
+
+  return null
 }
 
 interface DodecahedronSceneProps {
@@ -53,9 +72,30 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
         {/* Background */}
         <color attach="background" args={['#0a0a0f']} />
 
+        {/* Fog for depth fade */}
+        <SceneFog />
+
         <Suspense fallback={null}>
+          {/* Void environment: grid + golden particles */}
+          <VoidEnvironment
+            gridSize={200}
+            gridDivisions={13}
+            particleCount={50}
+          />
+
+          {/* Main dodecahedron */}
           <Dodecahedron onPortalClick={handlePortalClick} />
         </Suspense>
+
+        {/* Post-processing effects */}
+        <EffectComposer>
+          <Bloom
+            intensity={0.8}
+            luminanceThreshold={0.1}
+            luminanceSmoothing={0.9}
+            mipmapBlur
+          />
+        </EffectComposer>
       </Canvas>
 
       {/* SOIL Logo - static overlay below the scene */}
