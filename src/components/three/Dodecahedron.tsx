@@ -507,6 +507,10 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
   const [fadeOpacity, setFadeOpacity] = useState(0)
   const groupRef = useRef<THREE.Group>(null)
 
+  // Track pointer position to distinguish click from drag
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null)
+  const DRAG_THRESHOLD = 5 // pixels - if moved more than this, it's a drag not a click
+
   // Persist animation state across hover on/off cycles
   const labelAnimState = useRef<LabelAnimState>({
     currentAngle: 0,
@@ -571,9 +575,31 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
     document.body.style.cursor = 'auto'
   }, [])
 
-  // Click handler - computes world coordinates of portal
-  const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+  // Pointer down - record position to detect drag vs click
+  const handlePointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
+    pointerDownPos.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY }
+  }, [])
+
+  // Pointer up - only trigger click if not dragged
+  const handlePointerUp = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
+
+    // Check if this was a drag (user rotated the dodecahedron)
+    if (pointerDownPos.current) {
+      const dx = e.nativeEvent.clientX - pointerDownPos.current.x
+      const dy = e.nativeEvent.clientY - pointerDownPos.current.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      // If moved more than threshold, this was a drag - don't trigger click
+      if (distance > DRAG_THRESHOLD) {
+        pointerDownPos.current = null
+        return
+      }
+    }
+
+    pointerDownPos.current = null
+
+    // Actual click - trigger portal navigation
     if (face.config?.active && onPortalClick && groupRef.current) {
       // Get world position and normal from the portal group
       const worldCenter = new THREE.Vector3()
@@ -590,7 +616,7 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
         worldNormal,
       })
     }
-  }, [face.config, onPortalClick])
+  }, [face.config, onPortalClick, DRAG_THRESHOLD])
 
   // Emissive color for hover state
   const innerRingEmissive = hovered ? '#4a8a6a' : (face.config?.active ? '#2a4a3a' : '#000000')
@@ -605,7 +631,8 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
           <mesh
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
-            onClick={handleClick}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
           >
             <circleGeometry args={[face.holeRadius, 32]} />
             <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
