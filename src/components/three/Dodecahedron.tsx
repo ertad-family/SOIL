@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useCallback } from 'react'
 import { useFrame, ThreeEvent, useThree } from '@react-three/fiber'
-import { useTexture, Text3D, Center, MeshTransmissionMaterial } from '@react-three/drei'
+import { useTexture, Text3D, Center, MeshTransmissionMaterial, Cloud, Clouds } from '@react-three/drei'
 import * as THREE from 'three'
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg'
 
@@ -720,6 +720,48 @@ function createHollowDodecahedronWithHoles(
   return result.geometry
 }
 
+// Inner fog using drei Cloud component
+function InnerFog() {
+  return (
+    <group>
+      {/* Soft point light in the center - sunset purple glow */}
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={8}
+        color="#9370DB"
+        distance={5}
+        decay={2}
+      />
+      <Clouds material={THREE.MeshBasicMaterial}>
+        {/* Outer fog - light purple/lavender */}
+        <Cloud
+          seed={42}
+          segments={10}
+          bounds={[0.4, 0.4, 0.4]}
+          volume={3}
+          color="#b8a0d0"
+          fade={10}
+          speed={0.2}
+          opacity={0.5}
+          concentrate="inside"
+        />
+        {/* Dense core - deeper purple */}
+        <Cloud
+          seed={7}
+          segments={6}
+          bounds={[0.15, 0.15, 0.15]}
+          volume={4}
+          color="#9370DB"
+          fade={10}
+          speed={0.15}
+          opacity={0.7}
+          concentrate="inside"
+        />
+      </Clouds>
+    </group>
+  )
+}
+
 interface DodecahedronProps {
   onPortalClick?: (faceId: number, section: string | null) => void
 }
@@ -785,6 +827,9 @@ export function Dodecahedron({ onPortalClick }: DodecahedronProps) {
   return (
     <>
       <group ref={groupRef}>
+        {/* Inner fog in the center */}
+        <InnerFog />
+
         {/* Main dodecahedron with holes - bronze material */}
         <mesh geometry={holedGeometry}>
           <meshStandardMaterial

@@ -128,6 +128,10 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
 
   useFrame((frameState, delta) => {
     if (meshRef.current) {
+      // Clamp delta to prevent huge jumps when tab loses focus
+      // Browser throttles RAF when tab is inactive, causing large delta on return
+      const clampedDelta = Math.min(delta, 0.1) // Max 100ms per frame
+
       const time = frameState.clock.elapsedTime
       const s = state.current
       const distFromCenter = s.pos.length()
@@ -240,7 +244,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       }
 
       // Smoothly interpolate velocity toward target (easing)
-      const lerpFactor = 1 - Math.pow(0.93, delta * 60)
+      const lerpFactor = 1 - Math.pow(0.93, clampedDelta * 60)
       s.vel.lerp(s.targetVel, lerpFactor)
 
       // Apply velocity with non-linear damping
@@ -253,7 +257,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       }
 
       // Update position
-      s.pos.add(s.vel.clone().multiplyScalar(delta * 60))
+      s.pos.add(s.vel.clone().multiplyScalar(clampedDelta * 60))
 
       // Soft boundary - keep in general area
       if (distFromCenter > 60) {
