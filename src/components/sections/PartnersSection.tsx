@@ -3,8 +3,8 @@ import { SectionLabel } from '@/components/ui/section-label'
 export function PartnersSection() {
   return (
     <section className="py-20 md:py-32 animate-fade-in-up relative overflow-hidden">
-      {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800/50 to-slate-900 pointer-events-none" />
+      {/* Subtle gradient background with transition to next section */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800/50 to-marble-900 pointer-events-none" />
 
       <div className="max-w-content mx-auto px-6 relative z-10">
         <SectionLabel>partners</SectionLabel>

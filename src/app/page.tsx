@@ -9,6 +9,7 @@ import {
   MethodologySection,
   PartnersSection,
   CommunitySection,
+  TestimonialsSliderSection,
   ScopeSection,
   GetInvolvedSection,
   AboutSection,
@@ -76,6 +77,7 @@ export default function LandingPage() {
           <MethodologySection />
           <PartnersSection />
           <CommunitySection />
+          <TestimonialsSliderSection />
           <ScopeSection />
           <GetInvolvedSection />
           <AboutSection />

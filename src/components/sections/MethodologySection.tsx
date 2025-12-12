@@ -44,12 +44,12 @@ export function MethodologySection() {
           </div>
 
           <div>
-            <p className="text-marble-100 text-lg md:text-xl leading-relaxed mb-6">
+            <p className="text-marble-100 text-lg leading-relaxed mb-6">
               SOIL is building the world&apos;s first systematic database of organizational
               autopsies. We capture comprehensive data from founders who&apos;ve closed their
               ventures — not to judge, but to learn.
             </p>
-            <p className="text-slate-400 leading-relaxed">
+            <p className="text-slate-400 text-lg leading-relaxed">
               Our proprietary Interview Framework guides founders through a structured reflection
               process across 6 modules: organizational mapping, financial analysis, timeline of
               events, environmental factors, founder context, and meaning-making narrative. Each
@@ -67,7 +67,7 @@ export function MethodologySection() {
               >
                 XX
               </span>
-              <span className="text-slate-400 text-base md:text-lg pb-2 md:pb-3 lg:pb-4">
+              <span className="text-slate-400 text-lg pb-2 md:pb-3 lg:pb-4">
                 organization autopsies globally
                 <br />
                  is our minimal goal.
@@ -113,7 +113,7 @@ export function MethodologySection() {
               <h3 className="font-display text-lg font-medium text-marble-100 mb-2">
                 {step.title}
               </h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
+              <p className="text-slate-400 text-lg leading-relaxed">{step.description}</p>
             </div>
           ))}
         </div>
