@@ -1,12 +1,16 @@
 'use client'
 
-import { useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { useMemo, useRef, useEffect } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 // Wireframe colors (dimmer for footer)
 const LINE_COLOR = '#555555'
 const ROAD_COLOR = '#666666'
+
+// Road texture paths (same as TuscanLandscape)
+const ROAD_TEXTURE_BASE = '/textures/Ground048_1K-JPG/Ground048_1K-JPG'
 
 // Helper for clamping
 function clamp(val: number, min: number, max: number): number {
@@ -28,13 +32,13 @@ function getTerrainHeight(x: number, z: number): number {
   return rollingHills + mediumWaves + smallWaves
 }
 
-// Road path for footer (extra wide S-curve spanning full width)
+// Road path for footer (wide S-curve spanning full width)
 const ROAD_POINTS = [
-  new THREE.Vector3(-180, 0, 60),
-  new THREE.Vector3(-90, 0, 30),
+  new THREE.Vector3(-200, 0, 70),
+  new THREE.Vector3(-100, 0, 35),
   new THREE.Vector3(0, 0, 5),
-  new THREE.Vector3(90, 0, -20),
-  new THREE.Vector3(180, 0, -45),
+  new THREE.Vector3(100, 0, -20),
+  new THREE.Vector3(200, 0, -50),
 ]
 
 function createRoadCurve(): THREE.CatmullRomCurve3 {
@@ -117,6 +121,103 @@ function createRoadGeometry(roadCurve: THREE.CatmullRomCurve3, width: number): T
   return geometry
 }
 
+// Generate road mesh (solid surface) with UV coordinates for texturing
+function createRoadMeshGeometry(roadCurve: THREE.CatmullRomCurve3, width: number): THREE.BufferGeometry {
+  const positions: number[] = []
+  const uvs: number[] = []
+  const indices: number[] = []
+  const points = roadCurve.getPoints(60)
+
+  // Calculate total road length for UV scaling
+  let totalLength = 0
+  const segmentLengths: number[] = [0]
+  for (let i = 1; i < points.length; i++) {
+    totalLength += points[i].distanceTo(points[i - 1])
+    segmentLengths.push(totalLength)
+  }
+
+  // UV repeat: texture repeats every ~10 units along the road
+  const uvScale = totalLength / 10
+
+  // Build vertices along both edges of the road
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i]
+    const y = getTerrainHeight(p.x, p.z) + 0.05 // Slightly below the lines
+
+    // Calculate perpendicular direction
+    let tangent: THREE.Vector3
+    if (i < points.length - 1) {
+      tangent = new THREE.Vector3().subVectors(points[i + 1], p).normalize()
+    } else {
+      tangent = new THREE.Vector3().subVectors(p, points[i - 1]).normalize()
+    }
+    const perp = new THREE.Vector3(-tangent.z, 0, tangent.x).multiplyScalar(width / 2)
+
+    // Left vertex
+    positions.push(p.x + perp.x, y, p.z + perp.z)
+    // Right vertex
+    positions.push(p.x - perp.x, y, p.z - perp.z)
+
+    // UV coordinates: V along road length, U across width
+    const v = (segmentLengths[i] / totalLength) * uvScale
+    uvs.push(0, v) // Left edge
+    uvs.push(1, v) // Right edge
+  }
+
+  // Build triangles connecting the vertices
+  for (let i = 0; i < points.length - 1; i++) {
+    const leftCurrent = i * 2
+    const rightCurrent = i * 2 + 1
+    const leftNext = (i + 1) * 2
+    const rightNext = (i + 1) * 2 + 1
+
+    // Two triangles per quad
+    indices.push(leftCurrent, rightCurrent, leftNext)
+    indices.push(rightCurrent, rightNext, leftNext)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+
+  return geometry
+}
+
+// Textured road mesh component
+interface TexturedRoadMeshProps {
+  geometry: THREE.BufferGeometry
+}
+
+function TexturedRoadMesh({ geometry }: TexturedRoadMeshProps) {
+  // Load PBR textures
+  const textures = useTexture({
+    map: `${ROAD_TEXTURE_BASE}_Color.jpg`,
+    normalMap: `${ROAD_TEXTURE_BASE}_NormalGL.jpg`,
+    roughnessMap: `${ROAD_TEXTURE_BASE}_Roughness.jpg`,
+    aoMap: `${ROAD_TEXTURE_BASE}_AmbientOcclusion.jpg`,
+  })
+
+  // Configure texture wrapping for repeat
+  useMemo(() => {
+    Object.values(textures).forEach((texture) => {
+      texture.wrapS = THREE.RepeatWrapping
+      texture.wrapT = THREE.RepeatWrapping
+    })
+  }, [textures])
+
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial
+        {...textures}
+        side={THREE.DoubleSide}
+        roughness={0.9}
+      />
+    </mesh>
+  )
+}
+
 // Simple cypress tree wireframe
 function createCypressGeometry(height: number, radius: number): THREE.BufferGeometry {
   const positions: number[] = []
@@ -186,6 +287,199 @@ function createCypressGeometry(height: number, radius: number): THREE.BufferGeom
   return geometry
 }
 
+// ============================================================================
+// GLOWING PARTICLES (same as VoidEnvironment)
+// ============================================================================
+
+// Create glow texture for particles (soft radial gradient)
+function createGlowTexture(): THREE.CanvasTexture {
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+
+  const gradient = ctx.createRadialGradient(
+    size / 2, size / 2, 0,
+    size / 2, size / 2, size / 2
+  )
+
+  // Gold color with alpha falloff
+  gradient.addColorStop(0, 'rgba(255, 220, 150, 1)')
+  gradient.addColorStop(0.1, 'rgba(255, 200, 100, 0.8)')
+  gradient.addColorStop(0.3, 'rgba(201, 148, 61, 0.4)')
+  gradient.addColorStop(0.6, 'rgba(201, 148, 61, 0.1)')
+  gradient.addColorStop(1, 'rgba(201, 148, 61, 0)')
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, size, size)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
+// Shared glow texture
+let glowTexture: THREE.CanvasTexture | null = null
+function getGlowTexture(): THREE.CanvasTexture {
+  if (!glowTexture) {
+    glowTexture = createGlowTexture()
+  }
+  return glowTexture
+}
+
+// Simple 3D noise function for organic movement
+function noise3D(x: number, y: number, z: number): number {
+  return (
+    Math.sin(x * 1.2 + y * 0.9) * 0.5 +
+    Math.sin(y * 1.1 + z * 0.8) * 0.3 +
+    Math.sin(z * 0.9 + x * 1.3) * 0.2
+  )
+}
+
+// Glowing gold sphere particle
+interface GlowingSphereProps {
+  position: THREE.Vector3
+  size: number
+  seed: number
+}
+
+function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
+  const spriteRef = useRef<THREE.Sprite>(null)
+  const texture = useMemo(() => getGlowTexture(), [])
+
+  // Store current velocity and position for physics-based movement
+  const state = useRef({
+    pos: position.clone(),
+    vel: new THREE.Vector3(
+      (Math.random() - 0.5) * 0.02,
+      (Math.random() - 0.5) * 0.02,
+      (Math.random() - 0.5) * 0.02
+    ),
+    targetVel: new THREE.Vector3(),
+  })
+
+  useFrame((frameState, delta) => {
+    if (spriteRef.current) {
+      const clampedDelta = Math.min(delta, 0.1)
+      const time = frameState.clock.elapsedTime
+      const s = state.current
+
+      // Wandering movement using noise
+      const noiseScale = 0.12
+      const noiseX = noise3D(time * 0.1 + seed, seed * 10, 0) * noiseScale
+      const noiseY = noise3D(seed * 10, time * 0.08 + seed, 0) * noiseScale * 0.5 // Less vertical
+      const noiseZ = noise3D(0, seed * 10, time * 0.09 + seed) * noiseScale
+      s.targetVel.set(noiseX, noiseY, noiseZ)
+
+      // Smoothly interpolate velocity
+      const lerpFactor = 1 - Math.pow(0.93, clampedDelta * 60)
+      s.vel.lerp(s.targetVel, lerpFactor)
+
+      // Limit speed
+      const speed = s.vel.length()
+      const maxSpeed = 0.08
+      if (speed > maxSpeed) {
+        s.vel.multiplyScalar(maxSpeed / speed)
+      }
+
+      // Update position
+      s.pos.add(s.vel.clone().multiplyScalar(clampedDelta * 60))
+
+      // Keep particles above terrain and within bounds
+      const terrainY = getTerrainHeight(s.pos.x, s.pos.z) - 5 // Landscape offset
+      const minY = terrainY + 3
+      const maxY = terrainY + 25
+      if (s.pos.y < minY) {
+        s.pos.y = minY
+        s.vel.y = Math.abs(s.vel.y) * 0.5
+      }
+      if (s.pos.y > maxY) {
+        s.pos.y = maxY
+        s.vel.y = -Math.abs(s.vel.y) * 0.5
+      }
+
+      // Keep within horizontal bounds
+      const maxDist = 150
+      if (Math.abs(s.pos.x) > maxDist) {
+        s.vel.x *= -0.5
+        s.pos.x = Math.sign(s.pos.x) * maxDist
+      }
+      if (Math.abs(s.pos.z) > 80) {
+        s.vel.z *= -0.5
+        s.pos.z = Math.sign(s.pos.z) * 80
+      }
+
+      // Apply position
+      spriteRef.current.position.copy(s.pos)
+
+      // Pulsing opacity
+      const material = spriteRef.current.material as THREE.SpriteMaterial
+      const basePulse = Math.sin(time * 2 + seed) * 0.15
+      const randomFlicker = Math.random() < 0.02 ? Math.random() * 0.3 : 0
+      material.opacity = 0.5 + basePulse + randomFlicker
+    }
+  })
+
+  const glowSize = size * 12
+
+  return (
+    <sprite ref={spriteRef} position={position} scale={[glowSize, glowSize, 1]}>
+      <spriteMaterial
+        map={texture}
+        transparent
+        opacity={0.6}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </sprite>
+  )
+}
+
+// Floating particles component
+interface FooterParticlesProps {
+  count?: number
+}
+
+function FooterParticles({ count = 30 }: FooterParticlesProps) {
+  const particles = useMemo(() => {
+    const result: { position: THREE.Vector3; size: number; seed: number }[] = []
+
+    for (let i = 0; i < count; i++) {
+      // Distribute particles across the landscape
+      const x = (Math.random() - 0.5) * 250
+      const z = (Math.random() - 0.5) * 100
+      const terrainY = getTerrainHeight(x, z) - 5 // Landscape offset
+      const y = terrainY + 5 + Math.random() * 15
+
+      const position = new THREE.Vector3(x, y, z)
+      const size = Math.random() * 0.04 + 0.02
+      const seed = i * 0.7 + Math.random() * 100
+
+      result.push({ position, size, seed })
+    }
+
+    return result
+  }, [count])
+
+  return (
+    <group>
+      {particles.map((particle, idx) => (
+        <GlowingSphere
+          key={idx}
+          position={particle.position}
+          size={particle.size}
+          seed={particle.seed}
+        />
+      ))}
+    </group>
+  )
+}
+
+// ============================================================================
+// TREES
+// ============================================================================
+
 // Get tree positions along road
 function getTreePositions(roadCurve: THREE.CatmullRomCurve3, count: number): { x: number; z: number; scale: number }[] {
   const positions: { x: number; z: number; scale: number }[] = []
@@ -212,6 +506,23 @@ function getTreePositions(roadCurve: THREE.CatmullRomCurve3, count: number): { x
   return positions
 }
 
+// Setup fog in the scene
+function SceneFog() {
+  const { scene } = useThree()
+
+  useEffect(() => {
+    // Linear fog matching marble-950 background for seamless fade
+    // Starts at 40 units, fully opaque at 120 units
+    scene.fog = new THREE.Fog('#252220', 40, 120)
+
+    return () => {
+      scene.fog = null
+    }
+  }, [scene])
+
+  return null
+}
+
 // Static landscape scene (no animation)
 function LandscapeScene() {
   const roadCurve = useMemo(() => createRoadCurve(), [])
@@ -223,6 +534,12 @@ function LandscapeScene() {
 
   const roadGeometry = useMemo(
     () => createRoadGeometry(roadCurve, 3),
+    [roadCurve]
+  )
+
+  // Mesh geometry for textured road surface
+  const roadMeshGeometry = useMemo(
+    () => createRoadMeshGeometry(roadCurve, 3),
     [roadCurve]
   )
 
@@ -241,7 +558,7 @@ function LandscapeScene() {
         <lineBasicMaterial color={LINE_COLOR} transparent opacity={0.3} />
       </lineSegments>
 
-      {/* Road */}
+      {/* Road wireframe lines */}
       <lineSegments geometry={roadGeometry}>
         <lineBasicMaterial color={ROAD_COLOR} transparent opacity={0.5} />
       </lineSegments>
@@ -252,6 +569,9 @@ function LandscapeScene() {
           <lineBasicMaterial color={LINE_COLOR} transparent opacity={0.4} />
         </lineSegments>
       ))}
+
+      {/* Floating golden particles */}
+      <FooterParticles count={25} />
     </group>
   )
 }
@@ -265,8 +585,8 @@ export function FooterLandscape({ className }: FooterLandscapeProps) {
     <div className={className} style={{ width: '100%', height: '100%' }}>
       <Canvas
         camera={{
-          position: [0, 30, 60],
-          fov: 65,
+          position: [0, 20, 35],
+          fov: 60,
           near: 0.1,
           far: 500,
         }}
@@ -275,6 +595,7 @@ export function FooterLandscape({ className }: FooterLandscapeProps) {
       >
         {/* Minimal lighting */}
         <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 20, 10]} intensity={0.3} />
 
         {/* Background color matching marble-950 */}
         <color attach="background" args={['#252220']} />

@@ -14,6 +14,7 @@ import {
   GetInvolvedSection,
 } from '@/components/sections'
 import { FooterLandscape } from '@/components/three/FooterLandscape'
+import { GlobalParticles } from '@/components/three/GlobalParticles'
 
 // ============================================================================
 // FOOTER - Black marble with wireframe landscape
@@ -54,6 +55,11 @@ export default function LandingPage() {
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
+      {/* Global floating particles - other visitors */}
+      <Suspense fallback={null}>
+        <GlobalParticles />
+      </Suspense>
+
       <div className="min-h-screen bg-slate-900 dark:bg-slate-900 text-marble-100">
         {/* Header with theme toggle */}
         <header className="sticky top-0 z-50 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-lg">
