@@ -46,7 +46,7 @@ export function ScopeSection() {
         <div className="mb-12">
           <SectionLabel>ecosystem</SectionLabel>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-medium mt-4 text-marble-100 leading-tight max-w-xl">
-            What We&apos;re Building
+            Our Projects
           </h2>
         </div>
 

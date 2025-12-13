@@ -366,11 +366,23 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       const s = state.current
 
       // Wandering movement using noise
-      const noiseScale = 0.12
+      const noiseScale = 0.08
       const noiseX = noise3D(time * 0.1 + seed, seed * 10, 0) * noiseScale
-      const noiseY = noise3D(seed * 10, time * 0.08 + seed, 0) * noiseScale * 0.5 // Less vertical
+      const noiseY = noise3D(seed * 10, time * 0.08 + seed, 0) * noiseScale * 0.5
       const noiseZ = noise3D(0, seed * 10, time * 0.09 + seed) * noiseScale
       s.targetVel.set(noiseX, noiseY, noiseZ)
+
+      // Add attraction back to center when far from origin
+      const maxDistX = 100
+      const maxDistZ = 50
+      const attractionStrength = 0.02
+
+      if (Math.abs(s.pos.x) > maxDistX * 0.7) {
+        s.targetVel.x -= Math.sign(s.pos.x) * attractionStrength * (Math.abs(s.pos.x) / maxDistX)
+      }
+      if (Math.abs(s.pos.z) > maxDistZ * 0.7) {
+        s.targetVel.z -= Math.sign(s.pos.z) * attractionStrength * (Math.abs(s.pos.z) / maxDistZ)
+      }
 
       // Smoothly interpolate velocity
       const lerpFactor = 1 - Math.pow(0.93, clampedDelta * 60)
@@ -378,7 +390,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
 
       // Limit speed
       const speed = s.vel.length()
-      const maxSpeed = 0.08
+      const maxSpeed = 0.06
       if (speed > maxSpeed) {
         s.vel.multiplyScalar(maxSpeed / speed)
       }
@@ -387,28 +399,14 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       s.pos.add(s.vel.clone().multiplyScalar(clampedDelta * 60))
 
       // Keep particles above terrain and within bounds
-      const terrainY = getTerrainHeight(s.pos.x, s.pos.z) - 5 // Landscape offset
+      const terrainY = getTerrainHeight(s.pos.x, s.pos.z) - 5
       const minY = terrainY + 3
-      const maxY = terrainY + 25
-      if (s.pos.y < minY) {
-        s.pos.y = minY
-        s.vel.y = Math.abs(s.vel.y) * 0.5
-      }
-      if (s.pos.y > maxY) {
-        s.pos.y = maxY
-        s.vel.y = -Math.abs(s.vel.y) * 0.5
-      }
+      const maxY = terrainY + 20
+      s.pos.y = Math.max(minY, Math.min(maxY, s.pos.y))
 
-      // Keep within horizontal bounds
-      const maxDist = 150
-      if (Math.abs(s.pos.x) > maxDist) {
-        s.vel.x *= -0.5
-        s.pos.x = Math.sign(s.pos.x) * maxDist
-      }
-      if (Math.abs(s.pos.z) > 80) {
-        s.vel.z *= -0.5
-        s.pos.z = Math.sign(s.pos.z) * 80
-      }
+      // Hard clamp horizontal bounds
+      s.pos.x = Math.max(-maxDistX, Math.min(maxDistX, s.pos.x))
+      s.pos.z = Math.max(-maxDistZ, Math.min(maxDistZ, s.pos.z))
 
       // Apply position
       spriteRef.current.position.copy(s.pos)
@@ -417,7 +415,7 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
       const material = spriteRef.current.material as THREE.SpriteMaterial
       const basePulse = Math.sin(time * 2 + seed) * 0.15
       const randomFlicker = Math.random() < 0.02 ? Math.random() * 0.3 : 0
-      material.opacity = 0.5 + basePulse + randomFlicker
+      material.opacity = 0.6 + basePulse + randomFlicker
     }
   })
 
@@ -446,14 +444,14 @@ function FooterParticles({ count = 30 }: FooterParticlesProps) {
     const result: { position: THREE.Vector3; size: number; seed: number }[] = []
 
     for (let i = 0; i < count; i++) {
-      // Distribute particles across the landscape
-      const x = (Math.random() - 0.5) * 250
-      const z = (Math.random() - 0.5) * 100
-      const terrainY = getTerrainHeight(x, z) - 5 // Landscape offset
-      const y = terrainY + 5 + Math.random() * 15
+      // Distribute particles in visible area (smaller bounds)
+      const x = (Math.random() - 0.5) * 160
+      const z = (Math.random() - 0.5) * 80
+      const terrainY = getTerrainHeight(x, z) - 5
+      const y = terrainY + 4 + Math.random() * 12
 
       const position = new THREE.Vector3(x, y, z)
-      const size = Math.random() * 0.04 + 0.02
+      const size = Math.random() * 0.06 + 0.03 // Larger particles
       const seed = i * 0.7 + Math.random() * 100
 
       result.push({ position, size, seed })
@@ -576,11 +574,47 @@ function LandscapeScene() {
   )
 }
 
-interface FooterLandscapeProps {
-  className?: string
+// Camera controller that responds to scroll progress
+interface CameraControllerProps {
+  scrollProgress: number
 }
 
-export function FooterLandscape({ className }: FooterLandscapeProps) {
+function CameraController({ scrollProgress }: CameraControllerProps) {
+  const { camera } = useThree()
+  const targetRef = useRef({ z: 35, y: 20 })
+
+  useFrame(() => {
+    // Scroll down (progress 0->1) = camera zooms out (z increases)
+    // scrollProgress 0 = close (z=25), scrollProgress 1 = far (z=55)
+    const minZ = 25
+    const maxZ = 55
+    const minY = 15
+    const maxY = 28
+
+    targetRef.current.z = minZ + scrollProgress * (maxZ - minZ)
+    targetRef.current.y = minY + scrollProgress * (maxY - minY)
+
+    // Different speeds for zoom in vs zoom out
+    const deltaZ = targetRef.current.z - camera.position.z
+    const deltaY = targetRef.current.y - camera.position.y
+
+    // Zoom in (scrolling up, deltaZ < 0) is faster
+    const lerpZ = deltaZ < 0 ? 0.15 : 0.08
+    const lerpY = deltaY < 0 ? 0.15 : 0.08
+
+    camera.position.z += deltaZ * lerpZ
+    camera.position.y += deltaY * lerpY
+  })
+
+  return null
+}
+
+interface FooterLandscapeProps {
+  className?: string
+  scrollProgress?: number
+}
+
+export function FooterLandscape({ className, scrollProgress = 0 }: FooterLandscapeProps) {
   return (
     <div className={className} style={{ width: '100%', height: '100%' }}>
       <Canvas
@@ -593,6 +627,9 @@ export function FooterLandscape({ className }: FooterLandscapeProps) {
         gl={{ antialias: true, alpha: true }}
         style={{ background: 'transparent' }}
       >
+        {/* Camera zoom based on scroll */}
+        <CameraController scrollProgress={scrollProgress} />
+
         {/* Minimal lighting */}
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 20, 10]} intensity={0.3} />
