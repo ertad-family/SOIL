@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sun, Moon } from 'lucide-react'
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/sections'
 import { FooterLandscape } from '@/components/three/FooterLandscape'
 import { GlobalParticles } from '@/components/three/GlobalParticles'
+import { MenuTransition } from '@/components/transitions/MenuTransition'
 
 // ============================================================================
 // FOOTER - Black marble with wireframe landscape
@@ -83,6 +84,24 @@ function Footer() {
 // ============================================================================
 export default function LandingPage() {
   const [isDarkMode, setIsDarkMode] = useState(true) // Dark by default
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // Handle menu button click
+  const handleMenuClick = useCallback(() => {
+    setMenuOpen(true)
+  }, [])
+
+  // Handle navigation from menu (portal click)
+  const handleMenuNavigate = useCallback((section: string | null) => {
+    console.log('Navigate to section:', section)
+    // For now, just close menu. Later: implement actual navigation
+    // TODO: Navigate to the appropriate page/section based on portal
+  }, [])
+
+  // Handle menu close (transition complete back to page)
+  const handleMenuClose = useCallback(() => {
+    setMenuOpen(false)
+  }, [])
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
@@ -90,6 +109,15 @@ export default function LandingPage() {
       <Suspense fallback={null}>
         <GlobalParticles />
       </Suspense>
+
+      {/* Menu transition overlay */}
+      <MenuTransition
+        isActive={menuOpen}
+        exitPortalSection="home"
+        onTransitionComplete={() => console.log('Menu transition complete')}
+        onNavigate={handleMenuNavigate}
+        onClose={handleMenuClose}
+      />
 
       <div className="min-h-screen bg-slate-900 dark:bg-slate-900 text-marble-100">
         {/* Header with theme toggle */}
@@ -109,7 +137,7 @@ export default function LandingPage() {
                 >
                   {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
-                <Button variant="dark-secondary" size="sm">
+                <Button variant="dark-secondary" size="sm" onClick={handleMenuClick}>
                   Menu
                 </Button>
               </div>

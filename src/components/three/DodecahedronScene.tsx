@@ -8,10 +8,13 @@ import { Suspense, useCallback, useRef, useEffect, useState } from 'react'
 // This prevents black screen flash when first hovering over a portal
 useFont.preload('/fonts/Cinzel/Cinzel SemiBold_Regular.json')
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
-import { Dodecahedron, type PortalClickData } from './Dodecahedron'
+import { Dodecahedron, type PortalClickData, getPortalDataBySection, RADIUS } from './Dodecahedron'
 import { VoidEnvironment } from './VoidEnvironment'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import * as THREE from 'three'
+
+// Dodecahedron is positioned at [0, 8, 0] in the scene
+const DODECAHEDRON_Y_OFFSET = 8
 
 // Animation state for camera fly-through
 interface FlyThroughState {
@@ -44,9 +47,11 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
+
 // Animation durations (seconds)
 const FLYTHROUGH_DURATION = 2.2  // Total flight time (approach + enter combined)
 const FADEOUT_DURATION = 0.4    // Fog fills screen after entering
+const FLYOUT_DURATION = 3.5     // Fly-out duration (arc trajectory)
 
 // Component to track camera position and rotation continuously (for smooth animation start)
 interface CameraTrackerProps {
@@ -203,6 +208,154 @@ function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimato
   return null
 }
 
+// Animation state for camera fly-OUT (reverse of fly-through)
+interface FlyOutState {
+  isAnimating: boolean
+  startTime: number
+  phase: 'idle' | 'flyout'
+  // Portal to exit through
+  portalCenter: THREE.Vector3
+  portalNormal: THREE.Vector3
+  // Waypoints for fly-out trajectory
+  waypoints: {
+    inside: THREE.Vector3           // Start: inside dodecahedron (center)
+    exitPoint: THREE.Vector3        // Exit point outside portal (along portal normal)
+    pivotPoint: THREE.Vector3       // Pivot point where camera slows down and turns
+    observer: THREE.Vector3         // End: observer position
+  } | null
+  // Store initial quaternion for smooth rotation
+  startQuaternion: THREE.Quaternion
+  onComplete: (() => void) | null
+}
+
+// Camera animator for fly-OUT animation (exiting dodecahedron)
+interface CameraFlyOutAnimatorProps {
+  flyOutState: React.MutableRefObject<FlyOutState>
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
+  onFadeProgress: (progress: number) => void
+}
+
+function CameraFlyOutAnimator({ flyOutState, controlsRef, onFadeProgress }: CameraFlyOutAnimatorProps) {
+  const { camera } = useThree()
+
+  useFrame((state) => {
+    const fs = flyOutState.current
+    if (!fs.isAnimating || fs.phase === 'idle') return
+
+    // Initialize waypoints on first frame
+    if (fs.startTime === 0) {
+      fs.startTime = state.clock.elapsedTime
+
+      // Trajectory: center → through portal → arc to side → observer
+      const portalCenterWorld = fs.portalCenter.clone()
+      portalCenterWorld.y += DODECAHEDRON_Y_OFFSET
+
+      const dodecahedronCenter = new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)
+
+      // Exit point: just outside the portal along its normal
+      const exitPoint = portalCenterWorld.clone()
+        .add(fs.portalNormal.clone().multiplyScalar(4))
+
+      // Fixed final observer position (side view showing landscape)
+      const observerPos = new THREE.Vector3(-2.63, 15.86, 23.59)
+
+      // Pivot point: intermediate point for the arc
+      // Must be OFFSET from the line exitPoint→observer to create actual curve
+      const pivotPoint = new THREE.Vector3().lerpVectors(exitPoint, observerPos, 0.5)
+      // Offset sideways (negative X) and up to create arc that swings around
+      pivotPoint.x -= 15  // Swing far to the left
+      pivotPoint.y += 8   // Go higher for more dramatic arc
+
+      fs.waypoints = {
+        inside: dodecahedronCenter.clone(),
+        exitPoint,
+        pivotPoint,
+        observer: observerPos,
+      }
+
+      // Start camera inside, looking toward the portal
+      camera.position.copy(fs.waypoints.inside)
+      camera.lookAt(portalCenterWorld)
+      fs.startQuaternion.copy(camera.quaternion)
+    }
+
+    const elapsed = state.clock.elapsedTime - fs.startTime
+
+    // Disable orbit controls during animation
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false
+    }
+
+    if (fs.phase === 'flyout' && fs.waypoints) {
+      const t = Math.min(elapsed / FLYOUT_DURATION, 1)
+
+      // Two-phase animation:
+      // Phase 1 (0-0.25): Linear through portal center (inside → exitPoint)
+      // Phase 2 (0.25-1.0): Quadratic Bezier arc (exitPoint → pivotPoint → observer)
+
+      let pos: THREE.Vector3
+      const dodecahedronCenter = new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)
+
+      if (t < 0.25) {
+        // Phase 1: Straight line through portal
+        const segmentT = t / 0.25
+        const eased = easeInOutCubic(segmentT)
+        pos = new THREE.Vector3().lerpVectors(fs.waypoints.inside, fs.waypoints.exitPoint, eased)
+      } else {
+        // Phase 2: Quadratic Bezier arc from exit to observer via pivot
+        const segmentT = (t - 0.25) / 0.75
+        const eased = easeInOutCubic(segmentT)
+
+        // Quadratic Bezier: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+        const oneMinusT = 1 - eased
+        const p0 = fs.waypoints.exitPoint
+        const p1 = fs.waypoints.pivotPoint
+        const p2 = fs.waypoints.observer
+
+        pos = new THREE.Vector3(
+          oneMinusT * oneMinusT * p0.x + 2 * oneMinusT * eased * p1.x + eased * eased * p2.x,
+          oneMinusT * oneMinusT * p0.y + 2 * oneMinusT * eased * p1.y + eased * eased * p2.y,
+          oneMinusT * oneMinusT * p0.z + 2 * oneMinusT * eased * p1.z + eased * eased * p2.z
+        )
+      }
+
+      camera.position.copy(pos)
+
+      // Camera always looks at dodecahedron center
+      camera.lookAt(dodecahedronCenter)
+
+      // Fade OUT the overlay during fly-out (1 → 0)
+      // Start fading immediately, complete by 30% so user sees the fly-out animation
+      if (t < 0.3) {
+        const fadeT = t / 0.3 // 0→1 over first 30%
+        onFadeProgress(1 - fadeT) // 1→0
+      } else {
+        onFadeProgress(0)
+      }
+
+      if (t >= 1) {
+        // Animation complete
+        fs.phase = 'idle'
+        fs.isAnimating = false
+
+        // Re-enable controls
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true
+          // Reset target to dodecahedron center
+          controlsRef.current.target.set(0, DODECAHEDRON_Y_OFFSET, 0)
+        }
+
+        // Call completion callback
+        if (fs.onComplete) {
+          fs.onComplete()
+        }
+      }
+    }
+  })
+
+  return null
+}
+
 // Key light that follows camera with offset (prevents frontal overexposure)
 function KeyLight() {
   const { camera } = useThree()
@@ -266,22 +419,114 @@ function SceneFog() {
 interface DodecahedronSceneProps {
   className?: string
   onPortalClick?: (faceId: number, section: string | null) => void
+  // NEW: For menu transition
+  initialView?: 'outside' | 'inside'  // 'inside' = start inside for fly-out animation
+  exitPortalSection?: string  // Which portal to fly out through (e.g., 'home', 'research')
+  onFlyOutComplete?: () => void  // Called when fly-out animation finishes
+  initialFadeOpacity?: number  // Initial fade overlay opacity (1 for menu transition)
+  onExternalFadeProgress?: (progress: number) => void  // Report fade progress to parent (for external overlay sync)
+  hideInternalOverlay?: boolean  // If true, don't render internal fade overlay (parent handles it)
+  onReady?: () => void  // Called when scene is ready (preloaded)
+  triggerFlyOutRef?: React.MutableRefObject<(() => void) | null>  // Ref to trigger fly-out externally
 }
 
-export function DodecahedronScene({ className, onPortalClick }: DodecahedronSceneProps) {
+export function DodecahedronScene({
+  className,
+  onPortalClick,
+  initialView = 'outside',
+  exitPortalSection = 'home',
+  onFlyOutComplete,
+  initialFadeOpacity = 0,
+  onExternalFadeProgress,
+  hideInternalOverlay = false,
+  onReady,
+  triggerFlyOutRef,
+}: DodecahedronSceneProps) {
   // Ref for OrbitControls (to disable during animation)
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
 
   // Continuously tracked camera position and rotation (updated every frame by CameraTracker)
   // This allows us to capture the exact camera state at the moment of click
-  const cameraPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 8, 18))
+  const cameraPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 18))
   const cameraQuaternionRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
 
   // Fade overlay opacity (0 = transparent, 1 = fully purple fog)
-  const [fadeOpacity, setFadeOpacity] = useState(0)
+  const [fadeOpacity, setFadeOpacity] = useState(initialFadeOpacity)
 
   // Track if we're navigating (to pause dodecahedron rotation)
-  const [isNavigating, setIsNavigating] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(initialView === 'inside')
+
+  // Track if fly-out has been initialized
+  const flyOutInitializedRef = useRef(false)
+
+  // Fly-OUT animation state (for exiting dodecahedron)
+  const flyOutStateRef = useRef<FlyOutState>({
+    isAnimating: false,
+    startTime: 0,
+    phase: 'idle',
+    portalCenter: new THREE.Vector3(),
+    portalNormal: new THREE.Vector3(),
+    waypoints: null,
+    startQuaternion: new THREE.Quaternion(),
+    onComplete: null,
+  })
+
+  // Function to trigger fly-out animation externally
+  const triggerFlyOut = useCallback(() => {
+    if (flyOutStateRef.current.isAnimating) return // Already animating
+
+    // Get portal data for the exit portal
+    const portalData = getPortalDataBySection(exitPortalSection)
+    if (!portalData) {
+      console.warn(`Portal not found for section: ${exitPortalSection}, using home`)
+      const homePortal = getPortalDataBySection('home')
+      if (homePortal) {
+        flyOutStateRef.current.portalCenter.copy(homePortal.center)
+        flyOutStateRef.current.portalNormal.copy(homePortal.normal)
+      }
+    } else {
+      flyOutStateRef.current.portalCenter.copy(portalData.center)
+      flyOutStateRef.current.portalNormal.copy(portalData.normal)
+    }
+
+    // Stop dodecahedron rotation
+    setIsNavigating(true)
+
+    // Start fly-out animation
+    flyOutStateRef.current.isAnimating = true
+    flyOutStateRef.current.phase = 'flyout'
+    flyOutStateRef.current.startTime = 0
+    flyOutStateRef.current.waypoints = null
+    flyOutStateRef.current.onComplete = () => {
+      setIsNavigating(false)
+      onFlyOutComplete?.()
+    }
+  }, [exitPortalSection, onFlyOutComplete])
+
+  // Expose triggerFlyOut via ref
+  useEffect(() => {
+    if (triggerFlyOutRef) {
+      triggerFlyOutRef.current = triggerFlyOut
+    }
+    return () => {
+      if (triggerFlyOutRef) {
+        triggerFlyOutRef.current = null
+      }
+    }
+  }, [triggerFlyOut, triggerFlyOutRef])
+
+  // Call onReady when scene mounts
+  useEffect(() => {
+    onReady?.()
+  }, [onReady])
+
+  // Initialize fly-out animation when starting from inside (legacy support)
+  useEffect(() => {
+    if (initialView === 'inside' && !flyOutInitializedRef.current) {
+      flyOutInitializedRef.current = true
+      triggerFlyOut()
+    }
+  }, [initialView, triggerFlyOut])
 
   // Fly-through animation state (ref to avoid re-renders during animation)
   const flyStateRef = useRef<FlyThroughState>({
@@ -301,8 +546,6 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
   // Handle portal click - starts fly-through animation
   // Portal now passes world coordinates directly
   const handlePortalClick = useCallback((data: PortalClickData) => {
-    console.log(`Portal clicked: Face ${data.faceId}, Section: ${data.section}`)
-
     // Don't start new animation if already animating
     if (flyStateRef.current.isAnimating) return
 
@@ -338,12 +581,19 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
   // Handle fade progress updates from CameraAnimator
   const handleFadeProgress = useCallback((progress: number) => {
     setFadeOpacity(progress)
-  }, [])
+    // Also report to parent for external overlay sync
+    onExternalFadeProgress?.(progress)
+  }, [onExternalFadeProgress])
+
+  // Determine initial camera position based on initialView
+  const initialCameraPosition: [number, number, number] = initialView === 'inside'
+    ? [0, DODECAHEDRON_Y_OFFSET, 0]  // Inside dodecahedron center
+    : [0, DODECAHEDRON_Y_OFFSET, 18] // Normal observer position
 
   return (
     <div className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas
-        camera={{ position: [0, 8, 18], fov: 50 }}
+        camera={{ position: initialCameraPosition, fov: 50 }}
         gl={{ antialias: true, alpha: false }}
       >
         <OrbitControls
@@ -352,15 +602,23 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           dampingFactor={0.05}
           minDistance={8}
           maxDistance={35}
-          target={[0, 8, 0]}
+          target={[0, DODECAHEDRON_Y_OFFSET, 0]}
+          enabled={initialView !== 'inside'} // Disable during fly-out
         />
 
         {/* Track camera position and rotation continuously for smooth animation start */}
         <CameraTracker cameraPositionRef={cameraPositionRef} cameraQuaternionRef={cameraQuaternionRef} />
 
-        {/* Camera animator - handles fly-through */}
+        {/* Camera animator - handles fly-through (entering portal) */}
         <CameraAnimator
           flyState={flyStateRef}
+          controlsRef={controlsRef}
+          onFadeProgress={handleFadeProgress}
+        />
+
+        {/* Camera fly-OUT animator - handles exiting dodecahedron */}
+        <CameraFlyOutAnimator
+          flyOutState={flyOutStateRef}
           controlsRef={controlsRef}
           onFadeProgress={handleFadeProgress}
         />
@@ -394,7 +652,7 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
           />
 
           {/* Main dodecahedron - raised to sit above the landscape */}
-          <group position={[0, 8, 0]}>
+          <group position={[0, DODECAHEDRON_Y_OFFSET, 0]}>
             <Dodecahedron onPortalClick={handlePortalClick} isNavigating={isNavigating} />
           </group>
         </Suspense>
@@ -411,7 +669,8 @@ export function DodecahedronScene({ className, onPortalClick }: DodecahedronScen
       </Canvas>
 
       {/* Fog transition overlay: purple → white-gold (subtle inner glow) */}
-      {fadeOpacity > 0 && (
+      {/* Hidden when parent handles the overlay (hideInternalOverlay=true) */}
+      {!hideInternalOverlay && fadeOpacity > 0 && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{

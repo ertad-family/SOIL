@@ -173,6 +173,23 @@ export function getDodecahedronFaceCenters(radius: number): FaceData[] {
   return faces
 }
 
+// Get portal data (center and normal) by section name
+// Used for fly-out animation to find the exit portal
+export function getPortalDataBySection(section: string): { center: THREE.Vector3, normal: THREE.Vector3, faceId: number } | null {
+  const faceConfig = FACE_CONFIG.find(f => f.section === section)
+  if (!faceConfig) return null
+
+  const faces = getDodecahedronFaceCenters(RADIUS)
+  const face = faces[faceConfig.id]
+  if (!face) return null
+
+  return {
+    center: face.center.clone(),
+    normal: face.normal.clone(),
+    faceId: faceConfig.id
+  }
+}
+
 // Face data with hole radius and config attached
 interface FaceWithHole {
   center: THREE.Vector3
