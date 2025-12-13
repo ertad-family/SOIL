@@ -19,12 +19,8 @@ import {
 // ============================================================================
 function Footer() {
   return (
-    <footer className="relative bg-marble-950 overflow-hidden">
-      {/* Subtle marble sheen overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-800/10 via-transparent to-gold-500/5 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(196,161,90,0.03)_0%,_transparent_50%)] pointer-events-none" />
-
-      <div className="max-w-content mx-auto px-6 py-16 relative z-10">
+    <footer className="bg-marble-950">
+      <div className="max-w-content mx-auto px-6 py-16">
         <div className="flex flex-col items-center gap-6">
           <div className="font-serif text-2xl tracking-wider text-marble-300">
             S<span className="text-gold-500">·</span>O<span className="text-gold-500">·</span>I
