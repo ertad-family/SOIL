@@ -8,7 +8,7 @@ import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg'
 
 // Portal configuration for each face with varying hole sizes
 export const FACE_CONFIG = [
-  { id: 0, name: 'Home', section: 'home', active: true, holeRadius: 1.3 },
+  { id: 0, name: 'Main', section: 'home', active: true, holeRadius: 1.3 },
   { id: 1, name: 'Research', section: 'research', active: true, holeRadius: 1.1 },
   { id: 2, name: 'Memorials', section: 'memorials', active: true, holeRadius: 1.4 },
   { id: 3, name: 'Diagnostics', section: 'diagnostics', active: true, holeRadius: 1.0 },

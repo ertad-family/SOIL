@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sun, Moon } from 'lucide-react'
 import {
@@ -13,14 +13,23 @@ import {
   ScopeSection,
   GetInvolvedSection,
 } from '@/components/sections'
+import { FooterLandscape } from '@/components/three/FooterLandscape'
 
 // ============================================================================
-// FOOTER - Black marble with subtle sheen
+// FOOTER - Black marble with wireframe landscape
 // ============================================================================
 function Footer() {
   return (
-    <footer className="bg-marble-950">
-      <div className="max-w-content mx-auto px-6 py-16">
+    <footer className="bg-marble-950 relative">
+      {/* Wireframe landscape background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <Suspense fallback={null}>
+          <FooterLandscape className="w-full h-full" />
+        </Suspense>
+      </div>
+
+      {/* Content overlay */}
+      <div className="relative z-10 max-w-content mx-auto px-6 py-32">
         <div className="flex flex-col items-center gap-6">
           <div className="font-serif text-2xl tracking-wider text-marble-300">
             S<span className="text-gold-500">·</span>O<span className="text-gold-500">·</span>I

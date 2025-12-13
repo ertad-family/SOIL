@@ -2,11 +2,15 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 // Colors matching the original VoidGrid aesthetic
 const LINE_COLOR = '#888888'
 const ROAD_COLOR = '#aaaaaa'
+
+// Road texture paths
+const ROAD_TEXTURE_BASE = '/textures/Ground048_1K-JPG/Ground048_1K-JPG'
 
 // Helper for clamping
 function clamp(val: number, min: number, max: number): number {
@@ -434,6 +438,103 @@ function createRoadGeometry(roadCurve: THREE.CatmullRomCurve3, width: number): T
   return geometry
 }
 
+// Generate road mesh (solid surface) with UV coordinates for texturing
+function createRoadMeshGeometry(roadCurve: THREE.CatmullRomCurve3, width: number): THREE.BufferGeometry {
+  const positions: number[] = []
+  const uvs: number[] = []
+  const indices: number[] = []
+  const points = roadCurve.getPoints(120)
+
+  // Calculate total road length for UV scaling
+  let totalLength = 0
+  const segmentLengths: number[] = [0]
+  for (let i = 1; i < points.length; i++) {
+    totalLength += points[i].distanceTo(points[i - 1])
+    segmentLengths.push(totalLength)
+  }
+
+  // UV repeat: texture repeats every ~10 units along the road
+  const uvScale = totalLength / 10
+
+  // Build vertices along both edges of the road
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i]
+    const y = getTerrainHeight(p.x, p.z) + 0.15 // Slightly below the lines
+
+    // Calculate perpendicular direction
+    let tangent: THREE.Vector3
+    if (i < points.length - 1) {
+      tangent = new THREE.Vector3().subVectors(points[i + 1], p).normalize()
+    } else {
+      tangent = new THREE.Vector3().subVectors(p, points[i - 1]).normalize()
+    }
+    const perp = new THREE.Vector3(-tangent.z, 0, tangent.x).multiplyScalar(width / 2)
+
+    // Left vertex
+    positions.push(p.x + perp.x, y, p.z + perp.z)
+    // Right vertex
+    positions.push(p.x - perp.x, y, p.z - perp.z)
+
+    // UV coordinates: V along road length, U across width
+    const v = (segmentLengths[i] / totalLength) * uvScale
+    uvs.push(0, v) // Left edge
+    uvs.push(1, v) // Right edge
+  }
+
+  // Build triangles connecting the vertices
+  for (let i = 0; i < points.length - 1; i++) {
+    const leftCurrent = i * 2
+    const rightCurrent = i * 2 + 1
+    const leftNext = (i + 1) * 2
+    const rightNext = (i + 1) * 2 + 1
+
+    // Two triangles per quad
+    indices.push(leftCurrent, rightCurrent, leftNext)
+    indices.push(rightCurrent, rightNext, leftNext)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+
+  return geometry
+}
+
+// Textured road mesh component
+interface TexturedRoadMeshProps {
+  geometry: THREE.BufferGeometry
+}
+
+function TexturedRoadMesh({ geometry }: TexturedRoadMeshProps) {
+  // Load PBR textures
+  const textures = useTexture({
+    map: `${ROAD_TEXTURE_BASE}_Color.jpg`,
+    normalMap: `${ROAD_TEXTURE_BASE}_NormalGL.jpg`,
+    roughnessMap: `${ROAD_TEXTURE_BASE}_Roughness.jpg`,
+    aoMap: `${ROAD_TEXTURE_BASE}_AmbientOcclusion.jpg`,
+  })
+
+  // Configure texture wrapping for repeat
+  useMemo(() => {
+    Object.values(textures).forEach((texture) => {
+      texture.wrapS = THREE.RepeatWrapping
+      texture.wrapT = THREE.RepeatWrapping
+    })
+  }, [textures])
+
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial
+        {...textures}
+        side={THREE.DoubleSide}
+        roughness={0.9}
+      />
+    </mesh>
+  )
+}
+
 interface TuscanLandscapeProps {
   size?: number
   segments?: number
@@ -475,6 +576,17 @@ export function TuscanLandscape({
 
   const secondaryRoadGeometry = useMemo(
     () => createRoadGeometry(secondaryRoadCurve, roadWidth * 0.85), // Secondary road slightly narrower
+    [secondaryRoadCurve, roadWidth]
+  )
+
+  // Mesh geometry for road fill (solid surface)
+  const mainRoadMeshGeometry = useMemo(
+    () => createRoadMeshGeometry(mainRoadCurve, roadWidth),
+    [mainRoadCurve, roadWidth]
+  )
+
+  const secondaryRoadMeshGeometry = useMemo(
+    () => createRoadMeshGeometry(secondaryRoadCurve, roadWidth * 0.85),
     [secondaryRoadCurve, roadWidth]
   )
 
@@ -544,7 +656,10 @@ export function TuscanLandscape({
         />
       </lineSegments>
 
-      {/* Main Road */}
+      {/* Main Road Fill (textured surface) */}
+      <TexturedRoadMesh geometry={mainRoadMeshGeometry} />
+
+      {/* Main Road Lines */}
       <lineSegments ref={mainRoadRef} geometry={mainRoadGeometry}>
         <lineBasicMaterial
           color={roadColor}
@@ -553,7 +668,10 @@ export function TuscanLandscape({
         />
       </lineSegments>
 
-      {/* Secondary Road */}
+      {/* Secondary Road Fill (textured surface) */}
+      <TexturedRoadMesh geometry={secondaryRoadMeshGeometry} />
+
+      {/* Secondary Road Lines */}
       <lineSegments ref={secondaryRoadRef} geometry={secondaryRoadGeometry}>
         <lineBasicMaterial
           color={roadColor}
