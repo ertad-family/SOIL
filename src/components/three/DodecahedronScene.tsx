@@ -423,6 +423,7 @@ interface DodecahedronSceneProps {
   initialView?: 'outside' | 'inside'  // 'inside' = start inside for fly-out animation
   exitPortalSection?: string  // Which portal to fly out through (e.g., 'home', 'research')
   onFlyOutComplete?: () => void  // Called when fly-out animation finishes
+  onFlyInStart?: (faceId: number, section: string | null) => void  // Called when fly-in starts (portal double-clicked)
   initialFadeOpacity?: number  // Initial fade overlay opacity (1 for menu transition)
   onExternalFadeProgress?: (progress: number) => void  // Report fade progress to parent (for external overlay sync)
   hideInternalOverlay?: boolean  // If true, don't render internal fade overlay (parent handles it)
@@ -436,6 +437,7 @@ export function DodecahedronScene({
   initialView = 'outside',
   exitPortalSection = 'home',
   onFlyOutComplete,
+  onFlyInStart,
   initialFadeOpacity = 0,
   onExternalFadeProgress,
   hideInternalOverlay = false,
@@ -549,6 +551,10 @@ export function DodecahedronScene({
     // Don't start new animation if already animating
     if (flyStateRef.current.isAnimating) return
 
+    // Notify parent that fly-in is STARTING (before animation begins)
+    // This allows parent to set phase='flyingIn' to receive fade progress updates
+    onFlyInStart?.(data.faceId, data.section)
+
     // IMPORTANT: Disable OrbitControls IMMEDIATELY to prevent damping
     // from moving the camera between click and first animation frame
     if (controlsRef.current) {
@@ -576,7 +582,7 @@ export function DodecahedronScene({
 
     // Reset fade
     setFadeOpacity(0)
-  }, [onPortalClick])
+  }, [onPortalClick, onFlyInStart])
 
   // Handle fade progress updates from CameraAnimator
   const handleFadeProgress = useCallback((progress: number) => {

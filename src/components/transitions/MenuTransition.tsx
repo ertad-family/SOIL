@@ -104,8 +104,9 @@ export function MenuTransition({
     onTransitionComplete?.()
   }, [onTransitionComplete])
 
-  // Handle portal click in menu (fly-in to navigate)
-  const handlePortalClick = useCallback((faceId: number, section: string | null) => {
+  // Handle fly-in START (portal double-clicked, animation about to begin)
+  // This is called BEFORE animation starts, so we can set phase to receive fade progress
+  const handleFlyInStart = useCallback((faceId: number, section: string | null) => {
     setPhase('flyingIn')
     onNavigate?.(section)
   }, [onNavigate])
@@ -252,7 +253,7 @@ export function MenuTransition({
             initialView="outside"
             exitPortalSection={exitPortalSection}
             onFlyOutComplete={handleFlyOutComplete}
-            onPortalClick={handlePortalClick}
+            onFlyInStart={handleFlyInStart}
             initialFadeOpacity={0}
             onExternalFadeProgress={handleFadeProgress}
             hideInternalOverlay={true}
