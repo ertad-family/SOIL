@@ -11,6 +11,7 @@ import {
   NICHE_DEPTH,
   NICHE_HEIGHT,
   PARTITION_WIDTH,
+  FLOOR_THICKNESS,
   INNER_RADIUS,
   NICHES_PER_WALL,
 } from './config'
@@ -30,22 +31,6 @@ import {
  * - Пол: (LEVEL_HEIGHT - NICHE_HEIGHT) / 2 = 0.25м
  * - Потолок: 0.25м (одновременно пол следующего уровня)
  */
-
-// ============================================
-// ТЕСТОВЫЕ ПАРАМЕТРЫ (5 ниш на сторону)
-// ============================================
-
-const TEST_NICHES_PER_WALL = 5
-
-// Вычисляем размеры для тестовой сцены
-const TEST_WALL_LENGTH = TEST_NICHES_PER_WALL * NICHE_WIDTH + (TEST_NICHES_PER_WALL + 1) * PARTITION_WIDTH
-// = 5 × 2.0 + 6 × 0.5 = 10 + 3 = 13м
-
-const TEST_INNER_RADIUS = TEST_WALL_LENGTH / (2 * Math.sin(Math.PI / 5))
-// = 13 / 1.176 ≈ 11.05м
-
-// Отступ пола/потолка ниши от границ уровня
-const NICHE_FLOOR_OFFSET = (LEVEL_HEIGHT - NICHE_HEIGHT) / 2 // 0.25м
 
 // ============================================
 // ГЕОМЕТРИЧЕСКИЕ ВЫЧИСЛЕНИЯ
@@ -210,7 +195,7 @@ function generateNicheParams(innerRadius: number, nichesPerWall: number): NicheP
       )
 
       // Z позиция - центр ниши по высоте (с учётом пола)
-      const zPos = NICHE_FLOOR_OFFSET + NICHE_HEIGHT / 2
+      const zPos = FLOOR_THICKNESS + NICHE_HEIGHT / 2
 
       // 3D координаты: X, Y из 2D, Z = высота
       niches.push({
@@ -357,15 +342,16 @@ export function PentagonalStructure() {
 }
 
 /**
- * Тестовая структура с 5 нишами на сторону (для отладки)
+ * Тестовая структура - использует NICHES_PER_WALL и INNER_RADIUS из config.ts
+ * Изменяй константы в config.ts для настройки размера
  */
 export function TestPentagonalStructure() {
   return (
     <group>
       <PentagonLevel
         level={1}
-        innerRadius={TEST_INNER_RADIUS}
-        nichesPerWall={TEST_NICHES_PER_WALL}
+        innerRadius={INNER_RADIUS}
+        nichesPerWall={NICHES_PER_WALL}
       />
     </group>
   )
@@ -376,7 +362,7 @@ export function TestPentagonalStructure() {
  * В системе координат XY (Z вверх)
  */
 export function DebugNicheBoxes() {
-  const nicheParams = useMemo(() => generateNicheParams(TEST_INNER_RADIUS, TEST_NICHES_PER_WALL), [])
+  const nicheParams = useMemo(() => generateNicheParams(INNER_RADIUS, NICHES_PER_WALL), [])
 
   return (
     <group>

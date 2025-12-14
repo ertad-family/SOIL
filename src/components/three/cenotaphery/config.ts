@@ -3,27 +3,20 @@
  *
  * Все размеры в метрах (1 unit Three.js = 1 метр)
  *
- * ФИКСИРОВАННЫЕ ПАРАМЕТРЫ (из документации):
- * - Ниша: 2.0м × 2.5м × 3.0м (ширина × высота × глубина)
- * - Перегородка между нишами: 0.5м
- * - Высота уровня: 3.0м
- * - Уровней: 8
- * - Ниш на стену: 31
- * - Вход: 5 ниш × 3 уровня = 15 ниш
- *
- * ВЫЧИСЛЯЕМЫЕ ПАРАМЕТРЫ:
- * - Длина стены = 31 × 2.0 + 32 × 0.5 = 62 + 16 = 78м
- * - Радиус пятиугольника = 78 / (2 × sin(36°)) = 78 / 1.176 ≈ 66.3м
- * - Общая высота = 8 × 3.0 = 24м
- * - Толщина стены = глубина ниши (3.0м) + задняя стенка (0.5м) = 3.5м
+ * ВСЕ ПАРАМЕТРЫ ВЫЧИСЛЯЮТСЯ ИЗ БАЗОВЫХ КОНСТАНТ:
+ * - Размеры ниши (ширина, высота, глубина)
+ * - Толщины (пол, потолок, перегородка, задняя стенка)
+ * - Количество ниш на стену
+ * - Количество уровней
  *
  * ИТОГО НИШ: 5 × 31 × 8 - 15 = 1240 - 15 = 1225 = 35²
  */
 
 // ============================================
-// ФИКСИРОВАННЫЕ ПАРАМЕТРЫ (не менять без причины)
+// БАЗОВЫЕ КОНСТАНТЫ (первичные параметры)
 // ============================================
 
+// --- Размеры ниши ---
 /** Ширина ниши (метры) */
 export const NICHE_WIDTH = 2.0
 
@@ -33,21 +26,27 @@ export const NICHE_HEIGHT = 2.5
 /** Глубина ниши (метры) */
 export const NICHE_DEPTH = 3.0
 
-/** Толщина задней стенки за нишей (метры) */
-export const BACK_WALL_THICKNESS = 0.5
+// --- Толщины ---
+/** Толщина пола ниши (метры) - расстояние от низа уровня до низа ниши */
+export const FLOOR_THICKNESS = 0.25
+
+/** Толщина потолка ниши (метры) - расстояние от верха ниши до верха уровня */
+export const CEILING_THICKNESS = 0.25
 
 /** Ширина перегородки между нишами (метры) */
 export const PARTITION_WIDTH = 0.5
 
+/** Толщина задней стенки за нишей (метры) */
+export const BACK_WALL_THICKNESS = 0.5
+
+// --- Количества ---
 /** Количество ниш на одну стену на один уровень */
-export const NICHES_PER_WALL = 31
+export const NICHES_PER_WALL = 10
 
 /** Количество уровней */
 export const LEVELS = 8
 
-/** Высота одного уровня (метры) */
-export const LEVEL_HEIGHT = 3.0
-
+// --- Вход (опционально, пока не используется) ---
 /** Ширина входа в нишах */
 export const ENTRANCE_WIDTH = 5
 
@@ -58,24 +57,29 @@ export const ENTRANCE_HEIGHT = 3
 export const ENTRANCE_WALL = 0
 
 // ============================================
-// ВЫЧИСЛЯЕМЫЕ ПАРАМЕТРЫ
+// ВЫЧИСЛЯЕМЫЕ ПАРАМЕТРЫ (производные от базовых)
 // ============================================
 
-/** Длина одной стены (метры) */
+/** Высота одного уровня = пол + ниша + потолок (метры) */
+export const LEVEL_HEIGHT = FLOOR_THICKNESS + NICHE_HEIGHT + CEILING_THICKNESS
+// = 0.25 + 2.5 + 0.25 = 3.0м
+
+/** Длина одной стены = ниши + перегородки (метры) */
 export const WALL_LENGTH = NICHES_PER_WALL * NICHE_WIDTH + (NICHES_PER_WALL + 1) * PARTITION_WIDTH
 // = 31 * 2.0 + 32 * 0.5 = 62 + 16 = 78м
-
-/** Внутренний радиус пятиугольника (метры) */
-// Для правильного пятиугольника: сторона = 2 × R × sin(36°)
-// R = сторона / (2 × sin(36°)) = сторона / 1.17557
-export const INNER_RADIUS = WALL_LENGTH / (2 * Math.sin(Math.PI / 5))
-// = 78 / 1.17557 ≈ 66.3м
 
 /** Толщина стены = глубина ниши + задняя стенка (метры) */
 export const WALL_THICKNESS = NICHE_DEPTH + BACK_WALL_THICKNESS
 // = 3.0 + 0.5 = 3.5м
 
-/** Общая высота кенотафария (метры) */
+/** Внутренний радиус пятиугольника (метры)
+ * Для правильного пятиугольника: сторона = 2 × R × sin(36°)
+ * R = сторона / (2 × sin(36°))
+ */
+export const INNER_RADIUS = WALL_LENGTH / (2 * Math.sin(Math.PI / 5))
+// = 78 / 1.17557 ≈ 66.3м
+
+/** Общая высота кенотафария = уровни × высота уровня (метры) */
 export const WALL_HEIGHT = LEVELS * LEVEL_HEIGHT
 // = 8 * 3.0 = 24м
 
@@ -88,22 +92,31 @@ export const TOTAL_NICHES = 5 * NICHES_PER_WALL * LEVELS - ENTRANCE_WIDTH * ENTR
 // ============================================
 
 export const CENOTAPHERY_CONFIG = {
-  // Фиксированные
+  // Базовые - размеры ниши
   nicheWidth: NICHE_WIDTH,
   nicheHeight: NICHE_HEIGHT,
   nicheDepth: NICHE_DEPTH,
+
+  // Базовые - толщины
+  floorThickness: FLOOR_THICKNESS,
+  ceilingThickness: CEILING_THICKNESS,
   partitionWidth: PARTITION_WIDTH,
+  backWallThickness: BACK_WALL_THICKNESS,
+
+  // Базовые - количества
   nichesPerWall: NICHES_PER_WALL,
   levels: LEVELS,
-  levelHeight: LEVEL_HEIGHT,
+
+  // Базовые - вход
   entranceWidth: ENTRANCE_WIDTH,
   entranceHeight: ENTRANCE_HEIGHT,
   entranceWall: ENTRANCE_WALL,
 
   // Вычисляемые
+  levelHeight: LEVEL_HEIGHT,
   wallLength: WALL_LENGTH,
-  innerRadius: INNER_RADIUS,
   wallThickness: WALL_THICKNESS,
+  innerRadius: INNER_RADIUS,
   wallHeight: WALL_HEIGHT,
   totalNiches: TOTAL_NICHES,
 }
