@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Sun, Moon } from 'lucide-react'
 import {
@@ -16,6 +17,17 @@ import {
 import { FooterLandscape } from '@/components/three/FooterLandscape'
 import { GlobalParticles } from '@/components/three/GlobalParticles'
 import { MenuTransition } from '@/components/transitions/MenuTransition'
+
+// Map portal sections to page routes
+const SECTION_TO_ROUTE: Record<string, string> = {
+  home: '/',
+  research: '/research',
+  community: '/community',
+  memorials: '/', // TODO: create page
+  diagnostics: '/', // TODO: create page
+  education: '/', // TODO: create page
+  clinic: '/', // TODO: create page
+}
 
 // ============================================================================
 // FOOTER - Black marble with wireframe landscape
@@ -83,6 +95,7 @@ function Footer() {
 // MAIN PAGE
 // ============================================================================
 export default function LandingPage() {
+  const router = useRouter()
   const [isDarkMode, setIsDarkMode] = useState(true) // Dark by default
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -93,10 +106,15 @@ export default function LandingPage() {
 
   // Handle navigation from menu (portal click)
   const handleMenuNavigate = useCallback((section: string | null) => {
-    console.log('Navigate to section:', section)
-    // For now, just close menu. Later: implement actual navigation
-    // TODO: Navigate to the appropriate page/section based on portal
-  }, [])
+    if (!section) return
+
+    const route = SECTION_TO_ROUTE[section]
+    if (route && route !== '/') {
+      // Navigate to different page
+      router.push(route)
+    }
+    // If home or same page, just close menu (handled by onClose)
+  }, [router])
 
   // Handle menu close (transition complete back to page)
   const handleMenuClose = useCallback(() => {
@@ -114,7 +132,6 @@ export default function LandingPage() {
       <MenuTransition
         isActive={menuOpen}
         exitPortalSection="home"
-        onTransitionComplete={() => console.log('Menu transition complete')}
         onNavigate={handleMenuNavigate}
         onClose={handleMenuClose}
       />

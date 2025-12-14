@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { SectionLabel } from '@/components/ui/section-label'
 import { BookOpen, Database, TrendingUp } from 'lucide-react'
+import { PageLayout } from '@/components/layout/PageLayout'
 
 // ============================================================================
 // THE RESEARCH GAP SECTION (moved from Landing)
@@ -57,26 +57,11 @@ function ResearchGapSection() {
 }
 
 // ============================================================================
-// RESEARCH PAGE (placeholder for now)
+// RESEARCH PAGE
 // ============================================================================
 export default function ResearchPage() {
   return (
-    <div className="min-h-screen bg-slate-900 text-marble-100">
-      {/* Temporary header */}
-      <header className="sticky top-0 z-50 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-lg">
-        <div className="max-w-content mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <a href="/" className="font-serif text-2xl font-semibold tracking-wider">
-              S<span className="text-gold-400">·</span>O<span className="text-gold-400">·</span>I
-              <span className="text-gold-400">·</span>L
-            </a>
-            <Button variant="dark-secondary" size="sm">
-              Menu
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <PageLayout currentSection="research">
       <main>
         {/* Hero */}
         <section className="py-20 md:py-28">
@@ -101,7 +86,7 @@ export default function ResearchPage() {
         </section>
       </main>
 
-      {/* Temporary footer */}
+      {/* Footer */}
       <footer className="border-t border-slate-700/50 bg-slate-900">
         <div className="max-w-content mx-auto px-6 py-12">
           <div className="flex flex-col items-center gap-4">
@@ -113,6 +98,6 @@ export default function ResearchPage() {
           </div>
         </div>
       </footer>
-    </div>
+    </PageLayout>
   )
 }

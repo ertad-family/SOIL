@@ -1,9 +1,14 @@
+'use client'
+
 import { CommunityTestimonialsSection } from '@/components/sections/CommunityTestimonialsSection'
+import { PageLayout } from '@/components/layout/PageLayout'
 
 export default function CommunityPage() {
   return (
-    <main className="min-h-screen bg-slate-900">
-      <CommunityTestimonialsSection />
-    </main>
+    <PageLayout currentSection="community">
+      <main>
+        <CommunityTestimonialsSection />
+      </main>
+    </PageLayout>
   )
 }

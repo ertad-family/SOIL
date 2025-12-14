@@ -10,8 +10,8 @@ const DodecahedronScene = dynamic(
 )
 
 // Animation durations (ms)
-const FADE_IN_DURATION = 600  // Fade in overlay
-const FADE_OUT_DURATION = 600 // Fade out overlay
+const FADE_IN_DURATION = 600   // Fade in overlay
+const FADE_OUT_DURATION = 1200 // Fade out overlay (slower for smoother reveal)
 
 // Transition phases
 export type TransitionPhase =
@@ -41,17 +41,62 @@ export function MenuTransition({
   const [fadeOpacity, setFadeOpacity] = useState(0)
   const [sceneVisible, setSceneVisible] = useState(false)
 
+  // Ref to track phase without stale closure issues in callbacks
+  const phaseRef = useRef<TransitionPhase>('idle')
+
   // Ref to trigger fly-out animation in the scene
   const triggerFlyOutRef = useRef<(() => void) | null>(null)
 
   // Track if scene is ready (preloaded)
   const [sceneReady, setSceneReady] = useState(false)
 
+  // Store target section for navigation (called when fade completes)
+  const pendingNavigationRef = useRef<string | null>(null)
+
+  // Helper to update both phase state and ref
+  const updatePhase = useCallback((newPhase: TransitionPhase) => {
+    phaseRef.current = newPhase
+    setPhase(newPhase)
+  }, [])
+
+  // Track if we're using CSS transition for fade-out (arrival from menu)
+  const [useCssTransition, setUseCssTransition] = useState(false)
+
+  // Check on mount if we're arriving from menu navigation (need to fade-out)
+  useEffect(() => {
+    const transitionFlag = sessionStorage.getItem('menuTransition')
+    if (transitionFlag === 'fadeOut') {
+      sessionStorage.removeItem('menuTransition')
+
+      // Start with full opacity overlay
+      setFadeOpacity(1)
+      updatePhase('fadingOut')
+      setUseCssTransition(true)
+
+      // CRITICAL: We need TWO animation frames to ensure CSS sees opacity=1 first
+      // Frame 1: Browser paints with opacity=1
+      // Frame 2: We set opacity=0, CSS transition kicks in
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setFadeOpacity(0)
+        })
+      })
+
+      // Clean up after transition completes
+      const timer = setTimeout(() => {
+        updatePhase('idle')
+        setUseCssTransition(false)
+      }, FADE_OUT_DURATION + 100) // Add small buffer
+
+      return () => clearTimeout(timer)
+    }
+  }, [updatePhase])
+
   // Start transition when isActive changes to true
   useEffect(() => {
     if (isActive && phase === 'idle') {
       // Start fade-in animation
-      setPhase('fadingIn')
+      updatePhase('fadingIn')
 
       let startTime: number | null = null
       const animateFadeIn = (currentTime: number) => {
@@ -76,7 +121,7 @@ export function MenuTransition({
           // Fade complete - show scene and start fly-out
           setFadeOpacity(1)
           setSceneVisible(true)
-          setPhase('flyingOut')
+          updatePhase('flyingOut')
 
           // Trigger fly-out animation in the scene
           // Small delay to ensure scene is visible
@@ -88,73 +133,70 @@ export function MenuTransition({
 
       requestAnimationFrame(animateFadeIn)
     }
-  }, [isActive, phase])
+  }, [isActive, phase, updatePhase])
 
   // Handle fade progress from scene during fly-out
   const handleSceneFadeProgress = useCallback((progress: number) => {
-    if (phase === 'flyingOut') {
+    if (phaseRef.current === 'flyingOut') {
       setFadeOpacity(progress)
     }
-  }, [phase])
+  }, [])
 
   // Handle fly-out completion
   const handleFlyOutComplete = useCallback(() => {
-    setPhase('menu')
+    updatePhase('menu')
     setFadeOpacity(0)
     onTransitionComplete?.()
-  }, [onTransitionComplete])
+  }, [onTransitionComplete, updatePhase])
 
   // Handle fly-in START (portal double-clicked, animation about to begin)
   // This is called BEFORE animation starts, so we can set phase to receive fade progress
+  // NOTE: We don't navigate immediately - we store the section and navigate when fade = 1
   const handleFlyInStart = useCallback((faceId: number, section: string | null) => {
-    setPhase('flyingIn')
-    onNavigate?.(section)
-  }, [onNavigate])
+    pendingNavigationRef.current = section
+    updatePhase('flyingIn')
+  }, [updatePhase])
+
+  // Track if we've already triggered navigation (prevent double-fire)
+  const hasNavigatedRef = useRef(false)
 
   // Handle fly-in fade progress (scene reports 0→1)
   const handleFlyInFadeProgress = useCallback((progress: number) => {
-    if (phase === 'flyingIn') {
+    if (phaseRef.current === 'flyingIn') {
       setFadeOpacity(progress)
 
-      // When fade reaches 1, start fading out to reveal page
-      if (progress >= 1) {
-        setPhase('fadingOut')
-        setSceneVisible(false)
+      // When fade reaches 1, navigate to new page (under the overlay)
+      // Only do this once!
+      if (progress >= 1 && !hasNavigatedRef.current) {
+        hasNavigatedRef.current = true
+        console.log('[MenuTransition] Fade complete, navigating to:', pendingNavigationRef.current)
 
-        let startTime: number | null = null
-        const animateFadeOut = (currentTime: number) => {
-          if (startTime === null) {
-            startTime = currentTime
-          }
+        // Store flag so new page knows to fade-out on mount
+        sessionStorage.setItem('menuTransition', 'fadeOut')
 
-          const elapsed = currentTime - startTime
-          const prog = Math.min(elapsed / FADE_OUT_DURATION, 1)
+        // Navigate NOW while overlay is fully opaque
+        const targetSection = pendingNavigationRef.current
+        pendingNavigationRef.current = null
 
-          const eased = prog < 0.5
-            ? 4 * prog * prog * prog
-            : 1 - Math.pow(-2 * prog + 2, 3) / 2
+        // Hide scene AFTER initiating navigation to avoid breaking the animation loop
+        // Use setTimeout to ensure navigation starts first
+        setTimeout(() => {
+          setSceneVisible(false)
+        }, 50)
 
-          setFadeOpacity(1 - eased)
+        onNavigate?.(targetSection)
 
-          if (prog < 1) {
-            requestAnimationFrame(animateFadeOut)
-          } else {
-            setPhase('idle')
-            setFadeOpacity(0)
-            onClose?.()
-          }
-        }
-
-        requestAnimationFrame(animateFadeOut)
+        // Note: fade-out will be handled by the new page's MenuTransition
+        // via the sessionStorage flag check on mount
       }
     }
-  }, [phase, onClose])
+  }, [onNavigate])
 
   // Handle closing menu without navigation (when isActive becomes false while in menu)
   useEffect(() => {
     if (!isActive && phase === 'menu') {
       // Fade in overlay, hide scene, fade out overlay
-      setPhase('fadingOut')
+      updatePhase('fadingOut')
 
       let startTime: number | null = null
       const animateFadeIn = (currentTime: number) => {
@@ -196,7 +238,7 @@ export function MenuTransition({
             if (prog < 1) {
               requestAnimationFrame(animateFadeOut)
             } else {
-              setPhase('idle')
+              updatePhase('idle')
               setFadeOpacity(0)
               onClose?.()
             }
@@ -208,21 +250,21 @@ export function MenuTransition({
 
       requestAnimationFrame(animateFadeIn)
     }
-  }, [isActive, phase, onClose])
+  }, [isActive, phase, onClose, updatePhase])
 
   // Combined fade progress handler
+  // Note: We call both handlers and let them check phase internally
+  // This avoids stale closure issues with phase
   const handleFadeProgress = useCallback((progress: number) => {
-    if (phase === 'flyingOut') {
-      handleSceneFadeProgress(progress)
-    } else if (phase === 'flyingIn') {
-      handleFlyInFadeProgress(progress)
-    }
-  }, [phase, handleSceneFadeProgress, handleFlyInFadeProgress])
+    handleSceneFadeProgress(progress)
+    handleFlyInFadeProgress(progress)
+  }, [handleSceneFadeProgress, handleFlyInFadeProgress])
 
   return (
     <>
       {/* Fade overlay - FULLY OPAQUE, z-[100] to cover header */}
-      {fadeOpacity > 0 && (
+      {console.log('[MenuTransition] Render - fadeOpacity:', fadeOpacity, 'phase:', phase, 'useCssTransition:', useCssTransition)}
+      {(fadeOpacity > 0 || useCssTransition) && (
         <div
           className="fixed inset-0 z-[100] pointer-events-none"
           style={{
@@ -235,33 +277,37 @@ export function MenuTransition({
               rgba(80, 70, 100, 1) 85%,
               rgba(20, 18, 25, 1) 100%)`,
             opacity: fadeOpacity,
+            // Use CSS transition for smooth fade-out during page arrival
+            // (requestAnimationFrame gets throttled during heavy rendering)
+            transition: useCssTransition ? `opacity ${FADE_OUT_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)` : 'none',
           }}
         />
       )}
 
-      {/* DodecahedronScene - ALWAYS MOUNTED (preloaded), visibility controlled */}
-      <div
-        className="fixed inset-0 z-[90]"
-        style={{
-          visibility: sceneVisible ? 'visible' : 'hidden',
-          pointerEvents: sceneVisible ? 'auto' : 'none',
-        }}
-      >
-        <Suspense fallback={null}>
-          <DodecahedronScene
-            className="w-full h-full"
-            initialView="outside"
-            exitPortalSection={exitPortalSection}
-            onFlyOutComplete={handleFlyOutComplete}
-            onFlyInStart={handleFlyInStart}
-            initialFadeOpacity={0}
-            onExternalFadeProgress={handleFadeProgress}
-            hideInternalOverlay={true}
-            onReady={() => setSceneReady(true)}
-            triggerFlyOutRef={triggerFlyOutRef}
-          />
-        </Suspense>
-      </div>
+      {/* DodecahedronScene - Only mount when needed to avoid WebGL context conflicts */}
+      {sceneVisible && (
+        <div
+          className="fixed inset-0 z-[90]"
+          style={{
+            pointerEvents: 'auto',
+          }}
+        >
+          <Suspense fallback={null}>
+            <DodecahedronScene
+              className="w-full h-full"
+              initialView="outside"
+              exitPortalSection={exitPortalSection}
+              onFlyOutComplete={handleFlyOutComplete}
+              onFlyInStart={handleFlyInStart}
+              initialFadeOpacity={0}
+              onExternalFadeProgress={handleFadeProgress}
+              hideInternalOverlay={true}
+              onReady={() => setSceneReady(true)}
+              triggerFlyOutRef={triggerFlyOutRef}
+            />
+          </Suspense>
+        </div>
+      )}
     </>
   )
 }
