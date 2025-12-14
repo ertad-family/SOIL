@@ -14,6 +14,7 @@ import {
   FLOOR_THICKNESS,
   INNER_RADIUS,
   NICHES_PER_WALL,
+  LEVELS,
 } from './config'
 
 /**
@@ -342,17 +343,23 @@ export function PentagonalStructure() {
 }
 
 /**
- * Тестовая структура - использует NICHES_PER_WALL и INNER_RADIUS из config.ts
+ * Тестовая структура - использует NICHES_PER_WALL, INNER_RADIUS и LEVELS из config.ts
  * Изменяй константы в config.ts для настройки размера
  */
 export function TestPentagonalStructure() {
+  // Создаём массив уровней [1, 2, 3, ..., LEVELS]
+  const levels = useMemo(() => Array.from({ length: LEVELS }, (_, i) => i + 1), [])
+
   return (
     <group>
-      <PentagonLevel
-        level={1}
-        innerRadius={INNER_RADIUS}
-        nichesPerWall={NICHES_PER_WALL}
-      />
+      {levels.map((level) => (
+        <PentagonLevel
+          key={level}
+          level={level}
+          innerRadius={INNER_RADIUS}
+          nichesPerWall={NICHES_PER_WALL}
+        />
+      ))}
     </group>
   )
 }

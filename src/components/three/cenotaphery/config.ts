@@ -72,12 +72,18 @@ export const WALL_LENGTH = NICHES_PER_WALL * NICHE_WIDTH + (NICHES_PER_WALL + 1)
 export const WALL_THICKNESS = NICHE_DEPTH + BACK_WALL_THICKNESS
 // = 3.0 + 0.5 = 3.5м
 
-/** Внутренний радиус пятиугольника (метры)
+/** Внутренний радиус пятиугольника (апофема) (метры)
  * Для правильного пятиугольника: сторона = 2 × R × sin(36°)
  * R = сторона / (2 × sin(36°))
  */
 export const INNER_RADIUS = WALL_LENGTH / (2 * Math.sin(Math.PI / 5))
 // = 78 / 1.17557 ≈ 66.3м
+
+/** Внешний радиус пятиугольника (метры)
+ * Внешний радиус = внутренний радиус + толщина стены / cos(36°)
+ * (толщина стены измеряется перпендикулярно стене, а радиус — от центра)
+ */
+export const OUTER_RADIUS = INNER_RADIUS + WALL_THICKNESS / Math.cos(Math.PI / 5)
 
 /** Общая высота кенотафария = уровни × высота уровня (метры) */
 export const WALL_HEIGHT = LEVELS * LEVEL_HEIGHT
@@ -117,6 +123,7 @@ export const CENOTAPHERY_CONFIG = {
   wallLength: WALL_LENGTH,
   wallThickness: WALL_THICKNESS,
   innerRadius: INNER_RADIUS,
+  outerRadius: OUTER_RADIUS,
   wallHeight: WALL_HEIGHT,
   totalNiches: TOTAL_NICHES,
 }

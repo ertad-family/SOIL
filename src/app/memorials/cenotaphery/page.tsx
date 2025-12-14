@@ -43,10 +43,16 @@ export default function CenotapheryPage() {
       {/* Navigation hint */}
       <div className="absolute bottom-6 right-6 text-right pointer-events-none">
         <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
-          Drag to look around
+          Drag: rotate view
         </p>
         <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
-          Scroll to zoom
+          Scroll: zoom
+        </p>
+        <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
+          WASD / Arrows: move
+        </p>
+        <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
+          Q/E: up/down
         </p>
       </div>
 
