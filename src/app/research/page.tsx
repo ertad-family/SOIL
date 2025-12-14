@@ -7,9 +7,6 @@ import {
   BookOpen,
   Database,
   TrendingUp,
-  FlaskConical,
-  Scale,
-  Layers,
   Users,
   FileText,
   Handshake,
@@ -221,6 +218,11 @@ function HeroSection() {
           </div>
         </div>
       </div>
+
+      {/* Decorative divider */}
+      <div className="divider-roman mt-16 md:mt-20 animate-fade-in-up stagger-2">
+        <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">MMXXV</span>
+      </div>
     </section>
   )
 }
@@ -284,50 +286,189 @@ function ResearchGapSection() {
 // WHAT SOIL IS BUILDING SECTION
 // ============================================================================
 function WhatWeAreBuildingSection() {
+  const metrics = [
+    {
+      value: 'XX',
+      valueStyle: 'roman',
+      label: 'Target: 20,000 Autopsies',
+      description: 'Comprehensive organizational autopsies to build statistical power for pattern recognition and predictive modeling.',
+    },
+    {
+      value: 'Global',
+      valueStyle: 'text',
+      label: 'Worldwide Coverage',
+      description: 'Data collection across all countries, regions, and cities for truly representative insights.',
+    },
+    {
+      value: '∞',
+      valueStyle: 'symbol',
+      label: 'Open Access',
+      description: 'Anonymized datasets available to qualified researchers worldwide.',
+    },
+  ]
+
+  // Custom SVG icons in Hero section style
+  const DataCollectionIcon = () => (
+    <svg viewBox="0 0 64 64" className="w-36 h-36" fill="none">
+      {/* Concentric orbits */}
+      {[0, 1, 2].map((i) => (
+        <ellipse
+          key={i}
+          cx="32"
+          cy="32"
+          rx={12 + i * 8}
+          ry={6 + i * 4}
+          fill="none"
+          stroke="rgba(196,161,90,0.3)"
+          strokeWidth="1"
+          transform={`rotate(${i * 20} 32 32)`}
+        />
+      ))}
+      {/* Center pentagon */}
+      <polygon
+        points="32,20 40,26 38,36 26,36 24,26"
+        fill="none"
+        stroke="rgba(196,161,90,0.6)"
+        strokeWidth="1.5"
+      />
+      {/* Data points */}
+      <circle cx="32" cy="12" r="2" fill="rgba(196,161,90,0.8)" />
+      <circle cx="50" cy="32" r="2" fill="rgba(196,161,90,0.8)" />
+      <circle cx="14" cy="32" r="2" fill="rgba(196,161,90,0.8)" />
+      <circle cx="44" cy="48" r="1.5" fill="rgba(196,161,90,0.6)" />
+      <circle cx="20" cy="48" r="1.5" fill="rgba(196,161,90,0.6)" />
+    </svg>
+  )
+
+  const FrameworkIcon = () => (
+    <svg viewBox="0 0 64 64" className="w-36 h-36" fill="none">
+      {/* Multiple overlapping frameworks (circles) */}
+      <circle cx="32" cy="24" r="14" fill="none" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
+      <circle cx="24" cy="38" r="14" fill="none" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
+      <circle cx="40" cy="38" r="14" fill="none" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
+      {/* Center intersection - neutral zone */}
+      <circle cx="32" cy="32" r="6" fill="rgba(147,112,219,0.15)" stroke="rgba(147,112,219,0.4)" strokeWidth="1.5" />
+      {/* Radial lines showing multiple perspectives */}
+      <line x1="32" y1="32" x2="32" y2="10" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
+      <line x1="32" y1="32" x2="13" y2="43" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
+      <line x1="32" y1="32" x2="51" y2="43" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
+    </svg>
+  )
+
+  const ScaleIcon = () => (
+    <svg viewBox="0 0 64 64" className="w-36 h-36" fill="none">
+      {/* Expanding rings representing scale */}
+      {[0, 1, 2, 3].map((i) => (
+        <circle
+          key={i}
+          cx="32"
+          cy="32"
+          r={8 + i * 7}
+          fill="none"
+          stroke={`rgba(196,161,90,${0.5 - i * 0.1})`}
+          strokeWidth="1.5"
+        />
+      ))}
+      {/* Data points at different scales */}
+      <circle cx="32" cy="32" r="3" fill="rgba(196,161,90,0.8)" />
+      <circle cx="32" cy="18" r="2" fill="rgba(196,161,90,0.6)" />
+      <circle cx="46" cy="32" r="2" fill="rgba(196,161,90,0.6)" />
+      <circle cx="32" cy="46" r="2" fill="rgba(196,161,90,0.6)" />
+      <circle cx="18" cy="32" r="2" fill="rgba(196,161,90,0.6)" />
+      {/* Outer points */}
+      <circle cx="32" cy="4" r="1.5" fill="rgba(196,161,90,0.4)" />
+      <circle cx="60" cy="32" r="1.5" fill="rgba(196,161,90,0.4)" />
+      <circle cx="32" cy="60" r="1.5" fill="rgba(196,161,90,0.4)" />
+      <circle cx="4" cy="32" r="1.5" fill="rgba(196,161,90,0.4)" />
+    </svg>
+  )
+
   const approaches = [
     {
-      icon: <FlaskConical className="w-6 h-6" />,
+      icon: <DataCollectionIcon />,
       title: 'Systematic Data Collection',
-      description:
-        'We conduct structured "autopsies" of failed organizations — capturing not just what happened, but the full organizational state: functional structure, financial dynamics, environmental conditions, founder context, and narrative meaning.',
+      points: [
+        'Structured organizational autopsies',
+        'Full organizational state capture',
+        'Functional structure analysis',
+        'Environmental context mapping',
+      ],
     },
     {
-      icon: <Scale className="w-6 h-6" />,
+      icon: <FrameworkIcon />,
       title: 'Framework-Agnostic Methodology',
-      description:
-        "We don't impose a single theoretical lens. Data is collected in neutral formats and analyzed through multiple frameworks post-hoc — testing existing theories against real patterns rather than confirming preconceptions.",
+      points: [
+        'No predetermined theoretical lens',
+        'Neutral data collection formats',
+        'Multi-framework post-hoc analysis',
+        'Pattern-driven theory development',
+      ],
     },
     {
-      icon: <Layers className="w-6 h-6" />,
+      icon: <ScaleIcon />,
       title: 'Scale and Depth',
-      description:
-        'Our goal is thousands of comprehensive organizational autopsies, creating statistical power that enables pattern recognition, predictive modeling, and eventually intervention design.',
+      points: [
+        'Thousands of comprehensive cases',
+        'Statistical power for patterns',
+        'Predictive modeling capability',
+        'Intervention design foundation',
+      ],
     },
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
+    <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
         <SectionLabel>what we are building</SectionLabel>
-        <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
+        <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-12 text-marble-100">
           Infrastructure for a New Discipline
         </h2>
-        <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          SOIL (Social Organizational Intelligence Lab) is creating the infrastructure for a new
-          scientific discipline: <span className="text-marble-100 font-medium">Organizational Biology, Health, and Medicine</span>.
-        </p>
 
+        {/* Metrics row - first card larger */}
+        <div className="grid md:grid-cols-[2fr_1fr_1fr] gap-6 mb-16">
+          {metrics.map((metric, index) => (
+            <Card
+              key={index}
+              variant={index === 0 ? 'dark-elevated' : 'dark'}
+              padding="lg"
+              className="h-full"
+            >
+              <span
+                className={`inline-block mb-4 ${
+                  metric.valueStyle === 'roman'
+                    ? 'relative font-serif text-7xl md:text-8xl lg:text-9xl font-normal select-none leading-none [color:transparent] [-webkit-text-stroke:1.5px_rgba(226,176,85,0.25)] before:absolute before:top-[0.05em] before:left-0 before:w-full before:h-[2px] before:bg-[rgba(226,176,85,0.25)]'
+                    : 'font-display text-4xl md:text-5xl font-semibold text-gold-400'
+                }`}
+              >
+                {metric.value}
+              </span>
+              <h3 className="font-display text-lg font-medium text-marble-100 mb-2">
+                {metric.label}
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">{metric.description}</p>
+            </Card>
+          ))}
+        </div>
+
+        {/* Approaches row - 3 columns with icons and bullet points */}
         <div className="grid md:grid-cols-3 gap-8">
           {approaches.map((approach, index) => (
-            <Card key={index} variant="dark" padding="lg" className="h-full">
-              <div className="w-12 h-12 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-6">
+            <div key={index} className="space-y-6">
+              <div className="w-36 h-36">
                 {approach.icon}
               </div>
-              <h3 className="font-display text-xl font-medium text-marble-100 mb-3">
+              <h3 className="font-display text-xl font-medium text-marble-100">
                 {approach.title}
               </h3>
-              <p className="text-slate-400 leading-relaxed">{approach.description}</p>
-            </Card>
+              <ul className="space-y-3">
+                {approach.points.map((point, pointIndex) => (
+                  <li key={pointIndex} className="flex items-start gap-3 text-slate-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold-400 mt-2 flex-shrink-0" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
       </div>
@@ -349,7 +490,7 @@ function ResearchQuestionsSection() {
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
+    <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
         <SectionLabel>research questions</SectionLabel>
         <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
@@ -361,17 +502,24 @@ function ResearchQuestionsSection() {
         </p>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {questions.map((question, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-4 p-6 bg-slate-800/30 rounded-xl border border-slate-700/50"
-            >
-              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 font-display text-sm font-medium">
-                {index + 1}
-              </span>
-              <p className="text-marble-100 leading-relaxed">{question}</p>
-            </div>
-          ))}
+          {questions.map((question, index) => {
+            const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
+            return (
+              <div
+                key={index}
+                className="relative p-6 pl-20 bg-slate-800/30 rounded-xl border border-slate-700/50 overflow-hidden"
+              >
+                {/* Large background Roman numeral */}
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 font-serif text-8xl font-normal select-none pointer-events-none [color:transparent] [-webkit-text-stroke:1.5px_rgba(226,176,85,0.25)]"
+                >
+                  {romanNumerals[index]}
+                </span>
+                <p className="text-marble-100 leading-relaxed relative z-10">{question}</p>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -411,40 +559,52 @@ function CollaborationSection() {
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
-      <div className="max-w-content mx-auto px-6">
-        <SectionLabel>collaboration</SectionLabel>
-        <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
-          Collaboration Opportunities
-        </h2>
-        <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          We believe in open science and collaborative research. Join us in building a new field.
-        </p>
+    <>
+      {/* Gradient transition into section */}
+      <div className="h-24 bg-gradient-to-b from-slate-900 to-marble-950" />
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {opportunities.map((opportunity, index) => (
-            <Card key={index} variant="dark-elevated" padding="lg" className="h-full">
-              <CardHeader>
-                <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-2">
-                  {opportunity.icon}
-                </div>
-                <div className="flex items-center gap-3">
-                  <CardTitle variant="dark">{opportunity.title}</CardTitle>
-                  {opportunity.comingSoon && (
-                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-gold-500/20 text-gold-400">
-                      Coming Soon
-                    </span>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-400 leading-relaxed">{opportunity.description}</p>
-              </CardContent>
-            </Card>
-          ))}
+      <section className="py-16 md:py-24 bg-marble-950 relative">
+        <div className="max-w-content mx-auto px-6">
+          <h2 className="font-display text-3xl md:text-4xl font-medium mb-6 text-marble-100">
+            Collaboration Opportunities
+          </h2>
+          <p className="text-lg text-slate-400 max-w-3xl mb-12">
+            We believe in open science and collaborative research. Join us in building a new field.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {opportunities.map((opportunity, index) => (
+              <Card key={index} variant="dark-elevated" padding="lg" className="h-full">
+                <CardHeader>
+                  <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-2">
+                    {opportunity.icon}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CardTitle variant="dark">{opportunity.title}</CardTitle>
+                    {opportunity.comingSoon && (
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-gold-500/20 text-gold-400">
+                        Coming Soon
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-400 leading-relaxed">{opportunity.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* Gradient transition out of section */}
+      <div className="h-24 bg-gradient-to-b from-marble-950 to-slate-900" />
+
+      {/* Decorative divider */}
+      <div className="divider-roman py-12 md:py-16">
+        <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">✦</span>
       </div>
-    </section>
+    </>
   )
 }
 
@@ -476,38 +636,44 @@ function ComparisonSection() {
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
+    <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
-        <SectionLabel>our approach</SectionLabel>
-        <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
-          What Makes SOIL Different
-        </h2>
-        <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          We&apos;re not just studying failure differently — we&apos;re building the infrastructure
-          for an entirely new approach to organizational science.
-        </p>
+        <div className="text-center mb-12">
+          <SectionLabel>our approach</SectionLabel>
+          <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
+            What Makes SOIL Different
+          </h2>
+          <p className="text-lg text-slate-400 max-w-3xl mx-auto">
+            We&apos;re not just studying failure differently — we&apos;re building the infrastructure
+            for an entirely new approach to organizational science.
+          </p>
+        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left py-4 px-6 font-display text-lg font-medium text-slate-400">
-                  Traditional Failure Research
-                </th>
-                <th className="text-left py-4 px-6 font-display text-lg font-medium text-gold-400">
-                  SOIL Approach
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparisons.map((row, index) => (
-                <tr key={index} className="border-b border-slate-800/50">
-                  <td className="py-4 px-6 text-slate-400">{row.traditional}</td>
-                  <td className="py-4 px-6 text-marble-100">{row.soil}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex justify-center">
+          <Card variant="dark-elevated" padding="lg" className="w-full max-w-4xl">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left py-4 px-6 font-display text-lg font-medium text-slate-400">
+                      Traditional Failure Research
+                    </th>
+                    <th className="text-left py-4 px-6 font-display text-lg font-medium text-gold-400">
+                      SOIL Approach
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisons.map((row, index) => (
+                    <tr key={index} className="border-b border-slate-800/50 last:border-b-0">
+                      <td className="py-4 px-6 text-slate-400">{row.traditional}</td>
+                      <td className="py-4 px-6 text-marble-100">{row.soil}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
       </div>
     </section>
@@ -551,7 +717,7 @@ function CommitmentsSection() {
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
+    <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
         <SectionLabel>our principles</SectionLabel>
         <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
@@ -598,31 +764,36 @@ function CurrentStatusSection() {
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
+    <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
-        <div className="max-w-3xl">
-          <SectionLabel>current status</SectionLabel>
-          <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
-            Ground Floor of a New Field
-          </h2>
-          <p className="text-lg text-slate-400 mb-8">
-            SOIL is in active development. This is the ground floor of a new field. The
-            foundational papers haven&apos;t been written. The canonical datasets don&apos;t exist. The
-            theoretical frameworks haven&apos;t been tested.
-          </p>
-
-          <div className="space-y-4 mb-8">
-            {statusItems.map((item, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="w-2 h-2 rounded-full bg-gold-500" />
-                <span className="text-marble-100">{item}</span>
-              </div>
-            ))}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          {/* Left column: Label, Title, Description */}
+          <div>
+            <SectionLabel>current status</SectionLabel>
+            <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
+              Ground Floor of a New Field
+            </h2>
+            <p className="text-lg text-slate-400">
+              SOIL is in active development. This is the ground floor of a new field. The
+              foundational papers haven&apos;t been written. The canonical datasets don&apos;t exist. The
+              theoretical frameworks haven&apos;t been tested.
+            </p>
           </div>
 
-          <p className="text-lg text-gold-400/80 italic">
-            We are currently:
-          </p>
+          {/* Right column: Status items */}
+          <div>
+            <p className="text-lg text-gold-400/80 italic mb-6">
+              We are currently:
+            </p>
+            <div className="space-y-4">
+              {statusItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-4">
+                  <div className="w-2 h-2 rounded-full bg-gold-500" />
+                  <span className="text-marble-100">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -655,7 +826,7 @@ function GetInvolvedSection() {
   ]
 
   return (
-    <section id="get-involved" className="py-16 md:py-24 border-t border-slate-800 bg-slate-900/50">
+    <section id="get-involved" className="py-16 md:py-24 bg-slate-900/50">
       <div className="max-w-content mx-auto px-6">
         <SectionLabel>get involved</SectionLabel>
         <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
@@ -677,8 +848,12 @@ function GetInvolvedSection() {
               <CardContent className="flex-1 flex flex-col">
                 <p className="text-slate-400 leading-relaxed flex-1 mb-6">{audience.description}</p>
                 <a href={`mailto:${audience.email}`}>
-                  <Button variant="dark-primary" size="lg" className="w-full">
-                    <Mail className="w-4 h-4 mr-2" />
+                  <Button
+                    variant={index === 2 ? 'light-primary' : 'dark-primary'}
+                    size="lg"
+                    className="w-full"
+                    rightIcon={<Mail className="w-4 h-4" />}
+                  >
                     {audience.email}
                   </Button>
                 </a>
@@ -694,21 +869,112 @@ function GetInvolvedSection() {
 // ============================================================================
 // ADVISORY BOARD SECTION
 // ============================================================================
-function AdvisoryBoardSection() {
+// Team Member Card Component
+interface TeamMemberProps {
+  name: string
+  role: string
+  imageUrl?: string
+  accentWord?: string
+}
+
+function TeamMemberCard({ name, role, accentWord }: TeamMemberProps) {
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800">
+    <div className="relative group">
+      {/* Card with image placeholder */}
+      <div className="relative bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 rounded-2xl overflow-hidden aspect-[3/4] w-full max-w-[280px]">
+        {/* Vertical accent word */}
+        {accentWord && (
+          <span
+            className="absolute right-4 top-1/2 -translate-y-1/2 font-display text-6xl font-bold select-none pointer-events-none opacity-10 [writing-mode:vertical-rl] text-marble-100"
+          >
+            {accentWord}
+          </span>
+        )}
+
+        {/* Placeholder for photo - decorative pattern */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full bg-slate-600/50 flex items-center justify-center">
+            <span className="text-4xl text-slate-500 font-display font-semibold">
+              {name.split(' ').map(n => n[0]).join('')}
+            </span>
+          </div>
+        </div>
+
+        {/* Gradient overlay at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-slate-900/90 to-transparent" />
+      </div>
+
+      {/* Name and role below card */}
+      <div className="mt-4">
+        <h3 className="font-display text-lg font-medium text-marble-100">{name}</h3>
+        <p className="text-slate-500 text-sm">/ {role} /</p>
+      </div>
+    </div>
+  )
+}
+
+function AdvisoryBoardSection() {
+  // Placeholder advisors - to be replaced with real data
+  const advisors: TeamMemberProps[] = [
+    { name: 'To Be Announced', role: 'Organizational Studies', accentWord: 'Research' },
+    { name: 'To Be Announced', role: 'Entrepreneurship', accentWord: 'Strategy' },
+    { name: 'To Be Announced', role: 'Data Science', accentWord: 'Analytics' },
+    { name: 'To Be Announced', role: 'Systems Theory', accentWord: 'Systems' },
+    { name: 'To Be Announced', role: 'Economics', accentWord: 'Economics' },
+  ]
+
+  return (
+    <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
-        <div className="max-w-3xl">
-          <SectionLabel>advisory board</SectionLabel>
-          <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
-            Research Advisory Board
-          </h2>
-          <p className="text-lg text-slate-400 mb-8">
-            We are actively forming our research advisory board. If you&apos;re a senior scholar in
-            organizational studies, entrepreneurship, or related fields and interested in shaping a
-            new discipline, we&apos;d welcome a conversation.
-          </p>
-          <p className="text-xl text-slate-500 italic">To be announced</p>
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-16">
+          {/* Left column: Content */}
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <SectionLabel>advisory board</SectionLabel>
+            <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
+              Research Advisory Board
+            </h2>
+            <p className="text-lg text-slate-400 mb-8">
+              We are actively forming our research advisory board. If you&apos;re a senior scholar in
+              organizational studies, entrepreneurship, or related fields and interested in shaping a
+              new discipline, we&apos;d welcome a conversation.
+            </p>
+
+            {/* Stats placeholder */}
+            <div className="mb-8">
+              <span className="font-display text-5xl md:text-6xl font-semibold text-gradient-gold">
+                +5
+              </span>
+              <p className="text-marble-100 mt-2">Advisory positions forming</p>
+            </div>
+
+            <Button
+              variant="dark-secondary"
+              size="lg"
+              rightIcon={<ArrowRight className="w-5 h-5" />}
+            >
+              Join Advisory Board
+            </Button>
+          </div>
+
+          {/* Right column: Staggered team cards grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {/* First column - starts at top */}
+            <div className="space-y-6">
+              <TeamMemberCard {...advisors[0]} />
+            </div>
+
+            {/* Second column - offset down */}
+            <div className="space-y-6 mt-16">
+              <TeamMemberCard {...advisors[1]} />
+              <TeamMemberCard {...advisors[3]} />
+            </div>
+
+            {/* Third column - slight offset */}
+            <div className="space-y-6 mt-8 hidden md:block">
+              <TeamMemberCard {...advisors[2]} />
+              <TeamMemberCard {...advisors[4]} />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -730,8 +996,8 @@ export default function ResearchPage() {
       <ComparisonSection />
       <CommitmentsSection />
       <CurrentStatusSection />
-      <GetInvolvedSection />
       <AdvisoryBoardSection />
+      <GetInvolvedSection />
     </>
   )
 }
