@@ -157,6 +157,9 @@ export function MenuTransition() {
     didNavigateRef.current = false
   }, [updatePhase])
 
+  // Track target section for navigation
+  const targetSectionRef = useRef<string | null>(null)
+
   // ============================================================================
   // Portal navigation (called when fly-in fade reaches 1)
   // ============================================================================
@@ -165,37 +168,56 @@ export function MenuTransition() {
     didNavigateRef.current = true
     console.log('[MenuTransition] Navigating to:', section)
 
+    targetSectionRef.current = section
     updatePhase('navigating')
     navigateViaPortal(section)
+    // Fade-out will be triggered by useEffect watching currentSection change
+  }, [navigateViaPortal, updatePhase])
 
-    // Fade-out after navigation
-    setTimeout(() => {
-      let startTime: number | null = null
-      const animate = (currentTime: number) => {
-        if (startTime === null) startTime = currentTime
-        const elapsed = currentTime - startTime
-        const progress = Math.min(elapsed / FADE_DURATION, 1)
+  // ============================================================================
+  // Watch for navigation completion (currentSection changes when pathname changes)
+  // ============================================================================
+  useEffect(() => {
+    if (phase !== 'navigating') return
 
-        const eased = progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2
+    const targetSection = targetSectionRef.current
+    if (!targetSection) return
 
-        setFadeOpacity(1 - eased)
+    // Wait until currentSection matches target (or target is same as current for same-page nav)
+    if (currentSection !== targetSection) {
+      console.log('[MenuTransition] Waiting for navigation... current:', currentSection, 'target:', targetSection)
+      return
+    }
 
-        if (progress < 1) {
-          requestAnimationFrame(animate)
-        } else {
-          console.log('[MenuTransition] Navigation fade-out complete')
-          setFadeOpacity(0)
-          updatePhase('idle')
-          closeMenu()
-          didNavigateRef.current = false
-        }
+    // Navigation complete - start fade-out
+    console.log('[MenuTransition] Navigation complete! Starting fade-out. Section:', currentSection)
+
+    let startTime: number | null = null
+    const animate = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / FADE_DURATION, 1)
+
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2
+
+      setFadeOpacity(1 - eased)
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      } else {
+        console.log('[MenuTransition] Navigation fade-out complete')
+        setFadeOpacity(0)
+        updatePhase('idle')
+        closeMenu()
+        didNavigateRef.current = false
+        targetSectionRef.current = null
       }
+    }
 
-      requestAnimationFrame(animate)
-    }, 200) // Small delay for page to start rendering
-  }, [navigateViaPortal, updatePhase, closeMenu])
+    requestAnimationFrame(animate)
+  }, [phase, currentSection, updatePhase, closeMenu])
 
   // ============================================================================
   // Handle closing without navigation
