@@ -43,8 +43,10 @@ export function AppShell({ children }: AppShellProps) {
           />
 
           {/* Page content */}
-          <main className="flex-1">
+          <main className="flex-1 relative">
             {children}
+            {/* Auto gradient transition to footer - applies to all pages */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-marble-950 pointer-events-none z-10" />
           </main>
 
           <Footer />

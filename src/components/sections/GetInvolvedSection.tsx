@@ -33,10 +33,7 @@ const audiences = [
 export function GetInvolvedSection() {
   return (
     <section className="py-16 md:py-24 pb-32 animate-fade-in-up relative overflow-hidden bg-slate-900">
-      {/* Gradient transition only at the bottom to marble footer */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-marble-950 pointer-events-none" />
-
-      <div className="max-w-content mx-auto px-6 relative z-10">
+      <div className="max-w-content mx-auto px-6">
         <SectionLabel>get involved</SectionLabel>
         <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-12 text-marble-100">
           Join the Movement
