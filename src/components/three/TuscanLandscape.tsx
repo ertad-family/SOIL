@@ -525,7 +525,7 @@ function TexturedRoadMesh({ geometry }: TexturedRoadMeshProps) {
   }, [textures])
 
   return (
-    <mesh geometry={geometry}>
+    <mesh geometry={geometry} receiveShadow>
       <meshStandardMaterial
         {...textures}
         side={THREE.DoubleSide}
