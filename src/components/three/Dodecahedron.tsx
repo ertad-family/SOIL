@@ -331,7 +331,7 @@ function PendulumLabel({ name, animState, opacity }: PendulumLabelProps) {
   })
 
   return (
-    <group ref={groupRef} position={[0, 0, 0.25]}>
+    <group ref={groupRef} position={[0, 0, 0.25]} castShadow>
       <Center>
         <Text3D
           font="/fonts/Cinzel/Cinzel SemiBold_Regular.json"
@@ -341,6 +341,7 @@ function PendulumLabel({ name, animState, opacity }: PendulumLabelProps) {
           bevelEnabled
           bevelSize={0.005}
           bevelThickness={0.005}
+          castShadow
         >
           {name}
           <meshStandardMaterial
@@ -879,7 +880,7 @@ export function Dodecahedron({ onPortalClick, isNavigating = false }: Dodecahedr
         <InnerFog />
 
         {/* Main dodecahedron with holes - bronze material */}
-        <mesh geometry={holedGeometry}>
+        <mesh geometry={holedGeometry} castShadow receiveShadow>
           <meshStandardMaterial
             map={textures.map}
             normalMap={textures.normalMap}
@@ -918,7 +919,7 @@ export function Dodecahedron({ onPortalClick, isNavigating = false }: Dodecahedr
           const pos = vertex.clone().normalize().multiplyScalar(vertex.length() + 0.15)
 
           return (
-            <mesh key={`sphere-${idx}`} position={pos}>
+            <mesh key={`sphere-${idx}`} position={pos} castShadow>
               <sphereGeometry args={[0.25, 16, 16]} />
               <meshStandardMaterial
                 map={sphereTextures.map}
