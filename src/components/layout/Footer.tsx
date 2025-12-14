@@ -1,7 +1,91 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
+import Link from 'next/link'
 import { FooterLandscape } from '@/components/three/FooterLandscape'
+
+// Primary navigation - main site sections
+const PRIMARY_LINKS = [
+  { href: '/research', label: 'Research' },
+  { href: '/memorials', label: 'Memorials' },
+  { href: '/community', label: 'Community' },
+  { href: '#', label: 'Learning Hub', disabled: true },
+  { href: '#', label: 'Diagnostics', disabled: true },
+  { href: '#', label: 'Clinic', disabled: true },
+]
+
+// Secondary navigation - informational pages
+const SECONDARY_LINKS = [
+  { href: '#', label: 'About the Project', disabled: true },
+  { href: '#', label: 'For Associates', disabled: true },
+  { href: '#', label: 'For Investors', disabled: true },
+  { href: '#', label: 'For Patrons', disabled: true },
+  { href: '#', label: 'For Media', disabled: true },
+  { href: '#', label: 'Careers', disabled: true },
+]
+
+// Service navigation - utility pages
+const SERVICE_LINKS = [
+  { href: '#', label: 'Account', disabled: true },
+  { href: '#', label: 'Search', disabled: true },
+  { href: '#', label: 'Privacy Policy', disabled: true },
+  { href: '#', label: 'Terms & Conditions', disabled: true },
+  { href: '#', label: 'Sitemap', disabled: true },
+]
+
+// Connect section - contacts & social media (horizontal layout)
+const CONNECT_LINKS = [
+  { href: '#', label: 'Contacts', disabled: true },
+  { href: '#', label: 'LinkedIn', disabled: true },
+  { href: '#', label: 'GitHub', disabled: true },
+]
+
+interface FooterLinkProps {
+  href: string
+  label: string
+  disabled?: boolean
+}
+
+function FooterLink({ href, label, disabled }: FooterLinkProps) {
+  if (disabled) {
+    return (
+      <span className="text-slate-500 text-sm cursor-not-allowed">
+        {label}
+      </span>
+    )
+  }
+
+  return (
+    <Link
+      href={href}
+      className="!text-marble-400 hover:!text-gold-400 text-sm transition-colors"
+    >
+      {label}
+    </Link>
+  )
+}
+
+interface FooterSectionProps {
+  title: string
+  links: FooterLinkProps[]
+}
+
+function FooterSection({ title, links }: FooterSectionProps) {
+  return (
+    <div className="flex flex-col gap-4">
+      <h4 className="font-sans text-xs font-bold uppercase tracking-widest text-marble-300">
+        {title}
+      </h4>
+      <ul className="flex flex-col gap-2">
+        {links.map((link) => (
+          <li key={link.label}>
+            <FooterLink {...link} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 export function Footer() {
   const footerRef = useRef<HTMLElement>(null)
@@ -45,17 +129,46 @@ export function Footer() {
       </div>
 
       {/* Content overlay */}
-      <div className="relative z-10 max-w-content mx-auto px-6 py-48">
-        <div className="flex flex-col items-center gap-6">
-          <div className="font-serif text-2xl tracking-wider text-marble-300">
-            S<span className="text-gold-500">&middot;</span>O<span className="text-gold-500">&middot;</span>I
-            <span className="text-gold-500">&middot;</span>L
+      <div className="relative z-10 max-w-content mx-auto px-6 pt-16 pb-16">
+        {/* Main navigation grid - first column wider, others closer together */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 lg:gap-6">
+          {/* Logo & description */}
+          <div className="flex flex-col gap-4">
+            <Link href="/" className="font-serif text-2xl font-semibold tracking-wider !text-marble-100 hover:!text-marble-100">
+              S<span className="text-gold-400">&middot;</span>O<span className="text-gold-400">&middot;</span>I
+              <span className="text-gold-400">&middot;</span>L
+            </Link>
+            <p className="font-ui text-xs uppercase tracking-widest text-marble-500">
+              Social Organizational Intelligence Lab
+            </p>
+            <p className="text-sm text-marble-500 leading-relaxed mt-2">
+              Autopsy of organizations. Learning from corporate death to build healthier futures.
+            </p>
+            <p className="text-xs text-marble-600 mt-auto pt-4">&copy; MMXXV SOIL. All rights reserved.</p>
           </div>
-          <p className="font-ui text-sm uppercase tracking-widest text-marble-500">
-            Social Organizational Intelligence Lab
-          </p>
-          <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold-500/30 to-transparent" />
-          <p className="text-xs text-marble-600">&copy; 2025 SOIL. All rights reserved.</p>
+
+          {/* Primary Menu */}
+          <FooterSection title="Navigate" links={PRIMARY_LINKS} />
+
+          {/* Secondary Menu */}
+          <FooterSection title="Information" links={SECONDARY_LINKS} />
+
+          {/* Service Menu & Social */}
+          <div className="flex flex-col gap-8">
+            <FooterSection title="Service" links={SERVICE_LINKS} />
+
+            {/* Connect links - horizontal */}
+            <div className="flex flex-col gap-4">
+              <h4 className="font-sans text-xs font-bold uppercase tracking-widest text-marble-300">
+                Connect
+              </h4>
+              <div className="flex flex-wrap gap-4">
+                {CONNECT_LINKS.map((link) => (
+                  <FooterLink key={link.label} {...link} />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
