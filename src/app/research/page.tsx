@@ -2,10 +2,9 @@
 
 import { SectionLabel } from '@/components/ui/section-label'
 import { BookOpen, Database, TrendingUp } from 'lucide-react'
-import { PageLayout } from '@/components/layout/PageLayout'
 
 // ============================================================================
-// THE RESEARCH GAP SECTION (moved from Landing)
+// THE RESEARCH GAP SECTION
 // ============================================================================
 function ResearchGapSection() {
   const problems = [
@@ -58,46 +57,32 @@ function ResearchGapSection() {
 
 // ============================================================================
 // RESEARCH PAGE
+// Header, Footer, MenuTransition, and GlobalParticles are provided by AppShell.
 // ============================================================================
 export default function ResearchPage() {
   return (
-    <PageLayout currentSection="research">
-      <main>
-        {/* Hero */}
-        <section className="py-20 md:py-28">
-          <div className="max-w-content mx-auto px-6">
-            <SectionLabel>research center</SectionLabel>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold tracking-wide mt-4 mb-6 text-marble-100">
-              Research Center
-            </h1>
-            <p className="text-xl text-slate-400 max-w-2xl">
-              Advancing organizational theory through systematic data collection and analysis.
-            </p>
-          </div>
-        </section>
-
-        <ResearchGapSection />
-
-        {/* More sections will be added later */}
-        <section className="py-16 md:py-24 border-t border-slate-800">
-          <div className="max-w-content mx-auto px-6 text-center">
-            <p className="text-slate-500 italic">More research content coming soon...</p>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-700/50 bg-slate-900">
-        <div className="max-w-content mx-auto px-6 py-12">
-          <div className="flex flex-col items-center gap-4">
-            <div className="font-serif text-xl tracking-wider text-slate-400">
-              S<span className="text-gold-400">·</span>O<span className="text-gold-400">·</span>I
-              <span className="text-gold-400">·</span>L
-            </div>
-            <p className="text-xs text-slate-600">© 2025 SOIL. All rights reserved.</p>
-          </div>
+    <>
+      {/* Hero */}
+      <section className="py-20 md:py-28">
+        <div className="max-w-content mx-auto px-6">
+          <SectionLabel>research center</SectionLabel>
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold tracking-wide mt-4 mb-6 text-marble-100">
+            Research Center
+          </h1>
+          <p className="text-xl text-slate-400 max-w-2xl">
+            Advancing organizational theory through systematic data collection and analysis.
+          </p>
         </div>
-      </footer>
-    </PageLayout>
+      </section>
+
+      <ResearchGapSection />
+
+      {/* More sections will be added later */}
+      <section className="py-16 md:py-24 border-t border-slate-800">
+        <div className="max-w-content mx-auto px-6 text-center">
+          <p className="text-slate-500 italic">More research content coming soon...</p>
+        </div>
+      </section>
+    </>
   )
 }

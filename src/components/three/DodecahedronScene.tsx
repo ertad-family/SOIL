@@ -61,8 +61,14 @@ interface CameraTrackerProps {
 
 function CameraTracker({ cameraPositionRef, cameraQuaternionRef }: CameraTrackerProps) {
   const { camera } = useThree()
+  const lastLoggedY = useRef(camera.position.y)
 
   useFrame(() => {
+    // Log significant Y position changes
+    if (Math.abs(camera.position.y - lastLoggedY.current) > 0.5) {
+      console.log('[CameraTracker] Camera Y changed:', lastLoggedY.current.toFixed(2), '->', camera.position.y.toFixed(2))
+      lastLoggedY.current = camera.position.y
+    }
     // Continuously track camera position and rotation so we always have the latest
     cameraPositionRef.current.copy(camera.position)
     cameraQuaternionRef.current.copy(camera.quaternion)
@@ -91,13 +97,15 @@ function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimato
       fs.startTime = state.clock.elapsedTime
 
       // Calculate waypoints for the journey
+      // Dodecahedron center (where camera should end up)
+      const dodecahedronCenter = new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)
+
       fs.waypoints = {
         portalApproach: fs.targetPortalCenter.clone()
           .add(fs.targetPortalNormal.clone().multiplyScalar(3)),
         portalEntry: fs.targetPortalCenter.clone()
           .add(fs.targetPortalNormal.clone().multiplyScalar(0.3)),
-        inside: fs.targetPortalCenter.clone()
-          .sub(fs.targetPortalNormal.clone().multiplyScalar(2)),
+        inside: dodecahedronCenter,  // End at center, not 2 units from portal
       }
     }
 
@@ -176,6 +184,7 @@ function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimato
       }
 
       if (t >= 1) {
+        console.log('[FlyIn] Flythrough complete, camera at:', camera.position.toArray().map(n => n.toFixed(2)))
         fs.phase = 'fadeout'
         fs.startTime = state.clock.elapsedTime
       }
@@ -189,13 +198,16 @@ function CameraAnimator({ flyState, controlsRef, onFadeProgress }: CameraAnimato
 
       if (t >= 1) {
         // Animation complete - trigger callback
+        console.log('[FlyIn] Fadeout complete, camera at:', camera.position.toArray().map(n => n.toFixed(2)))
+        if (controlsRef.current) {
+          console.log('[FlyIn] OrbitControls target:', controlsRef.current.target.toArray().map(n => n.toFixed(2)))
+        }
         fs.phase = 'idle'
         fs.isAnimating = false
 
-        // Re-enable controls
-        if (controlsRef.current) {
-          controlsRef.current.enabled = true
-        }
+        // DON'T re-enable controls after fly-in - scene is hidden and will show fly-out next time
+        // Keeping controls disabled prevents them from moving the camera during navigation
+        // Controls will be re-enabled after fly-out completes
 
         // Call completion callback
         if (fs.onComplete) {
@@ -244,6 +256,7 @@ function CameraFlyOutAnimator({ flyOutState, controlsRef, onFadeProgress }: Came
 
     // Initialize waypoints on first frame
     if (fs.startTime === 0) {
+      console.log('[FlyOut] Starting fly-out, camera was at:', camera.position.toArray().map(n => n.toFixed(2)))
       fs.startTime = state.clock.elapsedTime
 
       // Trajectory: center → through portal → arc to side → observer
@@ -274,6 +287,7 @@ function CameraFlyOutAnimator({ flyOutState, controlsRef, onFadeProgress }: Came
       }
 
       // Start camera inside, looking toward the portal
+      console.log('[FlyOut] Moving camera to center:', fs.waypoints.inside.toArray().map(n => n.toFixed(2)))
       camera.position.copy(fs.waypoints.inside)
       camera.lookAt(portalCenterWorld)
       fs.startQuaternion.copy(camera.quaternion)
@@ -335,6 +349,7 @@ function CameraFlyOutAnimator({ flyOutState, controlsRef, onFadeProgress }: Came
 
       if (t >= 1) {
         // Animation complete
+        console.log('[FlyOut] Fly-out complete, camera at:', camera.position.toArray().map(n => n.toFixed(2)))
         fs.phase = 'idle'
         fs.isAnimating = false
 
@@ -523,12 +538,13 @@ export function DodecahedronScene({
   }, [onReady])
 
   // Initialize fly-out animation when starting from inside (legacy support)
+  // Skip auto-trigger if parent controls fly-out via triggerFlyOutRef
   useEffect(() => {
-    if (initialView === 'inside' && !flyOutInitializedRef.current) {
+    if (initialView === 'inside' && !flyOutInitializedRef.current && !triggerFlyOutRef) {
       flyOutInitializedRef.current = true
       triggerFlyOut()
     }
-  }, [initialView, triggerFlyOut])
+  }, [initialView, triggerFlyOut, triggerFlyOutRef])
 
   // Fly-through animation state (ref to avoid re-renders during animation)
   const flyStateRef = useRef<FlyThroughState>({
