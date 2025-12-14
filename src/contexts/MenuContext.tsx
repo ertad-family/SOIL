@@ -8,7 +8,7 @@ const SECTION_TO_ROUTE: Record<string, string> = {
   home: '/',
   research: '/research',
   community: '/community',
-  memorials: '/', // TODO: create page
+  memorials: '/memorials',
   diagnostics: '/', // TODO: create page
   education: '/', // TODO: create page
   clinic: '/', // TODO: create page
@@ -19,6 +19,7 @@ const ROUTE_TO_SECTION: Record<string, string> = {
   '/': 'home',
   '/research': 'research',
   '/community': 'community',
+  '/memorials': 'memorials',
 }
 
 interface MenuContextType {
