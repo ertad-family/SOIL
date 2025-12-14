@@ -18,7 +18,212 @@ import {
   Heart,
   Globe,
   Mail,
+  ArrowRight,
 } from 'lucide-react'
+
+// ============================================================================
+// HERO SECTION
+// ============================================================================
+function HeroSection() {
+  return (
+    <section className="relative py-16 md:py-24 overflow-hidden">
+      <div className="w-full px-4 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Left: Content - 1/3 width */}
+          <div className="flex flex-col animate-fade-in-up lg:w-1/3">
+            {/* Text content with left padding */}
+            <div className="flex-1 pl-4 lg:pl-8">
+              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold tracking-wide mb-6 text-marble-100 leading-tight">
+                Building the Future of{' '}
+                <span className="text-gradient-gold">Organizational Science</span>
+              </h1>
+              <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
+                A new scientific discipline based on systematic study of organizational mortality.
+                Join us in creating the infrastructure for Organizational Biology, Health, and Medicine.
+              </p>
+
+              {/* CTA Button */}
+              <a href="#get-involved">
+                <Button
+                  variant="dark-primary"
+                  size="lg"
+                  rightIcon={<ArrowRight className="w-5 h-5" />}
+                >
+                  Get Involved
+                </Button>
+              </a>
+            </div>
+
+            {/* Email Contact Card - Full width, less padding */}
+            <Card variant="dark" padding="lg" className="mt-8 flex items-center justify-between">
+              <span className="text-slate-400 text-lg">Contact us:</span>
+              <a
+                href="mailto:research@soil.rip"
+                className="text-gold-400 text-xl font-medium hover:text-gold-300 transition-colors"
+              >
+                research@soil.rip
+              </a>
+            </Card>
+          </div>
+
+          {/* Right: Decorative Graphic in Card - 2/3 width */}
+          <div className="animate-fade-in-up stagger-1 lg:w-2/3">
+            <Card variant="dark-elevated" padding="none" className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center">
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-gradient-radial from-gold-500/10 via-transparent to-transparent" />
+
+              {/* Decorative SVG - Dodecahedron portal themed */}
+              <svg
+                viewBox="0 0 400 400"
+                className="w-auto h-full max-h-[65vh] scale-110"
+                fill="none"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {/* Outer rotating ellipses - data orbits (+20% radius) */}
+                {[...Array(6)].map((_, i) => (
+                  <ellipse
+                    key={`orbit-${i}`}
+                    cx="200"
+                    cy="200"
+                    rx={84 + i * 24}
+                    ry={42 + i * 12}
+                    fill="none"
+                    stroke="rgba(196,161,90,0.12)"
+                    strokeWidth="1"
+                    transform={`rotate(${i * 30} 200 200)`}
+                  />
+                ))}
+
+                {/* Pentagon - dodecahedron face (regular pentagon) */}
+                <polygon
+                  points="200,115 280,173 249,268 151,268 120,173"
+                  fill="none"
+                  stroke="rgba(196,161,90,0.5)"
+                  strokeWidth="2"
+                />
+
+                {/* Outer ring (inscribed in pentagon) - apothem = circumradius × cos(36°) = 85 × 0.809 ≈ 68 */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="68"
+                  fill="none"
+                  stroke="rgba(196,161,90,0.4)"
+                  strokeWidth="3"
+                />
+                {/* Outer ring grooves */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="73"
+                  fill="none"
+                  stroke="rgba(74,53,40,0.6)"
+                  strokeWidth="1"
+                />
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="63"
+                  fill="none"
+                  stroke="rgba(74,53,40,0.6)"
+                  strokeWidth="1"
+                />
+
+                {/* Inner ring (around portal hole) */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="45"
+                  fill="none"
+                  stroke="rgba(196,161,90,0.5)"
+                  strokeWidth="3"
+                />
+                {/* Inner ring grooves */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="50"
+                  fill="none"
+                  stroke="rgba(74,53,40,0.6)"
+                  strokeWidth="1"
+                />
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="40"
+                  fill="none"
+                  stroke="rgba(74,53,40,0.6)"
+                  strokeWidth="1"
+                />
+
+                {/* Portal hole (center) */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="30"
+                  fill="rgba(147,112,219,0.15)"
+                  stroke="rgba(147,112,219,0.3)"
+                  strokeWidth="1"
+                />
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="15"
+                  fill="rgba(147,112,219,0.25)"
+                />
+
+                {/* Data points on orbits around pentagon (radii 100-170 from center) */}
+                {[
+                  // Inner orbit (r~100)
+                  { cx: 300, cy: 200, r: 4 },
+                  { cx: 169, cy: 305, r: 3 },
+                  { cx: 100, cy: 200, r: 4 },
+                  // Middle orbit (r~130)
+                  { cx: 330, cy: 200, r: 5 },
+                  { cx: 240, cy: 320, r: 4 },
+                  { cx: 80, cy: 245, r: 3 },
+                  { cx: 130, cy: 90, r: 4 },
+                  // Outer orbit (r~160)
+                  { cx: 360, cy: 200, r: 4 },
+                  { cx: 295, cy: 330, r: 5 },
+                  { cx: 105, cy: 330, r: 3 },
+                  { cx: 50, cy: 170, r: 4 },
+                  { cx: 200, cy: 45, r: 5 },
+                ].map((point, i) => (
+                  <circle
+                    key={`point-${i}`}
+                    cx={point.cx}
+                    cy={point.cy}
+                    r={point.r}
+                    fill="rgba(196,161,90,0.6)"
+                  />
+                ))}
+
+                {/* Pentagon vertex accents */}
+                <circle cx="200" cy="115" r="5" fill="rgba(196,161,90,0.5)" />
+                <circle cx="280" cy="173" r="5" fill="rgba(196,161,90,0.5)" />
+                <circle cx="249" cy="268" r="5" fill="rgba(196,161,90,0.5)" />
+                <circle cx="151" cy="268" r="5" fill="rgba(196,161,90,0.5)" />
+                <circle cx="120" cy="173" r="5" fill="rgba(196,161,90,0.5)" />
+              </svg>
+
+              {/* Floating labels */}
+              <div className="absolute top-6 right-6 text-xs text-gold-400/60 font-mono">
+                DATA COLLECTION
+              </div>
+              <div className="absolute bottom-6 left-6 text-xs text-gold-400/60 font-mono">
+                PATTERN ANALYSIS
+              </div>
+              <div className="absolute top-1/2 right-6 -translate-y-1/2 text-xs text-gold-400/60 font-mono">
+                FRAMEWORKS
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 // ============================================================================
 // THE RESEARCH GAP SECTION
@@ -450,7 +655,7 @@ function GetInvolvedSection() {
   ]
 
   return (
-    <section className="py-16 md:py-24 border-t border-slate-800 bg-slate-900/50">
+    <section id="get-involved" className="py-16 md:py-24 border-t border-slate-800 bg-slate-900/50">
       <div className="max-w-content mx-auto px-6">
         <SectionLabel>get involved</SectionLabel>
         <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
@@ -517,20 +722,7 @@ function AdvisoryBoardSection() {
 export default function ResearchPage() {
   return (
     <>
-      {/* Hero */}
-      <section className="py-20 md:py-28">
-        <div className="max-w-content mx-auto px-6">
-          <SectionLabel>soil research program</SectionLabel>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold tracking-wide mt-4 mb-6 text-marble-100">
-            Research Program
-          </h1>
-          <p className="text-xl text-slate-400 max-w-2xl">
-            Building the foundation for Organizational Biology, Health, and Medicine — a new
-            scientific discipline based on systematic study of organizational mortality.
-          </p>
-        </div>
-      </section>
-
+      <HeroSection />
       <ResearchGapSection />
       <WhatWeAreBuildingSection />
       <ResearchQuestionsSection />

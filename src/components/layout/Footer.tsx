@@ -17,7 +17,7 @@ const PRIMARY_LINKS = [
 // Secondary navigation - informational pages
 const SECONDARY_LINKS = [
   { href: '#', label: 'About the Project', disabled: true },
-  { href: '#', label: 'For Associates', disabled: true },
+  { href: '/research', label: 'For Researchers' },
   { href: '#', label: 'For Investors', disabled: true },
   { href: '#', label: 'For Patrons', disabled: true },
   { href: '#', label: 'For Media', disabled: true },

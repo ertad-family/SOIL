@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 const cardVariants = cva(
   // Base styles - Modern Roman aesthetic with depth
   [
-    'rounded-md',
+    'rounded-xl',
     'transition-all duration-300 ease-out',
     'relative',
   ],
