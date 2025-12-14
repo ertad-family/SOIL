@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cinzel, Sora, Manrope } from 'next/font/google'
 import './globals.css'
+import { AppShell } from '@/components/layout'
 
 // Sora - geometric sans-serif for headings (clean, modern)
 const sora = Sora({
@@ -44,7 +45,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-marble-50 text-marble-950 font-sans antialiased">
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   )
