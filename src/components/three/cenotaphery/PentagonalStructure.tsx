@@ -15,6 +15,12 @@ import {
   INNER_RADIUS,
   NICHES_PER_WALL,
   LEVELS,
+  ENTRANCE_WALL,
+  ENTRANCE_HEIGHT,
+  ENTRANCE_START_NICHE,
+  ENTRANCE_END_NICHE,
+  ENTRANCE_WIDTH_METERS,
+  ENTRANCE_HEIGHT_METERS,
 } from './config'
 
 /**
@@ -76,6 +82,19 @@ function getWallOutwardNormal(vertices: THREE.Vector2[], wallIndex: number): THR
   } else {
     return perp2
   }
+}
+
+/**
+ * Проверяет, является ли ниша частью входа
+ * @param wallIndex индекс стены (0-4)
+ * @param nicheIndex индекс ниши на стене (0-indexed)
+ * @param level номер уровня (1-indexed)
+ */
+function isEntranceNiche(wallIndex: number, nicheIndex: number, level: number): boolean {
+  return wallIndex === ENTRANCE_WALL &&
+         level <= ENTRANCE_HEIGHT &&
+         nicheIndex >= ENTRANCE_START_NICHE &&
+         nicheIndex <= ENTRANCE_END_NICHE
 }
 
 /**
@@ -150,7 +169,7 @@ interface NicheParams {
   rotationZ: number        // угол поворота вокруг Z (вертикальной оси)
 }
 
-function generateNicheParams(innerRadius: number, nichesPerWall: number): NicheParams[] {
+function generateNicheParams(innerRadius: number, nichesPerWall: number, level: number): NicheParams[] {
   const niches: NicheParams[] = []
   const innerVerts = getPentagonVertices(innerRadius)
 
@@ -180,6 +199,12 @@ function generateNicheParams(innerRadius: number, nichesPerWall: number): NicheP
     let currentPos = PARTITION_WIDTH // начинаем после первой перегородки
 
     for (let nicheIndex = 0; nicheIndex < nichesPerWall; nicheIndex++) {
+      // Пропускаем ниши в зоне входа
+      if (isEntranceNiche(wallIndex, nicheIndex, level)) {
+        currentPos += NICHE_WIDTH + PARTITION_WIDTH
+        continue
+      }
+
       // Центр ниши вдоль стены
       const nicheCenterAlongWall = currentPos + NICHE_WIDTH / 2
 
@@ -247,9 +272,61 @@ function createTransformedNicheGeometry(position: THREE.Vector3, rotationZ: numb
 }
 
 /**
- * Создаёт финальную геометрию уровня: сплошная стена минус ниши
+ * Создаёт геометрию проёма входа
+ * Бокс на всю высоту входа, который вычитается из стены
  */
-function createLevelWithNichesGeometry(innerRadius: number, nichesPerWall: number): THREE.BufferGeometry {
+function createEntranceHoleGeometry(innerRadius: number): THREE.BufferGeometry {
+  const innerVerts = getPentagonVertices(innerRadius)
+  const wallStart = innerVerts[ENTRANCE_WALL]
+  const wallEnd = innerVerts[(ENTRANCE_WALL + 1) % 5]
+
+  const wallDir = new THREE.Vector2(
+    wallEnd.x - wallStart.x,
+    wallEnd.y - wallStart.y
+  ).normalize()
+  const outwardNormal = getWallOutwardNormal(innerVerts, ENTRANCE_WALL)
+
+  // Позиция центра входа вдоль стены
+  // Начинаем с первой перегородки, затем ENTRANCE_START_NICHE полных ячеек (ниша + перегородка)
+  // Затем половина ширины входа
+  const entranceCenterAlongWall = PARTITION_WIDTH +
+    ENTRANCE_START_NICHE * (NICHE_WIDTH + PARTITION_WIDTH) +
+    ENTRANCE_WIDTH_METERS / 2
+
+  // Центр входа в 2D (в середине толщины стены)
+  const entranceCenter2D = new THREE.Vector2(
+    wallStart.x + wallDir.x * entranceCenterAlongWall + outwardNormal.x * (WALL_THICKNESS / 2),
+    wallStart.y + wallDir.y * entranceCenterAlongWall + outwardNormal.y * (WALL_THICKNESS / 2)
+  )
+
+  // Z позиция - центр по высоте входа
+  const zPos = ENTRANCE_HEIGHT_METERS / 2
+
+  // Угол поворота
+  const outwardAngle = Math.atan2(outwardNormal.y, outwardNormal.x)
+  const rotationZ = outwardAngle - Math.PI / 2
+
+  // Создаём бокс с небольшим запасом для CSG
+  const EPSILON = 0.01
+  const geo = new THREE.BoxGeometry(
+    ENTRANCE_WIDTH_METERS + EPSILON,
+    WALL_THICKNESS + EPSILON,
+    ENTRANCE_HEIGHT_METERS + EPSILON
+  )
+
+  // Трансформируем
+  const rotationMatrix = new THREE.Matrix4().makeRotationZ(rotationZ)
+  const translationMatrix = new THREE.Matrix4().makeTranslation(entranceCenter2D.x, entranceCenter2D.y, zPos)
+  const matrix = new THREE.Matrix4().multiplyMatrices(translationMatrix, rotationMatrix)
+  geo.applyMatrix4(matrix)
+
+  return geo
+}
+
+/**
+ * Создаёт финальную геометрию уровня: сплошная стена минус ниши (и вход на нижних уровнях)
+ */
+function createLevelWithNichesGeometry(innerRadius: number, nichesPerWall: number, level: number): THREE.BufferGeometry {
   const evaluator = new Evaluator()
 
   // 1. Создаём сплошную стену
@@ -257,8 +334,8 @@ function createLevelWithNichesGeometry(innerRadius: number, nichesPerWall: numbe
   let result = new Brush(solidWallGeo)
   result.updateMatrixWorld()
 
-  // 2. Генерируем параметры ниш
-  const nicheParams = generateNicheParams(innerRadius, nichesPerWall)
+  // 2. Генерируем параметры ниш (с учётом входа)
+  const nicheParams = generateNicheParams(innerRadius, nichesPerWall, level)
 
   // 3. Вычитаем каждую нишу
   for (const params of nicheParams) {
@@ -272,6 +349,15 @@ function createLevelWithNichesGeometry(innerRadius: number, nichesPerWall: numbe
 
     // Освобождаем память
     nicheGeo.dispose()
+  }
+
+  // 4. Вычитаем проём входа на уровнях 1..ENTRANCE_HEIGHT
+  if (level <= ENTRANCE_HEIGHT) {
+    const entranceGeo = createEntranceHoleGeometry(innerRadius)
+    const entranceBrush = new Brush(entranceGeo)
+    entranceBrush.updateMatrixWorld()
+    result = evaluator.evaluate(result, entranceBrush, SUBTRACTION)
+    entranceGeo.dispose()
   }
 
   // Освобождаем память
@@ -310,8 +396,8 @@ function PentagonLevel({ level, innerRadius, nichesPerWall }: PentagonLevelProps
   }, [textures])
 
   const geometry = useMemo(() => {
-    return createLevelWithNichesGeometry(innerRadius, nichesPerWall)
-  }, [innerRadius, nichesPerWall])
+    return createLevelWithNichesGeometry(innerRadius, nichesPerWall, level)
+  }, [innerRadius, nichesPerWall, level])
 
   return (
     <group position={[0, 0, zPosition]}>
@@ -369,7 +455,8 @@ export function TestPentagonalStructure() {
  * В системе координат XY (Z вверх)
  */
 export function DebugNicheBoxes() {
-  const nicheParams = useMemo(() => generateNicheParams(INNER_RADIUS, NICHES_PER_WALL), [])
+  // Показываем ниши первого уровня (без входа)
+  const nicheParams = useMemo(() => generateNicheParams(INNER_RADIUS, NICHES_PER_WALL, 1), [])
 
   return (
     <group>

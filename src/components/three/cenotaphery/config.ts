@@ -48,7 +48,7 @@ export const LEVELS = 8
 
 // --- Вход (опционально, пока не используется) ---
 /** Ширина входа в нишах */
-export const ENTRANCE_WIDTH = 5
+export const ENTRANCE_WIDTH = 2
 
 /** Высота входа в уровнях */
 export const ENTRANCE_HEIGHT = 3
@@ -93,6 +93,24 @@ export const WALL_HEIGHT = LEVELS * LEVEL_HEIGHT
 export const TOTAL_NICHES = 5 * NICHES_PER_WALL * LEVELS - ENTRANCE_WIDTH * ENTRANCE_HEIGHT
 // = 5 * 31 * 8 - 15 = 1240 - 15 = 1225 = 35²
 
+// --- Вычисляемые параметры входа ---
+
+/** Индекс первой ниши входа (0-indexed, по центру с Math.floor) */
+export const ENTRANCE_START_NICHE = Math.floor((NICHES_PER_WALL - ENTRANCE_WIDTH) / 2)
+// При NICHES_PER_WALL=10, ENTRANCE_WIDTH=2: (10-2)/2 = 4
+
+/** Индекс последней ниши входа (включительно) */
+export const ENTRANCE_END_NICHE = ENTRANCE_START_NICHE + ENTRANCE_WIDTH - 1
+// = 4 + 2 - 1 = 5
+
+/** Ширина проёма входа в метрах */
+export const ENTRANCE_WIDTH_METERS = ENTRANCE_WIDTH * NICHE_WIDTH + (ENTRANCE_WIDTH - 1) * PARTITION_WIDTH
+// = 2 * 2.0 + 1 * 0.5 = 4.5м
+
+/** Высота проёма входа в метрах */
+export const ENTRANCE_HEIGHT_METERS = ENTRANCE_HEIGHT * LEVEL_HEIGHT
+// = 3 * 3.0 = 9.0м
+
 // ============================================
 // ОБЪЕКТ КОНФИГУРАЦИИ (для совместимости)
 // ============================================
@@ -120,6 +138,10 @@ export const CENOTAPHERY_CONFIG = {
 
   // Вычисляемые
   levelHeight: LEVEL_HEIGHT,
+  entranceStartNiche: ENTRANCE_START_NICHE,
+  entranceEndNiche: ENTRANCE_END_NICHE,
+  entranceWidthMeters: ENTRANCE_WIDTH_METERS,
+  entranceHeightMeters: ENTRANCE_HEIGHT_METERS,
   wallLength: WALL_LENGTH,
   wallThickness: WALL_THICKNESS,
   innerRadius: INNER_RADIUS,
