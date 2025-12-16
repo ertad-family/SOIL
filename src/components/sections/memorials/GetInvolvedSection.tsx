@@ -22,7 +22,7 @@ const audiences = [
       'Organize local events, host Day of the Dead Venture celebrations, and connect founders in your region who can learn from each other.',
     cta: 'Join the Community',
     href: '/community',
-    buttonVariant: 'light-primary' as const,
+    buttonVariant: 'marble' as const,
   },
   {
     icon: <MapPin className="w-8 h-8" />,
