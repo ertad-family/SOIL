@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { NewsletterWidget } from '@/components/ui/newsletter-widget'
-import { ArrowRight } from 'lucide-react'
+import { Search, ArrowRight } from 'lucide-react'
 import {
   Landmark,
   FlaskConical,
@@ -64,7 +64,7 @@ const roles = [
     id: 'volunteers',
     label: 'VOLUNTEERS',
     title: 'Volunteers',
-    description: 'Contribute time as content reviewers, event organizers, or community moderators.',
+    description: 'There are numerous ways to contribute your time and skills to our mission.',
     color: 'rgba(59,130,246,1)', // blue
     colorBg: 'rgba(59,130,246,0.15)',
     colorStroke: 'rgba(59,130,246,0.5)',
@@ -385,7 +385,7 @@ export function CommunityHeroSection() {
                 A global network transforming organizational failure into collective wisdom.
               </p>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
-                Founders are at the heart of everything we do. Around them, a community of
+                Founders community is at the heart of everything we do. Around them, a community of
                 researchers, keepers, contributors, givers, and volunteers works together
                 to preserve and share organizational wisdom.
               </p>
@@ -395,7 +395,7 @@ export function CommunityHeroSection() {
                 <Button
                   variant="dark-primary"
                   size="lg"
-                  rightIcon={<ArrowRight className="w-5 h-5" />}
+                  rightIcon={<Search className="w-5 h-5" />}
                 >
                   Find Your Role
                 </Button>

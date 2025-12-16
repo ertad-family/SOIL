@@ -4,6 +4,7 @@ import {
   MemorialsHeroSection,
   GlobeSection,
   FeaturedStoriesSection,
+  GetInvolvedSection,
   MemorialsCTASection,
 } from '@/components/sections/memorials'
 import { mockCenotapheries, globalStats, sidePanelStats, featuredStories } from '@/data/mock-cenotapheries'
@@ -34,6 +35,14 @@ export default function MemorialsPage() {
 
       {/* CTA to create cenotaph */}
       <MemorialsCTASection />
+
+      {/* Roman separator */}
+      <div className="divider-roman py-12 md:py-16 bg-slate-950">
+        <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">✦</span>
+      </div>
+
+      {/* Get Involved - appeal to future Keepers */}
+      <GetInvolvedSection />
     </>
   )
 }
