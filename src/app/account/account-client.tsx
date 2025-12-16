@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { useState } from 'react'
 import { DashboardLayout } from '@/components/layouts/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SwitchWithLabel } from '@/components/ui/switch'
 import {
-  User,
   Plus,
   Eye,
   Heart,
@@ -21,6 +21,7 @@ import {
   FileText,
   Calendar,
   ExternalLink,
+  Settings,
 } from 'lucide-react'
 
 interface AccountUser {
@@ -49,6 +50,12 @@ interface AccountClientProps {
 }
 
 export function AccountClient({ user, memorials }: AccountClientProps) {
+  const [notifications, setNotifications] = useState({
+    newRespects: true,
+    newCondolences: true,
+    weeklyDigest: false,
+  })
+
   const publishedMemorials = memorials.filter((m) => m.status === 'published')
   const draftMemorials = memorials.filter((m) => m.status === 'draft')
 
@@ -65,31 +72,13 @@ export function AccountClient({ user, memorials }: AccountClientProps) {
       pageTitle={`Welcome, ${user.name}`}
       pageDescription="Manage your cenotaphs and account settings"
       pageActions={
-        <Button variant="dark-primary" size="sm" asChild>
-          <Link href="/create">
-            <Plus className="w-4 h-4 mr-2" />
+        <a href="/create">
+          <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
             New Cenotaph
-          </Link>
-        </Button>
+          </Button>
+        </a>
       }
     >
-      {/* Profile Card */}
-      <Card variant="dark" className="mb-8">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gold-500/20 flex items-center justify-center">
-              <User className="w-8 h-8 text-gold-400" />
-            </div>
-            <div>
-              <h2 className="font-display text-xl font-medium text-marble-100">
-                {user.name}
-              </h2>
-              <p className="text-slate-400">{user.email}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card variant="dark">
@@ -214,6 +203,57 @@ export function AccountClient({ user, memorials }: AccountClientProps) {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Account Settings */}
+      <Card variant="dark" className="mt-8">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
+              <Settings className="w-5 h-5 text-gold-400" />
+            </div>
+            <div>
+              <CardTitle variant="dark">Account Settings</CardTitle>
+              <CardDescription variant="dark">{user.email}</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium text-marble-100 mb-4">Email Notifications</h4>
+              <div className="space-y-4">
+                <SwitchWithLabel
+                  variant="dark"
+                  label="New respects"
+                  description="Get notified when someone pays respect to your cenotaph"
+                  checked={notifications.newRespects}
+                  onCheckedChange={(checked) =>
+                    setNotifications((prev) => ({ ...prev, newRespects: checked }))
+                  }
+                />
+                <SwitchWithLabel
+                  variant="dark"
+                  label="New condolences"
+                  description="Get notified when someone leaves a condolence message"
+                  checked={notifications.newCondolences}
+                  onCheckedChange={(checked) =>
+                    setNotifications((prev) => ({ ...prev, newCondolences: checked }))
+                  }
+                />
+                <SwitchWithLabel
+                  variant="dark"
+                  label="Weekly digest"
+                  description="Receive a weekly summary of activity on your cenotaphs"
+                  checked={notifications.weeklyDigest}
+                  onCheckedChange={(checked) =>
+                    setNotifications((prev) => ({ ...prev, weeklyDigest: checked }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </DashboardLayout>
   )
 }
@@ -241,12 +281,11 @@ function EmptyState({
         {title}
       </h3>
       <p className="text-slate-400 mb-6">{description}</p>
-      <Button variant="dark-primary" asChild>
-        <Link href={actionHref}>
-          <Plus className="w-4 h-4 mr-2" />
+      <a href={actionHref}>
+        <Button variant="dark-primary" rightIcon={<Plus className="w-4 h-4" />}>
           {actionLabel}
-        </Link>
-      </Button>
+        </Button>
+      </a>
     </div>
   )
 }
@@ -267,7 +306,7 @@ function MemorialCard({
             <h3 className="font-display text-lg font-medium text-marble-100">
               {memorial.organization_name}
             </h3>
-            <Badge variant={isDraft ? 'dark-ghost' : 'dark-success'} size="sm">
+            <Badge variant={isDraft ? 'dark-outline' : 'dark-success'} size="sm">
               {isDraft ? 'Draft' : 'Published'}
             </Badge>
           </div>
@@ -278,7 +317,7 @@ function MemorialCard({
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
               {memorial.founded_date} - {memorial.closed_date}
@@ -300,18 +339,17 @@ function MemorialCard({
 
         <div className="flex items-center gap-2">
           {isDraft ? (
-            <Button variant="dark-primary" size="sm" asChild>
-              <Link href={`/create?edit=${memorial.id}`}>
+            <a href={`/create?edit=${memorial.id}`}>
+              <Button variant="dark-primary" size="sm">
                 Continue Editing
-              </Link>
-            </Button>
+              </Button>
+            </a>
           ) : (
-            <Button variant="dark-secondary" size="sm" asChild>
-              <Link href={`/memorials/${memorial.slug}`}>
-                <ExternalLink className="w-4 h-4 mr-2" />
+            <a href={`/memorials/${memorial.slug}`}>
+              <Button variant="dark-secondary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
                 View
-              </Link>
-            </Button>
+              </Button>
+            </a>
           )}
         </div>
       </div>
