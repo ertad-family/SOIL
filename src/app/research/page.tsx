@@ -849,7 +849,7 @@ function GetInvolvedSection() {
                 <p className="text-slate-400 leading-relaxed flex-1 mb-6">{audience.description}</p>
                 <a href={`mailto:${audience.email}`}>
                   <Button
-                    variant={index === 2 ? 'light-primary' : 'dark-primary'}
+                    variant={index === 2 ? 'marble' : 'dark-primary'}
                     size="lg"
                     className="w-full"
                     rightIcon={<Mail className="w-4 h-4" />}

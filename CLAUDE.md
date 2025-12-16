@@ -100,6 +100,8 @@ Tailwind configuration in [tailwind.config.ts](tailwind.config.ts) with Roman-in
 5. **Test thoroughly** - Check everything twice before celebrating
 6. **No `as any`** - Avoid TypeScript escape hatches
 7. **Real testing** - No mocking for integration/E2E tests
+8. **Hot reload** - do not build the project after every edit
+9. **Dev Server** - next dev server is allways running
 
 ## Tech Stack
 

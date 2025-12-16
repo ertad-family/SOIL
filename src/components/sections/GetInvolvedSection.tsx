@@ -18,7 +18,7 @@ const audiences = [
     description:
       'Support groundbreaking research, join our advisory board, or sponsor initiatives that advance organizational science and help future founders.',
     cta: 'Support Research',
-    buttonVariant: 'light-primary' as const,
+    buttonVariant: 'marble' as const,
   },
   {
     icon: <BookOpen className="w-8 h-8" />,

@@ -60,7 +60,7 @@ export function NewsletterWidget({
             />
             <Button
               type="submit"
-              variant="light-primary"
+              variant="marble"
               size="sm"
               disabled={isLoading}
             >
@@ -95,7 +95,7 @@ export function NewsletterWidget({
           />
           <Button
             type="submit"
-            variant="light-primary"
+            variant="marble"
             size="md"
             disabled={isLoading}
           >

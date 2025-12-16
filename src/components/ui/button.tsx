@@ -125,9 +125,9 @@ const buttonVariants = cva(
           'focus-visible:ring-[#d4cfc5] focus-visible:ring-offset-slate-900',
         ],
 
-        // === Light Mode Variants (for light backgrounds) ===
-        // Light Primary - Dark marble with shine (for light backgrounds)
-        'light-primary': [
+        // === Marble Button - Dark stone with polished shine ===
+        // Marble - Dark polished stone, used for accent contrast on dark backgrounds
+        marble: [
           'bg-[linear-gradient(135deg,#3d3a36_0%,#2d2a26_25%,#3d3a36_50%,#4a4640_75%,#2d2a26_100%)]',
           'text-[#f2efe9] font-semibold',
           'border border-transparent',
@@ -139,16 +139,6 @@ const buttonVariants = cva(
           // Shine effect
           'btn-marble-dark-shine',
         ],
-        // Light Secondary - Outline style (dark border on light bg)
-        'light-secondary': [
-          'bg-transparent',
-          'text-[#2d2a26]',
-          'border-2 border-[#4a4640]',
-          'hover:bg-[#2d2a26] hover:text-[#f2efe9] hover:border-[#2d2a26]',
-          'active:bg-[#3d3a36]',
-          'focus-visible:ring-[#4a4640] focus-visible:ring-offset-[#f2efe9]',
-        ],
-
         // === Cenotaph Special Variant - Premium gold with glow ===
         cenotaph: [
           'bg-gradient-to-b from-gold-300 via-gold-500 to-gold-600',
@@ -211,6 +201,32 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : 'button'
 
+    // When asChild is true, Slot expects a single child element.
+    // Icons and loading state are only supported for non-asChild buttons.
+    const renderContent = () => {
+      if (asChild) {
+        // Pass children directly to Slot - it will merge props with the child
+        return children
+      }
+
+      if (isLoading) {
+        return (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>{children}</span>
+          </>
+        )
+      }
+
+      return (
+        <>
+          {leftIcon && <span className="shrink-0">{leftIcon}</span>}
+          {children}
+          {rightIcon && <span className="shrink-0">{rightIcon}</span>}
+        </>
+      )
+    }
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
@@ -218,18 +234,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         {...props}
       >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>{children}</span>
-          </>
-        ) : (
-          <>
-            {leftIcon && <span className="shrink-0">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="shrink-0">{rightIcon}</span>}
-          </>
-        )}
+        {renderContent()}
       </Comp>
     )
   }
