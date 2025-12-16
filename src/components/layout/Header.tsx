@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Sun, Moon } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { useMenu } from '@/contexts/MenuContext'
+import { createClient } from '@/lib/supabase/client'
 
 const NAV_LINKS = [
   { href: '/research', label: 'Research' },
@@ -12,15 +14,34 @@ const NAV_LINKS = [
   { href: '/community', label: 'Community' },
 ]
 
-interface HeaderProps {
-  isDarkMode: boolean
-  onThemeToggle: () => void
-  showThemeToggle?: boolean
-}
-
-export function Header({ isDarkMode, onThemeToggle, showThemeToggle = true }: HeaderProps) {
+export function Header() {
   const { openMenu } = useMenu()
   const pathname = usePathname()
+  const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Check initial auth state
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsAuthenticated(!!user)
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session?.user)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-lg">
@@ -54,14 +75,31 @@ export function Header({ isDarkMode, onThemeToggle, showThemeToggle = true }: He
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            {showThemeToggle && (
-              <button
-                onClick={onThemeToggle}
-                className="p-2 rounded-sm text-slate-400 hover:text-gold-400 transition-colors"
-                aria-label="Toggle theme"
-              >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/account"
+                  className={`p-2 rounded-sm transition-colors ${
+                    pathname === '/account'
+                      ? 'text-gold-400'
+                      : 'text-slate-400 hover:text-gold-400'
+                  }`}
+                  aria-label="Account"
+                >
+                  <User className="w-5 h-5" />
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 rounded-sm text-slate-400 hover:text-gold-400 transition-colors"
+                  aria-label="Sign out"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <Button variant="dark-ghost" size="sm" asChild>
+                <Link href="/login">Sign In</Link>
+              </Button>
             )}
             <Button variant="dark-secondary" size="sm" onClick={openMenu}>
               Menu

@@ -101,7 +101,7 @@ const DashboardLayout = React.forwardRef<HTMLDivElement, DashboardLayoutProps>(
               </div>
             )}
 
-            <div className="p-6 lg:p-8">
+            <div className="max-w-content mx-auto p-6 lg:p-8">
               {/* Page Header */}
               {(pageTitle || pageDescription || pageActions) && (
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

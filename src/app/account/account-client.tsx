@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { DashboardLayout } from '@/components/layouts/dashboard-layout'
 import { Button } from '@/components/ui/button'
@@ -13,10 +12,8 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { createClient } from '@/lib/supabase/client'
 import {
   User,
-  LogOut,
   Plus,
   Eye,
   Heart,
@@ -52,15 +49,6 @@ interface AccountClientProps {
 }
 
 export function AccountClient({ user, memorials }: AccountClientProps) {
-  const router = useRouter()
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-  }
-
   const publishedMemorials = memorials.filter((m) => m.status === 'published')
   const draftMemorials = memorials.filter((m) => m.status === 'draft')
 
@@ -77,18 +65,12 @@ export function AccountClient({ user, memorials }: AccountClientProps) {
       pageTitle={`Welcome, ${user.name}`}
       pageDescription="Manage your cenotaphs and account settings"
       pageActions={
-        <div className="flex items-center gap-3">
-          <Button variant="dark-secondary" size="sm" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
-          <Button variant="dark-primary" size="sm" asChild>
-            <Link href="/create">
-              <Plus className="w-4 h-4 mr-2" />
-              New Cenotaph
-            </Link>
-          </Button>
-        </div>
+        <Button variant="dark-primary" size="sm" asChild>
+          <Link href="/create">
+            <Plus className="w-4 h-4 mr-2" />
+            New Cenotaph
+          </Link>
+        </Button>
       }
     >
       {/* Profile Card */}

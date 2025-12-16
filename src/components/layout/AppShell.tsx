@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, ReactNode } from 'react'
+import { Suspense, ReactNode } from 'react'
 import { MenuProvider } from '@/contexts/MenuContext'
 import { Header } from './Header'
 import { Footer } from './Footer'
@@ -21,14 +21,11 @@ interface AppShellProps {
  * - Footer (with 3D landscape)
  * - MenuTransition (single global instance)
  * - GlobalParticles (floating visitor particles)
- * - Dark mode state
  */
 export function AppShell({ children }: AppShellProps) {
-  const [isDarkMode, setIsDarkMode] = useState(true)
-
   return (
     <MenuProvider>
-      <div className={isDarkMode ? 'dark' : ''}>
+      <div className="dark">
         {/* Global floating particles */}
         <Suspense fallback={null}>
           <GlobalParticles />
@@ -38,10 +35,7 @@ export function AppShell({ children }: AppShellProps) {
         <MenuTransition />
 
         <div className="min-h-screen bg-slate-900 dark:bg-slate-900 text-marble-100 flex flex-col">
-          <Header
-            isDarkMode={isDarkMode}
-            onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-          />
+          <Header />
 
           {/* Page content */}
           <main className="flex-1 relative">
