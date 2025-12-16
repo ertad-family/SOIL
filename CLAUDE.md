@@ -112,7 +112,6 @@ Tailwind configuration in [tailwind.config.ts](tailwind.config.ts) with Roman-in
 
 ## Documentation
 
-Strategic documents in `docs/`:
-- `SOIL_Master_Strategy_v3.md` - Complete project vision
-- `SOIL_Dodecahedron_Navigation_Architecture.md` - 3D navigation design
-- `interview_framework.md` - Data collection methodology
+Strategic documents are stored in a separate private repository: [SOIL-strategy](https://github.com/ertad-family/SOIL-strategy)
+
+Local access via symlink: `docs/` → `../SOIL-strategy/` (gitignored)

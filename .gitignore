@@ -46,3 +46,6 @@ Thumbs.db
 
 # Plan files
 PLAN.md
+
+# Strategy docs (symlink to private SOIL-strategy repo)
+docs
