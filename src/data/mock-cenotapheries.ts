@@ -124,15 +124,25 @@ export const mockCenotapheries: CenotapheryMarker[] = [
 ]
 
 /**
- * Global statistics calculated from mock data
+ * Global statistics for hero section
  */
 export const globalStats = {
+  countries: 5,
+  cities: 147,
+  founders: 892,
+  organizations: 3274,
+}
+
+/**
+ * Statistics for side panel (calculated from markers)
+ */
+export const sidePanelStats = {
   totalStories: mockCenotapheries.reduce(
     (sum, m) => sum + m.statistics.cenotaphCount,
     0
   ),
   totalCountries: new Set(mockCenotapheries.map((m) => m.location.country)).size,
-  totalIndustries: 12, // Mock value - in real app would come from cenotaph data
+  totalIndustries: 12,
 }
 
 /**

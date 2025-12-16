@@ -6,7 +6,7 @@ import {
   FeaturedStoriesSection,
   MemorialsCTASection,
 } from '@/components/sections/memorials'
-import { mockCenotapheries, globalStats, featuredStories } from '@/data/mock-cenotapheries'
+import { mockCenotapheries, globalStats, sidePanelStats, featuredStories } from '@/data/mock-cenotapheries'
 
 /**
  * Memorials page - Global memorial with interactive 3D globe navigation
@@ -27,7 +27,7 @@ export default function MemorialsPage() {
       <MemorialsHeroSection stats={globalStats} />
 
       {/* Interactive 3D Globe with markers */}
-      <GlobeSection markers={mockCenotapheries} globalStats={globalStats} />
+      <GlobeSection markers={mockCenotapheries} globalStats={sidePanelStats} />
 
       {/* Featured stories from cenotaphs */}
       <FeaturedStoriesSection stories={featuredStories} />

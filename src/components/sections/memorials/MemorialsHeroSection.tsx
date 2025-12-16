@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown } from 'lucide-react'
 
 interface AnimatedCounterProps {
   end: number
@@ -48,9 +47,10 @@ function AnimatedCounter({ end, duration = 2000, delay = 600 }: AnimatedCounterP
 
 interface MemorialsHeroSectionProps {
   stats: {
-    totalStories: number
-    totalCountries: number
-    totalIndustries: number
+    countries: number
+    cities: number
+    founders: number
+    organizations: number
   }
 }
 
@@ -79,16 +79,7 @@ export function MemorialsHeroSection({ stats }: MemorialsHeroSectionProps) {
         <div className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-8 text-lg md:text-xl">
           <div className="flex items-center gap-2">
             <span className="font-mono text-2xl md:text-3xl font-bold text-gold-400">
-              [<AnimatedCounter end={stats.totalStories} />]
-            </span>
-            <span className="text-slate-400">stories</span>
-          </div>
-
-          <span className="text-slate-600 hidden md:inline">·</span>
-
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-2xl md:text-3xl font-bold text-gold-400">
-              [<AnimatedCounter end={stats.totalCountries} delay={800} />]
+              [<AnimatedCounter end={stats.countries} />]
             </span>
             <span className="text-slate-400">countries</span>
           </div>
@@ -97,29 +88,46 @@ export function MemorialsHeroSection({ stats }: MemorialsHeroSectionProps) {
 
           <div className="flex items-center gap-2">
             <span className="font-mono text-2xl md:text-3xl font-bold text-gold-400">
-              [<AnimatedCounter end={stats.totalIndustries} delay={1000} />]
+              [<AnimatedCounter end={stats.cities} delay={700} />]
             </span>
-            <span className="text-slate-400">industries</span>
+            <span className="text-slate-400">cities</span>
+          </div>
+
+          <span className="text-slate-600 hidden md:inline">·</span>
+
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-2xl md:text-3xl font-bold text-gold-400">
+              [<AnimatedCounter end={stats.founders} delay={900} />]
+            </span>
+            <span className="text-slate-400">founders</span>
+          </div>
+
+          <span className="text-slate-600 hidden md:inline">·</span>
+
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-2xl md:text-3xl font-bold text-gold-400">
+              [<AnimatedCounter end={stats.organizations} delay={1100} />]
+            </span>
+            <span className="text-slate-400">organizations</span>
           </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-pulse-subtle">
-        <button
-          onClick={() => {
-            window.scrollTo({
-              top: window.innerHeight,
-              behavior: 'smooth',
-            })
-          }}
-          className="flex flex-col items-center gap-2 text-slate-500 hover:text-gold-400 transition-colors"
-          aria-label="Scroll to explore"
-        >
-          <span className="text-sm uppercase tracking-widest">Explore</span>
-          <ChevronDown className="w-6 h-6 animate-bounce" />
-        </button>
-      </div>
+      {/* Decorative divider at bottom - clickable to scroll */}
+      <button
+        onClick={() => {
+          window.scrollTo({
+            top: window.innerHeight,
+            behavior: 'smooth',
+          })
+        }}
+        className="absolute bottom-20 left-0 right-0 cursor-pointer hover:opacity-80 transition-opacity"
+        aria-label="Scroll to explore"
+      >
+        <div className="divider-roman">
+          <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">EXPLORE</span>
+        </div>
+      </button>
     </section>
   )
 }

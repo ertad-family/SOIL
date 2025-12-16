@@ -3,7 +3,7 @@
 import { SectionLabel } from '@/components/ui/section-label'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ArrowRight, Landmark, Heart, DollarSign, RefreshCw } from 'lucide-react'
+import { Landmark, Heart, DollarSign, RefreshCw } from 'lucide-react'
 
 // Custom SVG illustration for Founders
 function FoundersIllustrationSVG() {
@@ -153,7 +153,11 @@ export function FoundersRoleSection() {
               <Button
                 variant="dark-primary"
                 size="lg"
-                rightIcon={<ArrowRight className="w-5 h-5" />}
+                rightIcon={
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                }
               >
                 Create Your Cenotaph
               </Button>
