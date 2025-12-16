@@ -6,6 +6,7 @@ import { Header } from './Header'
 import { Footer } from './Footer'
 import { MenuTransition } from '@/components/transitions/MenuTransition'
 import { GlobalParticles } from '@/components/three/GlobalParticles'
+import { ContributionFab } from '@/components/ui/contribution-fab'
 
 interface AppShellProps {
   children: ReactNode
@@ -50,6 +51,9 @@ export function AppShell({ children }: AppShellProps) {
           </main>
 
           <Footer />
+
+          {/* Floating contribution button - visible on all pages */}
+          <ContributionFab />
         </div>
       </div>
     </MenuProvider>
