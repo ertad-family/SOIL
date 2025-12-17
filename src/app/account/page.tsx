@@ -1,18 +1,31 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AccountClient } from './account-client'
+import type { StoryStatus, ModuleId, OrganizationType } from '@/types/interview'
 
+interface StoryData {
+  id: string
+  status: StoryStatus
+  current_module: ModuleId
+  completed_modules: ModuleId[]
+  basic_info: {
+    organizationName: string
+    organizationType: OrganizationType | null
+    description: string
+    foundedDate: string | null
+    closedDate: string | null
+  }
+  created_at: string
+  updated_at: string
+  coined_at: string | null
+}
+
+// For now, memorials are separate - later we'll link them to stories
 interface MemorialData {
   id: string
   slug: string
   organization_name: string
-  organization_type: string
-  epitaph: string | null
-  founded_date: string | null
-  closed_date: string | null
-  status: string
-  views_count: number
-  respects_count: number
+  story_id: string | null
 }
 
 export default async function AccountPage() {
@@ -27,12 +40,18 @@ export default async function AccountPage() {
     redirect('/login')
   }
 
-  // Fetch user's memorials (cenotaphs) from Supabase
+  // Fetch user's stories (organizations)
+  const { data: stories } = await supabase
+    .from('stories')
+    .select('id, status, current_module, completed_modules, basic_info, created_at, updated_at, coined_at')
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false })
+
+  // Fetch user's memorials (cenotaphs) - for now separate, will link later
   const { data: memorials } = await supabase
     .from('memorials')
-    .select('*')
+    .select('id, slug, organization_name, story_id')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
 
   // Get profile data
   const { data: profile } = await supabase
@@ -49,6 +68,7 @@ export default async function AccountPage() {
         name: profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
         avatarUrl: profile?.avatar_url,
       }}
+      stories={(stories as StoryData[]) || []}
       memorials={(memorials as MemorialData[]) || []}
     />
   )

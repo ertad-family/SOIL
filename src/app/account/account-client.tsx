@@ -15,14 +15,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SwitchWithLabel } from '@/components/ui/switch'
 import {
   Plus,
-  Eye,
-  Heart,
   Building2,
   FileText,
   Calendar,
   ExternalLink,
   Settings,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  Landmark,
 } from 'lucide-react'
+import type { StoryStatus, ModuleId, OrganizationType } from '@/types/interview'
+import { MODULES } from '@/types/interview'
 
 interface AccountUser {
   id: string
@@ -31,50 +35,76 @@ interface AccountUser {
   avatarUrl?: string
 }
 
+interface StoryData {
+  id: string
+  status: StoryStatus
+  current_module: ModuleId
+  completed_modules: ModuleId[]
+  basic_info: {
+    organizationName: string
+    organizationType: OrganizationType | null
+    description: string
+    foundedDate: string | null
+    closedDate: string | null
+  }
+  created_at: string
+  updated_at: string
+  coined_at: string | null
+}
+
 interface MemorialData {
   id: string
   slug: string
   organization_name: string
-  organization_type: string
-  epitaph: string | null
-  founded_date: string | null
-  closed_date: string | null
-  status: string
-  views_count: number
-  respects_count: number
+  story_id: string | null
 }
 
 interface AccountClientProps {
   user: AccountUser
+  stories: StoryData[]
   memorials: MemorialData[]
 }
 
-export function AccountClient({ user, memorials }: AccountClientProps) {
+const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
+  tech_product: 'Tech Product',
+  services: 'Services',
+  ecommerce: 'E-commerce',
+  manufacturing: 'Manufacturing',
+  ngo: 'NGO',
+  media: 'Media',
+}
+
+export function AccountClient({ user, stories, memorials }: AccountClientProps) {
   const [notifications, setNotifications] = useState({
     newRespects: true,
     newCondolences: true,
     weeklyDigest: false,
   })
 
-  const publishedMemorials = memorials.filter((m) => m.status === 'published')
-  const draftMemorials = memorials.filter((m) => m.status === 'draft')
+  // Categorize stories
+  const inProgressStories = stories.filter(s => s.status === 'draft' || s.status === 'in_progress')
+  const coinedStories = stories.filter(s => s.status === 'coined')
+
+  // Find which coined stories have cenotaphs
+  const getMemorialForStory = (storyId: string) =>
+    memorials.find(m => m.story_id === storyId)
 
   const stats = {
-    totalMemorials: publishedMemorials.length,
-    totalViews: memorials.reduce((acc, m) => acc + (m.views_count || 0), 0),
-    totalRespects: memorials.reduce((acc, m) => acc + (m.respects_count || 0), 0),
-    drafts: draftMemorials.length,
+    totalOrganizations: stories.length,
+    inProgress: inProgressStories.length,
+    coined: coinedStories.length,
+    cenotaphs: memorials.length,
   }
 
   return (
     <DashboardLayout
       variant="dark"
       pageTitle={`Welcome, ${user.name}`}
-      pageDescription="Manage your cenotaphs and account settings"
+      pageDescription="Manage your organizations and cenotaphs"
       pageActions={
-        <a href="/create">
+        <a href="/interview">
           <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
-            New Cenotaph
+            Share Your Story
           </Button>
         </a>
       }
@@ -89,113 +119,117 @@ export function AccountClient({ user, memorials }: AccountClientProps) {
               </div>
               <div>
                 <p className="text-2xl font-semibold text-marble-100">
-                  {stats.totalMemorials}
+                  {stats.totalOrganizations}
+                </p>
+                <p className="text-sm text-slate-400">Organizations</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="dark">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-gold-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-marble-100">
+                  {stats.inProgress}
+                </p>
+                <p className="text-sm text-slate-400">In Progress</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="dark">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-gold-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-marble-100">
+                  {stats.coined}
+                </p>
+                <p className="text-sm text-slate-400">Stories Coined</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="dark">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
+                <Landmark className="w-5 h-5 text-gold-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-marble-100">
+                  {stats.cenotaphs}
                 </p>
                 <p className="text-sm text-slate-400">Cenotaphs</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <Eye className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.totalViews.toLocaleString()}
-                </p>
-                <p className="text-sm text-slate-400">Total Views</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <Heart className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.totalRespects.toLocaleString()}
-                </p>
-                <p className="text-sm text-slate-400">Respects</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.drafts}
-                </p>
-                <p className="text-sm text-slate-400">Drafts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Cenotaphs Tabs */}
+      {/* Organizations Tabs */}
       <Card variant="dark">
         <CardHeader>
-          <CardTitle variant="dark">My Cenotaphs</CardTitle>
+          <CardTitle variant="dark">My Organizations</CardTitle>
           <CardDescription variant="dark">
-            Manage your digital memorials
+            Your organizational stories and their cenotaphs
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="published">
+          <Tabs defaultValue="in_progress">
             <TabsList variant="dark">
-              <TabsTrigger value="published" variant="dark">
-                Published ({publishedMemorials.length})
+              <TabsTrigger value="in_progress" variant="dark">
+                In Progress ({inProgressStories.length})
               </TabsTrigger>
-              <TabsTrigger value="drafts" variant="dark">
-                Drafts ({draftMemorials.length})
+              <TabsTrigger value="coined" variant="dark">
+                Coined ({coinedStories.length})
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="published" variant="dark" className="mt-6">
-              {publishedMemorials.length === 0 ? (
+            <TabsContent value="in_progress" variant="dark" className="mt-6">
+              {inProgressStories.length === 0 ? (
                 <EmptyState
-                  icon={<Building2 className="w-12 h-12" />}
-                  title="No published cenotaphs"
-                  description="Create your first cenotaph to honor an organization"
-                  actionLabel="Create Cenotaph"
-                  actionHref="/create"
+                  icon={<FileText className="w-12 h-12" />}
+                  title="No stories in progress"
+                  description="Start sharing your organization's story to preserve its legacy"
+                  actionLabel="Share Your Story"
+                  actionHref="/interview"
                 />
               ) : (
                 <div className="space-y-4">
-                  {publishedMemorials.map((memorial) => (
-                    <MemorialCard key={memorial.id} memorial={memorial} />
+                  {inProgressStories.map((story) => (
+                    <StoryCard key={story.id} story={story} />
                   ))}
                 </div>
               )}
             </TabsContent>
 
-            <TabsContent value="drafts" variant="dark" className="mt-6">
-              {draftMemorials.length === 0 ? (
+            <TabsContent value="coined" variant="dark" className="mt-6">
+              {coinedStories.length === 0 ? (
                 <EmptyState
-                  icon={<FileText className="w-12 h-12" />}
-                  title="No drafts"
-                  description="Start creating a cenotaph and save it as a draft"
-                  actionLabel="Start New"
-                  actionHref="/create"
+                  icon={<CheckCircle2 className="w-12 h-12" />}
+                  title="No coined stories yet"
+                  description="Complete an interview to coin your organization's story"
+                  actionLabel="Continue Interview"
+                  actionHref="/interview"
                 />
               ) : (
                 <div className="space-y-4">
-                  {draftMemorials.map((memorial) => (
-                    <MemorialCard key={memorial.id} memorial={memorial} isDraft />
+                  {coinedStories.map((story) => (
+                    <CoinedStoryCard
+                      key={story.id}
+                      story={story}
+                      memorial={getMemorialForStory(story.id)}
+                    />
                   ))}
                 </div>
               )}
@@ -290,64 +324,135 @@ function EmptyState({
   )
 }
 
-// Memorial card component
-function MemorialCard({
-  memorial,
-  isDraft = false,
-}: {
-  memorial: MemorialData
-  isDraft?: boolean
-}) {
+// Story card for in-progress stories
+function StoryCard({ story }: { story: StoryData }) {
+  const progress = Math.round((story.completed_modules.length / MODULES.length) * 100)
+  const orgName = story.basic_info.organizationName || 'Untitled Organization'
+  const orgType = story.basic_info.organizationType
+    ? ORG_TYPE_LABELS[story.basic_info.organizationType]
+    : null
+
   return (
     <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <h3 className="font-display text-lg font-medium text-marble-100">
-              {memorial.organization_name}
+              {orgName}
             </h3>
-            <Badge variant={isDraft ? 'dark-outline' : 'dark-success'} size="sm">
-              {isDraft ? 'Draft' : 'Published'}
+            <Badge variant="dark-outline" size="sm">
+              {story.status === 'draft' ? 'Draft' : 'In Progress'}
             </Badge>
           </div>
 
-          {memorial.epitaph && (
-            <p className="text-slate-400 text-sm mb-3 line-clamp-2">
-              {memorial.epitaph}
-            </p>
-          )}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 mb-3">
+            {orgType && (
+              <span className="flex items-center gap-1">
+                <Building2 className="w-4 h-4" />
+                {orgType}
+              </span>
+            )}
+            {story.basic_info.foundedDate && story.basic_info.closedDate && (
+              <span className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {story.basic_info.foundedDate} - {story.basic_info.closedDate}
+              </span>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gold-500 rounded-full transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="text-sm text-slate-400">{progress}%</span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            {story.completed_modules.length} of {MODULES.length} modules complete
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <a href={`/interview/${story.id}`}>
+            <Button variant="dark-primary" size="sm" rightIcon={<ChevronRight className="w-4 h-4" />}>
+              Continue
+            </Button>
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Coined story card with cenotaph status
+function CoinedStoryCard({
+  story,
+  memorial
+}: {
+  story: StoryData
+  memorial?: MemorialData
+}) {
+  const orgName = story.basic_info.organizationName || 'Untitled Organization'
+  const orgType = story.basic_info.organizationType
+    ? ORG_TYPE_LABELS[story.basic_info.organizationType]
+    : null
+  const hasCenotaph = !!memorial
+
+  return (
+    <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-display text-lg font-medium text-marble-100">
+              {orgName}
+            </h3>
+            <Badge variant="dark-success" size="sm">
+              Story Coined
+            </Badge>
+            {hasCenotaph && (
+              <Badge variant="dark-outline" size="sm">
+                <Landmark className="w-3 h-3 mr-1" />
+                Cenotaph
+              </Badge>
+            )}
+          </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {memorial.founded_date} - {memorial.closed_date}
-            </span>
-            {!isDraft && (
-              <>
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {memorial.views_count.toLocaleString()} views
-                </span>
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  {memorial.respects_count.toLocaleString()} respects
-                </span>
-              </>
+            {orgType && (
+              <span className="flex items-center gap-1">
+                <Building2 className="w-4 h-4" />
+                {orgType}
+              </span>
+            )}
+            {story.basic_info.foundedDate && story.basic_info.closedDate && (
+              <span className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {story.basic_info.foundedDate} - {story.basic_info.closedDate}
+              </span>
+            )}
+            {story.coined_at && (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" />
+                Coined {new Date(story.coined_at).toLocaleDateString()}
+              </span>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {isDraft ? (
-            <a href={`/create?edit=${memorial.id}`}>
-              <Button variant="dark-primary" size="sm">
-                Continue Editing
+          {hasCenotaph ? (
+            <a href={`/memorials/${memorial.slug}`}>
+              <Button variant="dark-secondary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
+                View Cenotaph
               </Button>
             </a>
           ) : (
-            <a href={`/memorials/${memorial.slug}`}>
-              <Button variant="dark-secondary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
-                View
+            <a href={`/create?story=${story.id}`}>
+              <Button variant="dark-primary" size="sm" rightIcon={<Landmark className="w-4 h-4" />}>
+                Create Cenotaph
               </Button>
             </a>
           )}
