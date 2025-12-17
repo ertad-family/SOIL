@@ -14,8 +14,10 @@ import {
   CheckCircle,
   Clock,
   Activity,
-  Lightbulb,
+  GraduationCap,
   Shield,
+  Database,
+  Microscope,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -37,9 +39,9 @@ function HeroSection() {
                 for Organizations
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
-                We are building toward a clinic that will connect struggling organizations
-                with founders who survived similar challenges — precision-matched consulting
-                powered by research insights.
+                We are building toward a clinic staffed by a new class of professionals —
+                organizational medicine specialists trained to diagnose and treat organizational
+                health issues using evidence-based protocols from our research.
               </p>
 
               {/* CTA Button */}
@@ -128,7 +130,7 @@ function HeroSection() {
                   </g>
                 ))}
 
-                {/* Expert nodes (founders with experience) */}
+                {/* Expert nodes (trained specialists) */}
                 {[
                   { cx: 200, cy: 80 },
                   { cx: 320, cy: 200 },
@@ -253,8 +255,8 @@ function VisionSection() {
             {
               icon: <Target className="w-8 h-8" />,
               step: 'II',
-              title: 'Expert Matching',
-              description: 'Precision matching connects the diagnosis with founders who survived that exact challenge.',
+              title: 'Specialist Assignment',
+              description: 'Trained organizational medicine specialists are assigned based on the specific diagnosis and treatment requirements.',
               status: 'Future',
             },
             {
@@ -304,8 +306,8 @@ function PotentialCapabilitiesSection() {
   const capabilities = [
     {
       icon: <Target className="w-7 h-7" />,
-      title: 'Precision-Matched Consulting',
-      description: 'Organizations facing specific challenges will be matched with founders who navigated that exact situation successfully.',
+      title: 'Specialist-Led Consulting',
+      description: 'Organizations receive care from trained professionals who specialize in specific organizational conditions and treatment protocols.',
     },
     {
       icon: <Stethoscope className="w-7 h-7" />,
@@ -365,31 +367,32 @@ function PotentialCapabilitiesSection() {
 }
 
 // ============================================================================
-// FOUNDER EXPERTS SECTION
+// NEW PROFESSION SECTION
 // ============================================================================
-function FounderExpertsSection() {
+function NewProfessionSection() {
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Left column: Content */}
           <div>
-            <SectionLabel>powered by experience</SectionLabel>
+            <SectionLabel>a new profession</SectionLabel>
             <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
-              Founders Helping Founders
+              Organizational Medicine Specialists
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              The Clinic&apos;s greatest asset will be the Founder Community — entrepreneurs who have
-              experienced organizational challenges firsthand. Their hard-won knowledge becomes
-              the treatment expertise.
+              The Clinic represents the pinnacle of our research mission — enabling a new class
+              of professionals trained in organizational medicine. These specialists will diagnose
+              and treat organizational health issues using evidence-based protocols derived from
+              our mortality research.
             </p>
 
             <ul className="space-y-4 mb-8">
               {[
-                'Founders who survived specific challenges become consultants',
-                'Matching based on exact failure type and industry context',
-                'Credible advisors with proven experience, not theory',
-                'Peer-level relationships, not hierarchical consulting',
+                'Rigorous training based on research findings',
+                'Evidence-based treatment protocols',
+                'Professional certification in organizational medicine',
+                'Continuous education as research evolves',
               ].map((point, index) => (
                 <li key={index} className="flex items-start gap-3 text-slate-400">
                   <CheckCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
@@ -398,13 +401,13 @@ function FounderExpertsSection() {
               ))}
             </ul>
 
-            <Link href="/community">
+            <Link href="/research">
               <Button
                 variant="dark-secondary"
                 size="lg"
                 rightIcon={<ArrowRight className="w-5 h-5" />}
               >
-                Learn About Our Community
+                Learn About Our Research
               </Button>
             </Link>
           </div>
@@ -413,44 +416,44 @@ function FounderExpertsSection() {
           <div className="flex items-center justify-center">
             <Card variant="dark-elevated" padding="lg" className="w-full">
               <div className="space-y-6">
-                {/* Matching illustration */}
+                {/* Training pipeline illustration */}
                 <div className="text-center">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 mb-4">
-                    <Users className="w-5 h-5 text-gold-400" />
-                    <span className="text-marble-100 font-medium">Founder Community</span>
+                    <Database className="w-5 h-5 text-gold-400" />
+                    <span className="text-marble-100 font-medium">Research Foundation</span>
                   </div>
 
                   <div className="flex items-center justify-center gap-4 my-6">
                     <div className="text-center">
                       <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center mb-2">
-                        <Lightbulb className="w-6 h-6 text-slate-400" />
+                        <Microscope className="w-6 h-6 text-slate-400" />
                       </div>
-                      <span className="text-xs text-slate-500">Experience</span>
+                      <span className="text-xs text-slate-500">Patterns</span>
                     </div>
                     <ArrowRight className="w-5 h-5 text-gold-500/50" />
                     <div className="text-center">
                       <div className="w-12 h-12 rounded-full bg-gold-500/20 flex items-center justify-center mb-2">
-                        <Target className="w-6 h-6 text-gold-400" />
+                        <GraduationCap className="w-6 h-6 text-gold-400" />
                       </div>
-                      <span className="text-xs text-slate-500">Matching</span>
+                      <span className="text-xs text-slate-500">Training</span>
                     </div>
                     <ArrowRight className="w-5 h-5 text-gold-500/50" />
                     <div className="text-center">
                       <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center mb-2">
-                        <HeartHandshake className="w-6 h-6 text-slate-400" />
+                        <Stethoscope className="w-6 h-6 text-slate-400" />
                       </div>
-                      <span className="text-xs text-slate-500">Support</span>
+                      <span className="text-xs text-slate-500">Treatment</span>
                     </div>
                   </div>
 
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500/10 border border-gold-500/30">
-                    <Stethoscope className="w-5 h-5 text-gold-400" />
-                    <span className="text-marble-100 font-medium">Clinic Services</span>
+                    <Users className="w-5 h-5 text-gold-400" />
+                    <span className="text-marble-100 font-medium">Certified Specialists</span>
                   </div>
                 </div>
 
                 <div className="text-center text-sm text-slate-500 pt-4 border-t border-slate-700">
-                  Experience transforms into expertise
+                  Research transforms into professional practice
                 </div>
               </div>
             </Card>
@@ -476,8 +479,9 @@ function CurrentStatusSection() {
               Honest About Our Progress
             </h2>
             <p className="text-lg text-slate-400">
-              The Clinic requires both a diagnostic foundation and an active Founder Community.
-              We are building these prerequisites first. Treatment comes after diagnosis.
+              The Clinic requires a research foundation, diagnostic capabilities, and trained
+              specialists. We are building these prerequisites in sequence — research data informs
+              protocols, protocols enable training, training produces specialists.
             </p>
           </div>
 
@@ -486,11 +490,11 @@ function CurrentStatusSection() {
             {[
               {
                 status: 'progress',
-                label: 'Building Founder Community',
+                label: 'Collecting organizational autopsy data',
               },
               {
                 status: 'progress',
-                label: 'Collecting organizational autopsy data',
+                label: 'Building research foundation',
               },
               {
                 status: 'future',
@@ -498,11 +502,11 @@ function CurrentStatusSection() {
               },
               {
                 status: 'future',
-                label: 'Expert matching algorithms',
+                label: 'Treatment protocol development',
               },
               {
                 status: 'future',
-                label: 'Treatment protocol development',
+                label: 'Specialist training curriculum',
               },
               {
                 status: 'future',
@@ -634,7 +638,7 @@ export default function ClinicPage() {
       <HeroSection />
       <VisionSection />
       <PotentialCapabilitiesSection />
-      <FounderExpertsSection />
+      <NewProfessionSection />
       <CurrentStatusSection />
       <WaitlistSection />
     </>
