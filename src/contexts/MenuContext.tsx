@@ -11,7 +11,7 @@ const SECTION_TO_ROUTE: Record<string, string> = {
   memorials: '/memorials',
   account: '/account',
   diagnostics: '/diagnostics',
-  education: '/', // TODO: create page
+  education: '/education',
   clinic: '/clinic',
 }
 
@@ -25,6 +25,7 @@ const ROUTE_TO_SECTION: Record<string, string> = {
   '/login': 'account',
   '/signup': 'account',
   '/diagnostics': 'diagnostics',
+  '/education': 'education',
   '/clinic': 'clinic',
 }
 
