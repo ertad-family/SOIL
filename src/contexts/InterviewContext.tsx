@@ -17,6 +17,7 @@ import type {
 } from '@/types/interview'
 import {
   createEmptyStory,
+  createEmptyOrganization,
   MODULES,
   getNextModule,
   calculateProgress,
@@ -126,10 +127,14 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
       // Transform snake_case to camelCase
       const transformedStory: Story = {
         id: data.id,
+        organizationId: data.organization_id,
         userId: data.user_id,
         status: data.status,
         currentModule: data.current_module,
         completedModules: data.completed_modules || [],
+        founderRole: data.founder_role,
+        publicNaming: data.public_naming,
+        contactEmail: data.contact_email,
         basicInfo: data.basic_info,
         functionalMapping: data.functional_mapping,
         financialPicture: data.financial_picture,
@@ -168,15 +173,51 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
         throw new Error('Must be logged in to create a story')
       }
 
-      const newStory = createEmptyStory(user.id)
+      // First, create an organization
+      const newOrg = createEmptyOrganization(user.id, '')
+
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: newOrg.name || 'Untitled Organization',
+          organization_type: newOrg.organizationType,
+          business_model: newOrg.businessModel,
+          industry: newOrg.industry,
+          description: newOrg.description,
+          location_country: newOrg.location.country,
+          location_city: newOrg.location.city,
+          founded_date: newOrg.foundedDate,
+          closed_date: newOrg.closedDate,
+          stage_at_closure: newOrg.stageAtClosure,
+          peak_team_size: newOrg.peakTeamSize,
+          verification_status: newOrg.verificationStatus,
+          verification_count: newOrg.verificationCount,
+          is_public: newOrg.isPublic,
+          created_by: user.id,
+        })
+        .select('id')
+        .single()
+
+      if (orgError) {
+        throw new Error(orgError.message)
+      }
+
+      const organizationId = orgData.id
+
+      // Then, create the story linked to the organization
+      const newStory = createEmptyStory(user.id, organizationId)
 
       const { data, error: insertError } = await supabase
         .from('stories')
         .insert({
+          organization_id: organizationId,
           user_id: user.id,
           status: newStory.status,
           current_module: newStory.currentModule,
           completed_modules: newStory.completedModules,
+          founder_role: newStory.founderRole,
+          public_naming: newStory.publicNaming,
+          contact_email: newStory.contactEmail,
           basic_info: newStory.basicInfo,
           functional_mapping: newStory.functionalMapping,
           financial_picture: newStory.financialPicture,
@@ -215,6 +256,9 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           status: story.status,
           current_module: story.currentModule,
           completed_modules: story.completedModules,
+          founder_role: story.founderRole,
+          public_naming: story.publicNaming,
+          contact_email: story.contactEmail,
           basic_info: story.basicInfo,
           functional_mapping: story.functionalMapping,
           financial_picture: story.financialPicture,

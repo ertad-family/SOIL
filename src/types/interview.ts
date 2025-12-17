@@ -32,6 +32,9 @@ export type StoryStatus =
   | 'coined'       // All modules complete, story finalized
   | 'archived'     // Soft deleted
 
+/** Verification status for organizations */
+export type VerificationStatus = 'unverified' | 'pending' | 'verified'
+
 /** Interview module identifiers */
 export type ModuleId =
   | 'basic_info'   // Module 0
@@ -512,18 +515,64 @@ export interface NarrativeData {
 }
 
 // =============================================================================
-// STORY (MAIN AGGREGATE)
+// ORGANIZATION (FACTUAL DATA)
+// =============================================================================
+
+export interface Organization {
+  id: string
+  slug: string
+
+  // Basic facts about the organization
+  name: string
+  organizationType: OrganizationType | null
+  businessModel: string | null
+  industry: string | null
+  description: string | null
+
+  // Location
+  location: {
+    country: string | null
+    city: string | null
+  }
+
+  // Timeline
+  foundedDate: string | null
+  closedDate: string | null
+  stageAtClosure: LifecycleStage | null
+  peakTeamSize: number | null
+
+  // Verification
+  verificationStatus: VerificationStatus
+  verificationCount: number
+  isPublic: boolean
+
+  // Creator
+  createdBy: string
+
+  // Timestamps
+  createdAt: string
+  updatedAt: string
+}
+
+// =============================================================================
+// STORY (FOUNDER PERSPECTIVE)
 // =============================================================================
 
 export interface Story {
   id: string
+  organizationId: string  // Link to organization
   userId: string
   status: StoryStatus
   currentModule: ModuleId
   completedModules: ModuleId[]
 
-  // Module data
-  basicInfo: BasicInfoData
+  // Author's role in the organization
+  founderRole: FounderRole | null
+  publicNaming: PublicNamingPreference | null
+  contactEmail: string | null
+
+  // Module data (perspectives, not facts)
+  basicInfo: BasicInfoData  // Keep for backward compatibility, will be deprecated
   functionalMapping: FunctionalMappingData
   financialPicture: FinancialPictureData
   dynamicPicture: DynamicPictureData
@@ -535,6 +584,9 @@ export interface Story {
   createdAt: string
   updatedAt: string
   coinedAt: string | null
+
+  // Joined data (optional, for convenience)
+  organization?: Organization
 }
 
 // =============================================================================
@@ -701,12 +753,33 @@ export const createEmptyNarrative = (): NarrativeData => ({
   },
 })
 
-export const createEmptyStory = (userId: string): Omit<Story, 'id' | 'createdAt' | 'updatedAt'> => ({
+export const createEmptyOrganization = (createdBy: string, name: string = ''): Omit<Organization, 'id' | 'slug' | 'createdAt' | 'updatedAt'> => ({
+  name,
+  organizationType: null,
+  businessModel: null,
+  industry: null,
+  description: null,
+  location: { country: null, city: null },
+  foundedDate: null,
+  closedDate: null,
+  stageAtClosure: null,
+  peakTeamSize: null,
+  verificationStatus: 'unverified',
+  verificationCount: 0,
+  isPublic: false,
+  createdBy,
+})
+
+export const createEmptyStory = (userId: string, organizationId: string): Omit<Story, 'id' | 'createdAt' | 'updatedAt'> => ({
+  organizationId,
   userId,
   status: 'draft',
   currentModule: 'basic_info',
   completedModules: [],
-  basicInfo: createEmptyBasicInfo(),
+  founderRole: null,
+  publicNaming: null,
+  contactEmail: null,
+  basicInfo: createEmptyBasicInfo(),  // Keep for backward compatibility
   functionalMapping: createEmptyFunctionalMapping(),
   financialPicture: createEmptyFinancialPicture(),
   dynamicPicture: createEmptyDynamicPicture(),

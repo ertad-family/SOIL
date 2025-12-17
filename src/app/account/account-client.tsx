@@ -25,7 +25,12 @@ import {
   Clock,
   Landmark,
 } from 'lucide-react'
-import type { StoryStatus, ModuleId, OrganizationType } from '@/types/interview'
+import type {
+  StoryStatus,
+  ModuleId,
+  OrganizationType,
+  VerificationStatus,
+} from '@/types/interview'
 import { MODULES } from '@/types/interview'
 
 interface AccountUser {
@@ -35,28 +40,34 @@ interface AccountUser {
   avatarUrl?: string
 }
 
+interface OrganizationData {
+  id: string
+  slug: string
+  name: string
+  organization_type: OrganizationType | null
+  description: string | null
+  founded_date: string | null
+  closed_date: string | null
+  verification_status: VerificationStatus
+  is_public: boolean
+}
+
 interface StoryData {
   id: string
+  organization_id: string
   status: StoryStatus
   current_module: ModuleId
   completed_modules: ModuleId[]
-  basic_info: {
-    organizationName: string
-    organizationType: OrganizationType | null
-    description: string
-    foundedDate: string | null
-    closedDate: string | null
-  }
   created_at: string
   updated_at: string
   coined_at: string | null
+  organization: OrganizationData
 }
 
 interface MemorialData {
   id: string
   slug: string
-  organization_name: string
-  story_id: string | null
+  organization_id: string | null
 }
 
 interface AccountClientProps {
@@ -85,9 +96,9 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
   const inProgressStories = stories.filter(s => s.status === 'draft' || s.status === 'in_progress')
   const coinedStories = stories.filter(s => s.status === 'coined')
 
-  // Find which coined stories have cenotaphs
-  const getMemorialForStory = (storyId: string) =>
-    memorials.find(m => m.story_id === storyId)
+  // Find which organizations have cenotaphs
+  const getMemorialForOrganization = (organizationId: string) =>
+    memorials.find(m => m.organization_id === organizationId)
 
   const stats = {
     totalOrganizations: stories.length,
@@ -228,7 +239,7 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
                     <CoinedStoryCard
                       key={story.id}
                       story={story}
-                      memorial={getMemorialForStory(story.id)}
+                      memorial={getMemorialForOrganization(story.organization_id)}
                     />
                   ))}
                 </div>
@@ -327,9 +338,10 @@ function EmptyState({
 // Story card for in-progress stories
 function StoryCard({ story }: { story: StoryData }) {
   const progress = Math.round((story.completed_modules.length / MODULES.length) * 100)
-  const orgName = story.basic_info.organizationName || 'Untitled Organization'
-  const orgType = story.basic_info.organizationType
-    ? ORG_TYPE_LABELS[story.basic_info.organizationType]
+  const org = story.organization
+  const orgName = org?.name || 'Untitled Organization'
+  const orgType = org?.organization_type
+    ? ORG_TYPE_LABELS[org.organization_type]
     : null
 
   return (
@@ -352,10 +364,10 @@ function StoryCard({ story }: { story: StoryData }) {
                 {orgType}
               </span>
             )}
-            {story.basic_info.foundedDate && story.basic_info.closedDate && (
+            {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {story.basic_info.foundedDate} - {story.basic_info.closedDate}
+                {org.founded_date} - {org.closed_date}
               </span>
             )}
           </div>
@@ -395,9 +407,10 @@ function CoinedStoryCard({
   story: StoryData
   memorial?: MemorialData
 }) {
-  const orgName = story.basic_info.organizationName || 'Untitled Organization'
-  const orgType = story.basic_info.organizationType
-    ? ORG_TYPE_LABELS[story.basic_info.organizationType]
+  const org = story.organization
+  const orgName = org?.name || 'Untitled Organization'
+  const orgType = org?.organization_type
+    ? ORG_TYPE_LABELS[org.organization_type]
     : null
   const hasCenotaph = !!memorial
 
@@ -427,10 +440,10 @@ function CoinedStoryCard({
                 {orgType}
               </span>
             )}
-            {story.basic_info.foundedDate && story.basic_info.closedDate && (
+            {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {story.basic_info.foundedDate} - {story.basic_info.closedDate}
+                {org.founded_date} - {org.closed_date}
               </span>
             )}
             {story.coined_at && (
