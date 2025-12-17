@@ -13,6 +13,7 @@ const SECTION_TO_ROUTE: Record<string, string> = {
   diagnostics: '/diagnostics',
   education: '/education',
   clinic: '/clinic',
+  about: '/about',
 }
 
 // Map routes to sections (reverse lookup)
@@ -27,6 +28,7 @@ const ROUTE_TO_SECTION: Record<string, string> = {
   '/diagnostics': 'diagnostics',
   '/education': 'education',
   '/clinic': 'clinic',
+  '/about': 'about',
 }
 
 interface MenuContextType {
