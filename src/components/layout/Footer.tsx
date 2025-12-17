@@ -9,9 +9,9 @@ const PRIMARY_LINKS = [
   { href: '/research', label: 'Research' },
   { href: '/memorials', label: 'Memorials' },
   { href: '/community', label: 'Community' },
-  { href: '#', label: 'Learning Hub', disabled: true },
-  { href: '#', label: 'Diagnostics', disabled: true },
-  { href: '#', label: 'Clinic', disabled: true },
+  { href: '/education', label: 'Learning Hub' },
+  { href: '/diagnostics', label: 'Diagnostics' },
+  { href: '/clinic', label: 'Clinic' },
 ]
 
 // Secondary navigation - informational pages
