@@ -238,8 +238,8 @@ function VisionSection() {
           <Link href="/diagnostics" className="text-gold-400 hover:text-gold-300 transition-colors">
             Diagnostics Center
           </Link>{' '}
-          identifies issues, the Clinic provides targeted intervention — connecting
-          organizations with experts who have firsthand experience overcoming similar challenges.
+          identifies issues, the Clinic provides targeted intervention — delivering
+          evidence-based treatment through trained organizational medicine specialists.
         </p>
 
         {/* Diagnostics → Matching → Treatment flow */}
