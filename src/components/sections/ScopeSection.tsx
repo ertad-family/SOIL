@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { SectionLabel } from '@/components/ui/section-label'
 import { Card } from '@/components/ui/card'
 
@@ -121,40 +122,42 @@ export function ScopeSection() {
               </div>
             </Card>
 
-            {/* Bottom card - smaller */}
-            <Card
-              variant="dark"
-              padding="md"
-              interactive
-              className="relative flex flex-col justify-end flex-1 min-h-[180px]"
-            >
-              {/* Decorative circles */}
-              <div className="absolute top-4 right-4 opacity-40 pointer-events-none">
-                <svg width="80" height="80" viewBox="0 0 80 80">
-                  {[...Array(4)].map((_, i) => (
-                    <circle
-                      key={i}
-                      cx="40"
-                      cy="40"
-                      r={10 + i * 8}
-                      fill="none"
-                      stroke="rgba(196,161,90,0.3)"
-                      strokeWidth="1"
-                    />
-                  ))}
-                </svg>
-              </div>
+            {/* Bottom card - smaller - DIAGNOSTICS (linked) */}
+            <Link href="/diagnostics" className="flex-1 min-h-[180px]">
+              <Card
+                variant="dark"
+                padding="md"
+                interactive
+                className="relative flex flex-col justify-end h-full"
+              >
+                {/* Decorative circles */}
+                <div className="absolute top-4 right-4 opacity-40 pointer-events-none">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    {[...Array(4)].map((_, i) => (
+                      <circle
+                        key={i}
+                        cx="40"
+                        cy="40"
+                        r={10 + i * 8}
+                        fill="none"
+                        stroke="rgba(196,161,90,0.3)"
+                        strokeWidth="1"
+                      />
+                    ))}
+                  </svg>
+                </div>
 
-              <div className="relative z-10">
-                <ConstructionLabel />
-                <h3 className="font-display text-xl font-medium text-marble-100 mb-1 mt-2">
-                  {ecosystem[2].title}
-                </h3>
-                <p className="text-slate-400 text-base leading-relaxed">
-                  {ecosystem[2].description}
-                </p>
-              </div>
-            </Card>
+                <div className="relative z-10">
+                  <ConstructionLabel />
+                  <h3 className="font-display text-xl font-medium text-marble-100 mb-1 mt-2">
+                    {ecosystem[2].title}
+                  </h3>
+                  <p className="text-slate-400 text-base leading-relaxed">
+                    {ecosystem[2].description}
+                  </p>
+                </div>
+              </Card>
+            </Link>
           </div>
 
           {/* Column 3: 2 cards (top smaller) */}

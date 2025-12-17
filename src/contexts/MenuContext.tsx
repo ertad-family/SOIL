@@ -10,7 +10,7 @@ const SECTION_TO_ROUTE: Record<string, string> = {
   community: '/community',
   memorials: '/memorials',
   account: '/account',
-  diagnostics: '/', // TODO: create page
+  diagnostics: '/diagnostics',
   education: '/', // TODO: create page
   clinic: '/', // TODO: create page
 }
@@ -24,6 +24,7 @@ const ROUTE_TO_SECTION: Record<string, string> = {
   '/account': 'account',
   '/login': 'account',
   '/signup': 'account',
+  '/diagnostics': 'diagnostics',
 }
 
 interface MenuContextType {
