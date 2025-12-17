@@ -232,8 +232,11 @@ function VisionSection() {
           From Diagnosis to Recovery
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          The Clinic represents the treatment arm of organizational medicine. Where the Diagnostics
-          Center identifies issues, the Clinic provides targeted intervention — connecting
+          The Clinic represents the treatment arm of organizational medicine. Where the{' '}
+          <Link href="/diagnostics" className="text-gold-400 hover:text-gold-300 transition-colors">
+            Diagnostics Center
+          </Link>{' '}
+          identifies issues, the Clinic provides targeted intervention — connecting
           organizations with experts who have firsthand experience overcoming similar challenges.
         </p>
 
