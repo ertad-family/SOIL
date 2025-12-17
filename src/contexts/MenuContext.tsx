@@ -12,7 +12,7 @@ const SECTION_TO_ROUTE: Record<string, string> = {
   account: '/account',
   diagnostics: '/diagnostics',
   education: '/', // TODO: create page
-  clinic: '/', // TODO: create page
+  clinic: '/clinic',
 }
 
 // Map routes to sections (reverse lookup)
@@ -25,6 +25,7 @@ const ROUTE_TO_SECTION: Record<string, string> = {
   '/login': 'account',
   '/signup': 'account',
   '/diagnostics': 'diagnostics',
+  '/clinic': 'clinic',
 }
 
 interface MenuContextType {

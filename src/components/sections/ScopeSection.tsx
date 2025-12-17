@@ -197,42 +197,44 @@ export function ScopeSection() {
               </div>
             </Card>
 
-            {/* Bottom card - larger */}
-            <Card
-              variant="dark-elevated"
-              padding="lg"
-              interactive
-              className="relative flex flex-col justify-end flex-[2] min-h-[280px] overflow-hidden"
-            >
-              {/* Decorative ellipses */}
-              <div className="absolute top-0 right-0 w-1/2 h-1/2 opacity-20 pointer-events-none">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  {[...Array(5)].map((_, i) => (
-                    <ellipse
-                      key={i}
-                      cx="70"
-                      cy="30"
-                      rx={15 + i * 10}
-                      ry={8 + i * 5}
-                      fill="none"
-                      stroke="rgba(196,161,90,0.4)"
-                      strokeWidth="1"
-                      transform={`rotate(${-15 + i * 3} 70 30)`}
-                    />
-                  ))}
-                </svg>
-              </div>
+            {/* Bottom card - larger - CLINIC (linked) */}
+            <Link href="/clinic" className="flex-[2] min-h-[280px]">
+              <Card
+                variant="dark-elevated"
+                padding="lg"
+                interactive
+                className="relative flex flex-col justify-end h-full overflow-hidden"
+              >
+                {/* Decorative ellipses */}
+                <div className="absolute top-0 right-0 w-1/2 h-1/2 opacity-20 pointer-events-none">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    {[...Array(5)].map((_, i) => (
+                      <ellipse
+                        key={i}
+                        cx="70"
+                        cy="30"
+                        rx={15 + i * 10}
+                        ry={8 + i * 5}
+                        fill="none"
+                        stroke="rgba(196,161,90,0.4)"
+                        strokeWidth="1"
+                        transform={`rotate(${-15 + i * 3} 70 30)`}
+                      />
+                    ))}
+                  </svg>
+                </div>
 
-              <div className="relative z-10">
-                <ConstructionLabel />
-                <h3 className="font-display text-xl md:text-2xl font-medium text-marble-100 mb-2 mt-2">
-                  {ecosystem[4].title}
-                </h3>
-                <p className="text-slate-400 text-lg leading-relaxed">
-                  {ecosystem[4].description}
-                </p>
-              </div>
-            </Card>
+                <div className="relative z-10">
+                  <ConstructionLabel />
+                  <h3 className="font-display text-xl md:text-2xl font-medium text-marble-100 mb-2 mt-2">
+                    {ecosystem[4].title}
+                  </h3>
+                  <p className="text-slate-400 text-lg leading-relaxed">
+                    {ecosystem[4].description}
+                  </p>
+                </div>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
