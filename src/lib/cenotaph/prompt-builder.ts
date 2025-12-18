@@ -4,55 +4,84 @@
  *
  * Combines SOIL design rules with organization data, story context,
  * and user wishes to create prompts for AI image generation.
+ *
+ * Philosophy: Cenotaphs are artistic sculptures representing founder's
+ * creative vision and organization's character - NOT tombstones or funeral monuments.
  */
 
 import type { OrganizationContext, StoryContext } from '@/types/cenotaph'
 
 /**
  * SOIL Platform Design Rules
- * These rules ensure all generated cenotaphs maintain a dignified,
- * memorial-appropriate aesthetic consistent with the SOIL brand.
+ * Focus on artistic sculpture and creative expression.
  */
 const SOIL_DESIGN_RULES = `
-You are creating a memorial monument design for a failed organization. Follow these strict design guidelines:
+You are creating an artistic sculpture design that represents an organization's unique character and legacy. This is a piece of fine art - a creative expression of the founder's vision.
 
-STYLE REQUIREMENTS:
-- Aesthetic: Dignified, timeless memorial architecture inspired by classical monuments, columbariums, and cenotaphs
-- Form: A single, elegant monument structure suitable for display in a memorial columbarium
-- Color palette: Warm neutrals - marble white, limestone beige, bronze accents, slate gray. Muted, respectful tones
-- Materials: Appear to be carved stone, bronze, or marble. Premium, lasting materials
-- Lighting: Soft, contemplative lighting suggesting a sacred space
-- Mood: Respectful, beautiful, contemplative - honoring the organization's legacy
+CORE CONCEPT:
+- This is a SCULPTURE, not a tombstone or grave marker
+- Think museum-quality art piece, gallery sculpture, or public art installation
+- The design should spark curiosity and admiration, not mourning
+- Focus on beauty, creativity, and artistic excellence
 
-MANDATORY CONSTRAINTS:
-- The monument should be isolated on a simple, neutral background (dark gray or black)
-- Square format (1024x1024 pixels)
-- The design should be suitable for later 3D model conversion
-- Include subtle design elements that reflect the organization's industry/purpose
-- May include tasteful text rendering (organization name or a short phrase)
+STYLE FREEDOM:
+- You have creative freedom to explore any artistic style
+- Can be abstract, geometric, organic, futuristic, surreal, kinetic-inspired, or architectural
+- Bold and unique is better than safe and generic
+- Each design should feel like it could win an art competition
 
-ABSOLUTELY AVOID:
-- Gaming aesthetics, sci-fi elements, or futuristic styles
-- Dark/gothic, macabre, or death-focused imagery
-- Corporate/tech startup aesthetic (no logos, gradients, or modern branding)
-- Garish colors, neon, or high-saturation palettes
-- Cluttered or complex backgrounds
-- Cartoonish or whimsical elements
-- Generic tombstone/gravestone clichés
+TECHNICAL REQUIREMENTS:
+- The sculpture should be isolated on a simple dark background (dark gray or black)
+- Square format, suitable for later 3D model conversion
+- Clean, well-defined forms with interesting visual depth
+
+CRITICAL - NO TEXT OR NAMES:
+- NEVER put any text, letters, words, or the organization name on the sculpture
+- The organization name is provided ONLY for creative inspiration about the form and character
+- The sculpture must be purely visual/sculptural with NO readable text of any kind
+- This is a strict privacy requirement
+
+AVOID:
+- Cemetery/funeral aesthetics (no crosses, tombstones, grave markers)
+- Morbid or dark themes
+- Generic corporate logos or branding
+- Cluttered or chaotic compositions
+- Cheap or low-quality appearance
+- ANY text, letters, numbers, or written words on the sculpture
 `
 
 /**
- * Industry-specific design suggestions
+ * Artistic style variations - each creates a distinctly different aesthetic
  */
-const INDUSTRY_DESIGN_HINTS: Record<string, string> = {
-  tech_product: 'Incorporate subtle geometric patterns or circuit-inspired motifs in the stone carving. Consider a modernist monument form.',
-  services: 'Feature flowing, organic lines suggesting human connection. Consider hands clasped or intertwined elements.',
-  ecommerce: 'Include merchant or marketplace symbolism - scales, columns, or archway motifs.',
-  manufacturing: 'Incorporate industrial elements transformed into elegant forms - gears as decorative rosettes, structural beams as classical columns.',
-  ngo: 'Feature symbols of community, growth, or helping hands. Consider a monument with multiple elements representing collective effort.',
-  media: 'Include storytelling elements - open books, scrolls, or theatrical masks rendered in classical style.',
-  // Default for unknown types
-  default: 'Create a balanced, classical monument that conveys dignity and permanence.'
+const STYLE_VARIATIONS = [
+  {
+    name: 'Abstract Geometric',
+    instruction: `Create an ABSTRACT GEOMETRIC sculpture. Use bold shapes - cubes, spheres, pyramids, toruses - combined in unexpected ways. Think Brancusi meets modern architecture. Clean lines, mathematical beauty, spatial tension. The forms should interlock or balance in visually striking ways.`
+  },
+  {
+    name: 'Organic Flowing',
+    instruction: `Create an ORGANIC FLOWING sculpture. Inspired by nature - waves, growth, DNA helixes, wind patterns, flowing water. Smooth curves, continuous surfaces, sense of movement frozen in time. Think Zaha Hadid or Art Nouveau reimagined. Elegant, alive, graceful.`
+  },
+  {
+    name: 'Futuristic Tech',
+    instruction: `Create a FUTURISTIC TECH-INSPIRED sculpture. Sleek, innovative, forward-looking. Could incorporate holographic elements, floating components, energy fields, crystalline structures. Think sci-fi concept art meets high-end product design. Premium, cutting-edge, aspirational.`
+  }
+]
+
+/**
+ * Industry-specific artistic interpretations
+ */
+const INDUSTRY_ARTISTIC_THEMES: Record<string, string> = {
+  tech_product: 'Reflect innovation and digital transformation. Consider circuits as art, data visualization aesthetics, or the poetry of technology. Precision meets creativity.',
+  services: 'Represent human connection and relationships. Intertwining forms, collaborative structures, or abstract representations of helping hands and bridges between people.',
+  ecommerce: 'Capture the energy of exchange and marketplace dynamics. Movement, flow, interconnected networks, or the beauty of logistics and delivery.',
+  manufacturing: 'Transform industrial forms into art. Celebrate precision engineering, assembly, and the beauty of well-crafted objects. Gears and structures as sculptural elements.',
+  ngo: 'Embody community, growth, and collective impact. Rising forms, hands reaching upward, seeds sprouting, or abstract representations of positive change.',
+  media: 'Express storytelling and communication. Narrative forms, information flow, the interplay of ideas, or the magic of content creation.',
+  fintech: 'Visualize trust, growth, and financial flow. Ascending curves, stable foundations with dynamic tops, or abstract representations of value exchange.',
+  healthcare: 'Represent healing, care, and wellbeing. Nurturing forms, protective structures, or the elegant complexity of life systems.',
+  education: 'Symbolize knowledge, growth, and enlightenment. Ascending spirals, opening forms, or the branching structure of learning paths.',
+  default: 'Create a unique artistic sculpture that feels premium, thoughtful, and distinctively memorable.'
 }
 
 /**
@@ -64,50 +93,43 @@ export function buildCenotaphPrompt(
   userWishes: string,
   variationIndex: number = 0
 ): string {
-  const industryHint = INDUSTRY_DESIGN_HINTS[organization.type || 'default']
-    || INDUSTRY_DESIGN_HINTS.default
+  const industryTheme = INDUSTRY_ARTISTIC_THEMES[organization.type || 'default']
+    || INDUSTRY_ARTISTIC_THEMES.default
 
-  // Calculate lifespan
-  let lifespan = 'Unknown duration'
+  // Calculate lifespan for context
+  let lifespan = ''
   if (organization.foundedDate && organization.closedDate) {
     const startYear = organization.foundedDate.split('-')[0]
     const endYear = organization.closedDate.split('-')[0]
-    lifespan = `${startYear} - ${endYear}`
+    lifespan = `Active ${startYear}-${endYear}`
   }
 
-  // Variation instructions for generating different options
-  const variationInstructions = [
-    'Create a vertical monument with a classical column or obelisk form.',
-    'Create a horizontal monument with a bench-like or altar form.',
-    'Create a unique, artistic monument with organic or abstract sculptural elements.'
-  ]
+  // Get style variation
+  const styleVariation = STYLE_VARIATIONS[variationIndex % STYLE_VARIATIONS.length]
 
   const prompt = `
 ${SOIL_DESIGN_RULES}
 
-ORGANIZATION CONTEXT:
+ARTISTIC STYLE FOR THIS VARIATION:
+${styleVariation.instruction}
+
+ORGANIZATION CHARACTER:
 - Name: "${organization.name}"
-- Industry: ${organization.industry || organization.type || 'General business'}
-- Type: ${organization.type || 'Business'}
-- Active period: ${lifespan}
-- Peak team size: ${organization.peakTeamSize ? `${organization.peakTeamSize} people` : 'Unknown'}
-- Location: ${organization.location || 'Unknown'}
+- Industry: ${organization.industry || organization.type || 'Business'}
+${lifespan ? `- Period: ${lifespan}` : ''}
+${organization.peakTeamSize ? `- Scale: ${organization.peakTeamSize} people at peak` : ''}
 
-INDUSTRY-SPECIFIC GUIDANCE:
-${industryHint}
+ARTISTIC THEME (based on industry):
+${industryTheme}
 
-MEMORIAL ESSENCE (from founder's reflection):
-- Epitaph: "${story.epitaph || 'In memoriam'}"
-- Key lesson learned: "${story.mainLesson || 'Every ending teaches us something valuable'}"
-- Closure type: ${story.closureType || 'Unknown'}
+FOUNDER'S ESSENCE:
+${story.epitaph ? `- Their message: "${story.epitaph}"` : ''}
+${story.mainLesson ? `- Key insight: "${story.mainLesson}"` : ''}
 
-FOUNDER'S DESIGN WISHES:
-${userWishes || 'No specific preferences provided. Create a dignified, beautiful memorial.'}
+FOUNDER'S CREATIVE DIRECTION:
+${userWishes || 'No specific direction given. Surprise them with something beautiful and unique.'}
 
-VARIATION INSTRUCTION:
-${variationInstructions[variationIndex % variationInstructions.length]}
-
-Generate a unique, beautiful memorial monument design that honors the organization "${organization.name}" while following all the guidelines above. The monument should tell the story of this organization's journey and legacy.
+Create a stunning ${styleVariation.name.toLowerCase()} sculpture for "${organization.name}" that captures their unique spirit. This should be a piece of art that the founder would be proud to display.
 `.trim()
 
   return prompt
@@ -127,9 +149,9 @@ export function buildRegenerationPrompt(
   return `
 ${basePrompt}
 
-FEEDBACK ON PREVIOUS DESIGN:
-The user wants something different. They said: "${feedbackOnPrevious}"
-Please create a design that addresses this feedback while maintaining the memorial aesthetic.
+IMPROVEMENT REQUEST:
+The founder wants something different. Their feedback: "${feedbackOnPrevious}"
+Create a new design that addresses this feedback while maintaining artistic excellence.
 `.trim()
 }
 
@@ -142,13 +164,13 @@ export function validateUserPrompt(prompt: string): { valid: boolean; error?: st
   }
 
   if (prompt.length > 2000) {
-    return { valid: false, error: 'Design wishes must be under 2000 characters' }
+    return { valid: false, error: 'Creative direction must be under 2000 characters' }
   }
 
-  // Basic content filtering (can be expanded)
+  // Basic content filtering
   const inappropriateTerms = [
     'explicit', 'violent', 'gore', 'nsfw', 'nude', 'sexual',
-    'weapon', 'gun', 'blood', 'death', 'kill', 'hate'
+    'weapon', 'gun', 'blood', 'kill', 'hate'
   ]
 
   const lowerPrompt = prompt.toLowerCase()
@@ -156,7 +178,7 @@ export function validateUserPrompt(prompt: string): { valid: boolean; error?: st
     if (lowerPrompt.includes(term)) {
       return {
         valid: false,
-        error: 'Design wishes contain inappropriate content. Please describe your memorial preferences respectfully.'
+        error: 'Creative direction contains inappropriate content. Please describe your artistic vision respectfully.'
       }
     }
   }

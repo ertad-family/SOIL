@@ -64,14 +64,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
       )
     }
 
-    // Update memorial with selection
+    // Update memorial with selection (keep only selected option)
     const { error: updateError } = await supabase
       .from('memorials')
       .update({
         design_status: 'completed',
         cenotaph_image_url: selectedDesign.url,
         cenotaph_design: {
-          ...design,
+          options: [selectedDesign], // Keep only the selected design
           selectedId: selectedDesignId
         }
       })
@@ -83,6 +83,32 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
         { success: false, error: 'Failed to save selection' },
         { status: 500 }
       )
+    }
+
+    // Clean up unselected images from storage (async, non-blocking)
+    const unselectedOptions = design.options.filter(opt => opt.id !== selectedDesignId)
+    if (unselectedOptions.length > 0) {
+      const filesToDelete = unselectedOptions
+        .map(opt => {
+          // Extract path from URL: .../cenotaph-designs/memorialId/filename.png
+          const match = opt.url.match(/cenotaph-designs\/(.+)$/)
+          return match ? match[1] : null
+        })
+        .filter((path): path is string => path !== null)
+
+      if (filesToDelete.length > 0) {
+        console.log(`Cleaning up ${filesToDelete.length} unselected designs...`)
+        supabase.storage
+          .from('cenotaph-designs')
+          .remove(filesToDelete)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Failed to clean up some files:', error)
+            } else {
+              console.log(`Successfully deleted ${filesToDelete.length} unselected designs`)
+            }
+          })
+      }
     }
 
     return NextResponse.json({

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { WizardLayout } from '@/components/layouts/wizard-layout'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Sparkles, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Plus, AlertCircle } from 'lucide-react'
 import type { DesignOption, DesignStatus, OrganizationContext } from '@/types/cenotaph'
 import { cn } from '@/lib/utils'
 
@@ -54,6 +54,44 @@ export default function CenotaphWizardPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [generationProgress, setGenerationProgress] = useState(0)
+
+  // Animate progress bar during generation
+  useEffect(() => {
+    if (!isGenerating) {
+      setGenerationProgress(0)
+      return
+    }
+
+    // Progress: 0-30% fast (5s), 30-60% medium (15s), 60-90% slow (20s)
+    const intervals = [
+      { target: 30, duration: 5000, step: 100 },
+      { target: 60, duration: 15000, step: 200 },
+      { target: 90, duration: 20000, step: 500 },
+    ]
+
+    let currentTarget = 0
+    const timers: NodeJS.Timeout[] = []
+
+    intervals.forEach(({ target, duration, step }) => {
+      const increment = (target - currentTarget) / (duration / step)
+      let progress = currentTarget
+
+      const timer = setInterval(() => {
+        progress += increment
+        if (progress >= target) {
+          progress = target
+          clearInterval(timer)
+        }
+        setGenerationProgress(prev => Math.max(prev, Math.min(progress, 90)))
+      }, step)
+
+      timers.push(timer)
+      currentTarget = target
+    })
+
+    return () => timers.forEach(t => clearInterval(t))
+  }, [isGenerating])
 
   // Fetch memorial data
   useEffect(() => {
@@ -88,13 +126,18 @@ export default function CenotaphWizardPage() {
         if (error) throw error
         setMemorial(data as unknown as MemorialData)
 
-        // Set initial step based on current status
-        if (data?.design_status === 'options_ready') {
-          setCurrentStep(3) // Go to select step
-        } else if (data?.design_status === 'completed') {
+        // Set initial step based on current design status
+        const status = data?.design_status
+        if (status === 'completed') {
           setCurrentStep(3) // Show completed state
           setSelectedDesignId(data.cenotaph_design?.selectedId || null)
+        } else if (status === 'options_ready' && data?.cenotaph_design?.options?.length > 0) {
+          setCurrentStep(3) // Go to select step - designs already exist
+        } else if (status === 'generating') {
+          setCurrentStep(2) // Show generating step
+          // Note: should implement polling for completion
         }
+        // Otherwise start from step 0 (review)
       } catch (err) {
         console.error('Failed to fetch memorial:', err)
         setError('Failed to load memorial data')
@@ -129,13 +172,13 @@ export default function CenotaphWizardPage() {
         throw new Error(result.error || 'Generation failed')
       }
 
-      // Update local state with new options
+      // Update local state with all options (existing + new)
       setMemorial(prev => prev ? {
         ...prev,
         design_status: 'options_ready',
         cenotaph_design: {
           options: result.options,
-          selectedId: null
+          selectedId: prev.cenotaph_design?.selectedId || null
         }
       } : null)
 
@@ -247,7 +290,7 @@ export default function CenotaphWizardPage() {
       onBack={handleBack}
       onNext={handleNext}
       title={WIZARD_STEPS[currentStep].label}
-      subtitle={WIZARD_STEPS[currentStep].description}
+      subtitle={currentStep === 3 ? undefined : WIZARD_STEPS[currentStep].description}
       cancelHref={`/organization/${memorial.organization_name}`}
       isLoading={isLoading || isGenerating}
       canGoBack={currentStep > 0 && currentStep !== 2 && !isGenerating}
@@ -261,6 +304,8 @@ export default function CenotaphWizardPage() {
         currentStep === 3 ? 'Confirm Selection' :
         'Continue'
       }
+      wide={currentStep === 3}
+      noCard={currentStep === 3}
     >
       {/* Error display */}
       {error && (
@@ -358,13 +403,35 @@ export default function CenotaphWizardPage() {
       {currentStep === 2 && (
         <div className="py-12 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-500/20 mb-6">
-            <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
+            <Sparkles className="h-8 w-8 text-gold-500" />
           </div>
-          <h3 className="text-xl text-marble-100 font-medium mb-2">
+          <h3 className="text-xl text-marble-100 font-medium mb-4">
             Creating Your Cenotaph Designs
           </h3>
-          <p className="text-slate-400 max-w-md mx-auto">
-            Our AI is crafting 3 unique memorial designs based on your organization&apos;s legacy. This may take a minute...
+
+          {/* Progress bar */}
+          <div className="max-w-md mx-auto mb-4">
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gold-500 transition-all duration-300 ease-out"
+                style={{ width: `${generationProgress}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-2 text-sm">
+              <span className="text-slate-400">
+                {generationProgress < 30 ? 'Preparing prompts...' :
+                 generationProgress < 60 ? 'Generating design 1 of 3...' :
+                 generationProgress < 80 ? 'Generating design 2 of 3...' :
+                 'Generating design 3 of 3...'}
+              </span>
+              <span className="text-gold-400 font-medium tabular-nums">
+                {Math.round(generationProgress)}%
+              </span>
+            </div>
+          </div>
+
+          <p className="text-slate-500 text-sm max-w-md mx-auto">
+            This usually takes 30-45 seconds
           </p>
         </div>
       )}
@@ -400,34 +467,32 @@ export default function CenotaphWizardPage() {
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between">
-                <p className="text-slate-300">
-                  Select your preferred design for the cenotaph.
-                </p>
+              <div className="flex justify-end mb-4">
                 <Button
                   variant="dark-ghost"
                   size="sm"
-                  onClick={() => {
-                    setCurrentStep(1)
-                    setSelectedDesignId(null)
-                  }}
+                  onClick={handleGenerate}
                   disabled={isGenerating}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Regenerate All
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  {isGenerating ? 'Generating...' : 'Generate More'}
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-6">
                 {memorial.cenotaph_design?.options?.map((option, index) => (
                   <button
                     key={option.id}
                     onClick={() => setSelectedDesignId(option.id)}
                     className={cn(
-                      'relative rounded-lg overflow-hidden border-2 transition-all',
+                      'relative rounded-2xl overflow-hidden border-2 transition-all',
                       selectedDesignId === option.id
-                        ? 'border-gold-500 ring-2 ring-gold-500/50'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-gold-500 ring-4 ring-gold-500/30'
+                        : 'border-slate-700 hover:border-slate-500'
                     )}
                   >
                     <img
@@ -436,19 +501,13 @@ export default function CenotaphWizardPage() {
                       className="w-full aspect-square object-cover"
                     />
                     {selectedDesignId === option.id && (
-                      <div className="absolute top-2 right-2 bg-gold-500 rounded-full p-1">
-                        <CheckCircle2 className="h-5 w-5 text-slate-900" />
+                      <div className="absolute top-4 right-4 bg-gold-500 rounded-full p-2 shadow-lg">
+                        <CheckCircle2 className="h-8 w-8 text-slate-900" />
                       </div>
                     )}
-                    <div className="p-3 bg-slate-800/90">
-                      <p className="text-sm text-marble-100 font-medium">
-                        Option {index + 1}
-                      </p>
-                    </div>
                   </button>
                 ))}
               </div>
-
               {(!memorial.cenotaph_design?.options || memorial.cenotaph_design.options.length === 0) && (
                 <div className="text-center py-8 text-slate-400">
                   No designs available. Please go back and generate designs.

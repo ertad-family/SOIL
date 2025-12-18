@@ -31,6 +31,10 @@ export interface WizardLayoutProps {
   className?: string
   /** Custom progress percentage (0-100). If not provided, calculated from steps. */
   progress?: number
+  /** Use wider content area (max-w-6xl instead of max-w-4xl) */
+  wide?: boolean
+  /** Hide the card wrapper around content */
+  noCard?: boolean
 }
 
 const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
@@ -53,6 +57,8 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
       footerContent,
       className,
       progress: customProgress,
+      wide = false,
+      noCard = false,
     },
     ref
   ) => {
@@ -115,10 +121,13 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
 
         {/* Main content */}
         <main className="flex-1">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+          <div className={cn(
+            'mx-auto px-4 sm:px-6 py-8',
+            wide ? 'max-w-7xl' : 'max-w-4xl'
+          )}>
             {/* Step title */}
             {(title || currentStepData) && (
-              <div className="mb-8 text-center">
+              <div className={cn('text-center', noCard ? 'mb-4' : 'mb-8')}>
                 <h1
                   className={cn(
                     'font-serif text-2xl sm:text-3xl font-semibold tracking-wide',
@@ -141,16 +150,20 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
             )}
 
             {/* Form content */}
-            <div
-              className={cn(
-                'rounded-md p-6 sm:p-8',
-                isDark
-                  ? 'bg-slate-800 border border-slate-700'
-                  : 'bg-white border border-marble-300 shadow-sm'
-              )}
-            >
-              {children}
-            </div>
+            {noCard ? (
+              children
+            ) : (
+              <div
+                className={cn(
+                  'rounded-md p-6 sm:p-8',
+                  isDark
+                    ? 'bg-slate-800 border border-slate-700'
+                    : 'bg-white border border-marble-300 shadow-sm'
+                )}
+              >
+                {children}
+              </div>
+            )}
           </div>
         </main>
 

@@ -59,6 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
         main_lesson,
         closure_type,
         design_status,
+        cenotaph_design,
         organization_id,
         story_id
       `)
@@ -188,30 +189,35 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
     console.log(`Uploading ${designs.length} designs to storage...`)
     const processedDesigns = await processAndUploadDesigns(supabase, memorialId, designs)
 
-    // Update memorial with design options
+    // Get existing options and append new ones
+    const existingOptions = memorial.cenotaph_design?.options || []
+    const allOptions = [...existingOptions, ...processedDesigns]
+
+    // Update memorial with combined design options
     await supabase
       .from('memorials')
       .update({
         design_status: 'options_ready',
         cenotaph_design: {
-          options: processedDesigns,
-          selectedId: null
+          options: allOptions,
+          selectedId: memorial.cenotaph_design?.selectedId || null
         },
         design_metadata: {
-          attempts: 1,
+          attempts: (memorial.cenotaph_design?.options?.length || 0) / 3 + 1,
           lastError: null,
           modelUsed: 'imagen-4.0-generate-001',
-          costEstimate: estimateCost(designs.length),
+          costEstimate: estimateCost(allOptions.length),
           generatedAt: new Date().toISOString()
         }
       })
       .eq('id', memorialId)
 
-    console.log(`Successfully generated ${processedDesigns.length} design options`)
+    console.log(`Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options`)
 
     return NextResponse.json({
       success: true,
-      options: processedDesigns,
+      options: allOptions,
+      newOptions: processedDesigns,
       status: 'options_ready'
     })
 
