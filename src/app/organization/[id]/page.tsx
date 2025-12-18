@@ -54,6 +54,8 @@ interface MemorialData {
   tombstone_color: string
   views_count: number
   respects_count: number
+  cenotaph_image_url: string | null
+  design_status: string | null
 }
 
 interface PageProps {
@@ -133,7 +135,7 @@ export default async function OrganizationPage({ params }: PageProps) {
   // Fetch memorial/cenotaph if exists
   const { data: memorial } = await supabase
     .from('memorials')
-    .select('id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count')
+    .select('id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, design_status')
     .eq('organization_id', id)
     .single()
 

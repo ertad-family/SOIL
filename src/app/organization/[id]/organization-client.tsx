@@ -42,6 +42,7 @@ import {
   Upload,
   File,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 import type {
   StoryStatus,
@@ -96,6 +97,8 @@ interface MemorialData {
   tombstone_color: string
   views_count: number
   respects_count: number
+  cenotaph_image_url: string | null
+  design_status: string | null
 }
 
 type VerificationRelationship = 'colleague' | 'customer' | 'supplier' | 'partner' | 'investor' | 'other'
@@ -804,50 +807,82 @@ function CenotaphAvatar({
   isOwner: boolean
 }) {
   if (memorial) {
+    // Check if memorial has AI-generated cenotaph image
+    const hasDesign = memorial.cenotaph_image_url && memorial.design_status === 'completed'
+    const needsDesign = !hasDesign && isOwner
+
     return (
-      <a href={`/memorials/${memorial.slug}`} className="block group">
-        {/* Roman Marble Frame */}
-        <div className={marbleFrameStyles}>
-          {/* Inner content */}
-          <div
-            className="relative w-full h-full rounded-sm overflow-hidden transition-all"
-            style={{ backgroundColor: memorial.tombstone_color || '#1e293b' }}
-          >
-            {/* Decorative corner ornaments */}
-            <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-gold-400/40" />
-            <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-gold-400/40" />
-            <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-gold-400/40" />
-            <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-gold-400/40" />
+      <div className="relative">
+        <a href={`/memorials/${memorial.slug}`} className="block group">
+          {/* Roman Marble Frame */}
+          <div className={marbleFrameStyles}>
+            {/* Inner content */}
+            <div
+              className="relative w-full h-full rounded-sm overflow-hidden transition-all"
+              style={{ backgroundColor: hasDesign ? 'transparent' : (memorial.tombstone_color || '#1e293b') }}
+            >
+              {/* AI-generated cenotaph image */}
+              {hasDesign && memorial.cenotaph_image_url && (
+                <img
+                  src={memorial.cenotaph_image_url}
+                  alt="Cenotaph design"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
 
-            {/* Tombstone Preview */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <Landmark className="w-10 h-10 text-marble-300/80 mb-3" />
-              <p className="text-marble-200 font-serif text-sm italic line-clamp-3 px-2">
-                {memorial.epitaph || 'In memoriam'}
-              </p>
-            </div>
+              {/* Decorative corner ornaments (only when no image) */}
+              {!hasDesign && (
+                <>
+                  <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-gold-400/40" />
+                  <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-gold-400/40" />
+                  <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-gold-400/40" />
+                  <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-gold-400/40" />
+                </>
+              )}
 
-            {/* Hover Overlay */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Button variant="dark-primary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
-                View Cenotaph
-              </Button>
-            </div>
+              {/* Tombstone Preview (only when no image) */}
+              {!hasDesign && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                  <Landmark className="w-10 h-10 text-marble-300/80 mb-3" />
+                  <p className="text-marble-200 font-serif text-sm italic line-clamp-3 px-2">
+                    {memorial.epitaph || 'In memoriam'}
+                  </p>
+                </div>
+              )}
 
-            {/* Stats */}
-            <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-4 text-sm text-slate-400">
-              <span className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                {memorial.views_count}
-              </span>
-              <span className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
-                {memorial.respects_count}
-              </span>
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Button variant="dark-primary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
+                  View Cenotaph
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-4 text-sm text-slate-400">
+                <span className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  {memorial.views_count}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Heart className="w-4 h-4" />
+                  {memorial.respects_count}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </a>
+        </a>
+
+        {/* Design Cenotaph button (shown when no AI design yet) */}
+        {needsDesign && (
+          <div className="mt-3 text-center">
+            <a href={`/cenotaph/create/${memorial.id}`}>
+              <Button variant="dark-secondary" size="sm" leftIcon={<Sparkles className="w-4 h-4" />}>
+                Design Cenotaph
+              </Button>
+            </a>
+          </div>
+        )}
+      </div>
     )
   }
 
