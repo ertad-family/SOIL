@@ -146,7 +146,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
         design_metadata: {
           attempts: 1,
           lastError: null,
-          modelUsed: 'gemini-2.0-flash-exp',
+          modelUsed: 'imagen-4.0-generate-001',
           costEstimate: estimateCost(3),
           generatedAt: new Date().toISOString()
         }
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
           design_metadata: {
             attempts: 1,
             lastError: 'Failed to generate any design options',
-            modelUsed: 'gemini-2.0-flash-exp',
+            modelUsed: 'imagen-4.0-generate-001',
             costEstimate: 0,
             generatedAt: new Date().toISOString()
           }
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
         design_metadata: {
           attempts: 1,
           lastError: null,
-          modelUsed: 'gemini-2.0-flash-exp',
+          modelUsed: 'imagen-4.0-generate-001',
           costEstimate: estimateCost(designs.length),
           generatedAt: new Date().toISOString()
         }
