@@ -22,7 +22,6 @@ import {
   Settings,
   ChevronRight,
   CheckCircle2,
-  Clock,
   Landmark,
 } from 'lucide-react'
 import type {
@@ -100,13 +99,6 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
   const getMemorialForOrganization = (organizationId: string) =>
     memorials.find(m => m.organization_id === organizationId)
 
-  const stats = {
-    totalOrganizations: stories.length,
-    inProgress: inProgressStories.length,
-    coined: coinedStories.length,
-    cenotaphs: memorials.length,
-  }
-
   return (
     <DashboardLayout
       variant="dark"
@@ -120,73 +112,6 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
         </a>
       }
     >
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.totalOrganizations}
-                </p>
-                <p className="text-sm text-slate-400">Organizations</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.inProgress}
-                </p>
-                <p className="text-sm text-slate-400">In Progress</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.coined}
-                </p>
-                <p className="text-sm text-slate-400">Stories Coined</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="dark">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <Landmark className="w-5 h-5 text-gold-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-marble-100">
-                  {stats.cenotaphs}
-                </p>
-                <p className="text-sm text-slate-400">Cenotaphs</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Organizations Tabs */}
       <Card variant="dark">
         <CardHeader>
@@ -343,18 +268,27 @@ function StoryCard({ story }: { story: StoryData }) {
   const orgType = org?.organization_type
     ? ORG_TYPE_LABELS[org.organization_type]
     : null
+  const isVerified = org?.verification_status === 'verified'
 
   return (
     <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-display text-lg font-medium text-marble-100">
-              {orgName}
-            </h3>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <a href={`/organization/${org?.id}`} className="hover:text-gold-400 transition-colors">
+              <h3 className="font-display text-lg font-medium text-marble-100">
+                {orgName}
+              </h3>
+            </a>
             <Badge variant="dark-outline" size="sm">
               {story.status === 'draft' ? 'Draft' : 'In Progress'}
             </Badge>
+            {isVerified && (
+              <Badge variant="dark-verified" size="sm">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Verified
+              </Badge>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 mb-3">
@@ -367,7 +301,7 @@ function StoryCard({ story }: { story: StoryData }) {
             {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {org.founded_date} - {org.closed_date}
+                {org.founded_date.replace('-', '.')} — {org.closed_date.replace('-', '.')}
               </span>
             )}
           </div>
@@ -413,20 +347,36 @@ function CoinedStoryCard({
     ? ORG_TYPE_LABELS[org.organization_type]
     : null
   const hasCenotaph = !!memorial
+  const isVerified = org?.verification_status === 'verified'
 
   return (
     <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-display text-lg font-medium text-marble-100">
-              {orgName}
-            </h3>
-            <Badge variant="dark-success" size="sm">
-              Story Coined
-            </Badge>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <a href={`/organization/${org?.id}`} className="hover:text-gold-400 transition-colors">
+              <h3 className="font-display text-lg font-medium text-marble-100">
+                {orgName}
+              </h3>
+            </a>
+            <a href={`/interview/${story.id}`} className="hover:opacity-80 transition-opacity">
+              <Badge
+                variant="dark-success"
+                size="sm"
+                title={story.coined_at ? `Coined ${new Date(story.coined_at).toLocaleDateString()}` : undefined}
+                className="cursor-pointer"
+              >
+                Story Coined
+              </Badge>
+            </a>
+            {isVerified && (
+              <Badge variant="dark-verified" size="sm">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Verified
+              </Badge>
+            )}
             {hasCenotaph && (
-              <Badge variant="dark-outline" size="sm">
+              <Badge variant="dark-success" size="sm">
                 <Landmark className="w-3 h-3 mr-1" />
                 Cenotaph
               </Badge>
@@ -443,13 +393,7 @@ function CoinedStoryCard({
             {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {org.founded_date} - {org.closed_date}
-              </span>
-            )}
-            {story.coined_at && (
-              <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-4 h-4" />
-                Coined {new Date(story.coined_at).toLocaleDateString()}
+                {org.founded_date.replace('-', '.')} — {org.closed_date.replace('-', '.')}
               </span>
             )}
           </div>

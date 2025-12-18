@@ -26,8 +26,8 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname()
 
-  // Disable particles on interview pages (they distract from the form)
-  const showParticles = !pathname.startsWith('/interview')
+  // Disable particles on private/focused pages (interview wizard, account)
+  const showParticles = !pathname.startsWith('/interview') && !pathname.startsWith('/account')
 
   return (
     <MenuProvider>
