@@ -63,10 +63,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Fetch user's profile for display name
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id', user.id)
+      .single()
+
+    // Fetch user's story for this organization to get their claimed role
+    const { data: story } = await supabase
+      .from('stories')
+      .select('founder_role, author_role')
+      .eq('organization_id', organizationId)
+      .eq('user_id', user.id)
+      .single()
+
+    // Determine requester name and claimed role
+    const requesterName = profile?.display_name || user.email?.split('@')[0] || 'Unknown'
+    // Use author_role if set, fallback to founder_role, then null
+    const claimedRole = story?.author_role || story?.founder_role || null
+
     // Create verification requests
     const requestsToInsert = contacts.map(contact => ({
       organization_id: organizationId,
       requester_id: user.id,
+      requester_name: requesterName,
+      claimed_role: claimedRole,
       verifier_email: contact.email.toLowerCase().trim(),
       verifier_name: contact.name?.trim() || null,
       relationship: contact.relationship,

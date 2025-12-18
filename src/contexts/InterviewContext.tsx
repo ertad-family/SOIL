@@ -249,6 +249,15 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
 
     setIsSaving(true)
 
+    // Map founder_role to author_role for verification
+    const authorRoleMap: Record<string, string> = {
+      founder: 'founder',
+      cofounder: 'co_founder',
+      ceo_non_founder: 'executive',
+      other: 'other',
+    }
+    const authorRole = story.founderRole ? authorRoleMap[story.founderRole] || null : null
+
     try {
       const { error: updateError } = await supabase
         .from('stories')
@@ -257,6 +266,7 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           current_module: story.currentModule,
           completed_modules: story.completedModules,
           founder_role: story.founderRole,
+          author_role: authorRole,
           public_naming: story.publicNaming,
           contact_email: story.contactEmail,
           basic_info: story.basicInfo,

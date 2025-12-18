@@ -22,6 +22,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         relationship,
         status,
         expires_at,
+        requester_name,
+        claimed_role,
         organization:organizations (
           id,
           name,
@@ -56,6 +58,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         verifierEmail: verificationRequest.verifier_email,
         verifierName: verificationRequest.verifier_name,
         relationship: verificationRequest.relationship,
+        requesterName: verificationRequest.requester_name,
+        claimedRole: verificationRequest.claimed_role,
         organization: verificationRequest.organization,
       },
     })

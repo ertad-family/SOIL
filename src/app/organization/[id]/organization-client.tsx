@@ -36,6 +36,10 @@ import {
   XCircle,
   Send,
   Loader2,
+  FileText,
+  Upload,
+  File,
+  AlertCircle,
 } from 'lucide-react'
 import type {
   StoryStatus,
@@ -106,6 +110,22 @@ interface VerificationRequest {
   responded_at: string | null
 }
 
+type DocumentVerificationStatus = 'pending_review' | 'approved' | 'rejected'
+type DocumentType = 'registration' | 'extract' | 'charter' | 'shareholder_list' | 'other'
+
+interface VerificationDocument {
+  id: string
+  file_path: string
+  file_name: string
+  file_size: number | null
+  file_type: string | null
+  document_type: DocumentType
+  description: string | null
+  status: DocumentVerificationStatus
+  rejection_reason: string | null
+  created_at: string
+}
+
 const RELATIONSHIP_LABELS: Record<VerificationRelationship, string> = {
   colleague: 'Ex-Colleague',
   customer: 'Ex-Customer',
@@ -115,11 +135,27 @@ const RELATIONSHIP_LABELS: Record<VerificationRelationship, string> = {
   other: 'Other',
 }
 
+const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
+  registration: 'Registration Certificate',
+  extract: 'Registry Extract',
+  charter: 'Company Charter',
+  shareholder_list: 'Shareholder List',
+  other: 'Other Document',
+}
+
+type VerificationTab = 'social' | 'documents'
+
+interface CurrentUserData {
+  name: string
+  role: string | null
+}
+
 interface OrganizationClientProps {
   organization: OrganizationData
   stories: StoryData[]
   memorial: MemorialData | null
   currentUserId: string
+  currentUserData: CurrentUserData
   isOwner: boolean
 }
 
@@ -144,6 +180,7 @@ export function OrganizationClient({
   stories,
   memorial,
   currentUserId,
+  currentUserData,
   isOwner,
 }: OrganizationClientProps) {
   const router = useRouter()
@@ -151,9 +188,13 @@ export function OrganizationClient({
   const [isSaving, setIsSaving] = useState(false)
 
   // Verification state
+  const [verificationTab, setVerificationTab] = useState<VerificationTab>('social')
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([])
+  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocument[]>([])
   const [isLoadingRequests, setIsLoadingRequests] = useState(false)
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
   const [showVerificationForm, setShowVerificationForm] = useState(false)
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false)
   const [isSubmittingVerification, setIsSubmittingVerification] = useState(false)
 
   // Fetch verification requests
@@ -174,13 +215,35 @@ export function OrganizationClient({
     }
   }, [organization.id, isOwner])
 
+  // Fetch verification documents
+  const fetchVerificationDocuments = useCallback(async () => {
+    if (!isOwner) return
+
+    setIsLoadingDocuments(true)
+    try {
+      const res = await fetch(`/api/verification/documents?organizationId=${organization.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setVerificationDocuments(data.documents || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch verification documents:', err)
+    } finally {
+      setIsLoadingDocuments(false)
+    }
+  }, [organization.id, isOwner])
+
   useEffect(() => {
     fetchVerificationRequests()
-  }, [fetchVerificationRequests])
+    fetchVerificationDocuments()
+  }, [fetchVerificationRequests, fetchVerificationDocuments])
 
   // Calculate verification progress
   const confirmedCount = verificationRequests.filter(r => r.status === 'confirmed').length
   const pendingCount = verificationRequests.filter(r => r.status === 'pending').length
+  const approvedDocs = verificationDocuments.filter(d => d.status === 'approved').length
+  const pendingDocs = verificationDocuments.filter(d => d.status === 'pending_review').length
+  const hasDocumentVerification = approvedDocs > 0
 
   // My story (if I have one)
   const myStory = stories.find(s => s.user_id === currentUserId)
@@ -356,72 +419,165 @@ export function OrganizationClient({
                   {organization.verification_status === 'verified' && (
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                   )}
-                  {confirmedCount}/3 verified
+                  {organization.verification_status === 'verified'
+                    ? 'Verified'
+                    : hasDocumentVerification
+                    ? 'Doc Verified'
+                    : `${confirmedCount}/3`}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="pt-0 space-y-4">
-              {/* Progress bar */}
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        confirmedCount >= 3 ? 'bg-gold-500' : 'bg-gold-500/60'
-                      }`}
-                      style={{ width: `${Math.min((confirmedCount / 3) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500">
-                  {confirmedCount >= 3
-                    ? 'Organization verified!'
-                    : `${3 - confirmedCount} more confirmation${3 - confirmedCount !== 1 ? 's' : ''} needed`}
-                  {pendingCount > 0 && ` (${pendingCount} pending)`}
-                </p>
-              </div>
-
-              {/* Verification steps */}
+              {/* Verification Tabs */}
               {isOwner && organization.verification_status !== 'verified' && (
-                <div className="border-t border-slate-700 pt-4">
-                  <h4 className="text-xs font-medium text-slate-300 uppercase tracking-wider mb-2">
-                    How to verify
-                  </h4>
-                  <ol className="text-xs text-slate-400 space-y-1.5 list-decimal list-inside">
-                    <li>Invite ex-colleagues, customers, or partners</li>
-                    <li>They confirm the organization existed</li>
-                    <li>After 3 confirmations, you&apos;re verified</li>
-                  </ol>
-                  <Button
-                    variant="dark-primary"
-                    size="sm"
-                    className="mt-3 w-full"
-                    onClick={() => setShowVerificationForm(true)}
-                    leftIcon={<Send className="w-4 h-4" />}
+                <div className="flex gap-2 border-b border-slate-700 pb-3">
+                  <button
+                    onClick={() => setVerificationTab('social')}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      verificationTab === 'social'
+                        ? 'bg-gold-500/20 text-gold-400'
+                        : 'text-slate-400 hover:text-slate-300'
+                    }`}
                   >
-                    Invite Verifiers
-                  </Button>
+                    <Users className="w-4 h-4" />
+                    References
+                  </button>
+                  <button
+                    onClick={() => setVerificationTab('documents')}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      verificationTab === 'documents'
+                        ? 'bg-gold-500/20 text-gold-400'
+                        : 'text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Documents
+                  </button>
                 </div>
               )}
 
-              {/* Verification requests list */}
-              {isOwner && verificationRequests.length > 0 && (
-                <div className="border-t border-slate-700 pt-4">
-                  <h4 className="text-xs font-medium text-slate-300 uppercase tracking-wider mb-2">
-                    Verification Requests
-                  </h4>
-                  {isLoadingRequests ? (
-                    <div className="flex items-center justify-center py-4">
-                      <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+              {/* Social Verification Tab */}
+              {verificationTab === 'social' && (
+                <>
+                  {/* Progress bar */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            confirmedCount >= 3 ? 'bg-gold-500' : 'bg-gold-500/60'
+                          }`}
+                          style={{ width: `${Math.min((confirmedCount / 3) * 100, 100)}%` }}
+                        />
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {verificationRequests.map((request) => (
-                        <VerificationRequestItem key={request.id} request={request} />
-                      ))}
+                    <p className="text-sm text-slate-500">
+                      {confirmedCount >= 3
+                        ? 'Organization verified!'
+                        : `${3 - confirmedCount} more confirmation${3 - confirmedCount !== 1 ? 's' : ''} needed`}
+                      {pendingCount > 0 && ` (${pendingCount} pending)`}
+                    </p>
+                  </div>
+
+                  {/* Verification steps */}
+                  {isOwner && organization.verification_status !== 'verified' && (
+                    <div className="border-t border-slate-700 pt-4">
+                      <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-2">
+                        How it works
+                      </h4>
+                      <ol className="text-sm text-slate-400 space-y-1.5 list-decimal list-inside">
+                        <li>Ask people who knew the organization</li>
+                        <li>They confirm existence &amp; your role</li>
+                        <li>3 confirmations = verified</li>
+                      </ol>
+                      <Button
+                        variant="dark-primary"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={() => setShowVerificationForm(true)}
+                        leftIcon={<Send className="w-4 h-4" />}
+                      >
+                        Request Verification
+                      </Button>
                     </div>
                   )}
-                </div>
+
+                  {/* Verification requests list */}
+                  {isOwner && verificationRequests.length > 0 && (
+                    <div className="border-t border-slate-700 pt-4">
+                      <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-2">
+                        Verification Requests
+                      </h4>
+                      {isLoadingRequests ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {verificationRequests.map((request) => (
+                            <VerificationRequestItem key={request.id} request={request} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Documents Verification Tab */}
+              {verificationTab === 'documents' && (
+                <>
+                  {/* Document status */}
+                  <div>
+                    <p className="text-sm text-slate-400 mb-3">
+                      Upload registration documents showing you as owner/founder.
+                      Documents are reviewed manually (1-3 business days).
+                    </p>
+                    {pendingDocs > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-gold-400 mb-3">
+                        <Clock className="w-4 h-4" />
+                        {pendingDocs} document{pendingDocs !== 1 ? 's' : ''} pending review
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload button */}
+                  {isOwner && organization.verification_status !== 'verified' && (
+                    <Button
+                      variant="dark-primary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setShowDocumentUpload(true)}
+                      leftIcon={<Upload className="w-4 h-4" />}
+                    >
+                      Upload Document
+                    </Button>
+                  )}
+
+                  {/* Documents list */}
+                  {verificationDocuments.length > 0 && (
+                    <div className="border-t border-slate-700 pt-4">
+                      <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-2">
+                        Uploaded Documents
+                      </h4>
+                      {isLoadingDocuments ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {verificationDocuments.map((doc) => (
+                            <DocumentItem
+                              key={doc.id}
+                              document={doc}
+                              onDelete={() => fetchVerificationDocuments()}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -431,10 +587,25 @@ export function OrganizationClient({
             <VerificationFormModal
               organizationId={organization.id}
               organizationName={organization.name}
+              confirmedCount={confirmedCount}
+              requesterName={currentUserData.name}
+              requesterRole={currentUserData.role}
               onClose={() => setShowVerificationForm(false)}
               onSuccess={() => {
                 setShowVerificationForm(false)
                 fetchVerificationRequests()
+              }}
+            />
+          )}
+
+          {/* Document Upload Modal */}
+          {showDocumentUpload && (
+            <DocumentUploadModal
+              organizationId={organization.id}
+              onClose={() => setShowDocumentUpload(false)}
+              onSuccess={() => {
+                setShowDocumentUpload(false)
+                fetchVerificationDocuments()
               }}
             />
           )}
@@ -627,13 +798,13 @@ function CenotaphAvatar({
             </div>
 
             {/* Stats */}
-            <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-4 text-xs text-slate-400">
+            <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-4 text-sm text-slate-400">
               <span className="flex items-center gap-1">
-                <Eye className="w-3 h-3" />
+                <Eye className="w-4 h-4" />
                 {memorial.views_count}
               </span>
               <span className="flex items-center gap-1">
-                <Heart className="w-3 h-3" />
+                <Heart className="w-4 h-4" />
                 {memorial.respects_count}
               </span>
             </div>
@@ -659,7 +830,7 @@ function CenotaphAvatar({
         <h3 className="font-display text-base text-marble-300 mb-2">
           No Cenotaph Yet
         </h3>
-        <p className="text-slate-500 text-xs mb-4 px-2">
+        <p className="text-slate-500 text-sm mb-4 px-2">
           Create a memorial to preserve this legacy
         </p>
         {isOwner && (
@@ -710,7 +881,7 @@ function StoryCard({
                 </Badge>
               )}
               {story.coined_at && (
-                <span className="text-xs text-slate-500">
+                <span className="text-sm text-slate-500">
                   {new Date(story.coined_at).toLocaleDateString()}
                 </span>
               )}
@@ -733,10 +904,10 @@ function StoryCard({
 // Verification Request Item Component
 function VerificationRequestItem({ request }: { request: VerificationRequest }) {
   const statusIcons = {
-    pending: <Clock className="w-3.5 h-3.5 text-gold-400" />,
-    confirmed: <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />,
-    declined: <XCircle className="w-3.5 h-3.5 text-red-400" />,
-    expired: <Clock className="w-3.5 h-3.5 text-slate-500" />,
+    pending: <Clock className="w-4 h-4 text-gold-400" />,
+    confirmed: <CheckCircle2 className="w-4 h-4 text-green-400" />,
+    declined: <XCircle className="w-4 h-4 text-red-400" />,
+    expired: <Clock className="w-4 h-4 text-slate-500" />,
   }
 
   const statusLabels = {
@@ -747,9 +918,9 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
   }
 
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded bg-slate-800/50 text-xs">
+    <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
       <div className="flex items-center gap-2 min-w-0">
-        <Mail className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+        <Mail className="w-4 h-4 text-slate-500 flex-shrink-0" />
         <span className="text-slate-300 truncate">
           {request.verifier_name || request.verifier_email}
         </span>
@@ -757,7 +928,7 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
           ({RELATIONSHIP_LABELS[request.relationship]})
         </span>
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
         {statusIcons[request.status]}
         <span className={`${
           request.status === 'confirmed' ? 'text-green-400' :
@@ -772,23 +943,56 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
   )
 }
 
+// Role labels for email preview
+const ROLE_LABELS_FOR_EMAIL: Record<string, string> = {
+  founder: 'the Founder',
+  co_founder: 'a Co-Founder',
+  cofounder: 'a Co-Founder',
+  executive: 'an Executive',
+  ceo_non_founder: 'the CEO',
+  employee: 'a team member',
+  customer: 'a customer',
+  supplier: 'a supplier',
+  partner: 'a partner',
+  investor: 'an investor',
+  other: 'a team member',
+}
+
 // Verification Form Modal Component
 function VerificationFormModal({
   organizationId,
   organizationName,
+  confirmedCount,
+  requesterName,
+  requesterRole,
   onClose,
   onSuccess,
 }: {
   organizationId: string
   organizationName: string
+  confirmedCount: number
+  requesterName: string
+  requesterRole: string | null
   onClose: () => void
   onSuccess: () => void
 }) {
+  const neededCount = Math.max(1, 3 - confirmedCount)
+
+  // Format role for display
+  const roleLabel = requesterRole ? ROLE_LABELS_FOR_EMAIL[requesterRole] || 'a team member' : 'a team member'
+
+  // Initialize with the required number of contact fields
   const [contacts, setContacts] = useState<Array<{
     email: string
     name: string
     relationship: VerificationRelationship
-  }>>([{ email: '', name: '', relationship: 'colleague' }])
+  }>>(() =>
+    Array.from({ length: neededCount }, () => ({
+      email: '',
+      name: '',
+      relationship: 'colleague' as VerificationRelationship,
+    }))
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -799,7 +1003,8 @@ function VerificationFormModal({
   }
 
   const removeContact = (index: number) => {
-    if (contacts.length > 1) {
+    // Don't allow removing below the required minimum
+    if (contacts.length > neededCount) {
       setContacts(contacts.filter((_, i) => i !== index))
     }
   }
@@ -860,11 +1065,12 @@ function VerificationFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
+          {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-display text-marble-100">
-              Invite Verifiers
+              Request Verification
             </h2>
             <button
               onClick={onClose}
@@ -875,8 +1081,8 @@ function VerificationFormModal({
           </div>
 
           <p className="text-sm text-slate-400 mb-4">
-            Invite people who can confirm that <strong className="text-marble-200">{organizationName}</strong> existed.
-            They will receive an email with a verification link.
+            Ask people who can confirm that <strong className="text-marble-200">{organizationName}</strong> existed
+            and your role in it. You need <strong className="text-gold-400">{neededCount} more</strong> confirmation{neededCount !== 1 ? 's' : ''}.
           </p>
 
           {error && (
@@ -885,65 +1091,132 @@ function VerificationFormModal({
             </div>
           )}
 
+          {/* Two-column layout */}
           <form onSubmit={handleSubmit}>
-            <div className="space-y-3 mb-4">
-              {contacts.map((contact, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-1 space-y-2">
-                    <input
-                      type="email"
-                      placeholder="Email *"
-                      value={contact.email}
-                      onChange={(e) => updateContact(index, 'email', e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
-                    />
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Name (optional)"
-                        value={contact.name}
-                        onChange={(e) => updateContact(index, 'name', e.target.value)}
-                        className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
-                      />
-                      <select
-                        value={contact.relationship}
-                        onChange={(e) => updateContact(index, 'relationship', e.target.value)}
-                        className="px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
-                      >
-                        <option value="colleague">Ex-Colleague</option>
-                        <option value="customer">Ex-Customer</option>
-                        <option value="supplier">Ex-Supplier</option>
-                        <option value="partner">Ex-Partner</option>
-                        <option value="investor">Ex-Investor</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                  {contacts.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeContact(index)}
-                      className="p-2 text-slate-500 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left column: Contacts */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-3">
+                  Contacts to ask
+                </h3>
+
+                {/* Tip */}
+                <div className="bg-gold-500/10 border border-gold-500/20 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-gold-300">
+                    <strong>Tip:</strong> The more people you ask, the faster verification will complete.
+                  </p>
                 </div>
-              ))}
+
+                <div className="space-y-3 mb-4">
+                  {contacts.map((contact, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="email"
+                          placeholder="Email *"
+                          value={contact.email}
+                          onChange={(e) => updateContact(index, 'email', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Name (optional)"
+                            value={contact.name}
+                            onChange={(e) => updateContact(index, 'name', e.target.value)}
+                            className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
+                          />
+                          <select
+                            value={contact.relationship}
+                            onChange={(e) => updateContact(index, 'relationship', e.target.value)}
+                            className="px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
+                          >
+                            <option value="colleague">Ex-Colleague</option>
+                            <option value="customer">Ex-Customer</option>
+                            <option value="supplier">Ex-Supplier</option>
+                            <option value="partner">Ex-Partner</option>
+                            <option value="investor">Ex-Investor</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                      {contacts.length > neededCount && (
+                        <button
+                          type="button"
+                          onClick={() => removeContact(index)}
+                          className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {contacts.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={addContact}
+                    className="flex items-center gap-1 text-sm text-gold-400 hover:text-gold-300"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add another contact
+                  </button>
+                )}
+              </div>
+
+              {/* Right column: Email Preview (always visible) */}
+              <div className="lg:border-l lg:border-slate-700 lg:pl-6">
+                <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Email Preview
+                </h3>
+
+                <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-sm">
+                  <p className="text-slate-300 mb-3">
+                    <strong className="text-marble-200">Subject:</strong> {requesterName} asks for your help preserving {organizationName}&apos;s legacy
+                  </p>
+                  <div className="text-slate-400 space-y-2.5">
+                    <p>Hi <span className="text-marble-200">[Recipient Name]</span>,</p>
+
+                    <p>
+                      <strong className="text-marble-200">{requesterName}</strong>, who was{' '}
+                      <strong className="text-gold-400">{roleLabel}</strong> of{' '}
+                      <strong className="text-marble-200">{organizationName}</strong>, is documenting the organization&apos;s
+                      story on SOIL — a platform dedicated to preserving the legacies of organizations that have closed.
+                    </p>
+
+                    <p>
+                      Every year, millions of companies close their doors. Their stories, lessons, and the people
+                      who built them risk being forgotten. SOIL exists to change that — creating digital cenotaphs
+                      that honor these journeys and help future founders learn from the past.
+                    </p>
+
+                    <p>
+                      <strong className="text-marble-200">{requesterName}</strong> listed you as{' '}
+                      <strong className="text-gold-400">an {contacts[0] ? RELATIONSHIP_LABELS[contacts[0].relationship].toLowerCase() : 'contact'}</strong> who
+                      can confirm that {organizationName} existed and their role in it. Your verification helps ensure
+                      authenticity and honors the real story.
+                    </p>
+
+                    <div className="bg-gold-500/10 border border-gold-500/20 rounded p-2.5 my-2">
+                      <p className="text-gold-300 text-xs">
+                        <strong>It takes just 30 seconds:</strong> Click the button below, review the details, and confirm.
+                      </p>
+                    </div>
+
+                    <p className="text-gold-400 font-medium">[Verify Now Button]</p>
+
+                    <p className="text-slate-500 text-xs pt-2 border-t border-slate-700">
+                      If you don&apos;t recognize {requesterName} or {organizationName}, simply ignore this email.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {contacts.length < 10 && (
-              <button
-                type="button"
-                onClick={addContact}
-                className="flex items-center gap-1 text-sm text-gold-400 hover:text-gold-300 mb-4"
-              >
-                <Plus className="w-4 h-4" />
-                Add another contact
-              </button>
-            )}
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+            {/* Footer with buttons */}
+            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-700">
               <Button
                 type="button"
                 variant="dark-ghost"
@@ -960,7 +1233,304 @@ function VerificationFormModal({
                 disabled={isSubmitting}
                 leftIcon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               >
-                {isSubmitting ? 'Sending...' : 'Send Invitations'}
+                {isSubmitting ? 'Sending...' : 'Send Requests'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Document Item Component
+function DocumentItem({
+  document,
+  onDelete,
+}: {
+  document: VerificationDocument
+  onDelete: () => void
+}) {
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const statusIcons = {
+    pending_review: <Clock className="w-4 h-4 text-gold-400" />,
+    approved: <CheckCircle2 className="w-4 h-4 text-green-400" />,
+    rejected: <XCircle className="w-4 h-4 text-red-400" />,
+  }
+
+  const statusLabels = {
+    pending_review: 'Pending Review',
+    approved: 'Approved',
+    rejected: 'Rejected',
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this document?')) return
+
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/verification/documents?id=${document.id}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        onDelete()
+      }
+    } catch (err) {
+      console.error('Failed to delete document:', err)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
+      <div className="flex items-center gap-2 min-w-0">
+        <File className="w-4 h-4 text-slate-500 flex-shrink-0" />
+        <div className="min-w-0">
+          <span className="text-slate-300 truncate block">
+            {document.file_name}
+          </span>
+          <span className="text-slate-500 text-xs">
+            {DOCUMENT_TYPE_LABELS[document.document_type]}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+        <div className="flex items-center gap-1.5">
+          {statusIcons[document.status]}
+          <span className={`${
+            document.status === 'approved' ? 'text-green-400' :
+            document.status === 'rejected' ? 'text-red-400' :
+            'text-gold-400'
+          }`}>
+            {statusLabels[document.status]}
+          </span>
+        </div>
+        {document.status === 'pending_review' && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+          </button>
+        )}
+      </div>
+      {document.status === 'rejected' && document.rejection_reason && (
+        <div className="absolute left-0 right-0 -bottom-6 text-sm text-red-400 truncate">
+          Reason: {document.rejection_reason}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Document Upload Modal Component
+function DocumentUploadModal({
+  organizationId,
+  onClose,
+  onSuccess,
+}: {
+  organizationId: string
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [file, setFile] = useState<File | null>(null)
+  const [documentType, setDocumentType] = useState<DocumentType>('registration')
+  const [description, setDescription] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useCallback((node: HTMLInputElement | null) => {
+    if (node) {
+      node.value = ''
+    }
+  }, [])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
+
+    // Validate file size (10MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB')
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setError('File must be PDF, JPEG, PNG, or WebP')
+      return
+    }
+
+    setFile(selectedFile)
+    setError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!file) {
+      setError('Please select a file')
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('organizationId', organizationId)
+      formData.append('documentType', documentType)
+      if (description.trim()) {
+        formData.append('description', description.trim())
+      }
+
+      const res = await fetch('/api/verification/documents', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to upload document')
+      }
+
+      onSuccess()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload document')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-display text-marble-100">
+              Upload Document
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-sm text-slate-400 mb-4">
+            Upload a document that proves your ownership of this organization.
+            Accepted formats: PDF, JPEG, PNG, WebP (max 10MB).
+          </p>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded p-3 mb-4 text-sm text-red-400 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {/* File Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Document File *
+              </label>
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  file
+                    ? 'border-gold-500/50 bg-gold-500/5'
+                    : 'border-slate-700 hover:border-slate-600'
+                }`}
+              >
+                {file ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <File className="w-6 h-6 text-gold-400" />
+                    <span className="text-marble-200 text-sm">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setFile(null)}
+                      className="text-slate-400 hover:text-red-400"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400 mb-2">
+                      Click to select or drag and drop
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Document Type */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Document Type *
+              </label>
+              <select
+                value={documentType}
+                onChange={(e) => setDocumentType(e.target.value as DocumentType)}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
+              >
+                <option value="registration">Registration Certificate</option>
+                <option value="extract">Registry Extract (EGRUL, etc.)</option>
+                <option value="charter">Company Charter</option>
+                <option value="shareholder_list">Shareholder List</option>
+                <option value="other">Other Document</option>
+              </select>
+            </div>
+
+            {/* Description */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Description (optional)
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Any additional notes about this document..."
+                rows={2}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+              <Button
+                type="button"
+                variant="dark-ghost"
+                size="sm"
+                onClick={onClose}
+                disabled={isUploading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="dark-primary"
+                size="sm"
+                disabled={isUploading || !file}
+                leftIcon={isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              >
+                {isUploading ? 'Uploading...' : 'Upload'}
               </Button>
             </div>
           </form>

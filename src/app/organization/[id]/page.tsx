@@ -137,12 +137,32 @@ export default async function OrganizationPage({ params }: PageProps) {
     .eq('organization_id', id)
     .single()
 
+  // Fetch current user's profile and story for verification modal
+  const { data: currentUserProfile } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', user.id)
+    .single()
+
+  const { data: currentUserStory } = await supabase
+    .from('stories')
+    .select('founder_role, author_role')
+    .eq('organization_id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  const currentUserData = {
+    name: currentUserProfile?.display_name || user.email?.split('@')[0] || 'Unknown',
+    role: currentUserStory?.author_role || currentUserStory?.founder_role || null,
+  }
+
   return (
     <OrganizationClient
       organization={organization as OrganizationData}
       stories={storiesWithProfiles as StoryData[]}
       memorial={memorial as MemorialData | null}
       currentUserId={user.id}
+      currentUserData={currentUserData}
       isOwner={isOwner}
     />
   )
