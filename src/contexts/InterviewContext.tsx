@@ -450,15 +450,41 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     const nextModule = getNextModule(moduleId)
     const newCurrentModule = nextModule?.id || story.currentModule
 
-    updateStory({
-      completedModules: newCompletedModules,
-      status: newStatus,
-      currentModule: newCurrentModule,
+    // Update local state
+    setStory(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        completedModules: newCompletedModules,
+        status: newStatus,
+        currentModule: newCurrentModule,
+      }
     })
 
-    // Save immediately after completing a module
-    await saveStory()
-  }, [story, updateStory, saveStory])
+    // Save directly to DB with explicit values (avoid stale closure)
+    setIsSaving(true)
+    try {
+      const { error: updateError } = await supabase
+        .from('stories')
+        .update({
+          status: newStatus,
+          current_module: newCurrentModule,
+          completed_modules: newCompletedModules,
+        })
+        .eq('id', story.id)
+
+      if (updateError) {
+        throw new Error(updateError.message)
+      }
+
+      setLastSavedAt(new Date())
+      setHasUnsavedChanges(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete module')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [story, supabase])
 
   const navigateToModule = React.useCallback((moduleId: ModuleId) => {
     if (!story || !canNavigateToModule(moduleId)) return
