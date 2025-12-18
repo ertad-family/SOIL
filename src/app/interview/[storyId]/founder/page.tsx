@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   User,
+  Check,
 } from 'lucide-react'
 import type {
   PersonalEvent,
@@ -314,7 +315,7 @@ export default function FounderPage() {
 
   if (isLoading || !story || !background) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -326,11 +327,11 @@ export default function FounderPage() {
 
   const renderBefore = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Help us understand where you were when you started this organization.
       </p>
 
-      <FormField label="Prior startup/business experience" htmlFor="prior-experience">
+      <FormField variant="dark" label="Prior startup/business experience" htmlFor="prior-experience">
         <div className="space-y-2">
           {PRIOR_EXPERIENCE_OPTIONS.map(option => (
             <button
@@ -339,8 +340,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.priorExperience === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -349,7 +350,7 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="Domain/industry knowledge" htmlFor="domain-knowledge">
+      <FormField variant="dark" label="Domain/industry knowledge" htmlFor="domain-knowledge">
         <div className="space-y-2">
           {DOMAIN_KNOWLEDGE_OPTIONS.map(option => (
             <button
@@ -358,8 +359,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.domainKnowledge === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -368,7 +369,7 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="Your life situation at the time" htmlFor="life-situation">
+      <FormField variant="dark" label="Your life situation at the time" htmlFor="life-situation">
         <div className="space-y-2">
           {LIFE_SITUATION_OPTIONS.map(option => (
             <button
@@ -377,8 +378,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.lifeSituation === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -395,11 +396,11 @@ export default function FounderPage() {
 
   const renderBeginning = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         How did you start this journey?
       </p>
 
-      <FormField label="Your commitment level" htmlFor="commitment">
+      <FormField variant="dark" label="Your commitment level" htmlFor="commitment">
         <div className="space-y-2">
           {COMMITMENT_OPTIONS.map(option => (
             <button
@@ -408,8 +409,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.commitment === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -418,7 +419,7 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="Who did you start with?" htmlFor="started-with">
+      <FormField variant="dark" label="Who did you start with?" htmlFor="started-with">
         <div className="space-y-2">
           {STARTED_WITH_OPTIONS.map(option => (
             <button
@@ -427,8 +428,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.startedWith === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -438,8 +439,9 @@ export default function FounderPage() {
       </FormField>
 
       {background.startedWith && background.startedWith !== 'solo' && (
-        <FormField label="How did you find your co-founder(s)?" htmlFor="how-found" hint="Optional">
+        <FormField variant="dark" label="How did you find your co-founder(s)?" htmlFor="how-found" hint="Optional">
           <Textarea
+            variant="dark"
             id="how-found"
             value={background.howFoundCoFounders || ''}
             onChange={(e) => updateBackground('howFoundCoFounders', e.target.value || null)}
@@ -450,7 +452,7 @@ export default function FounderPage() {
       )}
 
       {background.startedWith && background.startedWith !== 'solo' && (
-        <FormField label="How clear were the roles between you?" htmlFor="role-clarity">
+        <FormField variant="dark" label="How clear were the roles between you?" htmlFor="role-clarity">
           <div className="space-y-2">
             {ROLE_CLARITY_OPTIONS.map(option => (
               <button
@@ -459,8 +461,8 @@ export default function FounderPage() {
                 className={cn(
                   'w-full p-3 rounded-md border text-sm text-left transition-colors',
                   background.roleClarity === option.value
-                    ? 'bg-gold-50 border-gold-300 text-marble-900'
-                    : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                    ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                    : 'border-slate-600 text-slate-300 hover:border-slate-500'
                 )}
               >
                 {option.label}
@@ -478,11 +480,11 @@ export default function FounderPage() {
 
   const renderJourney = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         How did things evolve along the way?
       </p>
 
-      <FormField label="How did your motivation evolve?" htmlFor="motivation">
+      <FormField variant="dark" label="How did your motivation evolve?" htmlFor="motivation">
         <div className="space-y-2">
           {MOTIVATION_OPTIONS.map(option => (
             <button
@@ -491,8 +493,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.motivationEvolution === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -502,7 +504,7 @@ export default function FounderPage() {
       </FormField>
 
       {background.motivationEvolution === 'started_fading' && (
-        <FormField label="When did you first notice the fading?" htmlFor="fading-stage">
+        <FormField variant="dark" label="When did you first notice the fading?" htmlFor="fading-stage">
           <div className="flex flex-wrap gap-2">
             {LIFECYCLE_STAGES.map(option => (
               <button
@@ -511,8 +513,8 @@ export default function FounderPage() {
                 className={cn(
                   'px-3 py-2 rounded text-sm transition-colors',
                   background.fadingNoticedAt === option.value
-                    ? 'bg-gold-500 text-white'
-                    : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                    ? 'bg-gold-500 text-slate-900'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 )}
               >
                 {option.label}
@@ -523,7 +525,7 @@ export default function FounderPage() {
       )}
 
       {background.startedWith && background.startedWith !== 'solo' && (
-        <FormField label="How did your co-founder relationship evolve?" htmlFor="cofounder-relationship">
+        <FormField variant="dark" label="How did your co-founder relationship evolve?" htmlFor="cofounder-relationship">
           <div className="space-y-2">
             {COFOUNDER_RELATIONSHIP_OPTIONS.map(option => (
               <button
@@ -532,8 +534,8 @@ export default function FounderPage() {
                 className={cn(
                   'w-full p-3 rounded-md border text-sm text-left transition-colors',
                   background.cofounderRelationship === option.value
-                    ? 'bg-gold-50 border-gold-300 text-marble-900'
-                    : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                    ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                    : 'border-slate-600 text-slate-300 hover:border-slate-500'
                 )}
               >
                 {option.label}
@@ -543,7 +545,7 @@ export default function FounderPage() {
         </FormField>
       )}
 
-      <FormField label="Did this become your whole life?" htmlFor="investment-level">
+      <FormField variant="dark" label="Did this become your whole life?" htmlFor="investment-level">
         <div className="space-y-2">
           {INVESTMENT_LEVEL_OPTIONS.map(option => (
             <button
@@ -552,8 +554,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.investmentLevel === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -570,11 +572,11 @@ export default function FounderPage() {
 
   const renderCost = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         This journey affects us deeply. How did it affect you?
       </p>
 
-      <FormField label="Did your health suffer?" htmlFor="health-impact">
+      <FormField variant="dark" label="Did your health suffer?" htmlFor="health-impact">
         <div className="flex gap-2">
           {IMPACT_OPTIONS.map(option => (
             <button
@@ -583,8 +585,8 @@ export default function FounderPage() {
               className={cn(
                 'flex-1 p-3 rounded-md border text-sm transition-colors',
                 background.healthImpact === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -593,7 +595,7 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="Did your personal relationships suffer?" htmlFor="relationship-impact">
+      <FormField variant="dark" label="Did your personal relationships suffer?" htmlFor="relationship-impact">
         <div className="flex gap-2">
           {IMPACT_OPTIONS.map(option => (
             <button
@@ -602,8 +604,8 @@ export default function FounderPage() {
               className={cn(
                 'flex-1 p-3 rounded-md border text-sm transition-colors',
                 background.relationshipImpact === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -612,7 +614,7 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="Did your finances suffer?" htmlFor="finance-impact">
+      <FormField variant="dark" label="Did your finances suffer?" htmlFor="finance-impact">
         <div className="flex gap-2">
           {IMPACT_OPTIONS.map(option => (
             <button
@@ -621,8 +623,8 @@ export default function FounderPage() {
               className={cn(
                 'flex-1 p-3 rounded-md border text-sm transition-colors',
                 background.financeImpact === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -631,7 +633,7 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="How long did it take to recover after it ended?" htmlFor="recovery-time">
+      <FormField variant="dark" label="How long did it take to recover after it ended?" htmlFor="recovery-time">
         <div className="flex flex-wrap gap-2">
           {RECOVERY_TIME_OPTIONS.map(option => (
             <button
@@ -640,8 +642,8 @@ export default function FounderPage() {
               className={cn(
                 'px-4 py-2 rounded text-sm transition-colors',
                 background.recoveryTime === option.value
-                  ? 'bg-gold-500 text-white'
-                  : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                  ? 'bg-gold-500 text-slate-900'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               )}
             >
               {option.label}
@@ -658,12 +660,13 @@ export default function FounderPage() {
 
   const renderNow = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Where are you now in processing this experience?
       </p>
 
-      <FormField label="How long since it ended?" htmlFor="time-since-end" hint="Optional">
+      <FormField variant="dark" label="How long since it ended?" htmlFor="time-since-end" hint="Optional">
         <Input
+          variant="dark"
           id="time-since-end"
           type="text"
           value={background.timeSinceEnd || ''}
@@ -672,7 +675,7 @@ export default function FounderPage() {
         />
       </FormField>
 
-      <FormField label="How do you feel about it now?" htmlFor="current-feeling">
+      <FormField variant="dark" label="How do you feel about it now?" htmlFor="current-feeling">
         <div className="flex flex-wrap gap-2">
           {CURRENT_FEELING_OPTIONS.map(option => (
             <button
@@ -681,8 +684,8 @@ export default function FounderPage() {
               className={cn(
                 'px-4 py-2 rounded text-sm transition-colors',
                 background.currentFeeling === option.value
-                  ? 'bg-gold-500 text-white'
-                  : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                  ? 'bg-gold-500 text-slate-900'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               )}
             >
               {option.label}
@@ -691,8 +694,9 @@ export default function FounderPage() {
         </div>
       </FormField>
 
-      <FormField label="What has helped you process this experience?" htmlFor="what-helped" hint="Optional">
+      <FormField variant="dark" label="What has helped you process this experience?" htmlFor="what-helped" hint="Optional">
         <Textarea
+          variant="dark"
           id="what-helped"
           value={background.whatHelpedProcess || ''}
           onChange={(e) => updateBackground('whatHelpedProcess', e.target.value || null)}
@@ -701,7 +705,7 @@ export default function FounderPage() {
         />
       </FormField>
 
-      <FormField label="Knowing what you know now, would you do it again?" htmlFor="would-do-again">
+      <FormField variant="dark" label="Knowing what you know now, would you do it again?" htmlFor="would-do-again">
         <div className="space-y-2">
           {WOULD_DO_AGAIN_OPTIONS.map(option => (
             <button
@@ -710,8 +714,8 @@ export default function FounderPage() {
               className={cn(
                 'w-full p-3 rounded-md border text-sm text-left transition-colors',
                 background.wouldDoAgain === option.value
-                  ? 'bg-gold-50 border-gold-300 text-marble-900'
-                  : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                  ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                  : 'border-slate-600 text-slate-300 hover:border-slate-500'
               )}
             >
               {option.label}
@@ -728,7 +732,7 @@ export default function FounderPage() {
 
   const renderEvents = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Add significant personal events during your organization&apos;s life that affected your ability to lead.
       </p>
 
@@ -739,15 +743,15 @@ export default function FounderPage() {
           const categoryInfo = EVENT_CATEGORIES.find(c => c.value === event.category)
 
           return (
-            <div key={event.id} className="border border-marble-200 rounded-lg overflow-hidden">
+            <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
               <button
                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-marble-50 hover:bg-marble-100 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <User className="h-4 w-4 text-marble-400" />
-                  <span className="font-medium text-marble-900">
+                  <User className="h-4 w-4 text-slate-500" />
+                  <span className="font-medium text-marble-100">
                     {event.date || 'No date'} - {event.subType || categoryInfo?.label || 'New Event'}
                   </span>
                 </div>
@@ -756,7 +760,7 @@ export default function FounderPage() {
                     e.stopPropagation()
                     removeEvent(event.id)
                   }}
-                  className="text-marble-400 hover:text-error-500 transition-colors"
+                  className="text-slate-500 hover:text-error-500 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -766,8 +770,9 @@ export default function FounderPage() {
               {isExpanded && (
                 <div className="p-4 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Date" htmlFor={`date-${event.id}`}>
+                    <FormField variant="dark" label="Date" htmlFor={`date-${event.id}`}>
                       <Input
+                        variant="dark"
                         id={`date-${event.id}`}
                         type="month"
                         value={event.date}
@@ -775,7 +780,7 @@ export default function FounderPage() {
                       />
                     </FormField>
 
-                    <FormField label="Category" htmlFor={`category-${event.id}`}>
+                    <FormField variant="dark" label="Category" htmlFor={`category-${event.id}`}>
                       <select
                         id={`category-${event.id}`}
                         value={event.category}
@@ -783,7 +788,7 @@ export default function FounderPage() {
                           category: e.target.value as PersonalEventCategory,
                           subType: '',
                         })}
-                        className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                        className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                       >
                         {EVENT_CATEGORIES.map(cat => (
                           <option key={cat.value} value={cat.value}>
@@ -794,12 +799,12 @@ export default function FounderPage() {
                     </FormField>
                   </div>
 
-                  <FormField label="What happened?" htmlFor={`subtype-${event.id}`}>
+                  <FormField variant="dark" label="What happened?" htmlFor={`subtype-${event.id}`}>
                     <select
                       id={`subtype-${event.id}`}
                       value={event.subType}
                       onChange={(e) => updateEvent(event.id, { subType: e.target.value })}
-                      className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                     >
                       <option value="">Select...</option>
                       {EVENT_SUBTYPES[event.category].map(subtype => (
@@ -810,7 +815,7 @@ export default function FounderPage() {
                     </select>
                   </FormField>
 
-                  <FormField label="How did this affect your capacity?" htmlFor={`capacity-${event.id}`}>
+                  <FormField variant="dark" label="How did this affect your capacity?" htmlFor={`capacity-${event.id}`}>
                     <div className="space-y-2">
                       {CAPACITY_IMPACT_OPTIONS.map(option => (
                         <button
@@ -819,8 +824,8 @@ export default function FounderPage() {
                           className={cn(
                             'w-full p-3 rounded-md border text-sm text-left transition-colors',
                             event.capacityImpact === option.value
-                              ? 'bg-gold-50 border-gold-300 text-marble-900'
-                              : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                              ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-500'
                           )}
                         >
                           {option.label}
@@ -829,7 +834,7 @@ export default function FounderPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="How did the organization adapt?" htmlFor={`adapted-${event.id}`}>
+                  <FormField variant="dark" label="How did the organization adapt?" htmlFor={`adapted-${event.id}`}>
                     <div className="space-y-2">
                       {ORGANIZATION_ADAPTED_OPTIONS.map(option => (
                         <button
@@ -838,8 +843,8 @@ export default function FounderPage() {
                           className={cn(
                             'w-full p-3 rounded-md border text-sm text-left transition-colors',
                             event.organizationAdapted === option.value
-                              ? 'bg-gold-50 border-gold-300 text-marble-900'
-                              : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                              ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-500'
                           )}
                         >
                           {option.label}
@@ -848,7 +853,7 @@ export default function FounderPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Looking back..." htmlFor={`looking-back-${event.id}`}>
+                  <FormField variant="dark" label="Looking back..." htmlFor={`looking-back-${event.id}`}>
                     <div className="space-y-2">
                       {LOOKING_BACK_OPTIONS.map(option => (
                         <button
@@ -857,8 +862,8 @@ export default function FounderPage() {
                           className={cn(
                             'w-full p-3 rounded-md border text-sm text-left transition-colors',
                             event.lookingBack === option.value
-                              ? 'bg-gold-50 border-gold-300 text-marble-900'
-                              : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                              ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-500'
                           )}
                         >
                           {option.label}
@@ -867,8 +872,9 @@ export default function FounderPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Additional details" htmlFor={`details-${event.id}`} hint="Optional">
+                  <FormField variant="dark" label="Additional details" htmlFor={`details-${event.id}`} hint="Optional">
                     <Textarea
+                      variant="dark"
                       id={`details-${event.id}`}
                       value={event.details || ''}
                       onChange={(e) => updateEvent(event.id, { details: e.target.value || null })}
@@ -876,6 +882,18 @@ export default function FounderPage() {
                       rows={2}
                     />
                   </FormField>
+
+                  {/* Done button */}
+                  <div className="pt-4 flex justify-end">
+                    <Button
+                      variant="dark-secondary"
+                      size="sm"
+                      onClick={() => setExpandedEventId(null)}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Done
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -883,16 +901,16 @@ export default function FounderPage() {
         })}
 
         {events.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-marble-300 rounded-lg">
-            <p className="text-marble-500 mb-4">No personal events added yet</p>
-            <p className="text-xs text-marble-400">This section is optional but helps us understand the full picture</p>
+          <div className="text-center py-8 border border-dashed border-slate-600 rounded-lg">
+            <p className="text-slate-400 mb-4">No personal events added yet</p>
+            <p className="text-xs text-slate-500">This section is optional but helps us understand the full picture</p>
           </div>
         )}
       </div>
 
       {/* Add event button */}
       <Button
-        variant="secondary"
+        variant="dark-secondary"
         onClick={addEvent}
         className="w-full"
       >
@@ -908,6 +926,7 @@ export default function FounderPage() {
 
   return (
     <WizardLayout
+      variant="dark"
       steps={STEPS}
       currentStep={currentStep}
       onBack={handleBack}

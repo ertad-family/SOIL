@@ -438,6 +438,14 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
       newStatus = 'in_progress'
     }
 
+    // Check if all modules are now complete - auto-set to coined
+    const allModulesComplete = MODULES.every(m =>
+      newCompletedModules.includes(m.id)
+    )
+    if (allModulesComplete) {
+      newStatus = 'coined'
+    }
+
     // Determine next module
     const nextModule = getNextModule(moduleId)
     const newCurrentModule = nextModule?.id || story.currentModule

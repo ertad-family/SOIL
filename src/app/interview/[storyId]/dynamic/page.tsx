@@ -16,6 +16,7 @@ import {
   Plus,
   Trash2,
   Calendar,
+  Check,
 } from 'lucide-react'
 import { detectPatterns, getPatternQuestions } from '@/lib/interview-utils'
 import type {
@@ -300,7 +301,7 @@ export default function DynamicPage() {
 
   if (isLoading || !story) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -314,10 +315,10 @@ export default function DynamicPage() {
     if (detectedPatterns.length === 0) {
       return (
         <div className="text-center py-8">
-          <p className="text-marble-600 mb-4">
+          <p className="text-slate-400 mb-4">
             Based on your functional mapping, we didn&apos;t detect any specific patterns.
           </p>
-          <p className="text-sm text-marble-500">
+          <p className="text-sm text-slate-500">
             You can continue to add internal events that shaped your organization&apos;s journey.
           </p>
         </div>
@@ -326,7 +327,7 @@ export default function DynamicPage() {
 
     return (
       <div className="space-y-8">
-        <p className="text-marble-600">
+        <p className="text-slate-400">
           Based on your functional mapping, we noticed some patterns. Help us understand them better.
         </p>
 
@@ -335,19 +336,20 @@ export default function DynamicPage() {
           const questions = patternQuestions.filter(q => q.patternId === pattern)
 
           return (
-            <div key={pattern} className="border border-marble-200 rounded-lg p-6">
+            <div key={pattern} className="border border-slate-600 rounded-lg p-6">
               <div className="flex items-start gap-3 mb-4">
                 <AlertTriangle className="h-5 w-5 text-gold-500 mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-marble-900">{patternInfo.title}</h3>
-                  <p className="text-sm text-marble-500">{patternInfo.description}</p>
+                  <h3 className="font-medium text-marble-100">{patternInfo.title}</h3>
+                  <p className="text-sm text-slate-400">{patternInfo.description}</p>
                 </div>
               </div>
 
               <div className="space-y-4 ml-8">
                 {questions.map(q => (
-                  <FormField key={q.questionId} label={q.question} htmlFor={q.questionId}>
+                  <FormField variant="dark" key={q.questionId} label={q.question} htmlFor={q.questionId}>
                     <Textarea
+                      variant="dark"
                       id={q.questionId}
                       value={getPatternAnswer(q.questionId)}
                       onChange={(e) => updatePatternAnswer(q.questionId, q.question, pattern, e.target.value)}
@@ -370,7 +372,7 @@ export default function DynamicPage() {
 
   const renderEvents = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Add significant internal events that happened from your organization&apos;s peak to its closure.
       </p>
 
@@ -381,15 +383,15 @@ export default function DynamicPage() {
           const categoryInfo = EVENT_CATEGORIES.find(c => c.value === event.category)
 
           return (
-            <div key={event.id} className="border border-marble-200 rounded-lg overflow-hidden">
+            <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
               <button
                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-marble-50 hover:bg-marble-100 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-marble-400" />
-                  <span className="font-medium text-marble-900">
+                  <Calendar className="h-4 w-4 text-slate-500" />
+                  <span className="font-medium text-marble-100">
                     {event.date || 'No date'} - {event.subType || categoryInfo?.label || 'New Event'}
                   </span>
                 </div>
@@ -398,7 +400,7 @@ export default function DynamicPage() {
                     e.stopPropagation()
                     removeEvent(event.id)
                   }}
-                  className="text-marble-400 hover:text-error-500 transition-colors"
+                  className="text-slate-500 hover:text-error-500 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -406,10 +408,11 @@ export default function DynamicPage() {
 
               {/* Event details */}
               {isExpanded && (
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 bg-slate-800/50">
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Date" htmlFor={`date-${event.id}`}>
+                    <FormField variant="dark" label="Date" htmlFor={`date-${event.id}`}>
                       <Input
+                        variant="dark"
                         id={`date-${event.id}`}
                         type="month"
                         value={event.date}
@@ -417,7 +420,7 @@ export default function DynamicPage() {
                       />
                     </FormField>
 
-                    <FormField label="Category" htmlFor={`category-${event.id}`}>
+                    <FormField variant="dark" label="Category" htmlFor={`category-${event.id}`}>
                       <select
                         id={`category-${event.id}`}
                         value={event.category}
@@ -425,7 +428,7 @@ export default function DynamicPage() {
                           category: e.target.value as InternalEventCategory,
                           subType: '',
                         })}
-                        className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                        className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                       >
                         {EVENT_CATEGORIES.map(cat => (
                           <option key={cat.value} value={cat.value}>
@@ -436,12 +439,12 @@ export default function DynamicPage() {
                     </FormField>
                   </div>
 
-                  <FormField label="What happened?" htmlFor={`subtype-${event.id}`}>
+                  <FormField variant="dark" label="What happened?" htmlFor={`subtype-${event.id}`}>
                     <select
                       id={`subtype-${event.id}`}
                       value={event.subType}
                       onChange={(e) => updateEvent(event.id, { subType: e.target.value })}
-                      className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                     >
                       <option value="">Select...</option>
                       {EVENT_SUBTYPES[event.category].map(subtype => (
@@ -452,7 +455,7 @@ export default function DynamicPage() {
                     </select>
                   </FormField>
 
-                  <FormField label="How did you feel at the time?" htmlFor={`emotion-${event.id}`}>
+                  <FormField variant="dark" label="How did you feel at the time?" htmlFor={`emotion-${event.id}`}>
                     <div className="flex flex-wrap gap-2">
                       {EMOTIONS.map(emotion => (
                         <button
@@ -461,8 +464,8 @@ export default function DynamicPage() {
                           className={cn(
                             'px-3 py-1.5 rounded text-sm transition-colors',
                             event.emotionThen === emotion.value
-                              ? 'bg-gold-500 text-white'
-                              : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                              ? 'bg-gold-500 text-slate-900'
+                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                           )}
                         >
                           {emotion.label}
@@ -471,7 +474,7 @@ export default function DynamicPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Looking back..." htmlFor={`looking-back-${event.id}`}>
+                  <FormField variant="dark" label="Looking back..." htmlFor={`looking-back-${event.id}`}>
                     <div className="space-y-2">
                       {LOOKING_BACK_OPTIONS.map(option => (
                         <button
@@ -480,8 +483,8 @@ export default function DynamicPage() {
                           className={cn(
                             'w-full p-3 rounded-md border text-sm text-left transition-colors',
                             event.lookingBack === option.value
-                              ? 'bg-gold-50 border-gold-300 text-marble-900'
-                              : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                              ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-500'
                           )}
                         >
                           {option.label}
@@ -490,8 +493,9 @@ export default function DynamicPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Details" htmlFor={`details-${event.id}`} hint="Optional">
+                  <FormField variant="dark" label="Details" htmlFor={`details-${event.id}`} hint="Optional">
                     <Textarea
+                      variant="dark"
                       id={`details-${event.id}`}
                       value={event.details || ''}
                       onChange={(e) => updateEvent(event.id, { details: e.target.value })}
@@ -499,6 +503,18 @@ export default function DynamicPage() {
                       rows={3}
                     />
                   </FormField>
+
+                  {/* Done button */}
+                  <div className="pt-4 flex justify-end">
+                    <Button
+                      variant="dark-secondary"
+                      size="sm"
+                      onClick={() => setExpandedEventId(null)}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Done
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -506,15 +522,15 @@ export default function DynamicPage() {
         })}
 
         {events.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-marble-300 rounded-lg">
-            <p className="text-marble-500 mb-4">No events added yet</p>
+          <div className="text-center py-8 border border-dashed border-slate-600 rounded-lg">
+            <p className="text-slate-400 mb-4">No events added yet</p>
           </div>
         )}
       </div>
 
       {/* Add event button */}
       <Button
-        variant="secondary"
+        variant="dark-secondary"
         onClick={addEvent}
         className="w-full"
       >
@@ -539,6 +555,7 @@ export default function DynamicPage() {
 
   return (
     <WizardLayout
+      variant="dark"
       steps={effectiveSteps}
       currentStep={effectiveCurrentStep}
       onBack={handleBack}

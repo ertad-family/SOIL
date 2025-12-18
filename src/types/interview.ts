@@ -207,6 +207,8 @@ export interface FunctionalMappingData {
     name: string
     description?: string
   }>
+  /** Categories where "none of these functions existed" was selected */
+  excludedCategories?: string[]
 }
 
 // =============================================================================

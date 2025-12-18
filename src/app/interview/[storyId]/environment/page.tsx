@@ -15,6 +15,7 @@ import {
   Trash2,
   Calendar,
   Globe,
+  Check,
 } from 'lucide-react'
 import type {
   ExternalEvent,
@@ -317,7 +318,7 @@ export default function EnvironmentPage() {
 
   if (isLoading || !story) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -329,7 +330,7 @@ export default function EnvironmentPage() {
 
   const renderResources = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Rate your access to key resources at your organization&apos;s peak, and how they changed over time.
       </p>
 
@@ -337,19 +338,19 @@ export default function EnvironmentPage() {
         const assessment = getResourceAssessment(resource.value)
 
         return (
-          <div key={resource.value} className="border border-marble-200 rounded-lg p-4">
+          <div key={resource.value} className="border border-slate-600 rounded-lg p-4">
             <div className="flex items-start gap-3 mb-4">
-              <Globe className="h-5 w-5 text-marble-400 mt-0.5" />
+              <Globe className="h-5 w-5 text-slate-500 mt-0.5" />
               <div>
-                <h3 className="font-medium text-marble-900">{resource.label}</h3>
-                <p className="text-sm text-marble-500">{resource.description}</p>
+                <h3 className="font-medium text-marble-100">{resource.label}</h3>
+                <p className="text-sm text-slate-400">{resource.description}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ml-8">
               {/* Availability */}
               <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Availability at Peak</label>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">Availability at Peak</label>
                 <div className="flex flex-wrap gap-2">
                   {AVAILABILITY_LEVELS.map(level => (
                     <button
@@ -358,8 +359,8 @@ export default function EnvironmentPage() {
                       className={cn(
                         'px-3 py-1.5 rounded text-xs transition-colors',
                         assessment.peakAvailability === level.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                          ? 'bg-gold-500 text-slate-900'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                       )}
                     >
                       {level.label}
@@ -367,7 +368,7 @@ export default function EnvironmentPage() {
                   ))}
                 </div>
                 <div className="mt-2">
-                  <label className="text-xs text-marble-500 mb-1 block">Change over time</label>
+                  <label className="text-xs text-slate-500 mb-1 block">Change over time</label>
                   <div className="flex flex-wrap gap-1">
                     {TREND_OPTIONS.map(trend => (
                       <button
@@ -376,8 +377,8 @@ export default function EnvironmentPage() {
                         className={cn(
                           'px-2 py-1 rounded text-xs transition-colors',
                           assessment.availabilityChange === trend.value
-                            ? 'bg-marble-600 text-white'
-                            : 'bg-marble-50 text-marble-600 hover:bg-marble-100'
+                            ? 'bg-slate-500 text-white'
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                         )}
                       >
                         {trend.label}
@@ -389,7 +390,7 @@ export default function EnvironmentPage() {
 
               {/* Cost */}
               <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Cost at Peak</label>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">Cost at Peak</label>
                 <div className="flex flex-wrap gap-2">
                   {COST_LEVELS.map(level => (
                     <button
@@ -398,8 +399,8 @@ export default function EnvironmentPage() {
                       className={cn(
                         'px-3 py-1.5 rounded text-xs transition-colors',
                         assessment.peakCost === level.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                          ? 'bg-gold-500 text-slate-900'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                       )}
                     >
                       {level.label}
@@ -407,7 +408,7 @@ export default function EnvironmentPage() {
                   ))}
                 </div>
                 <div className="mt-2">
-                  <label className="text-xs text-marble-500 mb-1 block">Change over time</label>
+                  <label className="text-xs text-slate-500 mb-1 block">Change over time</label>
                   <div className="flex flex-wrap gap-1">
                     {TREND_OPTIONS.map(trend => (
                       <button
@@ -416,8 +417,8 @@ export default function EnvironmentPage() {
                         className={cn(
                           'px-2 py-1 rounded text-xs transition-colors',
                           assessment.costChange === trend.value
-                            ? 'bg-marble-600 text-white'
-                            : 'bg-marble-50 text-marble-600 hover:bg-marble-100'
+                            ? 'bg-slate-500 text-white'
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                         )}
                       >
                         {trend.label}
@@ -430,7 +431,7 @@ export default function EnvironmentPage() {
               {/* Competition (only for applicable resources) */}
               {resource.hasCompetition && (
                 <div>
-                  <label className="text-sm font-medium text-marble-700 mb-2 block">Competition at Peak</label>
+                  <label className="text-sm font-medium text-slate-300 mb-2 block">Competition at Peak</label>
                   <div className="flex flex-wrap gap-2">
                     {COMPETITION_LEVELS.map(level => (
                       <button
@@ -439,8 +440,8 @@ export default function EnvironmentPage() {
                         className={cn(
                           'px-3 py-1.5 rounded text-xs transition-colors',
                           assessment.peakCompetition === level.value
-                            ? 'bg-gold-500 text-white'
-                            : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                            ? 'bg-gold-500 text-slate-900'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                         )}
                       >
                         {level.label}
@@ -448,7 +449,7 @@ export default function EnvironmentPage() {
                     ))}
                   </div>
                   <div className="mt-2">
-                    <label className="text-xs text-marble-500 mb-1 block">Change over time</label>
+                    <label className="text-xs text-slate-500 mb-1 block">Change over time</label>
                     <div className="flex flex-wrap gap-1">
                       {TREND_OPTIONS.map(trend => (
                         <button
@@ -457,8 +458,8 @@ export default function EnvironmentPage() {
                           className={cn(
                             'px-2 py-1 rounded text-xs transition-colors',
                             assessment.competitionChange === trend.value
-                              ? 'bg-marble-600 text-white'
-                              : 'bg-marble-50 text-marble-600 hover:bg-marble-100'
+                              ? 'bg-slate-500 text-white'
+                              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                           )}
                         >
                           {trend.label}
@@ -481,7 +482,7 @@ export default function EnvironmentPage() {
 
   const renderEvents = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Add significant external events that affected your organization.
       </p>
 
@@ -492,15 +493,15 @@ export default function EnvironmentPage() {
           const categoryInfo = EVENT_CATEGORIES.find(c => c.value === event.category)
 
           return (
-            <div key={event.id} className="border border-marble-200 rounded-lg overflow-hidden">
+            <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
               <button
                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-marble-50 hover:bg-marble-100 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-marble-400" />
-                  <span className="font-medium text-marble-900">
+                  <Calendar className="h-4 w-4 text-slate-500" />
+                  <span className="font-medium text-marble-100">
                     {event.date || 'No date'} - {event.subType || categoryInfo?.label || 'New Event'}
                   </span>
                 </div>
@@ -509,7 +510,7 @@ export default function EnvironmentPage() {
                     e.stopPropagation()
                     removeEvent(event.id)
                   }}
-                  className="text-marble-400 hover:text-error-500 transition-colors"
+                  className="text-slate-500 hover:text-error-500 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -517,10 +518,11 @@ export default function EnvironmentPage() {
 
               {/* Event details */}
               {isExpanded && (
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 bg-slate-800/50">
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Date" htmlFor={`date-${event.id}`}>
+                    <FormField variant="dark" label="Date" htmlFor={`date-${event.id}`}>
                       <Input
+                        variant="dark"
                         id={`date-${event.id}`}
                         type="month"
                         value={event.date}
@@ -528,7 +530,7 @@ export default function EnvironmentPage() {
                       />
                     </FormField>
 
-                    <FormField label="Category" htmlFor={`category-${event.id}`}>
+                    <FormField variant="dark" label="Category" htmlFor={`category-${event.id}`}>
                       <select
                         id={`category-${event.id}`}
                         value={event.category}
@@ -536,7 +538,7 @@ export default function EnvironmentPage() {
                           category: e.target.value as ExternalEventCategory,
                           subType: '',
                         })}
-                        className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                        className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                       >
                         {EVENT_CATEGORIES.map(cat => (
                           <option key={cat.value} value={cat.value}>
@@ -547,12 +549,12 @@ export default function EnvironmentPage() {
                     </FormField>
                   </div>
 
-                  <FormField label="What happened?" htmlFor={`subtype-${event.id}`}>
+                  <FormField variant="dark" label="What happened?" htmlFor={`subtype-${event.id}`}>
                     <select
                       id={`subtype-${event.id}`}
                       value={event.subType}
                       onChange={(e) => updateEvent(event.id, { subType: e.target.value })}
-                      className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                     >
                       <option value="">Select...</option>
                       {EVENT_SUBTYPES[event.category].map(subtype => (
@@ -563,7 +565,7 @@ export default function EnvironmentPage() {
                     </select>
                   </FormField>
 
-                  <FormField label="How did you feel at the time?" htmlFor={`emotion-${event.id}`}>
+                  <FormField variant="dark" label="How did you feel at the time?" htmlFor={`emotion-${event.id}`}>
                     <div className="flex flex-wrap gap-2">
                       {EMOTIONS.map(emotion => (
                         <button
@@ -572,8 +574,8 @@ export default function EnvironmentPage() {
                           className={cn(
                             'px-3 py-1.5 rounded text-sm transition-colors',
                             event.emotionThen === emotion.value
-                              ? 'bg-gold-500 text-white'
-                              : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                              ? 'bg-gold-500 text-slate-900'
+                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                           )}
                         >
                           {emotion.label}
@@ -582,7 +584,7 @@ export default function EnvironmentPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Looking back..." htmlFor={`looking-back-${event.id}`}>
+                  <FormField variant="dark" label="Looking back..." htmlFor={`looking-back-${event.id}`}>
                     <div className="space-y-2">
                       {LOOKING_BACK_OPTIONS.map(option => (
                         <button
@@ -591,8 +593,8 @@ export default function EnvironmentPage() {
                           className={cn(
                             'w-full p-3 rounded-md border text-sm text-left transition-colors',
                             event.lookingBack === option.value
-                              ? 'bg-gold-50 border-gold-300 text-marble-900'
-                              : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                              ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-500'
                           )}
                         >
                           {option.label}
@@ -601,8 +603,9 @@ export default function EnvironmentPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Details" htmlFor={`details-${event.id}`} hint="Optional">
+                  <FormField variant="dark" label="Details" htmlFor={`details-${event.id}`} hint="Optional">
                     <Textarea
+                      variant="dark"
                       id={`details-${event.id}`}
                       value={event.details || ''}
                       onChange={(e) => updateEvent(event.id, { details: e.target.value })}
@@ -610,6 +613,18 @@ export default function EnvironmentPage() {
                       rows={3}
                     />
                   </FormField>
+
+                  {/* Done button */}
+                  <div className="pt-4 flex justify-end">
+                    <Button
+                      variant="dark-secondary"
+                      size="sm"
+                      onClick={() => setExpandedEventId(null)}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Done
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -617,15 +632,15 @@ export default function EnvironmentPage() {
         })}
 
         {events.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-marble-300 rounded-lg">
-            <p className="text-marble-500 mb-4">No events added yet</p>
+          <div className="text-center py-8 border border-dashed border-slate-600 rounded-lg">
+            <p className="text-slate-400 mb-4">No events added yet</p>
           </div>
         )}
       </div>
 
       {/* Add event button */}
       <Button
-        variant="secondary"
+        variant="dark-secondary"
         onClick={addEvent}
         className="w-full"
       >
@@ -641,6 +656,7 @@ export default function EnvironmentPage() {
 
   return (
     <WizardLayout
+      variant="dark"
       steps={STEPS}
       currentStep={currentStep}
       onBack={handleBack}

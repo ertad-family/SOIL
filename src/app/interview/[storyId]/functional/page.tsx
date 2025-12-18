@@ -15,8 +15,9 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Plus,
   AlertCircle,
+  CheckCircle2,
+  MinusCircle,
 } from 'lucide-react'
 import type {
   FunctionDetail,
@@ -41,13 +42,11 @@ import {
 } from '@/data/function-matrix'
 
 // =============================================================================
-// WIZARD STEPS
+// WIZARD STEPS (single step for this redesigned module)
 // =============================================================================
 
 const STEPS = [
-  { id: 'select', label: 'Select Functions', description: 'Which functions existed in your organization?' },
-  { id: 'details', label: 'Function Details', description: 'Tell us about each function' },
-  { id: 'health', label: 'Health Check', description: 'Assess the health of each function' },
+  { id: 'mapping', label: 'Map Functions', description: 'Select and describe each function' },
 ]
 
 // =============================================================================
@@ -101,9 +100,9 @@ const SATISFACTION_RATINGS: Array<{ value: SatisfactionRating; label: string }> 
 
 // Health Check Options
 const TURNOVER_OPTIONS: Array<{ value: TurnoverLevel; label: string }> = [
-  { value: 'low', label: 'Low (stable team)' },
+  { value: 'low', label: 'Low' },
   { value: 'normal', label: 'Normal' },
-  { value: 'high', label: 'High (frequent departures)' },
+  { value: 'high', label: 'High' },
 ]
 
 const STAFFING_OPTIONS: Array<{ value: StaffingLevel; label: string }> = [
@@ -112,21 +111,21 @@ const STAFFING_OPTIONS: Array<{ value: StaffingLevel; label: string }> = [
 ]
 
 const BUDGET_OPTIONS: Array<{ value: BudgetPressure; label: string }> = [
-  { value: 'none', label: 'No pressure' },
-  { value: 'some', label: 'Some pressure' },
-  { value: 'severe', label: 'Severe pressure' },
+  { value: 'none', label: 'None' },
+  { value: 'some', label: 'Some' },
+  { value: 'severe', label: 'Severe' },
 ]
 
 const QUALITY_OPTIONS: Array<{ value: QualityIssues; label: string }> = [
-  { value: 'none', label: 'No issues' },
-  { value: 'some', label: 'Some issues' },
-  { value: 'serious', label: 'Serious issues' },
+  { value: 'none', label: 'None' },
+  { value: 'some', label: 'Some' },
+  { value: 'serious', label: 'Serious' },
 ]
 
 const LEADERSHIP_OPTIONS: Array<{ value: LeadershipStatus; label: string }> = [
-  { value: 'stable', label: 'Stable leadership' },
-  { value: 'gaps', label: 'Leadership gaps' },
-  { value: 'vacuum', label: 'Leadership vacuum' },
+  { value: 'stable', label: 'Stable' },
+  { value: 'gaps', label: 'Gaps' },
+  { value: 'vacuum', label: 'Vacuum' },
 ]
 
 // =============================================================================
@@ -162,6 +161,67 @@ function createEmptyFunctionDetail(functionId: string, categoryId: string): Func
   }
 }
 
+// Check if a function has minimum required fields filled
+function isFunctionComplete(func: FunctionDetail): boolean {
+  return func.isActive && func.executionModel !== null
+}
+
+// =============================================================================
+// OPTION BUTTON COMPONENT (Dark theme)
+// =============================================================================
+
+interface OptionButtonProps {
+  selected: boolean
+  onClick: () => void
+  children: React.ReactNode
+  className?: string
+}
+
+function OptionButton({ selected, onClick, children, className }: OptionButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'px-3 py-2 rounded-md border text-sm transition-colors',
+        selected
+          ? 'bg-gold-500/20 border-gold-500 text-gold-300'
+          : 'border-slate-600 text-slate-300 hover:border-slate-500 hover:text-slate-200',
+        className
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+// =============================================================================
+// PILL BUTTON COMPONENT (for health check)
+// =============================================================================
+
+interface PillButtonProps {
+  selected: boolean
+  onClick: () => void
+  children: React.ReactNode
+}
+
+function PillButton({ selected, onClick, children }: PillButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'px-3 py-1 rounded-full text-xs transition-colors',
+        selected
+          ? 'bg-gold-500 text-slate-900'
+          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 // =============================================================================
 // MAIN COMPONENT
 // =============================================================================
@@ -175,10 +235,9 @@ export default function FunctionalPage() {
     completeModule,
   } = useInterview()
 
-  const [currentStep, setCurrentStep] = React.useState(0)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [detailsIndex, setDetailsIndex] = React.useState(0) // Index in active functions for details step
   const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set())
+  const [expandedFunctions, setExpandedFunctions] = React.useState<Set<string>>(new Set())
 
   // Get org type and stage from basic info
   const orgType = story?.basicInfo.organizationType
@@ -190,41 +249,84 @@ export default function FunctionalPage() {
     return getCategoriesForOrgType(orgType)
   }, [orgType])
 
-  // Get functions from story (use stable reference)
-  const functions = story?.functionalMapping.functions ?? []
-
-  // Get active functions
-  const activeFunctions = React.useMemo(() => {
-    const funcs = story?.functionalMapping.functions ?? []
-    return funcs.filter(f => f.isActive)
+  // Get functions from story (memoized to avoid dependency issues)
+  const functions = React.useMemo(() => {
+    return story?.functionalMapping.functions ?? []
   }, [story?.functionalMapping.functions])
 
-  // Current function being edited in details step
-  const currentDetailFunction = activeFunctions[detailsIndex]
+  // Get excluded categories from story
+  const excludedCategories = React.useMemo(() => {
+    return new Set(story?.functionalMapping.excludedCategories ?? [])
+  }, [story?.functionalMapping.excludedCategories])
+
+  // Get active functions count
+  const activeFunctionsCount = React.useMemo(() => {
+    return functions.filter(f => f.isActive).length
+  }, [functions])
+
+  // Get completed functions count
+  const completedFunctionsCount = React.useMemo(() => {
+    return functions.filter(f => isFunctionComplete(f)).length
+  }, [functions])
+
+  // Calculate progress: categories handled / total categories
+  // A category is "handled" if it's excluded OR has at least one function with details
+  const progressPercent = React.useMemo(() => {
+    if (categories.length === 0) return 0
+
+    const handledCategories = categories.filter(cat => {
+      // Category is excluded - it's handled
+      if (excludedCategories.has(cat.id)) return true
+
+      // Category has at least one function selected and completed
+      const categoryFunctions = functions.filter(f => f.categoryId === cat.id && f.isActive)
+      if (categoryFunctions.length === 0) return false
+
+      // All selected functions in this category are complete
+      return categoryFunctions.every(f => isFunctionComplete(f))
+    })
+
+    return Math.round((handledCategories.length / categories.length) * 100)
+  }, [categories, excludedCategories, functions])
 
   // ==========================================================================
   // FUNCTION HANDLERS
   // ==========================================================================
 
-  // Toggle function active state
+  // Toggle function active state and expand it
   const toggleFunction = (functionId: string, categoryId: string) => {
     if (!story) return
 
     const existingIndex = functions.findIndex(f => f.functionId === functionId)
+    const isCurrentlyActive = existingIndex >= 0 && functions[existingIndex].isActive
 
     if (existingIndex >= 0) {
       // Toggle existing
       const updated = [...functions]
       updated[existingIndex] = {
         ...updated[existingIndex],
-        isActive: !updated[existingIndex].isActive,
+        isActive: !isCurrentlyActive,
       }
       updateFunctionalMapping({ functions: updated })
+
+      // If activating, expand the function
+      if (!isCurrentlyActive) {
+        setExpandedFunctions(prev => new Set([...prev, functionId]))
+      } else {
+        // If deactivating, collapse it
+        setExpandedFunctions(prev => {
+          const next = new Set(prev)
+          next.delete(functionId)
+          return next
+        })
+      }
     } else {
-      // Add new
+      // Add new and activate
       const newFunction = createEmptyFunctionDetail(functionId, categoryId)
       newFunction.isActive = true
       updateFunctionalMapping({ functions: [...functions, newFunction] })
+      // Expand the new function
+      setExpandedFunctions(prev => new Set([...prev, functionId]))
     }
   }
 
@@ -278,53 +380,110 @@ export default function FunctionalPage() {
     })
   }
 
+  // Toggle function expanded state (for editing details)
+  const toggleFunctionExpand = (functionId: string) => {
+    setExpandedFunctions(prev => {
+      const next = new Set(prev)
+      if (next.has(functionId)) {
+        next.delete(functionId)
+      } else {
+        next.add(functionId)
+      }
+      return next
+    })
+  }
+
+  // Toggle category excluded state ("None of these existed")
+  const toggleCategoryExcluded = (categoryId: string) => {
+    if (!story) return
+
+    const currentExcluded = story.functionalMapping.excludedCategories ?? []
+    const isCurrentlyExcluded = currentExcluded.includes(categoryId)
+
+    let newExcluded: string[]
+    if (isCurrentlyExcluded) {
+      // Remove from excluded
+      newExcluded = currentExcluded.filter(id => id !== categoryId)
+    } else {
+      // Add to excluded and remove any functions from this category
+      newExcluded = [...currentExcluded, categoryId]
+
+      // Deactivate all functions in this category
+      const updatedFunctions = functions.map(f =>
+        f.categoryId === categoryId ? { ...f, isActive: false } : f
+      )
+      updateFunctionalMapping({
+        excludedCategories: newExcluded,
+        functions: updatedFunctions,
+      })
+      return
+    }
+
+    updateFunctionalMapping({ excludedCategories: newExcluded })
+  }
+
+  // Check if category is excluded
+  const isCategoryExcluded = (categoryId: string): boolean => {
+    return excludedCategories.has(categoryId)
+  }
+
+  // Handle "Done" button - collapse current and expand next incomplete function
+  const handleFunctionDone = (currentFunctionId: string) => {
+    // Collapse current
+    setExpandedFunctions(prev => {
+      const next = new Set(prev)
+      next.delete(currentFunctionId)
+      return next
+    })
+
+    // Find next incomplete function across all categories
+    for (const category of categories) {
+      if (excludedCategories.has(category.id)) continue
+
+      const visibleFuncs = getVisibleFunctionsForCategory(orgType!, category.id, stage)
+      for (const func of visibleFuncs) {
+        const detail = functions.find(f => f.functionId === func.id)
+        // Skip current function
+        if (func.id === currentFunctionId) continue
+        // Find active but incomplete function
+        if (detail?.isActive && !isFunctionComplete(detail)) {
+          // Expand category if not already
+          setExpandedCategories(prev => new Set([...prev, category.id]))
+          // Expand function
+          setExpandedFunctions(prev => new Set([...prev, func.id]))
+          // Scroll to element with offset for sticky header (~200px)
+          setTimeout(() => {
+            const element = document.getElementById(`func-${func.id}`)
+            if (element) {
+              const headerOffset = 200
+              const elementPosition = element.getBoundingClientRect().top
+              const offsetPosition = elementPosition + window.scrollY - headerOffset
+              window.scrollTo({ top: offsetPosition, behavior: 'smooth' })
+            }
+          }, 100)
+          return
+        }
+      }
+    }
+  }
+
   // ==========================================================================
   // NAVIGATION HANDLERS
   // ==========================================================================
 
   const handleBack = () => {
-    if (currentStep === 0) {
-      router.push(`/interview/${story?.id}`)
-    } else if (currentStep === 1 && detailsIndex > 0) {
-      // Go to previous function in details
-      setDetailsIndex(detailsIndex - 1)
-    } else {
-      setCurrentStep(currentStep - 1)
-      if (currentStep === 1) {
-        setDetailsIndex(activeFunctions.length - 1)
-      }
-    }
+    router.push(`/interview/${story?.id}`)
   }
 
-  const handleNext = async () => {
-    if (currentStep === 0) {
-      // Moving from selection to details
-      if (activeFunctions.length === 0) {
-        // Can't proceed without any functions
-        return
-      }
-      setDetailsIndex(0)
-      setCurrentStep(1)
-    } else if (currentStep === 1) {
-      // In details step
-      if (detailsIndex < activeFunctions.length - 1) {
-        // Go to next function
-        setDetailsIndex(detailsIndex + 1)
-      } else {
-        // Move to health check
-        setCurrentStep(2)
-      }
-    } else {
-      // Complete the module
-      setIsSubmitting(true)
-      try {
-        await completeModule('functional')
-        router.push(`/interview/${story?.id}`)
-      } catch (err) {
-        console.error('Failed to complete module:', err)
-      } finally {
-        setIsSubmitting(false)
-      }
+  const handleComplete = async () => {
+    setIsSubmitting(true)
+    try {
+      await completeModule('functional')
+      router.push(`/interview/${story?.id}`)
+    } catch (err) {
+      console.error('Failed to complete module:', err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -334,7 +493,7 @@ export default function FunctionalPage() {
 
   if (isLoading || !story) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -343,18 +502,18 @@ export default function FunctionalPage() {
   // Check if org type is set
   if (!orgType) {
     return (
-      <div className="min-h-screen bg-marble-gradient">
+      <div className="min-h-screen bg-slate-900">
         <div className="max-w-3xl mx-auto px-4 py-8">
-          <Card className="p-8 text-center">
+          <Card variant="dark" className="p-8 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-gold-500 mb-4" />
-            <h1 className="font-serif text-2xl font-semibold text-marble-950 mb-2">
+            <h1 className="font-serif text-2xl font-semibold text-marble-100 mb-2">
               Organization Type Required
             </h1>
-            <p className="text-marble-600 mb-6">
+            <p className="text-slate-400 mb-6">
               Please complete Basic Info first to set your organization type.
             </p>
             <Button
-              variant="primary"
+              variant="dark-primary"
               onClick={() => router.push(`/interview/${story.id}/basic-info`)}
             >
               Go to Basic Info
@@ -366,464 +525,462 @@ export default function FunctionalPage() {
   }
 
   // ==========================================================================
-  // STEP 1: FUNCTION SELECTION
+  // RENDER FUNCTION DETAIL FORM (inline within expanded function)
   // ==========================================================================
 
-  const renderFunctionSelection = () => (
-    <div className="space-y-4">
-      <p className="text-marble-600 mb-6">
-        Select all functions that existed in your organization at its peak.
-        We&apos;ve pre-highlighted functions typical for{' '}
-        <span className="font-medium text-marble-800">{ORG_TYPE_LABELS[orgType]}</span>{' '}
-        organizations at the{' '}
-        <span className="font-medium text-marble-800">{LIFECYCLE_STAGE_LABELS[stage]}</span>{' '}
-        stage.
-      </p>
-
-      {categories.map(category => {
-        const visibleFunctions = getVisibleFunctionsForCategory(orgType, category.id, stage)
-        const selectedCount = visibleFunctions.filter(f => isFunctionActive(f.id)).length
-        const isExpanded = expandedCategories.has(category.id)
-
-        return (
-          <div key={category.id} className="border border-marble-200 rounded-lg overflow-hidden">
-            {/* Category header */}
-            <button
-              onClick={() => toggleCategory(category.id)}
-              className="w-full flex items-center justify-between p-4 bg-marble-50 hover:bg-marble-100 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                {isExpanded ? (
-                  <ChevronDown className="h-5 w-5 text-marble-500" />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-marble-500" />
-                )}
-                <span className="font-medium text-marble-900">{category.name}</span>
-              </div>
-              <span className="text-sm text-marble-500">
-                {selectedCount}/{visibleFunctions.length} selected
-              </span>
-            </button>
-
-            {/* Functions list */}
-            {isExpanded && (
-              <div className="p-4 space-y-2">
-                {visibleFunctions.map(func => {
-                  const isActive = isFunctionActive(func.id)
-                  const isDimmed = func.status === 'dimmed'
-
-                  return (
-                    <button
-                      key={func.id}
-                      onClick={() => toggleFunction(func.id, category.id)}
-                      className={cn(
-                        'w-full flex items-center gap-3 p-3 rounded-md transition-colors',
-                        isActive
-                          ? 'bg-gold-50 border border-gold-200'
-                          : isDimmed
-                            ? 'bg-white border border-marble-200 opacity-60 hover:opacity-100'
-                            : 'bg-white border border-marble-200 hover:border-marble-300'
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'w-5 h-5 rounded flex items-center justify-center flex-shrink-0',
-                          isActive
-                            ? 'bg-gold-500 text-white'
-                            : 'border border-marble-300'
-                        )}
-                      >
-                        {isActive && <Check className="h-3.5 w-3.5" />}
-                      </div>
-                      <span
-                        className={cn(
-                          'text-sm',
-                          isActive ? 'text-marble-900 font-medium' : 'text-marble-700'
-                        )}
-                      >
-                        {func.name}
-                      </span>
-                      {isDimmed && !isActive && (
-                        <span className="text-xs text-marble-400 ml-auto">
-                          (less common)
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )
-      })}
-
-      {/* Summary */}
-      <div className="mt-6 p-4 bg-marble-50 rounded-lg">
-        <p className="text-sm text-marble-600">
-          <span className="font-semibold text-marble-900">{activeFunctions.length}</span>{' '}
-          functions selected
-        </p>
-      </div>
-    </div>
-  )
-
-  // ==========================================================================
-  // STEP 2: FUNCTION DETAILS
-  // ==========================================================================
-
-  const renderFunctionDetails = () => {
-    if (!currentDetailFunction) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-marble-600">No functions selected. Please go back and select at least one function.</p>
-        </div>
-      )
-    }
-
-    const func = currentDetailFunction
-    const funcName = func.customName || categories.flatMap(c => c.functions).find(f => f.id === func.functionId)?.name || func.functionId
+  const renderFunctionDetailForm = (func: FunctionDetail, funcName: string) => {
+    const functionExisted = func.executionModel !== 'none'
 
     return (
-      <div className="space-y-6">
-        {/* Progress indicator for this step */}
-        <div className="flex items-center justify-between text-sm text-marble-500 mb-4">
-          <span>Function {detailsIndex + 1} of {activeFunctions.length}</span>
-          <span className="font-medium text-marble-900">{funcName}</span>
-        </div>
-
+      <div className="p-4 space-y-6 border-t border-slate-700 bg-slate-800/50">
         {/* Execution Model */}
-        <FormField label="How was this function handled?" htmlFor="execution-model">
+        <FormField variant="dark" label="How was this function handled?">
           <div className="grid grid-cols-2 gap-2">
             {EXECUTION_MODELS.map(option => (
-              <button
+              <OptionButton
                 key={option.value}
+                selected={func.executionModel === option.value}
                 onClick={() => updateFunctionDetail(func.functionId, { executionModel: option.value })}
-                className={cn(
-                  'p-3 rounded-md border text-sm transition-colors',
-                  func.executionModel === option.value
-                    ? 'bg-gold-50 border-gold-300 text-marble-900'
-                    : 'border-marble-200 text-marble-700 hover:border-marble-300'
-                )}
               >
                 {option.label}
-              </button>
+              </OptionButton>
             ))}
           </div>
         </FormField>
 
-        {/* In-house specifics */}
-        {(func.executionModel === 'in_house' || func.executionModel === 'hybrid') && (
+        {/* Only show details and health check if function existed */}
+        {functionExisted && (
           <>
-            <FormField label="Headcount (people involved)" htmlFor="headcount">
-              <Input
-                id="headcount"
-                type="number"
-                min={0}
-                value={func.headcount || ''}
-                onChange={(e) => updateFunctionDetail(func.functionId, {
-                  headcount: e.target.value ? parseInt(e.target.value) : null,
-                })}
-                placeholder="e.g., 3"
-              />
-            </FormField>
+            {/* In-house specifics */}
+            {(func.executionModel === 'in_house' || func.executionModel === 'hybrid') && (
+              <>
+                <FormField variant="dark" label="Headcount (people involved)">
+                  <Input
+                    variant="dark"
+                    type="number"
+                    min={0}
+                    value={func.headcount || ''}
+                    onChange={(e) => updateFunctionDetail(func.functionId, {
+                      headcount: e.target.value ? parseInt(e.target.value) : null,
+                    })}
+                    placeholder="e.g., 3"
+                  />
+                </FormField>
 
-            <FormField label="Who owned this function?" htmlFor="owner-type">
-              <div className="grid grid-cols-2 gap-2">
-                {OWNER_TYPES.map(option => (
-                  <button
+                <FormField variant="dark" label="Who owned this function?">
+                  <div className="grid grid-cols-2 gap-2">
+                    {OWNER_TYPES.map(option => (
+                      <OptionButton
+                        key={option.value}
+                        selected={func.ownerType === option.value}
+                        onClick={() => updateFunctionDetail(func.functionId, { ownerType: option.value })}
+                      >
+                        {option.label}
+                      </OptionButton>
+                    ))}
+                  </div>
+                </FormField>
+              </>
+            )}
+
+            {/* Outsourced specifics */}
+            {(func.executionModel === 'outsourced' || func.executionModel === 'hybrid') && (
+              <FormField variant="dark" label="Provider type">
+                <div className="grid grid-cols-2 gap-2">
+                  {PROVIDER_TYPES.map(option => (
+                    <OptionButton
+                      key={option.value}
+                      selected={func.providerType === option.value}
+                      onClick={() => updateFunctionDetail(func.functionId, { providerType: option.value })}
+                    >
+                      {option.label}
+                    </OptionButton>
+                  ))}
+                </div>
+              </FormField>
+            )}
+
+            {/* Formalization */}
+            <FormField variant="dark" label="How formalized was this function?">
+              <div className="space-y-2">
+                {FORMALIZATION_LEVELS.map(option => (
+                  <OptionButton
                     key={option.value}
-                    onClick={() => updateFunctionDetail(func.functionId, { ownerType: option.value })}
-                    className={cn(
-                      'p-3 rounded-md border text-sm transition-colors',
-                      func.ownerType === option.value
-                        ? 'bg-gold-50 border-gold-300 text-marble-900'
-                        : 'border-marble-200 text-marble-700 hover:border-marble-300'
-                    )}
+                    selected={func.formalization === option.value}
+                    onClick={() => updateFunctionDetail(func.functionId, { formalization: option.value })}
+                    className="w-full text-left"
                   >
                     {option.label}
-                  </button>
+                  </OptionButton>
                 ))}
               </div>
             </FormField>
+
+            {/* Timeline */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField variant="dark" label="When did this start?">
+                <select
+                  value={func.startedAt || ''}
+                  onChange={(e) => updateFunctionDetail(func.functionId, {
+                    startedAt: e.target.value as LifecycleStage || null,
+                  })}
+                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+                >
+                  <option value="">Select...</option>
+                  {LIFECYCLE_STAGES.filter(s => s.value !== 'until_end').map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField variant="dark" label="When did it stop?">
+                <select
+                  value={func.stoppedAt || ''}
+                  onChange={(e) => updateFunctionDetail(func.functionId, {
+                    stoppedAt: e.target.value as LifecycleStage | 'until_end' || null,
+                  })}
+                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+                >
+                  <option value="">Select...</option>
+                  {LIFECYCLE_STAGES.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+
+            {/* Satisfaction */}
+            <FormField variant="dark" label="How satisfied were you with this function?">
+              <select
+                value={func.satisfaction || ''}
+                onChange={(e) => updateFunctionDetail(func.functionId, {
+                  satisfaction: e.target.value ? parseInt(e.target.value) as SatisfactionRating : null,
+                })}
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+              >
+                <option value="">Select...</option>
+                {SATISFACTION_RATINGS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            {/* Issue description if low satisfaction */}
+            {func.satisfaction !== null && func.satisfaction <= 3 && (
+              <FormField variant="dark" label="What was the issue?">
+                <Textarea
+                  variant="dark"
+                  value={func.issueDescription || ''}
+                  onChange={(e) => updateFunctionDetail(func.functionId, { issueDescription: e.target.value })}
+                  placeholder="Describe what wasn't working..."
+                  rows={3}
+                />
+              </FormField>
+            )}
+
+            {/* Health Check Section */}
+            <div className="pt-4 border-t border-slate-700">
+              <h4 className="text-sm font-medium text-marble-100 mb-4">Health Assessment</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {/* Turnover */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">Turnover</label>
+                  <div className="flex flex-wrap gap-1">
+                    {TURNOVER_OPTIONS.map(option => (
+                      <PillButton
+                        key={option.value}
+                        selected={func.healthCheck.turnover === option.value}
+                        onClick={() => updateHealthCheck(func.functionId, { turnover: option.value })}
+                      >
+                        {option.label}
+                      </PillButton>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Staffing */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">Staffing</label>
+                  <div className="flex flex-wrap gap-1">
+                    {STAFFING_OPTIONS.map(option => (
+                      <PillButton
+                        key={option.value}
+                        selected={func.healthCheck.staffing === option.value}
+                        onClick={() => updateHealthCheck(func.functionId, { staffing: option.value })}
+                      >
+                        {option.label}
+                      </PillButton>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Budget */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">Budget Pressure</label>
+                  <div className="flex flex-wrap gap-1">
+                    {BUDGET_OPTIONS.map(option => (
+                      <PillButton
+                        key={option.value}
+                        selected={func.healthCheck.budgetPressure === option.value}
+                        onClick={() => updateHealthCheck(func.functionId, { budgetPressure: option.value })}
+                      >
+                        {option.label}
+                      </PillButton>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quality */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">Quality Issues</label>
+                  <div className="flex flex-wrap gap-1">
+                    {QUALITY_OPTIONS.map(option => (
+                      <PillButton
+                        key={option.value}
+                        selected={func.healthCheck.qualityIssues === option.value}
+                        onClick={() => updateHealthCheck(func.functionId, { qualityIssues: option.value })}
+                      >
+                        {option.label}
+                      </PillButton>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Leadership */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">Leadership</label>
+                  <div className="flex flex-wrap gap-1">
+                    {LEADERSHIP_OPTIONS.map(option => (
+                      <PillButton
+                        key={option.value}
+                        selected={func.healthCheck.leadership === option.value}
+                        onClick={() => updateHealthCheck(func.functionId, { leadership: option.value })}
+                      >
+                        {option.label}
+                      </PillButton>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cross-function Conflict */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">Cross-function Conflict</label>
+                  <div className="flex gap-1">
+                    <PillButton
+                      selected={func.healthCheck.crossFunctionConflict === false}
+                      onClick={() => updateHealthCheck(func.functionId, { crossFunctionConflict: false })}
+                    >
+                      No
+                    </PillButton>
+                    <PillButton
+                      selected={func.healthCheck.crossFunctionConflict === true}
+                      onClick={() => updateHealthCheck(func.functionId, { crossFunctionConflict: true })}
+                    >
+                      Yes
+                    </PillButton>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Optional comments */}
+            <FormField variant="dark" label="Additional notes" hint="Optional">
+              <Textarea
+                variant="dark"
+                value={func.comments || ''}
+                onChange={(e) => updateFunctionDetail(func.functionId, { comments: e.target.value })}
+                placeholder="Any other observations about this function..."
+                rows={2}
+              />
+            </FormField>
+
+            {/* Save/Collapse button */}
+            <div className="pt-4 flex justify-end">
+              <Button
+                variant="dark-secondary"
+                size="sm"
+                onClick={() => handleFunctionDone(func.functionId)}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Done
+              </Button>
+            </div>
           </>
         )}
-
-        {/* Outsourced specifics */}
-        {(func.executionModel === 'outsourced' || func.executionModel === 'hybrid') && (
-          <FormField label="Provider type" htmlFor="provider-type">
-            <div className="grid grid-cols-2 gap-2">
-              {PROVIDER_TYPES.map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => updateFunctionDetail(func.functionId, { providerType: option.value })}
-                  className={cn(
-                    'p-3 rounded-md border text-sm transition-colors',
-                    func.providerType === option.value
-                      ? 'bg-gold-50 border-gold-300 text-marble-900'
-                      : 'border-marble-200 text-marble-700 hover:border-marble-300'
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </FormField>
-        )}
-
-        {/* Common fields */}
-        <FormField label="How formalized was this function?" htmlFor="formalization">
-          <div className="space-y-2">
-            {FORMALIZATION_LEVELS.map(option => (
-              <button
-                key={option.value}
-                onClick={() => updateFunctionDetail(func.functionId, { formalization: option.value })}
-                className={cn(
-                  'w-full p-3 rounded-md border text-sm text-left transition-colors',
-                  func.formalization === option.value
-                    ? 'bg-gold-50 border-gold-300 text-marble-900'
-                    : 'border-marble-200 text-marble-700 hover:border-marble-300'
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </FormField>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField label="When did this start?" htmlFor="started-at">
-            <select
-              id="started-at"
-              value={func.startedAt || ''}
-              onChange={(e) => updateFunctionDetail(func.functionId, {
-                startedAt: e.target.value as LifecycleStage || null,
-              })}
-              className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
-            >
-              <option value="">Select...</option>
-              {LIFECYCLE_STAGES.filter(s => s.value !== 'until_end').map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </FormField>
-
-          <FormField label="When did it stop?" htmlFor="stopped-at">
-            <select
-              id="stopped-at"
-              value={func.stoppedAt || ''}
-              onChange={(e) => updateFunctionDetail(func.functionId, {
-                stoppedAt: e.target.value as LifecycleStage | 'until_end' || null,
-              })}
-              className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
-            >
-              <option value="">Select...</option>
-              {LIFECYCLE_STAGES.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </div>
-
-        <FormField label="How satisfied were you with how this function worked?" htmlFor="satisfaction">
-          <select
-            id="satisfaction"
-            value={func.satisfaction || ''}
-            onChange={(e) => updateFunctionDetail(func.functionId, {
-              satisfaction: e.target.value ? parseInt(e.target.value) as SatisfactionRating : null,
-            })}
-            className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
-          >
-            <option value="">Select...</option>
-            {SATISFACTION_RATINGS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </FormField>
-
-        {/* Issue description if low satisfaction */}
-        {func.satisfaction !== null && func.satisfaction <= 3 && (
-          <FormField label="What was the issue?" htmlFor="issue-description">
-            <Textarea
-              id="issue-description"
-              value={func.issueDescription || ''}
-              onChange={(e) => updateFunctionDetail(func.functionId, { issueDescription: e.target.value })}
-              placeholder="Describe what wasn't working..."
-              rows={3}
-            />
-          </FormField>
-        )}
-
-        <FormField label="Any other comments?" htmlFor="comments" hint="Optional">
-          <Textarea
-            id="comments"
-            value={func.comments || ''}
-            onChange={(e) => updateFunctionDetail(func.functionId, { comments: e.target.value })}
-            placeholder="Optional notes about this function..."
-            rows={2}
-          />
-        </FormField>
       </div>
     )
   }
 
   // ==========================================================================
-  // STEP 3: HEALTH CHECK
+  // RENDER MAIN CONTENT
   // ==========================================================================
 
-  const renderHealthCheck = () => (
-    <div className="space-y-6">
-      <p className="text-marble-600 mb-6">
-        For each function, assess its health at the organization&apos;s peak. This helps us understand systemic patterns.
+  const renderContent = () => (
+    <div className="space-y-4">
+      {/* Instructions */}
+      <p className="text-slate-300 mb-6">
+        Select functions that existed in your organization. Click on each to provide details.
+        We&apos;ve organized functions typical for{' '}
+        <span className="font-medium text-gold-400">{ORG_TYPE_LABELS[orgType]}</span>{' '}
+        organizations.
       </p>
 
-      {activeFunctions.map((func, index) => {
-        const funcName = func.customName || categories.flatMap(c => c.functions).find(f => f.id === func.functionId)?.name || func.functionId
+      {/* Progress summary */}
+      <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg mb-4">
+        <span className="text-sm text-slate-400">
+          <span className="font-medium text-marble-100">{activeFunctionsCount}</span> functions selected
+        </span>
+        <span className="text-sm text-slate-400">
+          <span className="font-medium text-marble-100">{completedFunctionsCount}</span> with details
+        </span>
+      </div>
+
+      {/* Categories */}
+      {categories.map(category => {
+        const visibleFunctions = getVisibleFunctionsForCategory(orgType, category.id, stage)
+        const selectedCount = visibleFunctions.filter(f => isFunctionActive(f.id)).length
+        const completedCount = visibleFunctions.filter(f => {
+          const detail = getFunctionDetail(f.id)
+          return detail && isFunctionComplete(detail)
+        }).length
+        const isExpanded = expandedCategories.has(category.id)
+        const isExcluded = isCategoryExcluded(category.id)
 
         return (
-          <div key={func.functionId} className="border border-marble-200 rounded-lg p-4">
-            <h3 className="font-medium text-marble-900 mb-4">{funcName}</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Turnover */}
-              <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Turnover</label>
-                <div className="flex flex-wrap gap-2">
-                  {TURNOVER_OPTIONS.map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => updateHealthCheck(func.functionId, { turnover: option.value })}
-                      className={cn(
-                        'px-3 py-1.5 rounded text-xs transition-colors',
-                        func.healthCheck.turnover === option.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Staffing */}
-              <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Staffing</label>
-                <div className="flex flex-wrap gap-2">
-                  {STAFFING_OPTIONS.map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => updateHealthCheck(func.functionId, { staffing: option.value })}
-                      className={cn(
-                        'px-3 py-1.5 rounded text-xs transition-colors',
-                        func.healthCheck.staffing === option.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Budget Pressure */}
-              <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Budget Pressure</label>
-                <div className="flex flex-wrap gap-2">
-                  {BUDGET_OPTIONS.map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => updateHealthCheck(func.functionId, { budgetPressure: option.value })}
-                      className={cn(
-                        'px-3 py-1.5 rounded text-xs transition-colors',
-                        func.healthCheck.budgetPressure === option.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quality Issues */}
-              <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Quality Issues</label>
-                <div className="flex flex-wrap gap-2">
-                  {QUALITY_OPTIONS.map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => updateHealthCheck(func.functionId, { qualityIssues: option.value })}
-                      className={cn(
-                        'px-3 py-1.5 rounded text-xs transition-colors',
-                        func.healthCheck.qualityIssues === option.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Leadership */}
-              <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Leadership</label>
-                <div className="flex flex-wrap gap-2">
-                  {LEADERSHIP_OPTIONS.map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => updateHealthCheck(func.functionId, { leadership: option.value })}
-                      className={cn(
-                        'px-3 py-1.5 rounded text-xs transition-colors',
-                        func.healthCheck.leadership === option.value
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Cross-function Conflict */}
-              <div>
-                <label className="text-sm font-medium text-marble-700 mb-2 block">Cross-function Conflict</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => updateHealthCheck(func.functionId, { crossFunctionConflict: false })}
-                    className={cn(
-                      'px-3 py-1.5 rounded text-xs transition-colors',
-                      func.healthCheck.crossFunctionConflict === false
-                        ? 'bg-gold-500 text-white'
-                        : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                    )}
-                  >
-                    No
-                  </button>
-                  <button
-                    onClick={() => updateHealthCheck(func.functionId, { crossFunctionConflict: true })}
-                    className={cn(
-                      'px-3 py-1.5 rounded text-xs transition-colors',
-                      func.healthCheck.crossFunctionConflict === true
-                        ? 'bg-gold-500 text-white'
-                        : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
-                    )}
-                  >
-                    Yes
-                  </button>
-                </div>
+          <div
+            key={category.id}
+            className={cn(
+              'border rounded-lg overflow-hidden',
+              isExcluded ? 'border-slate-600 opacity-60' : 'border-slate-700'
+            )}
+          >
+            {/* Category header */}
+            <div className="flex items-center bg-slate-800/50">
+              <button
+                onClick={() => toggleCategory(category.id)}
+                className="flex-1 flex items-center gap-3 p-4 hover:bg-slate-800 transition-colors"
+              >
+                {isExpanded && !isExcluded ? (
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                ) : (
+                  <ChevronRight className="h-5 w-5 text-slate-400" />
+                )}
+                <span className={cn(
+                  'font-medium',
+                  isExcluded ? 'text-slate-400 line-through' : 'text-marble-100'
+                )}>
+                  {category.name}
+                </span>
+                {isExcluded && (
+                  <MinusCircle className="h-4 w-4 text-slate-500" />
+                )}
+                {!isExcluded && selectedCount > 0 && completedCount === selectedCount && (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                )}
+              </button>
+              <div className="flex items-center gap-3 pr-4">
+                {!isExcluded && (
+                  <span className="text-sm text-slate-400">
+                    {selectedCount}/{visibleFunctions.length}
+                  </span>
+                )}
+                <button
+                  onClick={() => toggleCategoryExcluded(category.id)}
+                  className={cn(
+                    'text-xs px-2 py-1 rounded transition-colors',
+                    isExcluded
+                      ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700'
+                  )}
+                >
+                  {isExcluded ? 'Undo' : 'None existed'}
+                </button>
               </div>
             </div>
+
+            {/* Functions list - only show if expanded and not excluded */}
+            {isExpanded && !isExcluded && (
+              <div className="divide-y divide-slate-700">
+                {visibleFunctions.map(func => {
+                  const isActive = isFunctionActive(func.id)
+                  const funcDetail = getFunctionDetail(func.id)
+                  const isComplete = funcDetail && isFunctionComplete(funcDetail)
+                  const isExpandedFunc = expandedFunctions.has(func.id)
+                  const isDimmed = func.status === 'dimmed'
+
+                  return (
+                    <div key={func.id} id={`func-${func.id}`}>
+                      {/* Function row */}
+                      <div
+                        className={cn(
+                          'w-full flex items-center gap-3 p-3 transition-colors',
+                          isActive
+                            ? 'bg-gold-500/10'
+                            : isDimmed
+                              ? 'opacity-60 hover:opacity-100'
+                              : 'hover:bg-slate-800/50'
+                        )}
+                      >
+                        {/* Checkbox toggle */}
+                        <button
+                          onClick={() => toggleFunction(func.id, category.id)}
+                          className={cn(
+                            'w-5 h-5 rounded flex items-center justify-center flex-shrink-0',
+                            isActive
+                              ? 'bg-gold-500 text-slate-900'
+                              : 'border border-slate-600 hover:border-slate-500'
+                          )}
+                        >
+                          {isActive && <Check className="h-3.5 w-3.5" />}
+                        </button>
+                        {/* Function name - clickable to toggle */}
+                        <button
+                          onClick={() => toggleFunction(func.id, category.id)}
+                          className={cn(
+                            'text-sm flex-1 text-left',
+                            isActive ? 'text-marble-100 font-medium' : 'text-slate-300 hover:text-slate-200'
+                          )}
+                        >
+                          {func.name}
+                        </button>
+                        {isComplete && (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                        )}
+                        {isActive && !isComplete && (
+                          <span className="text-xs text-slate-500">needs details</span>
+                        )}
+                        {isDimmed && !isActive && (
+                          <span className="text-xs text-slate-500">(less common)</span>
+                        )}
+                        {isActive && (
+                          <button
+                            onClick={() => toggleFunctionExpand(func.id)}
+                            className="ml-2 p-1 hover:bg-slate-700 rounded"
+                          >
+                            {isExpandedFunc ? (
+                              <ChevronDown className="h-4 w-4 text-slate-400" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Expanded function details */}
+                      {isActive && isExpandedFunc && funcDetail && (
+                        renderFunctionDetailForm(funcDetail, func.name)
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )
       })}
@@ -834,37 +991,29 @@ export default function FunctionalPage() {
   // RENDER
   // ==========================================================================
 
-  // Calculate effective step label for details
-  const effectiveSteps = [...STEPS]
-  if (currentStep === 1 && activeFunctions.length > 1) {
-    effectiveSteps[1] = {
-      ...STEPS[1],
-      label: `Details (${detailsIndex + 1}/${activeFunctions.length})`,
-    }
-  }
+  // Can complete if all categories are either excluded or have completed functions
+  const canComplete = categories.length > 0 && categories.every(cat => {
+    if (excludedCategories.has(cat.id)) return true
+    const categoryFunctions = functions.filter(f => f.categoryId === cat.id && f.isActive)
+    return categoryFunctions.length > 0 && categoryFunctions.every(f => isFunctionComplete(f))
+  })
 
   return (
     <WizardLayout
-      steps={effectiveSteps}
-      currentStep={currentStep}
+      variant="dark"
+      steps={STEPS}
+      currentStep={0}
       onBack={handleBack}
-      onNext={handleNext}
+      onNext={handleComplete}
       cancelHref={`/interview/${story.id}`}
       isLoading={isSubmitting}
-      canGoNext={currentStep === 0 ? activeFunctions.length > 0 : true}
-      nextLabel={
-        currentStep === 1 && detailsIndex < activeFunctions.length - 1
-          ? 'Next Function'
-          : currentStep === STEPS.length - 1
-            ? 'Complete'
-            : 'Continue'
-      }
+      canGoNext={canComplete || activeFunctionsCount > 0}
+      nextLabel="Complete"
       title="Functional Mapping"
-      subtitle="Map your organization&apos;s structure at its peak"
+      subtitle="Map your organization's structure at its peak"
+      progress={progressPercent}
     >
-      {currentStep === 0 && renderFunctionSelection()}
-      {currentStep === 1 && renderFunctionDetails()}
-      {currentStep === 2 && renderHealthCheck()}
+      {renderContent()}
     </WizardLayout>
   )
 }

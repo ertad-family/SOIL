@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { MenuProvider } from '@/contexts/MenuContext'
 import { Header } from './Header'
 import { Footer } from './Footer'
@@ -20,16 +21,23 @@ interface AppShellProps {
  * - Header (sticky, with menu button)
  * - Footer (with 3D landscape)
  * - MenuTransition (single global instance)
- * - GlobalParticles (floating visitor particles)
+ * - GlobalParticles (floating visitor particles, disabled on interview pages)
  */
 export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname()
+
+  // Disable particles on interview pages (they distract from the form)
+  const showParticles = !pathname.startsWith('/interview')
+
   return (
     <MenuProvider>
       <div className="dark">
-        {/* Global floating particles */}
-        <Suspense fallback={null}>
-          <GlobalParticles />
-        </Suspense>
+        {/* Global floating particles (disabled on interview pages) */}
+        {showParticles && (
+          <Suspense fallback={null}>
+            <GlobalParticles />
+          </Suspense>
+        )}
 
         {/* Global menu transition - single instance for entire app */}
         <MenuTransition />

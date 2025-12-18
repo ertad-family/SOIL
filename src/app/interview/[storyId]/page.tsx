@@ -7,20 +7,20 @@ import { useInterview } from '@/contexts/InterviewContext'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
+import { Badge } from '@/components/ui/badge'
 import {
   Check,
-  Circle,
   ArrowRight,
   ChevronLeft,
   Clock,
   Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { MODULES, type ModuleId } from '@/types/interview'
+import { MODULES } from '@/types/interview'
 import { ORG_TYPE_LABELS } from '@/data/function-matrix'
 
 /**
- * Story Overview Dashboard
+ * Story Overview Dashboard (Dark Theme, Two-Column Layout)
  * Shows completion progress and allows navigation to modules.
  */
 export default function StoryOverviewPage() {
@@ -37,7 +37,7 @@ export default function StoryOverviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -45,15 +45,15 @@ export default function StoryOverviewPage() {
 
   if (error || !story) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
-        <Card className="p-8 max-w-md text-center">
-          <h2 className="font-serif text-xl font-medium text-marble-900 mb-2">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <Card variant="dark" className="p-8 max-w-md text-center">
+          <h2 className="font-serif text-xl font-medium text-marble-100 mb-2">
             Story Not Found
           </h2>
-          <p className="text-marble-600 mb-4">
+          <p className="text-slate-400 mb-4">
             {error || 'Unable to load this story.'}
           </p>
-          <Button variant="primary" onClick={() => router.push('/interview')}>
+          <Button variant="dark-primary" onClick={() => router.push('/interview')}>
             Return to Stories
           </Button>
         </Card>
@@ -80,26 +80,26 @@ export default function StoryOverviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-marble-gradient">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-900">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back link */}
         <Link
-          href="/interview"
-          className="inline-flex items-center text-sm text-marble-600 hover:text-marble-900 mb-6"
+          href="/account"
+          className="inline-flex items-center text-sm text-slate-400 hover:text-marble-100 mb-6 transition-colors"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
-          All Stories
+          Back to account
         </Link>
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-marble-950 tracking-wide">
+              <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-marble-100 tracking-wide">
                 {orgName}
               </h1>
               {orgTypeLabel && (
-                <p className="mt-1 text-marble-600 flex items-center gap-2">
+                <p className="mt-1 text-slate-400 flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   {orgTypeLabel}
                 </p>
@@ -108,172 +108,191 @@ export default function StoryOverviewPage() {
 
             {/* Status badge */}
             {story.status === 'coined' ? (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-success-100 text-success-700">
-                <Check className="h-4 w-4 mr-1" />
-                Story Coined
-              </span>
+              <Badge variant="dark-success" size="md">
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                Completed
+              </Badge>
             ) : (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gold-100 text-gold-700">
+              <Badge variant="dark-warning" size="md">
                 In Progress
-              </span>
+              </Badge>
             )}
           </div>
         </div>
 
-        {/* Progress summary */}
-        {story.status !== 'coined' && (
-          <Card className="p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="font-medium text-marble-900">Your Progress</h2>
-                <p className="text-sm text-marble-600">
-                  {story.completedModules.length} of {MODULES.length} modules complete
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-semibold text-gold-600">{progress}%</p>
-                {remainingMinutes > 0 && (
-                  <p className="text-sm text-marble-500 flex items-center justify-end gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    ~{remainingMinutes} min remaining
-                  </p>
-                )}
-              </div>
-            </div>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left column - Progress and action */}
+          <div className="space-y-6">
+            {/* Progress summary */}
+            {story.status !== 'coined' && (
+              <Card variant="dark" className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-medium text-marble-100">Your Progress</h2>
+                    <p className="text-sm text-slate-400">
+                      {story.completedModules.length} of {MODULES.length} modules complete
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-semibold text-gold-400">{progress}%</p>
+                    {remainingMinutes > 0 && (
+                      <p className="text-sm text-slate-500 flex items-center justify-end gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        ~{remainingMinutes} min remaining
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-            {/* Progress bar */}
-            <div className="h-2 bg-marble-200 rounded-full overflow-hidden mb-4">
-              <div
-                className="h-full bg-gold-500 transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            {/* Continue button */}
-            {nextIncompleteModule && (
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={handleContinue}
-                className="w-full"
-              >
-                Continue: {nextIncompleteModule.name}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-          </Card>
-        )}
-
-        {/* Coined celebration */}
-        {story.status === 'coined' && (
-          <Card className="p-6 mb-8 bg-gradient-to-br from-gold-50 to-marble-50 border-gold-200">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="h-8 w-8 text-gold-600" />
-              </div>
-              <h2 className="font-serif text-xl font-medium text-marble-900 mb-2">
-                Your Story is Coined
-              </h2>
-              <p className="text-marble-600 mb-4">
-                Thank you for preserving the legacy of {orgName}.
-                Your experience will help others learn and grow.
-              </p>
-              <Button
-                variant="primary"
-                onClick={() => router.push(`/interview/${story.id}/complete`)}
-              >
-                View Summary
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Module list */}
-        <div className="space-y-3">
-          <h2 className="font-medium text-marble-900 mb-4">Modules</h2>
-
-          {MODULES.map((module, index) => {
-            const isComplete = isModuleComplete(module.id)
-            const canNavigate = canNavigateToModule(module.id)
-            const isCurrent = story.currentModule === module.id
-
-            return (
-              <button
-                key={module.id}
-                onClick={() => canNavigate && navigateToModule(module.id)}
-                disabled={!canNavigate}
-                className={cn(
-                  'w-full text-left p-4 rounded-lg border transition-all',
-                  canNavigate
-                    ? 'hover:border-gold-300 hover:shadow-sm cursor-pointer'
-                    : 'cursor-not-allowed opacity-60',
-                  isComplete
-                    ? 'bg-success-50 border-success-200'
-                    : isCurrent
-                      ? 'bg-gold-50 border-gold-300'
-                      : 'bg-white border-marble-200'
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  {/* Step number / check */}
+                {/* Progress bar */}
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-6">
                   <div
+                    className="h-full bg-gold-500 transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                {/* Continue button */}
+                {nextIncompleteModule && (
+                  <Button
+                    variant="dark-primary"
+                    size="lg"
+                    onClick={handleContinue}
+                    className="w-full"
+                  >
+                    Continue: {nextIncompleteModule.name}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
+              </Card>
+            )}
+
+            {/* Coined celebration */}
+            {story.status === 'coined' && (
+              <Card variant="dark" className="p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-gold-700/30">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gold-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check className="h-8 w-8 text-gold-400" />
+                  </div>
+                  <h2 className="font-serif text-xl font-medium text-marble-100 mb-2">
+                    Your Story is Coined
+                  </h2>
+                  <p className="text-slate-400 mb-4">
+                    Thank you for preserving the legacy of {orgName}.
+                    Your experience will help others learn and grow.
+                  </p>
+                  <Button
+                    variant="dark-primary"
+                    onClick={() => router.push(`/interview/${story.id}/complete`)}
+                  >
+                    View Summary
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Help text */}
+            <p className="text-center text-sm text-slate-500">
+              Your progress is saved automatically. You can return anytime to continue.
+            </p>
+          </div>
+
+          {/* Right column - Modules */}
+          <div>
+            <h2 className="font-medium text-marble-100 mb-4">Modules</h2>
+            <div className="space-y-3">
+              {MODULES.map((module, index) => {
+                const isComplete = isModuleComplete(module.id)
+                const canNavigate = canNavigateToModule(module.id)
+                const isCurrent = story.currentModule === module.id
+
+                return (
+                  <button
+                    key={module.id}
+                    onClick={() => canNavigate && navigateToModule(module.id)}
+                    disabled={!canNavigate}
                     className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                      'w-full text-left p-4 rounded-lg border transition-all',
+                      canNavigate
+                        ? 'hover:border-gold-500/50 hover:bg-slate-800/80 cursor-pointer'
+                        : 'cursor-not-allowed opacity-60',
                       isComplete
-                        ? 'bg-success-500 text-white'
+                        ? 'bg-emerald-900/20 border-emerald-700/50'
                         : isCurrent
-                          ? 'bg-gold-500 text-white'
-                          : 'bg-marble-200 text-marble-600'
+                          ? 'bg-gold-900/20 border-gold-700/50'
+                          : 'bg-slate-800/50 border-slate-700'
                     )}
                   >
-                    {isComplete ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
-                    )}
-                  </div>
+                    <div className="flex items-center gap-4">
+                      {/* Step number / check */}
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                          isComplete
+                            ? 'bg-emerald-600 text-white'
+                            : isCurrent
+                              ? 'bg-gold-600 text-white'
+                              : 'bg-slate-700 text-slate-400'
+                        )}
+                      >
+                        {isComplete ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <span className="text-sm font-medium">{index + 1}</span>
+                        )}
+                      </div>
 
-                  {/* Module info */}
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className={cn(
-                        'font-medium',
-                        isComplete ? 'text-success-700' : 'text-marble-900'
+                      {/* Module info */}
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={cn(
+                            'font-medium',
+                            isComplete ? 'text-emerald-400' : 'text-marble-100'
+                          )}
+                        >
+                          {module.name}
+                        </h3>
+                        <p className="text-sm text-slate-400 truncate">
+                          {module.description}
+                        </p>
+                      </div>
+
+                      {/* Time estimate */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm text-slate-500">
+                          ~{module.estimatedMinutes} min
+                        </p>
+                      </div>
+
+                      {/* Arrow */}
+                      {canNavigate && (
+                        <ArrowRight
+                          className={cn(
+                            'h-5 w-5 flex-shrink-0',
+                            isComplete ? 'text-emerald-500' : 'text-slate-500'
+                          )}
+                        />
                       )}
-                    >
-                      {module.name}
-                    </h3>
-                    <p className="text-sm text-marble-600 truncate">
-                      {module.description}
-                    </p>
-                  </div>
-
-                  {/* Time estimate */}
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-sm text-marble-500">
-                      ~{module.estimatedMinutes} min
-                    </p>
-                  </div>
-
-                  {/* Arrow */}
-                  {canNavigate && (
-                    <ArrowRight
-                      className={cn(
-                        'h-5 w-5 flex-shrink-0',
-                        isComplete ? 'text-success-400' : 'text-marble-400'
-                      )}
-                    />
-                  )}
-                </div>
-              </button>
-            )
-          })}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Help text */}
-        <p className="mt-8 text-center text-sm text-marble-500">
-          Your progress is saved automatically. You can return anytime to continue.
-        </p>
+        {/* Bottom separator section */}
+        <div className="mt-12 pt-8 border-t border-slate-700">
+          <div className="text-center">
+            <p className="text-slate-500 text-sm">
+              Need help? Contact us at{' '}
+              <a href="mailto:support@soil.foundation" className="text-gold-400 hover:text-gold-300 transition-colors">
+                support@soil.foundation
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

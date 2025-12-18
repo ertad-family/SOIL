@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, X, Check } from 'lucide-react'
+import { ArrowLeft, X } from 'lucide-react'
 
 export interface WizardStep {
   id: string
@@ -29,6 +29,8 @@ export interface WizardLayoutProps {
   canGoNext?: boolean
   footerContent?: React.ReactNode
   className?: string
+  /** Custom progress percentage (0-100). If not provided, calculated from steps. */
+  progress?: number
 }
 
 const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
@@ -50,10 +52,11 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
       canGoNext = true,
       footerContent,
       className,
+      progress: customProgress,
     },
     ref
   ) => {
-    const progress = ((currentStep + 1) / steps.length) * 100
+    const progress = customProgress ?? ((currentStep + 1) / steps.length) * 100
     const currentStepData = steps[currentStep]
     const isDark = variant === 'dark'
 
@@ -66,7 +69,7 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
           className
         )}
       >
-        {/* Header */}
+        {/* Header - compact single row */}
         <header
           className={cn(
             'sticky top-0 z-40 w-full backdrop-blur-md',
@@ -75,9 +78,9 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
               : 'bg-white/90 border-b border-marble-300'
           )}
         >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-            {/* Top row: Cancel and progress */}
-            <div className="flex items-center justify-between mb-4">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center gap-4">
+              {/* Cancel button */}
               <Link href={cancelHref}>
                 <Button
                   variant={isDark ? 'dark-ghost' : 'ghost'}
@@ -87,68 +90,25 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
                   Save & Exit
                 </Button>
               </Link>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={isDark ? 'text-slate-400' : 'text-marble-600'}>
-                  Step {currentStep + 1} of {steps.length}
-                </span>
-              </div>
-            </div>
 
-            {/* Progress bar */}
-            <div className={cn(
-              'h-1 rounded-full overflow-hidden',
-              isDark ? 'bg-slate-700' : 'bg-marble-200'
-            )}>
-              <div
-                className="h-full bg-gold-500 transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            {/* Step indicator */}
-            <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {steps.map((step, index) => (
+              {/* Progress bar - flexible width */}
+              <div className={cn(
+                'flex-1 h-1.5 rounded-full overflow-hidden',
+                isDark ? 'bg-slate-700' : 'bg-marble-200'
+              )}>
                 <div
-                  key={step.id}
-                  className={cn(
-                    'flex items-center gap-2 shrink-0',
-                    index !== steps.length - 1 && 'pr-4'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium',
-                      index < currentStep && 'bg-gold-500 text-marble-950',
-                      index === currentStep && 'bg-gold-500 text-marble-950 ring-4 ring-gold-200',
-                      index > currentStep && (isDark ? 'bg-slate-700 text-slate-400' : 'bg-marble-200 text-marble-500')
-                    )}
-                  >
-                    {index < currentStep ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  <span
-                    className={cn(
-                      'text-sm whitespace-nowrap hidden sm:inline',
-                      index === currentStep
-                        ? (isDark ? 'text-marble-100 font-medium' : 'text-marble-950 font-medium')
-                        : (isDark ? 'text-slate-500' : 'text-marble-500')
-                    )}
-                  >
-                    {step.label}
-                  </span>
-                  {index !== steps.length - 1 && (
-                    <div
-                      className={cn(
-                        'hidden sm:block w-8 h-px',
-                        index < currentStep ? 'bg-gold-500' : (isDark ? 'bg-slate-700' : 'bg-marble-200')
-                      )}
-                    />
-                  )}
-                </div>
-              ))}
+                  className="h-full bg-gold-500 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+
+              {/* Progress percentage */}
+              <span className={cn(
+                'text-sm font-medium tabular-nums',
+                isDark ? 'text-slate-400' : 'text-marble-600'
+              )}>
+                {Math.round(progress)}%
+              </span>
             </div>
           </div>
         </header>
@@ -197,7 +157,7 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
         {/* Footer */}
         <footer
           className={cn(
-            'sticky bottom-0 w-full backdrop-blur-md',
+            'w-full backdrop-blur-md',
             isDark
               ? 'bg-slate-900/90 border-t border-slate-700'
               : 'bg-white/90 border-t border-marble-300'
@@ -236,6 +196,18 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
             </div>
           </div>
         </footer>
+
+        {/* Bottom separator section - prevents gradient overlay from covering footer */}
+        <div
+          className={cn(
+            'w-full',
+            isDark ? 'bg-slate-900' : 'bg-marble-50'
+          )}
+        >
+          <div className="divider-roman">
+            <span className="text-gold-400 text-lg px-6">✦</span>
+          </div>
+        </div>
       </div>
     )
   }

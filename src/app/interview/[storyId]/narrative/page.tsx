@@ -92,6 +92,8 @@ export default function NarrativePage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+      // Scroll to top when moving to previous section
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       router.push(`/interview/${story?.id}`)
     }
@@ -100,6 +102,8 @@ export default function NarrativePage() {
   const handleNext = async () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1)
+      // Scroll to top when moving to next section
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       // Complete the module
       setIsSubmitting(true)
@@ -116,7 +120,7 @@ export default function NarrativePage() {
 
   if (isLoading || !story) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -135,6 +139,7 @@ export default function NarrativePage() {
 
   return (
     <WizardLayout
+      variant="dark"
       steps={STEPS}
       currentStep={currentStep}
       onBack={handleBack}
@@ -147,7 +152,7 @@ export default function NarrativePage() {
     >
       <div className="space-y-8">
         {/* Section intro */}
-        <p className="text-marble-600 italic">
+        <p className="text-slate-400 italic">
           {sectionIntros[currentSectionKey]}
         </p>
 
@@ -156,11 +161,13 @@ export default function NarrativePage() {
           <div key={q.questionId} className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <FormField
+                variant="dark"
                 label={formatQuestion(q.question)}
                 htmlFor={q.questionId}
                 className="flex-1"
               >
                 <Textarea
+                  variant="dark"
                   id={q.questionId}
                   value={q.answer || ''}
                   onChange={(e) => updateAnswer(q.questionId, e.target.value)}
@@ -173,15 +180,15 @@ export default function NarrativePage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-xs text-marble-400">
+              <p className="text-xs text-slate-500">
                 {q.skipped ? 'Skipped' : q.answer ? `${q.answer.length} characters` : 'Optional'}
               </p>
               {!q.skipped && (
                 <Button
-                  variant="ghost"
+                  variant="dark-ghost"
                   size="sm"
                   onClick={() => skipQuestion(q.questionId)}
-                  className="text-marble-500 hover:text-marble-700"
+                  className="text-slate-400 hover:text-slate-300"
                 >
                   <SkipForward className="h-4 w-4 mr-1" />
                   Skip
@@ -189,10 +196,10 @@ export default function NarrativePage() {
               )}
               {q.skipped && (
                 <Button
-                  variant="ghost"
+                  variant="dark-ghost"
                   size="sm"
                   onClick={() => updateAnswer(q.questionId, '')}
-                  className="text-marble-500 hover:text-marble-700"
+                  className="text-slate-400 hover:text-slate-300"
                 >
                   Answer this
                 </Button>
@@ -201,15 +208,15 @@ export default function NarrativePage() {
 
             {/* Divider between questions */}
             {index < questions.length - 1 && (
-              <div className="border-t border-marble-200 pt-4" />
+              <div className="border-t border-slate-700 pt-4" />
             )}
           </div>
         ))}
 
         {/* Therapeutic affirmation at end of section */}
         {currentStep === STEPS.length - 1 && (
-          <div className="mt-8 p-4 bg-gold-50 border border-gold-200 rounded-lg">
-            <p className="text-marble-700 text-center">
+          <div className="mt-8 p-4 bg-gold-900/30 border border-gold-700 rounded-lg">
+            <p className="text-slate-300 text-center">
               Thank you for sharing your story. What you&apos;ve written here will help others
               navigate their own journeys.
             </p>

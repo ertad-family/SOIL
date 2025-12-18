@@ -17,6 +17,7 @@ import {
   Upload,
   FileText,
   X,
+  Check,
 } from 'lucide-react'
 import type {
   FinancialEvent,
@@ -196,7 +197,7 @@ export default function FinancialPage() {
 
   if (isLoading || !story) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -208,7 +209,7 @@ export default function FinancialPage() {
 
   const renderEvents = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         Add significant financial events during your organization&apos;s life.
       </p>
 
@@ -219,15 +220,15 @@ export default function FinancialPage() {
           const categoryInfo = EVENT_CATEGORIES.find(c => c.value === event.category)
 
           return (
-            <div key={event.id} className="border border-marble-200 rounded-lg overflow-hidden">
+            <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
               <button
                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-marble-50 hover:bg-marble-100 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <DollarSign className="h-4 w-4 text-marble-400" />
-                  <span className="font-medium text-marble-900">
+                  <DollarSign className="h-4 w-4 text-slate-500" />
+                  <span className="font-medium text-marble-100">
                     {event.date || 'No date'} - {event.subType || categoryInfo?.label || 'New Event'}
                     {event.severity && ` (${event.severity})`}
                   </span>
@@ -237,7 +238,7 @@ export default function FinancialPage() {
                     e.stopPropagation()
                     removeEvent(event.id)
                   }}
-                  className="text-marble-400 hover:text-error-500 transition-colors"
+                  className="text-slate-500 hover:text-error-500 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -245,10 +246,11 @@ export default function FinancialPage() {
 
               {/* Event details */}
               {isExpanded && (
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 bg-slate-800/50">
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Date" htmlFor={`date-${event.id}`}>
+                    <FormField variant="dark" label="Date" htmlFor={`date-${event.id}`}>
                       <Input
+                        variant="dark"
                         id={`date-${event.id}`}
                         type="month"
                         value={event.date}
@@ -256,7 +258,7 @@ export default function FinancialPage() {
                       />
                     </FormField>
 
-                    <FormField label="Category" htmlFor={`category-${event.id}`}>
+                    <FormField variant="dark" label="Category" htmlFor={`category-${event.id}`}>
                       <select
                         id={`category-${event.id}`}
                         value={event.category}
@@ -264,7 +266,7 @@ export default function FinancialPage() {
                           category: e.target.value as FinancialEventCategory,
                           subType: '',
                         })}
-                        className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                        className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                       >
                         {EVENT_CATEGORIES.map(cat => (
                           <option key={cat.value} value={cat.value}>
@@ -275,12 +277,12 @@ export default function FinancialPage() {
                     </FormField>
                   </div>
 
-                  <FormField label="What happened?" htmlFor={`subtype-${event.id}`}>
+                  <FormField variant="dark" label="What happened?" htmlFor={`subtype-${event.id}`}>
                     <select
                       id={`subtype-${event.id}`}
                       value={event.subType}
                       onChange={(e) => updateEvent(event.id, { subType: e.target.value })}
-                      className="w-full rounded-md border border-marble-200 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
                     >
                       <option value="">Select...</option>
                       {EVENT_SUBTYPES[event.category].map(subtype => (
@@ -291,7 +293,7 @@ export default function FinancialPage() {
                     </select>
                   </FormField>
 
-                  <FormField label="How severe was this event?" htmlFor={`severity-${event.id}`}>
+                  <FormField variant="dark" label="How severe was this event?" htmlFor={`severity-${event.id}`}>
                     <div className="flex flex-wrap gap-2">
                       {SEVERITY_OPTIONS.map(option => (
                         <button
@@ -300,8 +302,8 @@ export default function FinancialPage() {
                           className={cn(
                             'px-3 py-1.5 rounded text-sm transition-colors',
                             event.severity === option.value
-                              ? 'bg-gold-500 text-white'
-                              : 'bg-marble-100 text-marble-700 hover:bg-marble-200'
+                              ? 'bg-gold-500 text-slate-900'
+                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                           )}
                         >
                           {option.label}
@@ -310,7 +312,7 @@ export default function FinancialPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Looking back..." htmlFor={`looking-back-${event.id}`}>
+                  <FormField variant="dark" label="Looking back..." htmlFor={`looking-back-${event.id}`}>
                     <div className="space-y-2">
                       {LOOKING_BACK_OPTIONS.map(option => (
                         <button
@@ -319,8 +321,8 @@ export default function FinancialPage() {
                           className={cn(
                             'w-full p-3 rounded-md border text-sm text-left transition-colors',
                             event.lookingBack === option.value
-                              ? 'bg-gold-50 border-gold-300 text-marble-900'
-                              : 'border-marble-200 text-marble-700 hover:border-marble-300'
+                              ? 'bg-gold-900/30 border-gold-500 text-marble-100'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-500'
                           )}
                         >
                           {option.label}
@@ -329,8 +331,9 @@ export default function FinancialPage() {
                     </div>
                   </FormField>
 
-                  <FormField label="Details" htmlFor={`details-${event.id}`} hint="Optional">
+                  <FormField variant="dark" label="Details" htmlFor={`details-${event.id}`} hint="Optional">
                     <Textarea
+                      variant="dark"
                       id={`details-${event.id}`}
                       value={event.details || ''}
                       onChange={(e) => updateEvent(event.id, { details: e.target.value || null })}
@@ -338,6 +341,18 @@ export default function FinancialPage() {
                       rows={3}
                     />
                   </FormField>
+
+                  {/* Done button */}
+                  <div className="pt-4 flex justify-end">
+                    <Button
+                      variant="dark-secondary"
+                      size="sm"
+                      onClick={() => setExpandedEventId(null)}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Done
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -345,15 +360,15 @@ export default function FinancialPage() {
         })}
 
         {events.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-marble-300 rounded-lg">
-            <p className="text-marble-500 mb-4">No financial events added yet</p>
+          <div className="text-center py-8 border border-dashed border-slate-600 rounded-lg">
+            <p className="text-slate-400 mb-4">No financial events added yet</p>
           </div>
         )}
       </div>
 
       {/* Add event button */}
       <Button
-        variant="secondary"
+        variant="dark-secondary"
         onClick={addEvent}
         className="w-full"
       >
@@ -369,17 +384,17 @@ export default function FinancialPage() {
 
   const renderDocuments = () => (
     <div className="space-y-6">
-      <p className="text-marble-600">
+      <p className="text-slate-400">
         If you have financial documents you&apos;d like to include (P&amp;L, cap table, etc.), you can upload them here. This is optional and all documents are kept confidential.
       </p>
 
       {/* Upload area */}
-      <div className="border-2 border-dashed border-marble-300 rounded-lg p-8 text-center">
-        <Upload className="h-12 w-12 mx-auto text-marble-400 mb-4" />
-        <p className="text-marble-600 mb-2">
+      <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center">
+        <Upload className="h-12 w-12 mx-auto text-slate-500 mb-4" />
+        <p className="text-slate-400 mb-2">
           Drag and drop files here, or click to browse
         </p>
-        <p className="text-xs text-marble-400 mb-4">
+        <p className="text-xs text-slate-500 mb-4">
           Supported formats: PDF, CSV, XLS, XLSX (max 10MB each)
         </p>
         <label className="cursor-pointer">
@@ -390,7 +405,7 @@ export default function FinancialPage() {
             onChange={handleFileSelect}
             className="hidden"
           />
-          <Button variant="secondary" asChild>
+          <Button variant="dark-secondary" asChild>
             <span>Select Files</span>
           </Button>
         </label>
@@ -399,24 +414,24 @@ export default function FinancialPage() {
       {/* Uploaded files list */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-marble-700">Uploaded Files</h3>
+          <h3 className="text-sm font-medium text-slate-300">Uploaded Files</h3>
           {uploadedFiles.map(file => (
             <div
               key={file.id}
-              className="flex items-center justify-between p-3 bg-marble-50 rounded-md"
+              className="flex items-center justify-between p-3 bg-slate-800 rounded-md"
             >
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-marble-400" />
+                <FileText className="h-5 w-5 text-slate-500" />
                 <div>
-                  <p className="text-sm font-medium text-marble-900">{file.name}</p>
-                  <p className="text-xs text-marble-500">
+                  <p className="text-sm font-medium text-marble-100">{file.name}</p>
+                  <p className="text-xs text-slate-400">
                     {(file.size / 1024).toFixed(1)} KB
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => removeFile(file.id)}
-                className="text-marble-400 hover:text-error-500 transition-colors"
+                className="text-slate-500 hover:text-error-500 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -426,9 +441,9 @@ export default function FinancialPage() {
       )}
 
       {/* Privacy note */}
-      <div className="p-4 bg-gold-50 rounded-lg">
-        <p className="text-sm text-marble-700">
-          <strong>Privacy note:</strong> All financial documents are encrypted and stored securely.
+      <div className="p-4 bg-gold-900/30 border border-gold-700 rounded-lg">
+        <p className="text-sm text-slate-300">
+          <strong className="text-gold-400">Privacy note:</strong> All financial documents are encrypted and stored securely.
           They will only be used for research purposes and will never be shared publicly
           without your explicit consent.
         </p>
@@ -442,6 +457,7 @@ export default function FinancialPage() {
 
   return (
     <WizardLayout
+      variant="dark"
       steps={STEPS}
       currentStep={currentStep}
       onBack={handleBack}

@@ -14,7 +14,7 @@ import { MODULES, calculateProgress } from '@/types/interview'
 import { ORG_TYPE_LABELS } from '@/data/function-matrix'
 
 /**
- * Interview Dashboard - Lists user's stories and allows creating new ones
+ * Interview Dashboard - Lists user's stories and allows creating new ones (Dark Theme)
  */
 export default function InterviewPage() {
   const router = useRouter()
@@ -126,24 +126,24 @@ export default function InterviewPage() {
     return `${Math.floor(diffDays / 30)} months ago`
   }
 
-  // Get status badge
+  // Get status badge (dark theme)
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-marble-200 text-marble-700">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-300">
             Draft
           </span>
         )
       case 'in_progress':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gold-100 text-gold-700">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gold-900/50 text-gold-400">
             In Progress
           </span>
         )
       case 'coined':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-900/50 text-emerald-400">
             Coined
           </span>
         )
@@ -154,35 +154,35 @@ export default function InterviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-marble-gradient">
+    <div className="min-h-screen bg-slate-900">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-semibold text-marble-950 tracking-wide">
+          <h1 className="font-serif text-3xl font-semibold text-marble-100 tracking-wide">
             Your Stories
           </h1>
-          <p className="mt-2 text-marble-600">
+          <p className="mt-2 text-slate-400">
             Document your organizational journey and preserve its legacy.
           </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-md text-error-700">
+          <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-md text-red-300">
             {error}
           </div>
         )}
 
         {/* Create new story button */}
         <Button
-          variant="primary"
+          variant="dark-primary"
           size="lg"
           onClick={handleCreateStory}
           disabled={isCreating}
@@ -195,12 +195,12 @@ export default function InterviewPage() {
 
         {/* Stories list */}
         {stories.length === 0 ? (
-          <Card className="p-8 text-center">
-            <FileText className="h-12 w-12 mx-auto text-marble-400 mb-4" />
-            <h3 className="font-serif text-lg font-medium text-marble-900 mb-2">
+          <Card variant="dark" className="p-8 text-center">
+            <FileText className="h-12 w-12 mx-auto text-slate-500 mb-4" />
+            <h3 className="font-serif text-lg font-medium text-marble-100 mb-2">
               No stories yet
             </h3>
-            <p className="text-marble-600 mb-6">
+            <p className="text-slate-400 mb-6">
               Begin documenting your first organizational story.
             </p>
           </Card>
@@ -219,21 +219,22 @@ export default function InterviewPage() {
                   className="block"
                 >
                   <Card
+                    variant="dark"
                     className={cn(
-                      'p-4 hover:shadow-md transition-shadow cursor-pointer',
-                      'border border-marble-200 hover:border-gold-300'
+                      'p-4 hover:bg-slate-800/80 transition-all cursor-pointer',
+                      'border border-slate-700 hover:border-gold-500/50'
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-medium text-marble-900 truncate">
+                          <h3 className="font-medium text-marble-100 truncate">
                             {story.organizationName || 'Untitled Story'}
                           </h3>
                           {getStatusBadge(story.status)}
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-marble-500">
+                        <div className="flex items-center gap-4 text-sm text-slate-400">
                           {orgTypeLabel && (
                             <span>{orgTypeLabel}</span>
                           )}
@@ -246,13 +247,13 @@ export default function InterviewPage() {
                         {/* Progress bar */}
                         {story.status !== 'coined' && (
                           <div className="mt-3">
-                            <div className="flex items-center justify-between text-xs text-marble-500 mb-1">
+                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                               <span>{progress}% complete</span>
                               <span>
                                 {story.completedModules.length} of {MODULES.length} modules
                               </span>
                             </div>
-                            <div className="h-1.5 bg-marble-200 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gold-500 transition-all"
                                 style={{ width: `${progress}%` }}
@@ -262,7 +263,7 @@ export default function InterviewPage() {
                         )}
                       </div>
 
-                      <ChevronRight className="h-5 w-5 text-marble-400 ml-4 flex-shrink-0" />
+                      <ChevronRight className="h-5 w-5 text-slate-500 ml-4 flex-shrink-0" />
                     </div>
                   </Card>
                 </Link>
@@ -270,6 +271,18 @@ export default function InterviewPage() {
             })}
           </div>
         )}
+
+        {/* Bottom separator section */}
+        <div className="mt-12 pt-8 border-t border-slate-700">
+          <div className="text-center">
+            <p className="text-slate-500 text-sm">
+              Need help? Contact us at{' '}
+              <a href="mailto:support@soil.foundation" className="text-gold-400 hover:text-gold-300 transition-colors">
+                support@soil.foundation
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

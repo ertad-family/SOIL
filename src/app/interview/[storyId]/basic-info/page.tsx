@@ -165,6 +165,7 @@ export default function BasicInfoPage() {
 
   return (
     <WizardLayout
+      variant="dark"
       steps={STEPS}
       currentStep={currentStep}
       onBack={handleBack}
