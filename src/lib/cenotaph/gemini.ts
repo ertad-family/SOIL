@@ -1,20 +1,24 @@
 /**
- * Gemini Image Generation Integration
+ * Vertex AI Imagen 4 Image Generation Integration
  * Issue: #23 Cenotaph creation wizard
  *
- * Uses Gemini 2.5 Flash Image (Nano Banana) for cenotaph design generation.
- * Cost: ~$0.039 per image (1290 output tokens at $30/1M tokens)
+ * Uses Google Vertex AI Imagen 4 for cenotaph design generation.
+ * Cost: ~$0.04 per image (Imagen 4 pricing)
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 import type { DesignOption } from '@/types/cenotaph'
 
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+// Initialize Google GenAI client with Vertex AI
+// Using Vertex AI requires project ID and location
+const ai = new GoogleGenAI({
+  vertexai: true,
+  project: process.env.GOOGLE_CLOUD_PROJECT_ID || '',
+  location: process.env.VERTEX_AI_LOCATION || 'us-central1',
+})
 
-// Model configuration
-// Using gemini-2.0-flash-exp for image generation (Nano Banana)
-const IMAGE_MODEL = 'gemini-2.0-flash-exp'
+// Model configuration - Imagen 4 for high-quality image generation
+const IMAGE_MODEL = 'imagen-4.0-generate-001'
 
 interface GeneratedImage {
   base64Data: string
@@ -22,35 +26,38 @@ interface GeneratedImage {
 }
 
 /**
- * Generate a single cenotaph design image using Gemini
+ * Generate a single cenotaph design image using Imagen 4
  */
 async function generateSingleImage(prompt: string): Promise<GeneratedImage | null> {
   try {
-    const model = genAI.getGenerativeModel({
+    console.log('Calling Imagen 4 with prompt:', prompt.substring(0, 100) + '...')
+
+    const response = await ai.models.generateImages({
       model: IMAGE_MODEL,
-      generationConfig: {
-        // @ts-expect-error - responseModalities is valid for image generation
-        responseModalities: ['Text', 'Image'],
+      prompt: prompt,
+      config: {
+        numberOfImages: 1,
+        aspectRatio: '1:1', // Square format for cenotaph designs
       },
     })
 
-    const result = await model.generateContent(prompt)
-    const response = result.response
+    // Check if we got generated images
+    if (response.generatedImages && response.generatedImages.length > 0) {
+      const image = response.generatedImages[0]
 
-    // Extract image from response
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
+      // imageBytes is a base64-encoded string in the SDK
+      if (image.image?.imageBytes) {
         return {
-          base64Data: part.inlineData.data,
-          mimeType: part.inlineData.mimeType || 'image/png'
+          base64Data: image.image.imageBytes,
+          mimeType: 'image/png'
         }
       }
     }
 
-    console.error('No image found in Gemini response')
+    console.error('No image found in Imagen response:', JSON.stringify(response, null, 2))
     return null
   } catch (error) {
-    console.error('Gemini image generation failed:', error)
+    console.error('Imagen 4 image generation failed:', error)
     throw error
   }
 }
@@ -80,6 +87,8 @@ export async function generateCenotaphDesigns(
           prompt: prompts[i].substring(0, 500), // Store truncated prompt for reference
           createdAt: new Date().toISOString()
         })
+
+        console.log(`Successfully generated design option ${i + 1}`)
       }
 
       // Add small delay between requests to avoid rate limiting
@@ -124,7 +133,7 @@ export async function uploadDesignToStorage(
     const fileName = `${memorialId}/${designId}.${ext}`
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('cenotaph-designs')
       .upload(fileName, buffer, {
         contentType: mimeType,
@@ -191,11 +200,9 @@ export async function processAndUploadDesigns(
 
 /**
  * Estimate cost for generation
- * Based on Gemini pricing: $30/1M output tokens, ~1290 tokens per image
+ * Based on Imagen 4 pricing: ~$0.04 per image
  */
 export function estimateCost(numberOfImages: number): number {
-  const tokensPerImage = 1290
-  const costPerMillionTokens = 30
-  const totalTokens = numberOfImages * tokensPerImage
-  return (totalTokens / 1_000_000) * costPerMillionTokens
+  const costPerImage = 0.04
+  return numberOfImages * costPerImage
 }
