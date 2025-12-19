@@ -164,10 +164,10 @@ export default function InterviewPage() {
           </div>
         )}
 
-        {/* Create new story button */}
+        {/* Create new organization button */}
         <Button variant="dark-primary" size="lg" onClick={handleCreateStory} className="mb-8">
           <Plus className="h-5 w-5 mr-2" />
-          Start a New Story
+          Create Organization
         </Button>
 
         {/* Stories list */}
