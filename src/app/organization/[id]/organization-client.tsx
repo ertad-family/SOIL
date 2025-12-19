@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SwitchWithLabel } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PrivacyDisplayStyle, PRIVACY_DISPLAY_LABELS, DEFAULT_PRIVACY_STYLE } from "@/lib/privacy";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Building2,
@@ -77,6 +85,7 @@ interface OrganizationData {
   verification_status: VerificationStatus;
   verification_count: number;
   is_public: boolean;
+  privacy_display_style: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -269,6 +278,9 @@ function OwnerView({
 }) {
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(organization.is_public);
+  const [privacyDisplayStyle, setPrivacyDisplayStyle] = useState<PrivacyDisplayStyle>(
+    (organization.privacy_display_style as PrivacyDisplayStyle) || DEFAULT_PRIVACY_STYLE
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   // Edit organization modal state
@@ -367,6 +379,28 @@ function OwnerView({
       setIsPublic(checked);
     } catch (err) {
       console.error("Failed to update visibility:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Update privacy display style via API
+  const handlePrivacyStyleChange = async (style: PrivacyDisplayStyle) => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/organization/${organization.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ privacy_display_style: style }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update privacy display style");
+      }
+
+      setPrivacyDisplayStyle(style);
+    } catch (err) {
+      console.error("Failed to update privacy display style:", err);
     } finally {
       setIsSaving(false);
     }
@@ -831,6 +865,35 @@ function OwnerView({
                 onCheckedChange={handleVisibilityChange}
                 disabled={isSaving}
               />
+
+              {/* Privacy Display Style */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-marble-100">Privacy display style</label>
+                <p className="text-sm text-slate-400 mb-2">
+                  Choose how your organization name appears when private
+                </p>
+                <Select
+                  value={privacyDisplayStyle}
+                  onValueChange={(value) => handlePrivacyStyleChange(value as PrivacyDisplayStyle)}
+                  disabled={isPublic || isSaving}
+                >
+                  <SelectTrigger variant="dark" className="w-full">
+                    <SelectValue placeholder="Select display style" />
+                  </SelectTrigger>
+                  <SelectContent variant="dark">
+                    {(Object.keys(PRIVACY_DISPLAY_LABELS) as PrivacyDisplayStyle[]).map((style) => (
+                      <SelectItem key={style} value={style} variant="dark">
+                        {PRIVACY_DISPLAY_LABELS[style]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {isPublic && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    This setting only applies when your profile is private
+                  </p>
+                )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-4 pt-4 border-t border-slate-700">

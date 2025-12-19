@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const {
       is_public,
+      privacy_display_style,
       name,
       description,
       organization_type,
@@ -56,6 +57,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
     if (typeof is_public === "boolean") updates.is_public = is_public;
+    if (typeof privacy_display_style === "string")
+      updates.privacy_display_style = privacy_display_style;
     if (typeof name === "string") updates.name = name;
     if (typeof description === "string") updates.description = description;
     if (typeof organization_type === "string") updates.organization_type = organization_type;

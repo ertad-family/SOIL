@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 
 interface CenotaphCardProps {
   id: string;
-  slug: string;
   organizationName: string;
+  isPrivate?: boolean;
   organizationType: string | null;
   industry: string | null;
   epitaph: string | null;
@@ -43,6 +43,7 @@ const ORG_TYPE_LABELS: Record<string, string> = {
  */
 export function CenotaphCard({
   organizationName,
+  isPrivate,
   organizationType,
   industry,
   epitaph,
@@ -102,7 +103,9 @@ export function CenotaphCard({
         <div className="relative aspect-[3/4] overflow-hidden">
           <Image
             src={cenotaphImageUrl}
-            alt={`Cenotaph for ${organizationName}`}
+            alt={
+              isPrivate ? "Cenotaph for a private organization" : `Cenotaph for ${organizationName}`
+            }
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -128,7 +131,15 @@ export function CenotaphCard({
         {/* Content Section */}
         <div className="p-4 space-y-3">
           {/* Organization Name */}
-          <h3 className="font-display text-lg font-medium text-marble-100 leading-tight group-hover:text-gold-300 transition-colors duration-300">
+          <h3
+            className={cn(
+              "font-display text-lg font-medium leading-tight transition-colors duration-300",
+              isPrivate
+                ? "text-slate-400 group-hover:text-slate-300"
+                : "text-marble-100 group-hover:text-gold-300"
+            )}
+            title={isPrivate ? "This organization has chosen to remain private" : undefined}
+          >
             {organizationName}
           </h3>
 
