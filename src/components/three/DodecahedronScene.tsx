@@ -486,6 +486,7 @@ interface DodecahedronSceneProps {
   hideInternalOverlay?: boolean; // If true, don't render internal fade overlay (parent handles it)
   onReady?: () => void; // Called when scene is ready (preloaded)
   triggerFlyOutRef?: React.MutableRefObject<(() => void) | null>; // Ref to trigger fly-out externally
+  triggerFlyInRef?: React.MutableRefObject<((section: string) => void) | null>; // Ref to trigger fly-in externally (for return/ESC)
 }
 
 export function DodecahedronScene({
@@ -500,6 +501,7 @@ export function DodecahedronScene({
   hideInternalOverlay = false,
   onReady,
   triggerFlyOutRef,
+  triggerFlyInRef,
 }: DodecahedronSceneProps) {
   // Ref for OrbitControls (to disable during animation)
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
@@ -654,6 +656,53 @@ export function DodecahedronScene({
     },
     [onExternalFadeProgress]
   );
+
+  // Function to trigger fly-in animation externally (for Return/ESC)
+  const triggerFlyIn = useCallback(
+    (section: string) => {
+      if (flyStateRef.current.isAnimating) return; // Already animating
+
+      // Get portal data for the target section, fallback to "home" if not found
+      let portalData = getPortalDataBySection(section);
+      if (!portalData) {
+        console.warn(`[FlyIn] Portal not found for section: ${section}, using home`);
+        portalData = getPortalDataBySection("home");
+        if (!portalData) {
+          console.error("[FlyIn] Home portal not found, cannot return");
+          return;
+        }
+      }
+
+      // Convert to world coordinates (add dodecahedron Y offset)
+      const worldCenter = portalData.center.clone();
+      worldCenter.y += DODECAHEDRON_Y_OFFSET;
+
+      const worldNormal = portalData.normal.clone();
+
+      // Create PortalClickData and trigger fly-in
+      const clickData: PortalClickData = {
+        faceId: portalData.faceId,
+        section: section,
+        worldCenter,
+        worldNormal,
+      };
+
+      handlePortalClick(clickData);
+    },
+    [handlePortalClick]
+  );
+
+  // Expose triggerFlyIn via ref
+  useEffect(() => {
+    if (triggerFlyInRef) {
+      triggerFlyInRef.current = triggerFlyIn;
+    }
+    return () => {
+      if (triggerFlyInRef) {
+        triggerFlyInRef.current = null;
+      }
+    };
+  }, [triggerFlyIn, triggerFlyInRef]);
 
   // Determine initial camera position based on initialView
   const initialCameraPosition: [number, number, number] =
