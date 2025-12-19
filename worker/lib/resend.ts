@@ -26,7 +26,17 @@ export function classifyResendError(error: unknown): {
   message: string;
   type: "resend_error" | "recipient_error";
 } {
-  const errorMessage = error instanceof Error ? error.message : String(error);
+  // Extract error message - Resend errors are objects with message property
+  let errorMessage: string;
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  } else if (error && typeof error === "object" && "message" in error) {
+    errorMessage = String((error as { message: unknown }).message);
+  } else if (error && typeof error === "object") {
+    errorMessage = JSON.stringify(error);
+  } else {
+    errorMessage = String(error);
+  }
 
   // Permanent recipient errors - don't retry
   const recipientErrorPatterns = [
