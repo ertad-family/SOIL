@@ -222,7 +222,6 @@ export function OrganizationClient({
         publicNarratives={publicNarratives}
         currentUserId={currentUserId}
         currentUserStoryId={currentUserStoryId}
-        storiesCount={stories.length}
       />
     );
   }

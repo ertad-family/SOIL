@@ -4,14 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SectionLabel } from "@/components/ui/section-label";
 import {
   Calendar,
   MapPin,
   Building2,
   Briefcase,
   Users,
-  Eye,
-  Heart,
   Quote,
   Lightbulb,
   MessageCircle,
@@ -23,6 +23,7 @@ import {
   Plus,
   Flag,
   ShieldCheck,
+  Eye,
 } from "lucide-react";
 import type {
   OrganizationType,
@@ -88,7 +89,6 @@ interface PublicViewProps {
   publicNarratives: PublicNarrativeData[];
   currentUserId: string | null;
   currentUserStoryId: string | null;
-  storiesCount: number;
 }
 
 // =============================================================================
@@ -217,18 +217,6 @@ function HeroSection({
                   <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-gold-400/50" />
                   <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-gold-400/50" />
                 </div>
-
-                {/* Stats under image */}
-                <div className="flex justify-center gap-6 mt-4 text-sm text-slate-400">
-                  <span className="flex items-center gap-1.5">
-                    <Eye className="w-4 h-4" />
-                    {memorial.views_count} views
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Heart className="w-4 h-4" />
-                    {memorial.respects_count} respects
-                  </span>
-                </div>
               </button>
             ) : (
               /* Placeholder when no cenotaph image */
@@ -254,7 +242,7 @@ function HeroSection({
             {/* Organization name */}
             <h1
               className={cn(
-                "font-serif text-4xl md:text-5xl lg:text-6xl font-semibold mb-6",
+                "font-display text-4xl md:text-5xl lg:text-6xl font-semibold mb-6",
                 organization.is_public ? "text-marble-100" : "text-slate-400 italic"
               )}
             >
@@ -376,7 +364,7 @@ function NarrativeSection({
         <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
           <Icon className="w-5 h-5 text-gold-400" />
         </div>
-        <h3 className="font-serif text-2xl text-marble-100">{title}</h3>
+        <h3 className="font-display text-2xl text-marble-100">{title}</h3>
         {authorDisplay && (
           <span className="text-sm text-slate-500 ml-auto">by {authorDisplay}</span>
         )}
@@ -405,91 +393,129 @@ function NarrativeSection({
   );
 }
 
-/** Call-to-action section for adding perspective or claiming ownership */
-function CTASection({
+/** Get Involved section - different options for public vs private orgs */
+function GetInvolvedSection({
   organization,
   currentUserId,
   currentUserStoryId,
-  storiesCount,
 }: {
   organization: OrganizationData;
   currentUserId: string | null;
   currentUserStoryId: string | null;
-  storiesCount: number;
 }) {
   const isAuthenticated = !!currentUserId;
   const hasOwnStory = !!currentUserStoryId;
+  const isPublicOrg = organization.is_public;
 
   return (
-    <section className="py-16 bg-gradient-to-b from-slate-800 to-slate-900">
-      <div className="container-content">
-        <div className="max-w-2xl mx-auto text-center">
-          {/* Main CTA */}
-          <div className="mb-12">
-            <h2 className="font-serif text-3xl text-marble-100 mb-4">
-              Were you part of this organization?
-            </h2>
-            <p className="text-slate-400 mb-8">
-              Every perspective matters. Add your story to help future founders learn from this
-              experience.
-            </p>
+    <section className="py-16 md:py-24 bg-slate-900">
+      <div className="max-w-content mx-auto px-6">
+        <SectionLabel>get involved</SectionLabel>
+        <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-12 text-marble-100">
+          Join the Movement
+        </h2>
 
-            {!isAuthenticated ? (
-              /* Not logged in */
-              <Link href={`/login?returnTo=/organization/${organization.id}`}>
-                <Button variant="dark-primary" size="lg" leftIcon={<LogIn className="w-5 h-5" />}>
-                  Sign in to Add Your Perspective
-                </Button>
-              </Link>
-            ) : hasOwnStory ? (
-              /* Has own story */
-              <Link href={`/interview/${currentUserStoryId}`}>
-                <Button
-                  variant="dark-secondary"
-                  size="lg"
-                  rightIcon={<ChevronRight className="w-5 h-5" />}
-                >
-                  View Your Story
-                </Button>
-              </Link>
-            ) : (
-              /* Logged in, no story yet */
-              <Link href={`/interview?org=${organization.id}`}>
-                <Button variant="dark-primary" size="lg" leftIcon={<Plus className="w-5 h-5" />}>
-                  Add Your Perspective
-                </Button>
-              </Link>
-            )}
-
-            {/* Stories count */}
-            {storiesCount > 0 && (
-              <p className="text-sm text-slate-500 mt-4">
-                {storiesCount} {storiesCount === 1 ? "person has" : "people have"} shared their
-                perspective
-              </p>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-12" />
-
-          {/* Secondary CTA - Claim Ownership */}
-          {isAuthenticated && (
-            <div className="text-center">
-              <p className="text-sm text-slate-500 mb-3">Something wrong with this page?</p>
-              <button
-                className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-gold-400 transition-colors"
-                onClick={() => {
-                  // TODO: Implement claim ownership modal/flow
-                  alert("Claim ownership feature coming soon. Please contact support.");
-                }}
-              >
-                <Flag className="w-4 h-4" />
-                Report or Claim Ownership
-              </button>
-            </div>
+        {/* Cards grid */}
+        <div
+          className={cn(
+            "grid gap-6",
+            isPublicOrg ? "md:grid-cols-2 max-w-4xl" : "md:grid-cols-1 max-w-lg"
           )}
+        >
+          {/* Add Perspective - only for public orgs */}
+          {isPublicOrg && (
+            <Card variant="dark-elevated" className="h-full flex flex-col">
+              <CardHeader>
+                <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-4">
+                  <Plus className="w-8 h-8" />
+                </div>
+                <CardTitle variant="dark">Add Your Perspective</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col">
+                <p className="text-slate-400 leading-relaxed flex-1">
+                  Were you part of this organization? Every perspective matters. Share your story to
+                  help others learn from this experience.
+                </p>
+                <div className="mt-6">
+                  {!isAuthenticated ? (
+                    <Link href={`/login?returnTo=/organization/${organization.id}`}>
+                      <Button
+                        variant="dark-primary"
+                        size="lg"
+                        className="w-full"
+                        leftIcon={<LogIn className="w-5 h-5" />}
+                      >
+                        Sign in to Contribute
+                      </Button>
+                    </Link>
+                  ) : hasOwnStory ? (
+                    <Link href={`/interview/${currentUserStoryId}`}>
+                      <Button
+                        variant="dark-secondary"
+                        size="lg"
+                        className="w-full"
+                        rightIcon={<ChevronRight className="w-5 h-5" />}
+                      >
+                        View Your Story
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={`/interview?org=${organization.id}`}>
+                      <Button
+                        variant="dark-primary"
+                        size="lg"
+                        className="w-full"
+                        leftIcon={<Plus className="w-5 h-5" />}
+                      >
+                        Add Your Perspective
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Coin Your Story - always shown */}
+          <Card variant="dark-elevated" className="h-full flex flex-col">
+            <CardHeader>
+              <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-4">
+                <Sparkles className="w-8 h-8" />
+              </div>
+              <CardTitle variant="dark">Coin Your Own Story</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col">
+              <p className="text-slate-400 leading-relaxed flex-1">
+                Have your own organization story to tell? Transform your experience into knowledge
+                that helps future founders avoid the same mistakes.
+              </p>
+              <div className="mt-6">
+                <Link href="/organization/create">
+                  <Button variant="marble" size="lg" className="w-full">
+                    Coin Your Story
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Claim Ownership link - only for authenticated users on public orgs */}
+        {isAuthenticated && isPublicOrg && (
+          <div className="text-center mt-12">
+            <p className="text-sm text-slate-500 mb-3">Something wrong with this page?</p>
+            <button
+              className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-gold-400 transition-colors"
+              onClick={() => {
+                // TODO: Implement claim ownership modal/flow
+                alert("Claim ownership feature coming soon. Please contact support.");
+              }}
+            >
+              <Flag className="w-4 h-4" />
+              Report or Claim Ownership
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -504,7 +530,9 @@ function ConsultationCTA({ organization }: { organization: OrganizationData }) {
       <div className="container-content">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <h3 className="font-serif text-xl text-marble-100 mb-2">Learn from this experience</h3>
+            <h3 className="font-display text-xl text-marble-100 mb-2">
+              Learn from this experience
+            </h3>
             <p className="text-slate-400">Connect with the founder for insights and consultation</p>
           </div>
           <Button
@@ -534,7 +562,6 @@ export function PublicView({
   publicNarratives,
   currentUserId,
   currentUserStoryId,
-  storiesCount,
 }: PublicViewProps) {
   const dateRange = formatDateRange(organization.founded_date, organization.closed_date);
   const location = [organization.location_city, organization.location_country]
@@ -627,7 +654,7 @@ export function PublicView({
         <section className="py-16 md:py-24">
           <div className="container-content max-w-2xl text-center">
             <BookOpen className="w-16 h-16 text-slate-600 mx-auto mb-6" />
-            <h2 className="font-serif text-2xl text-marble-100 mb-4">Story Coming Soon</h2>
+            <h2 className="font-display text-2xl text-marble-100 mb-4">Story Coming Soon</h2>
             <p className="text-slate-400 mb-8">
               The founder is still working on documenting this organization&apos;s story. Check back
               later or add your own perspective if you were part of it.
@@ -636,12 +663,11 @@ export function PublicView({
         </section>
       )}
 
-      {/* Add Perspective CTA */}
-      <CTASection
+      {/* Get Involved Section */}
+      <GetInvolvedSection
         organization={organization}
         currentUserId={currentUserId}
         currentUserStoryId={currentUserStoryId}
-        storiesCount={storiesCount}
       />
     </div>
   );
