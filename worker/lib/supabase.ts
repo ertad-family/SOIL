@@ -46,9 +46,8 @@ export interface VerificationRequest {
 export interface Organization {
   id: string;
   name: string;
-  location: string | null;
-  started_at: string | null;
-  closed_at: string | null;
+  location_city: string | null;
+  location_country: string | null;
 }
 
 // Query result type for pending emails

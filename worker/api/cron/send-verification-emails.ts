@@ -44,7 +44,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       .select(
         `
         *,
-        organization:organizations!inner(id, name, location, started_at, closed_at)
+        organization:organizations!inner(id, name, location_city, location_country)
       `
       )
       .is("email_sent_at", null)

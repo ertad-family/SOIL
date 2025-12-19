@@ -43,6 +43,16 @@ export function generateVerificationEmail(
     : "a team member";
   const relationshipLabel = RELATIONSHIP_LABELS[request.relationship] || "contact";
 
+  // Build location string from city and country
+  const locationParts = [
+    request.organization.location_city,
+    request.organization.location_country,
+  ].filter(Boolean);
+  const location = locationParts.length > 0 ? locationParts.join(", ") : null;
+  const organizationWithLocation = location
+    ? `${organizationName} (${location})`
+    : organizationName;
+
   const verifyUrl = `${appUrl}/verify/${request.token}`;
 
   const subject = `${requesterName} asks for your help preserving ${organizationName}'s legacy`;
@@ -78,7 +88,7 @@ export function generateVerificationEmail(
               <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #cbd5e1;">
                 <strong style="color: #f8fafc;">${requesterName}</strong>, who was
                 <strong style="color: #fbbf24;">${roleLabel}</strong> of
-                <strong style="color: #f8fafc;">${organizationName}</strong>, is documenting
+                <strong style="color: #f8fafc;">${organizationWithLocation}</strong>, is documenting
                 the organization's story on SOIL — a platform dedicated to preserving the
                 legacies of organizations that have closed.
               </p>
@@ -149,7 +159,7 @@ export function generateVerificationEmail(
   const text = `
 Hi ${recipientName},
 
-${requesterName}, who was ${roleLabel} of ${organizationName}, is documenting the organization's story on SOIL — a platform dedicated to preserving the legacies of organizations that have closed.
+${requesterName}, who was ${roleLabel} of ${organizationWithLocation}, is documenting the organization's story on SOIL — a platform dedicated to preserving the legacies of organizations that have closed.
 
 Every year, millions of companies close their doors. Their stories, lessons, and the people who built them risk being forgotten. SOIL exists to change that — creating digital cenotaphs that honor these journeys and help future founders learn from the past.
 
