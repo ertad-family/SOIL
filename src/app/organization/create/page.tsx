@@ -32,10 +32,15 @@ import {
   LIFECYCLE_STAGE_DESCRIPTIONS,
 } from "@/data/function-matrix";
 
-// Wizard steps for Organization creation
-const STEPS = [
+// Wizard steps for Organization creation (full flow)
+const FULL_STEPS = [
   { id: "basics", label: "The Basics", description: "Tell us about the organization" },
   { id: "timeline", label: "Timeline", description: "When did this organization exist?" },
+  { id: "about-you", label: "About You", description: "Your relationship to this organization" },
+];
+
+// Wizard steps for adding story to existing organization
+const ADD_STORY_STEPS = [
   { id: "about-you", label: "About You", description: "Your relationship to this organization" },
 ];
 
@@ -78,9 +83,18 @@ const createEmptyFormData = (): OrganizationFormData => ({
   publicNaming: null,
 });
 
+// Existing organization data (when adding story to existing org)
+interface ExistingOrganization {
+  id: string;
+  name: string;
+  description: string | null;
+  organization_type: OrganizationType | null;
+}
+
 /**
  * Organization Creation Wizard Content
  * Creates an organization and optionally starts an interview.
+ * When `org` param is provided, skips org creation and only creates a story.
  */
 function OrganizationCreateContent() {
   const router = useRouter();
@@ -88,6 +102,7 @@ function OrganizationCreateContent() {
   const supabase = createClient();
 
   const returnTo = searchParams.get("returnTo"); // e.g., "interview"
+  const existingOrgId = searchParams.get("org"); // Existing org ID for adding story
 
   const [formData, setFormData] = React.useState<OrganizationFormData>(createEmptyFormData);
   const [currentStep, setCurrentStep] = React.useState(0);
@@ -95,21 +110,46 @@ function OrganizationCreateContent() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [validationErrors, setValidationErrors] = React.useState<Record<string, string>>({});
   const [error, setError] = React.useState<string | null>(null);
+  const [existingOrg, setExistingOrg] = React.useState<ExistingOrganization | null>(null);
 
-  // Check if user is authenticated
+  // Use different steps based on whether we're adding to existing org
+  const STEPS = existingOrgId ? ADD_STORY_STEPS : FULL_STEPS;
+
+  // Check auth and load existing org if needed
   React.useEffect(() => {
-    async function checkAuth() {
+    async function initialize() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login?redirect=/organization/create");
+        const redirect = existingOrgId
+          ? `/organization/create?org=${existingOrgId}&returnTo=${returnTo || ""}`
+          : "/organization/create";
+        router.push(`/login?redirect=${encodeURIComponent(redirect)}`);
         return;
       }
+
+      // If adding to existing org, load org data
+      if (existingOrgId) {
+        const { data: orgData, error: orgError } = await supabase
+          .from("organizations")
+          .select("id, name, description, organization_type")
+          .eq("id", existingOrgId)
+          .single();
+
+        if (orgError || !orgData) {
+          setError("Organization not found");
+          setIsLoading(false);
+          return;
+        }
+
+        setExistingOrg(orgData as ExistingOrganization);
+      }
+
       setIsLoading(false);
     }
-    checkAuth();
-  }, [supabase, router]);
+    initialize();
+  }, [supabase, router, existingOrgId, returnTo]);
 
   // Get business models for selected org type
   const businessModels = formData.organizationType
@@ -119,8 +159,9 @@ function OrganizationCreateContent() {
   // Validation
   const validateStep = (step: number): boolean => {
     const errors: Record<string, string> = {};
+    const currentStepId = STEPS[step]?.id;
 
-    if (step === 0) {
+    if (currentStepId === "basics") {
       if (!formData.name?.trim()) {
         errors.name = "Organization name is required";
       }
@@ -132,13 +173,13 @@ function OrganizationCreateContent() {
       }
     }
 
-    if (step === 1) {
+    if (currentStepId === "timeline") {
       if (!formData.foundedDate) {
         errors.foundedDate = "Please enter when the organization was founded";
       }
     }
 
-    if (step === 2) {
+    if (currentStepId === "about-you") {
       if (!formData.founderRole) {
         errors.founderRole = "Please select your role";
       }
@@ -155,7 +196,9 @@ function OrganizationCreateContent() {
       setValidationErrors({});
     } else {
       // Go back to where we came from
-      if (returnTo === "interview") {
+      if (existingOrgId) {
+        router.push(`/organization/${existingOrgId}`);
+      } else if (returnTo === "interview") {
         router.push("/interview");
       } else {
         router.push("/account");
@@ -184,48 +227,56 @@ function OrganizationCreateContent() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("Must be logged in to create an organization");
+        throw new Error("Must be logged in");
       }
 
-      // 1. Create organization
-      const { data: orgData, error: orgError } = await supabase
-        .from("organizations")
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          organization_type: formData.organizationType,
-          business_model: formData.businessModel,
-          industry: formData.industry,
-          location_country: formData.location.country,
-          location_city: formData.location.city,
-          founded_date: formData.foundedDate,
-          closed_date: formData.closedDate,
-          stage_at_closure: formData.stageAtClosure,
-          peak_team_size: formData.peakTeamSize,
-          created_by: user.id,
-        })
-        .select("id")
-        .single();
+      let organizationId: string;
 
-      if (orgError) {
-        throw new Error(orgError.message);
+      // Different flows based on whether we're adding to existing org
+      if (existingOrg) {
+        // Adding story to existing organization - skip org creation
+        organizationId = existingOrg.id;
+      } else {
+        // Full flow - create new organization first
+        const { data: orgData, error: orgError } = await supabase
+          .from("organizations")
+          .insert({
+            name: formData.name,
+            description: formData.description,
+            organization_type: formData.organizationType,
+            business_model: formData.businessModel,
+            industry: formData.industry,
+            location_country: formData.location.country,
+            location_city: formData.location.city,
+            founded_date: formData.foundedDate,
+            closed_date: formData.closedDate,
+            stage_at_closure: formData.stageAtClosure,
+            peak_team_size: formData.peakTeamSize,
+            created_by: user.id,
+          })
+          .select("id")
+          .single();
+
+        if (orgError) {
+          throw new Error(orgError.message);
+        }
+
+        organizationId = orgData.id;
       }
 
-      const organizationId = orgData.id;
-
-      // 2. Create story linked to organization
-      const { data: storyData, error: storyError } = await supabase
-        .from("stories")
-        .insert({
-          organization_id: organizationId,
-          user_id: user.id,
-          status: "in_progress", // Skip draft since org info is complete
-          current_module: "functional", // Start at functional (skip basic_info)
-          completed_modules: ["basic_info"], // Mark basic_info as complete
-          founder_role: formData.founderRole,
-          public_naming: formData.publicNaming,
-          // Keep basic_info for backward compatibility
-          basic_info: {
+      // Create story linked to organization
+      const basicInfoData = existingOrg
+        ? {
+            // For existing org, use org data for basic_info
+            organizationName: existingOrg.name,
+            description: existingOrg.description,
+            organizationType: existingOrg.organization_type,
+            founderRole: formData.founderRole,
+            publicNaming: formData.publicNaming,
+            contactEmail: null,
+          }
+        : {
+            // For new org, use form data
             organizationName: formData.name,
             description: formData.description,
             organizationType: formData.organizationType,
@@ -238,8 +289,20 @@ function OrganizationCreateContent() {
             peakTeamSize: formData.peakTeamSize,
             founderRole: formData.founderRole,
             publicNaming: formData.publicNaming,
-            contactEmail: null, // Deprecated
-          },
+            contactEmail: null,
+          };
+
+      const { data: storyData, error: storyError } = await supabase
+        .from("stories")
+        .insert({
+          organization_id: organizationId,
+          user_id: user.id,
+          status: "in_progress",
+          current_module: "functional",
+          completed_modules: ["basic_info"],
+          founder_role: formData.founderRole,
+          public_naming: formData.publicNaming,
+          basic_info: basicInfoData,
         })
         .select("id")
         .single();
@@ -248,14 +311,10 @@ function OrganizationCreateContent() {
         throw new Error(storyError.message);
       }
 
-      // 3. Navigate to interview
-      if (returnTo === "interview" || !returnTo) {
-        router.push(`/interview/${storyData.id}`);
-      } else {
-        router.push(`/organization/${organizationId}`);
-      }
+      // Navigate to interview
+      router.push(`/interview/${storyData.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create organization");
+      setError(err instanceof Error ? err.message : "Failed to create story");
       setIsSubmitting(false);
     }
   };
@@ -319,6 +378,21 @@ function OrganizationCreateContent() {
     );
   }
 
+  // Determine cancel href
+  const cancelHref = existingOrgId
+    ? `/organization/${existingOrgId}`
+    : returnTo === "interview"
+      ? "/interview"
+      : "/account";
+
+  // Determine next button label
+  const nextLabel =
+    currentStep === STEPS.length - 1
+      ? existingOrg
+        ? "Add Story & Continue"
+        : "Create & Continue"
+      : "Continue";
+
   return (
     <WizardLayout
       variant="dark"
@@ -326,10 +400,18 @@ function OrganizationCreateContent() {
       currentStep={currentStep}
       onBack={handleBack}
       onNext={handleNext}
-      cancelHref={returnTo === "interview" ? "/interview" : "/account"}
+      cancelHref={cancelHref}
       isLoading={isSubmitting}
-      nextLabel={currentStep === STEPS.length - 1 ? "Create & Continue" : "Continue"}
+      nextLabel={nextLabel}
     >
+      {/* Header for existing org */}
+      {existingOrg && (
+        <div className="mb-6 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+          <p className="text-sm text-slate-400">Adding your story to</p>
+          <p className="font-medium text-marble-100">{existingOrg.name}</p>
+        </div>
+      )}
+
       {/* Error message */}
       {error && (
         <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-md text-red-300">
@@ -337,8 +419,8 @@ function OrganizationCreateContent() {
         </div>
       )}
 
-      {/* Step 0: The Basics */}
-      {currentStep === 0 && (
+      {/* Step: The Basics (full flow only) */}
+      {STEPS[currentStep]?.id === "basics" && (
         <div className="space-y-6">
           <FormField
             label="Organization Name"
@@ -445,8 +527,8 @@ function OrganizationCreateContent() {
         </div>
       )}
 
-      {/* Step 1: Timeline */}
-      {currentStep === 1 && (
+      {/* Step: Timeline (full flow only) */}
+      {STEPS[currentStep]?.id === "timeline" && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
@@ -523,8 +605,8 @@ function OrganizationCreateContent() {
         </div>
       )}
 
-      {/* Step 2: About You */}
-      {currentStep === 2 && (
+      {/* Step: About You */}
+      {STEPS[currentStep]?.id === "about-you" && (
         <div className="space-y-6">
           <FormField label="What was your role?" required error={validationErrors.founderRole}>
             <RadioGroup
