@@ -101,9 +101,9 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
       pageTitle={`Welcome, ${user.name}`}
       pageDescription="Manage your organizations and cenotaphs"
       pageActions={
-        <a href="/interview">
+        <a href="/organization/create?returnTo=interview">
           <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
-            Share Your Story
+            Create Organization
           </Button>
         </a>
       }
@@ -132,9 +132,9 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
                 <EmptyState
                   icon={<FileText className="w-12 h-12" />}
                   title="No stories in progress"
-                  description="Start sharing your organization's story to preserve its legacy"
-                  actionLabel="Share Your Story"
-                  actionHref="/interview"
+                  description="Create an organization and start documenting its story"
+                  actionLabel="Create Organization"
+                  actionHref="/organization/create?returnTo=interview"
                 />
               ) : (
                 <div className="space-y-4">
@@ -151,7 +151,7 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
                   icon={<CheckCircle2 className="w-12 h-12" />}
                   title="No coined stories yet"
                   description="Complete an interview to coin your organization's story"
-                  actionLabel="Continue Interview"
+                  actionLabel="View Stories"
                   actionHref="/interview"
                 />
               ) : (

@@ -114,8 +114,13 @@ export type Emotion = "distressed" | "worried" | "neutral" | "hopeful";
 // MODULE 0: BASIC INFO
 // =============================================================================
 
+/**
+ * @deprecated BasicInfoData is now split between Organization (org facts)
+ * and Story columns (founderRole, publicNaming). This interface is kept
+ * for backward compatibility with existing stories.
+ */
 export interface BasicInfoData {
-  // Screen 1: The Basics
+  // Screen 1: The Basics (now in organizations table)
   organizationName: string;
   description: string;
   organizationType: OrganizationType | null;
@@ -126,16 +131,16 @@ export interface BasicInfoData {
     city: string | null;
   };
 
-  // Screen 2: Timeline
+  // Screen 2: Timeline (now in organizations table)
   foundedDate: string | null; // ISO date string (YYYY-MM)
   closedDate: string | null; // ISO date string (YYYY-MM)
   stageAtClosure: LifecycleStage | null;
   peakTeamSize: number | null;
 
-  // Screen 3: About You
+  // Screen 3: About You (now in stories columns)
   founderRole: FounderRole | null;
   publicNaming: PublicNamingPreference | null;
-  contactEmail: string | null;
+  // contactEmail removed - use user's registration email instead (see issue #35)
 }
 
 // =============================================================================
@@ -574,7 +579,7 @@ export interface Story {
   // Author's role in the organization
   founderRole: FounderRole | null;
   publicNaming: PublicNamingPreference | null;
-  contactEmail: string | null;
+  // contactEmail removed - use user's registration email instead (see issue #35)
 
   // Module data (perspectives, not facts)
   basicInfo: BasicInfoData; // Keep for backward compatibility, will be deprecated
@@ -678,7 +683,6 @@ export const createEmptyBasicInfo = (): BasicInfoData => ({
   peakTeamSize: null,
   founderRole: null,
   publicNaming: null,
-  contactEmail: null,
 });
 
 export const createEmptyFunctionalMapping = (): FunctionalMappingData => ({
@@ -855,11 +859,10 @@ export const createEmptyStory = (
   organizationId,
   userId,
   status: "draft",
-  currentModule: "basic_info",
+  currentModule: "functional", // Start at functional (basic_info handled by org wizard)
   completedModules: [],
   founderRole: null,
   publicNaming: null,
-  contactEmail: null,
   basicInfo: createEmptyBasicInfo(), // Keep for backward compatibility
   functionalMapping: createEmptyFunctionalMapping(),
   financialPicture: createEmptyFinancialPicture(),

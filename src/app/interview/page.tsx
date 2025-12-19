@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, FileText, ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { StoryListItem, ModuleId } from "@/types/interview";
+import type { StoryListItem, ModuleId, OrganizationType, StoryStatus } from "@/types/interview";
 import { MODULES, calculateProgress } from "@/types/interview";
 import { ORG_TYPE_LABELS } from "@/data/function-matrix";
 
@@ -22,7 +22,6 @@ export default function InterviewPage() {
 
   const [stories, setStories] = React.useState<StoryListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isCreating, setIsCreating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   // Load user's stories
@@ -46,10 +45,13 @@ export default function InterviewPage() {
             status,
             current_module,
             completed_modules,
-            basic_info,
             created_at,
             updated_at,
-            coined_at
+            coined_at,
+            organization:organizations (
+              name,
+              organization_type
+            )
           `
           )
           .eq("user_id", user.id)
@@ -60,17 +62,23 @@ export default function InterviewPage() {
           throw new Error(fetchError.message);
         }
 
-        const transformedStories: StoryListItem[] = (data || []).map((story) => ({
-          id: story.id,
-          status: story.status,
-          organizationName: story.basic_info?.organizationName || null,
-          organizationType: story.basic_info?.organizationType || null,
-          currentModule: story.current_module,
-          completedModules: story.completed_modules || [],
-          createdAt: story.created_at,
-          updatedAt: story.updated_at,
-          coinedAt: story.coined_at,
-        }));
+        // Transform stories with organization data
+        const transformedStories: StoryListItem[] = (data || []).map((story) => {
+          // Supabase returns organization as object for FK relationship
+          const rawOrg = story.organization as unknown;
+          const org = rawOrg as { name: string; organization_type: string | null } | null;
+          return {
+            id: story.id as string,
+            status: story.status as StoryStatus,
+            organizationName: org?.name || null,
+            organizationType: (org?.organization_type as OrganizationType) || null,
+            currentModule: story.current_module as ModuleId,
+            completedModules: (story.completed_modules || []) as ModuleId[],
+            createdAt: story.created_at as string,
+            updatedAt: story.updated_at as string,
+            coinedAt: story.coined_at as string | null,
+          };
+        });
 
         setStories(transformedStories);
       } catch (err) {
@@ -83,39 +91,9 @@ export default function InterviewPage() {
     loadStories();
   }, [supabase, router]);
 
-  // Create new story
-  const handleCreateStory = async () => {
-    setIsCreating(true);
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login?redirect=/interview");
-        return;
-      }
-
-      const { data, error: insertError } = await supabase
-        .from("stories")
-        .insert({
-          user_id: user.id,
-        })
-        .select("id")
-        .single();
-
-      if (insertError) {
-        throw new Error(insertError.message);
-      }
-
-      if (data?.id) {
-        router.push(`/interview/${data.id}/basic-info`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create story");
-      setIsCreating(false);
-    }
+  // Start new story - redirect to organization wizard
+  const handleCreateStory = () => {
+    router.push("/organization/create?returnTo=interview");
   };
 
   // Format relative time
@@ -186,17 +164,10 @@ export default function InterviewPage() {
           </div>
         )}
 
-        {/* Create new story button */}
-        <Button
-          variant="dark-primary"
-          size="lg"
-          onClick={handleCreateStory}
-          disabled={isCreating}
-          isLoading={isCreating}
-          className="mb-8"
-        >
+        {/* Create new organization button */}
+        <Button variant="dark-primary" size="lg" onClick={handleCreateStory} className="mb-8">
           <Plus className="h-5 w-5 mr-2" />
-          Start a New Story
+          Create Organization
         </Button>
 
         {/* Stories list */}

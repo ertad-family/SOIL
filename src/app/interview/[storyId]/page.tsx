@@ -55,14 +55,16 @@ export default function StoryOverviewPage() {
   const orgType = story.basicInfo.organizationType;
   const orgTypeLabel = orgType ? ORG_TYPE_LABELS[orgType] : null;
 
-  // Find the next incomplete module
-  const nextIncompleteModule = MODULES.find((m) => !isModuleComplete(m.id));
+  // Filter out basic_info from displayed modules (it's handled by the organization wizard)
+  const displayedModules = MODULES.filter((m) => m.id !== "basic_info");
+
+  // Find the next incomplete module (excluding basic_info)
+  const nextIncompleteModule = displayedModules.find((m) => !isModuleComplete(m.id));
 
   // Calculate total estimated time remaining
-  const remainingMinutes = MODULES.filter((m) => !isModuleComplete(m.id)).reduce(
-    (sum, m) => sum + m.estimatedMinutes,
-    0
-  );
+  const remainingMinutes = displayedModules
+    .filter((m) => !isModuleComplete(m.id))
+    .reduce((sum, m) => sum + m.estimatedMinutes, 0);
 
   const handleContinue = () => {
     if (nextIncompleteModule) {
@@ -122,7 +124,8 @@ export default function StoryOverviewPage() {
                   <div>
                     <h2 className="font-medium text-marble-100">Your Progress</h2>
                     <p className="text-sm text-slate-400">
-                      {story.completedModules.length} of {MODULES.length} modules complete
+                      {story.completedModules.filter((m) => m !== "basic_info").length} of{" "}
+                      {displayedModules.length} modules complete
                     </p>
                   </div>
                   <div className="text-right">
@@ -195,7 +198,7 @@ export default function StoryOverviewPage() {
           <div>
             <h2 className="font-medium text-marble-100 mb-4">Modules</h2>
             <div className="space-y-3">
-              {MODULES.map((module, index) => {
+              {displayedModules.map((module, index) => {
                 const isComplete = isModuleComplete(module.id);
                 const canNavigate = canNavigateToModule(module.id);
                 const isCurrent = story.currentModule === module.id;
