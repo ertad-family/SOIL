@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { ArrowLeft } from "lucide-react";
 import { useMenu } from "@/contexts/MenuContext";
+import { Button } from "@/components/ui/button";
 
 // Dynamically import DodecahedronScene to avoid SSR issues with Three.js
 const DodecahedronScene = dynamic(
@@ -403,30 +405,17 @@ export function MenuTransition() {
 
         {/* Return button - visible in menu phase */}
         {phase === "menu" && (
-          <button
-            onClick={handleReturn}
-            className="absolute top-8 left-8 z-[95] flex items-center gap-2 px-4 py-2
-                       bg-slate-900/80 backdrop-blur-sm border border-slate-700/50
-                       rounded-sm text-marble-100 hover:text-gold-400 hover:border-gold-400/50
-                       transition-colors duration-200 font-sans text-sm font-medium uppercase tracking-wide"
-            aria-label="Return to page (ESC)"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="absolute top-8 right-8 z-[95]">
+            <Button
+              variant="dark-secondary"
+              size="sm"
+              onClick={handleReturn}
+              leftIcon={<ArrowLeft className="w-4 h-4" />}
+              aria-label="Return to page (ESC)"
             >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Return
-            <span className="text-slate-500 text-xs ml-1">(ESC)</span>
-          </button>
+              Return (ESC)
+            </Button>
+          </div>
         )}
       </div>
     </>
