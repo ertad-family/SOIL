@@ -73,7 +73,7 @@ export function generateVerificationEmail(
           <!-- Header -->
           <tr>
             <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #334155;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #f8fafc;">SOIL</h1>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #f8fafc; font-family: Cinzel, 'Times New Roman', Georgia, serif; letter-spacing: 0.1em;">S<span style="color: #fbbf24;">·</span>O<span style="color: #fbbf24;">·</span>I<span style="color: #fbbf24;">·</span>L</h1>
               <p style="margin: 8px 0 0; font-size: 14px; color: #64748b;">Preserving organizational legacies</p>
             </td>
           </tr>

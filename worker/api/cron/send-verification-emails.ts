@@ -27,8 +27,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const supabase = createSupabaseClient();
     const resend = getResendClient();
-    const appUrl = process.env.APP_URL || "https://soil.vercel.app";
-    const emailFrom = process.env.EMAIL_FROM || "SOIL <noreply@soil.vercel.app>";
+    const appUrl = process.env.APP_URL || "https://soil.rip";
+    const emailFrom = process.env.EMAIL_FROM || "S·O·I·L <noreply@m.soil.rip>";
 
     // Query pending verification requests that need emails sent
     // Conditions:
