@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPrivacyDisplayName, type PrivacyDisplayStyle } from "@/lib/privacy";
 
 // Industry color mapping
 const INDUSTRY_COLORS: Record<string, string> = {
@@ -31,6 +32,11 @@ function formatYears(foundedDate: string | null, closedDate: string | null): str
   return "Unknown";
 }
 
+interface OrganizationData {
+  is_public: boolean;
+  privacy_display_style: PrivacyDisplayStyle | null;
+}
+
 interface MemorialRow {
   id: string;
   organization_name: string;
@@ -40,6 +46,7 @@ interface MemorialRow {
   location: string | null;
   founded_date: string | null;
   closed_date: string | null;
+  organizations: OrganizationData[] | OrganizationData | null;
 }
 
 /**
@@ -53,7 +60,8 @@ export async function GET() {
   const { data: memorials, error } = await supabase
     .from("memorials")
     .select(
-      "id, organization_name, epitaph, main_lesson, industry, location, founded_date, closed_date"
+      `id, organization_name, epitaph, main_lesson, industry, location, founded_date, closed_date,
+       organizations!organization_id (is_public, privacy_display_style)`
     )
     .eq("status", "published")
     .eq("design_status", "completed")
@@ -66,16 +74,26 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch featured memorials" }, { status: 500 });
   }
 
-  const stories = (memorials || []).map((m: MemorialRow) => ({
-    id: m.id,
-    quote: m.epitaph || m.main_lesson || "A story worth remembering.",
-    companyName: m.organization_name,
-    years: formatYears(m.founded_date, m.closed_date),
-    location: m.location?.split(",")[0] || "Unknown",
-    industry: m.industry || "Other",
-    industryColor: getIndustryColor(m.industry),
-    respects: 0, // Could be a counter in the future
-  }));
+  const stories = (memorials || []).map((m: MemorialRow) => {
+    // Get privacy-aware display name
+    // Handle both array and object cases from Supabase join
+    const org = Array.isArray(m.organizations) ? m.organizations[0] : m.organizations;
+    const isPublic = org?.is_public ?? false;
+    const privacyStyle = org?.privacy_display_style ?? null;
+    const displayName = getPrivacyDisplayName(isPublic, m.organization_name, privacyStyle);
+
+    return {
+      id: m.id,
+      quote: m.epitaph || m.main_lesson || "A story worth remembering.",
+      companyName: displayName,
+      isPrivate: !isPublic,
+      years: formatYears(m.founded_date, m.closed_date),
+      location: m.location?.split(",")[0] || "Unknown",
+      industry: m.industry || "Other",
+      industryColor: getIndustryColor(m.industry),
+      respects: 0, // Could be a counter in the future
+    };
+  });
 
   return NextResponse.json({ stories });
 }

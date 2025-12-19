@@ -11,16 +11,16 @@ import Link from "next/link";
 
 interface Cenotaph {
   id: string;
-  slug: string;
-  organization_name: string;
-  organization_type: string | null;
+  organizationName: string;
+  isPrivate?: boolean;
+  organizationType: string | null;
   industry: string | null;
   epitaph: string | null;
-  founded_date: string | null;
-  closed_date: string | null;
+  foundedDate: string | null;
+  closedDate: string | null;
   location: string | null;
-  cenotaph_image_url: string;
-  organization_id: string | null;
+  cenotaphImageUrl: string;
+  organizationId: string | null;
 }
 
 interface CenotapheryInfo {

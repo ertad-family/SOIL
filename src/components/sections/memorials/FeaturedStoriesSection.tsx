@@ -2,11 +2,13 @@
 
 import { Heart } from "lucide-react";
 import { SectionLabel } from "@/components/ui/section-label";
+import { cn } from "@/lib/utils";
 
 interface FeaturedStory {
   id: string;
   quote: string;
   companyName: string;
+  isPrivate?: boolean;
   years: string;
   location: string;
   industry: string;
@@ -42,7 +44,12 @@ function StoryCard({ story }: { story: FeaturedStory }) {
 
       {/* Company info */}
       <div className="space-y-1">
-        <p className="text-marble-100 font-medium">{story.companyName}</p>
+        <p
+          className={cn("font-medium", story.isPrivate ? "text-slate-400" : "text-marble-100")}
+          title={story.isPrivate ? "This organization has chosen to remain private" : undefined}
+        >
+          {story.companyName}
+        </p>
         <p className="text-sm text-slate-400">
           {story.years} · {story.location}
         </p>
