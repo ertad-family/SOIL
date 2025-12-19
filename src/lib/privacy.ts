@@ -9,6 +9,7 @@
 export type PrivacyDisplayStyle =
   | "veiled"
   | "unnamed"
+  | "undisclosed"
   | "silent"
   | "redacted"
   | "incognita"
@@ -20,6 +21,7 @@ export type PrivacyDisplayStyle =
 export const PRIVACY_DISPLAY_LABELS: Record<PrivacyDisplayStyle, string> = {
   veiled: "Veiled Organization",
   unnamed: "Unnamed Organization",
+  undisclosed: "Undisclosed Organization",
   silent: "Silent Organization",
   redacted: "Organization [Redacted]",
   incognita: "Incognita Organization",
