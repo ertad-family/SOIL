@@ -59,3 +59,4 @@ n8n-project-447600-f780548a77b3.json
 *-service-account*.json
 *-credentials*.json
 *.credentials.json
+worker/.env.vercel

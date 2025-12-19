@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,8 @@ import {
   ShieldCheck,
   ShieldQuestion,
   Mail,
+  MailCheck,
+  MailX,
   Clock,
   XCircle,
   Send,
@@ -37,6 +40,7 @@ import {
   File,
   AlertCircle,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import type {
   StoryStatus,
@@ -44,6 +48,9 @@ import type {
   OrganizationType,
   LifecycleStage,
   VerificationStatus,
+  NarrativeData,
+  FounderRole,
+  PublicNamingPreference,
 } from "@/types/interview";
 import { MODULES } from "@/types/interview";
 import {
@@ -51,6 +58,7 @@ import {
   LIFECYCLE_STAGE_LABELS as LIFECYCLE_LABELS,
   LIFECYCLE_STAGE_DESCRIPTIONS,
 } from "@/data/function-matrix";
+import { PublicView } from "./public-view";
 
 interface OrganizationData {
   id: string;
@@ -109,6 +117,8 @@ type VerificationRelationship =
   | "other";
 type VerificationRequestStatus = "pending" | "confirmed" | "declined" | "expired";
 
+type EmailErrorType = "resend_error" | "recipient_error";
+
 interface VerificationRequest {
   id: string;
   verifier_email: string;
@@ -118,6 +128,12 @@ interface VerificationRequest {
   created_at: string;
   expires_at: string;
   responded_at: string | null;
+  // Email tracking fields
+  email_sent_at: string | null;
+  email_error: string | null;
+  email_error_type: EmailErrorType | null;
+  retry_count: number;
+  next_retry_at: string | null;
 }
 
 type DocumentVerificationStatus = "pending_review" | "approved" | "rejected";
@@ -160,13 +176,26 @@ interface CurrentUserData {
   role: string | null;
 }
 
+/** Narrative data from a coined story for public display */
+interface PublicNarrativeData {
+  storyId: string;
+  authorName: string | null;
+  founderRole: FounderRole | null;
+  publicNaming: PublicNamingPreference | null;
+  narrative: NarrativeData;
+  coinedAt: string;
+}
+
 interface OrganizationClientProps {
   organization: OrganizationData;
   stories: StoryData[];
   memorial: MemorialData | null;
-  currentUserId: string;
+  currentUserId: string | null;
   currentUserData: CurrentUserData;
   isOwner: boolean;
+  viewMode: "owner" | "visitor";
+  publicNarratives: PublicNarrativeData[];
+  currentUserStoryId: string | null;
 }
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
@@ -192,7 +221,52 @@ export function OrganizationClient({
   currentUserId,
   currentUserData,
   isOwner,
+  viewMode,
+  publicNarratives,
+  currentUserStoryId,
 }: OrganizationClientProps) {
+  // For visitor mode, render the public view
+  if (viewMode === "visitor") {
+    return (
+      <PublicView
+        organization={organization}
+        memorial={memorial}
+        publicNarratives={publicNarratives}
+        currentUserId={currentUserId}
+        currentUserStoryId={currentUserStoryId}
+      />
+    );
+  }
+
+  // Owner mode - render the dashboard (existing code below)
+  return (
+    <OwnerView
+      organization={organization}
+      stories={stories}
+      memorial={memorial}
+      currentUserId={currentUserId!}
+      currentUserData={currentUserData}
+      isOwner={isOwner}
+    />
+  );
+}
+
+/** Owner dashboard view - the existing implementation */
+function OwnerView({
+  organization,
+  stories,
+  memorial,
+  currentUserId,
+  currentUserData,
+  isOwner,
+}: {
+  organization: OrganizationData;
+  stories: StoryData[];
+  memorial: MemorialData | null;
+  currentUserId: string;
+  currentUserData: CurrentUserData;
+  isOwner: boolean;
+}) {
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(organization.is_public);
   const [isSaving, setIsSaving] = useState(false);
@@ -841,10 +915,12 @@ function CenotaphAvatar({
             >
               {/* AI-generated cenotaph image */}
               {hasDesign && memorial.cenotaph_image_url && (
-                <img
+                <Image
                   src={memorial.cenotaph_image_url}
                   alt="Cenotaph design"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 300px"
+                  className="object-cover"
                 />
               )}
 
@@ -905,12 +981,18 @@ function CenotaphAvatar({
             >
               <XCircle className="w-8 h-8" />
             </button>
-            <img
-              src={memorial.cenotaph_image_url}
-              alt="Cenotaph design"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            <div
+              className="relative max-w-full max-h-[90vh] w-[90vw] h-[90vh]"
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <Image
+                src={memorial.cenotaph_image_url}
+                alt="Cenotaph design"
+                fill
+                sizes="90vw"
+                className="object-contain rounded-lg shadow-2xl"
+              />
+            </div>
           </div>
         )}
 
@@ -1034,6 +1116,50 @@ function StoryCard({
   );
 }
 
+// Email status helper for verification requests
+function getEmailStatus(request: VerificationRequest): {
+  icon: React.ReactNode;
+  label: string;
+  className: string;
+  tooltip?: string;
+} {
+  // Email sent successfully
+  if (request.email_sent_at) {
+    return {
+      icon: <MailCheck className="w-3.5 h-3.5" />,
+      label: "Sent",
+      className: "text-green-400",
+    };
+  }
+
+  // Permanent recipient error (no retry)
+  if (request.email_error_type === "recipient_error") {
+    return {
+      icon: <MailX className="w-3.5 h-3.5" />,
+      label: "Failed",
+      className: "text-red-400",
+      tooltip: request.email_error || "Invalid email address",
+    };
+  }
+
+  // Retrying after temporary error
+  if (request.retry_count > 0 && request.email_error_type === "resend_error") {
+    return {
+      icon: <RefreshCw className="w-3.5 h-3.5" />,
+      label: `Retry ${request.retry_count}/10`,
+      className: "text-amber-400",
+      tooltip: request.email_error || "Retrying...",
+    };
+  }
+
+  // Waiting to be sent (new request)
+  return {
+    icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
+    label: "Sending",
+    className: "text-slate-400",
+  };
+}
+
 // Verification Request Item Component
 function VerificationRequestItem({ request }: { request: VerificationRequest }) {
   const statusIcons = {
@@ -1050,6 +1176,9 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
     expired: "Expired",
   };
 
+  // Only show email status for pending requests
+  const emailStatus = request.status === "pending" ? getEmailStatus(request) : null;
+
   return (
     <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
       <div className="flex items-center gap-2 min-w-0">
@@ -1061,21 +1190,40 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
           ({RELATIONSHIP_LABELS[request.relationship]})
         </span>
       </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-        {statusIcons[request.status]}
-        <span
-          className={`${
-            request.status === "confirmed"
-              ? "text-green-400"
-              : request.status === "declined"
-                ? "text-red-400"
-                : request.status === "pending"
-                  ? "text-gold-400"
-                  : "text-slate-500"
-          }`}
-        >
-          {statusLabels[request.status]}
-        </span>
+      <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+        {/* Email status indicator (only for pending requests) */}
+        {emailStatus && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={`flex items-center gap-1 ${emailStatus.className}`}>
+                {emailStatus.icon}
+                <span className="text-xs">{emailStatus.label}</span>
+              </div>
+            </TooltipTrigger>
+            {emailStatus.tooltip && (
+              <TooltipContent>
+                <p className="max-w-xs text-xs">{emailStatus.tooltip}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        )}
+        {/* Verification status */}
+        <div className="flex items-center gap-1.5">
+          {statusIcons[request.status]}
+          <span
+            className={`${
+              request.status === "confirmed"
+                ? "text-green-400"
+                : request.status === "declined"
+                  ? "text-red-400"
+                  : request.status === "pending"
+                    ? "text-gold-400"
+                    : "text-slate-500"
+            }`}
+          >
+            {statusLabels[request.status]}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OrganizationClient } from "./organization-client";
 import type {
@@ -7,6 +7,9 @@ import type {
   OrganizationType,
   LifecycleStage,
   VerificationStatus,
+  NarrativeData,
+  PublicNamingPreference,
+  FounderRole,
 } from "@/types/interview";
 
 interface OrganizationData {
@@ -58,6 +61,16 @@ interface MemorialData {
   design_status: string | null;
 }
 
+/** Narrative data from a coined story for public display */
+export interface PublicNarrativeData {
+  storyId: string;
+  authorName: string | null;
+  founderRole: FounderRole | null;
+  publicNaming: PublicNamingPreference | null;
+  narrative: NarrativeData;
+  coinedAt: string;
+}
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -66,15 +79,10 @@ export default async function OrganizationPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  // Check auth
+  // Check auth - but don't require it for public pages
   const {
     data: { user },
-    error: authError,
   } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    redirect("/login");
-  }
 
   // Fetch organization
   const { data: organization, error: orgError } = await supabase
@@ -87,12 +95,19 @@ export default async function OrganizationPage({ params }: PageProps) {
     notFound();
   }
 
-  // Check if user owns this organization
-  const isOwner = organization.created_by === user.id;
+  // Determine if current user is the owner
+  const isOwner = user ? organization.created_by === user.id : false;
 
-  // If not owner and not public, deny access
-  if (!isOwner && !organization.is_public) {
-    notFound();
+  // Check if current user has a story for this organization
+  let currentUserStoryId: string | null = null;
+  if (user) {
+    const { data: userStory } = await supabase
+      .from("stories")
+      .select("id")
+      .eq("organization_id", id)
+      .eq("user_id", user.id)
+      .single();
+    currentUserStoryId = userStory?.id || null;
   }
 
   // Fetch all stories for this organization
@@ -113,7 +128,6 @@ export default async function OrganizationPage({ params }: PageProps) {
     .eq("organization_id", id)
     .order("created_at", { ascending: false });
 
-  // Log any errors for debugging
   if (storiesError) {
     console.error("Stories fetch error:", storiesError);
   }
@@ -142,33 +156,77 @@ export default async function OrganizationPage({ params }: PageProps) {
     .eq("organization_id", id)
     .single();
 
-  // Fetch current user's profile and story for verification modal
-  const { data: currentUserProfile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .single();
+  // For public view: fetch narrative data from coined stories
+  let publicNarratives: PublicNarrativeData[] = [];
+  if (!isOwner) {
+    const { data: coinedStories } = await supabase
+      .from("stories")
+      .select("id, user_id, narrative, founder_role, public_naming, coined_at")
+      .eq("organization_id", id)
+      .eq("status", "coined")
+      .not("narrative", "is", null);
 
-  const { data: currentUserStory } = await supabase
-    .from("stories")
-    .select("founder_role, author_role")
-    .eq("organization_id", id)
-    .eq("user_id", user.id)
-    .single();
+    if (coinedStories && coinedStories.length > 0) {
+      // Get author names for coined stories
+      const coinedUserIds = coinedStories.map((s) => s.user_id);
+      const { data: authorProfiles } = await supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", coinedUserIds);
 
-  const currentUserData = {
-    name: currentUserProfile?.display_name || user.email?.split("@")[0] || "Unknown",
-    role: currentUserStory?.author_role || currentUserStory?.founder_role || null,
+      const authorMap = new Map(authorProfiles?.map((p) => [p.id, p.display_name]) || []);
+
+      publicNarratives = coinedStories.map((story) => ({
+        storyId: story.id,
+        authorName: authorMap.get(story.user_id) || null,
+        founderRole: story.founder_role,
+        publicNaming: story.public_naming,
+        narrative: story.narrative as NarrativeData,
+        coinedAt: story.coined_at,
+      }));
+    }
+  }
+
+  // For owner view: fetch current user's profile and story for verification modal
+  let currentUserData = {
+    name: "Guest",
+    role: null as string | null,
   };
+
+  if (user) {
+    const { data: currentUserProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single();
+
+    const { data: currentUserStory } = await supabase
+      .from("stories")
+      .select("founder_role, author_role")
+      .eq("organization_id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    currentUserData = {
+      name: currentUserProfile?.display_name || user.email?.split("@")[0] || "Unknown",
+      role: currentUserStory?.author_role || currentUserStory?.founder_role || null,
+    };
+  }
+
+  // Determine view mode
+  const viewMode: "owner" | "visitor" = isOwner ? "owner" : "visitor";
 
   return (
     <OrganizationClient
       organization={organization as OrganizationData}
       stories={storiesWithProfiles as StoryData[]}
       memorial={memorial as MemorialData | null}
-      currentUserId={user.id}
+      currentUserId={user?.id || null}
       currentUserData={currentUserData}
       isOwner={isOwner}
+      viewMode={viewMode}
+      publicNarratives={publicNarratives}
+      currentUserStoryId={currentUserStoryId}
     />
   );
 }

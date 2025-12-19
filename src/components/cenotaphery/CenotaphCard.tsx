@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Building2, Briefcase, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -99,10 +100,12 @@ export function CenotaphCard({
       >
         {/* Cenotaph Image */}
         <div className="relative aspect-[3/4] overflow-hidden">
-          <img
+          <Image
             src={cenotaphImageUrl}
             alt={`Cenotaph for ${organizationName}`}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
 
           {/* Gradient overlay for text readability */}
