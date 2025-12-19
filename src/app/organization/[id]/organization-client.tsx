@@ -44,6 +44,9 @@ import type {
   OrganizationType,
   LifecycleStage,
   VerificationStatus,
+  NarrativeData,
+  FounderRole,
+  PublicNamingPreference,
 } from "@/types/interview";
 import { MODULES } from "@/types/interview";
 import {
@@ -51,6 +54,7 @@ import {
   LIFECYCLE_STAGE_LABELS as LIFECYCLE_LABELS,
   LIFECYCLE_STAGE_DESCRIPTIONS,
 } from "@/data/function-matrix";
+import { PublicView } from "./public-view";
 
 interface OrganizationData {
   id: string;
@@ -160,13 +164,26 @@ interface CurrentUserData {
   role: string | null;
 }
 
+/** Narrative data from a coined story for public display */
+interface PublicNarrativeData {
+  storyId: string;
+  authorName: string | null;
+  founderRole: FounderRole | null;
+  publicNaming: PublicNamingPreference | null;
+  narrative: NarrativeData;
+  coinedAt: string;
+}
+
 interface OrganizationClientProps {
   organization: OrganizationData;
   stories: StoryData[];
   memorial: MemorialData | null;
-  currentUserId: string;
+  currentUserId: string | null;
   currentUserData: CurrentUserData;
   isOwner: boolean;
+  viewMode: "owner" | "visitor";
+  publicNarratives: PublicNarrativeData[];
+  currentUserStoryId: string | null;
 }
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
@@ -192,7 +209,52 @@ export function OrganizationClient({
   currentUserId,
   currentUserData,
   isOwner,
+  viewMode,
+  publicNarratives,
+  currentUserStoryId,
 }: OrganizationClientProps) {
+  // For visitor mode, render the public view
+  if (viewMode === "visitor") {
+    return (
+      <PublicView
+        organization={organization}
+        memorial={memorial}
+        publicNarratives={publicNarratives}
+        currentUserId={currentUserId}
+        currentUserStoryId={currentUserStoryId}
+      />
+    );
+  }
+
+  // Owner mode - render the dashboard (existing code below)
+  return (
+    <OwnerView
+      organization={organization}
+      stories={stories}
+      memorial={memorial}
+      currentUserId={currentUserId!}
+      currentUserData={currentUserData}
+      isOwner={isOwner}
+    />
+  );
+}
+
+/** Owner dashboard view - the existing implementation */
+function OwnerView({
+  organization,
+  stories,
+  memorial,
+  currentUserId,
+  currentUserData,
+  isOwner,
+}: {
+  organization: OrganizationData;
+  stories: StoryData[];
+  memorial: MemorialData | null;
+  currentUserId: string;
+  currentUserData: CurrentUserData;
+  isOwner: boolean;
+}) {
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(organization.is_public);
   const [isSaving, setIsSaving] = useState(false);
