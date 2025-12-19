@@ -389,17 +389,16 @@ function CoinedStoryCard({ story, memorial }: { story: StoryData; memorial?: Mem
         </div>
 
         <div className="flex items-center gap-2">
-          {hasCenotaph ? (
-            <a href={`/memorials/${memorial.slug}`}>
-              <Button
-                variant="dark-secondary"
-                size="sm"
-                rightIcon={<ExternalLink className="w-4 h-4" />}
-              >
-                View Cenotaph
-              </Button>
-            </a>
-          ) : (
+          <a href={`/organization/${story.organization_id}`}>
+            <Button
+              variant="dark-secondary"
+              size="sm"
+              rightIcon={<ExternalLink className="w-4 h-4" />}
+            >
+              View Organization
+            </Button>
+          </a>
+          {!hasCenotaph && (
             <a href={`/create?story=${story.id}`}>
               <Button variant="dark-primary" size="sm" rightIcon={<Landmark className="w-4 h-4" />}>
                 Create Cenotaph
