@@ -662,11 +662,15 @@ export function DodecahedronScene({
     (section: string) => {
       if (flyStateRef.current.isAnimating) return; // Already animating
 
-      // Get portal data for the target section
-      const portalData = getPortalDataBySection(section);
+      // Get portal data for the target section, fallback to "home" if not found
+      let portalData = getPortalDataBySection(section);
       if (!portalData) {
-        console.warn(`[FlyIn] Portal not found for section: ${section}`);
-        return;
+        console.warn(`[FlyIn] Portal not found for section: ${section}, using home`);
+        portalData = getPortalDataBySection("home");
+        if (!portalData) {
+          console.error("[FlyIn] Home portal not found, cannot return");
+          return;
+        }
       }
 
       // Convert to world coordinates (add dodecahedron Y offset)
