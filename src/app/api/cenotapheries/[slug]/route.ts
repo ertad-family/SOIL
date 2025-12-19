@@ -1,5 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPrivacyDisplayName, type PrivacyDisplayStyle } from "@/lib/privacy";
+
+interface OrganizationData {
+  is_public: boolean;
+  privacy_display_style: PrivacyDisplayStyle | null;
+}
+
+interface MemorialRow {
+  id: string;
+  organization_name: string;
+  organization_type: string | null;
+  industry: string | null;
+  epitaph: string | null;
+  founded_date: string | null;
+  closed_date: string | null;
+  location: string | null;
+  team_size: number | null;
+  cenotaph_image_url: string | null;
+  design_status: string | null;
+  created_at: string;
+  organization_id: string | null;
+  organizations: OrganizationData[] | OrganizationData | null;
+}
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -42,12 +65,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   // Build query for memorials belonging to this cenotaphery
+  // Note: We don't select 'slug' as it's derived from org name and would leak private names
   let query = supabase
     .from("memorials")
     .select(
       `
       id,
-      slug,
       organization_name,
       organization_type,
       industry,
@@ -59,7 +82,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       cenotaph_image_url,
       design_status,
       created_at,
-      organization_id
+      organization_id,
+      organizations!organization_id (is_public, privacy_display_style)
     `
     )
     .eq("cenotaphery_id", cenotaphery.id)
@@ -107,6 +131,32 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Failed to fetch cenotaphs" }, { status: 500 });
   }
 
+  // Transform cenotaphs to include privacy-aware display names
+  const transformedCenotaphs = (cenotaphs || []).map((c: MemorialRow) => {
+    // Handle both array and object cases from Supabase join
+    const org = Array.isArray(c.organizations) ? c.organizations[0] : c.organizations;
+    const isPublic = org?.is_public ?? false;
+    const privacyStyle = org?.privacy_display_style ?? null;
+    const displayName = getPrivacyDisplayName(isPublic, c.organization_name, privacyStyle);
+
+    return {
+      id: c.id,
+      organizationName: displayName,
+      isPrivate: !isPublic,
+      organizationType: c.organization_type,
+      industry: c.industry,
+      epitaph: c.epitaph,
+      foundedDate: c.founded_date,
+      closedDate: c.closed_date,
+      location: c.location,
+      teamSize: c.team_size,
+      cenotaphImageUrl: c.cenotaph_image_url,
+      designStatus: c.design_status,
+      createdAt: c.created_at,
+      organizationId: c.organization_id,
+    };
+  });
+
   return NextResponse.json({
     cenotaphery: {
       slug: cenotaphery.slug,
@@ -117,7 +167,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       status: cenotaphery.status,
       style: cenotaphery.style,
     },
-    cenotaphs: cenotaphs || [],
-    count: cenotaphs?.length || 0,
+    cenotaphs: transformedCenotaphs,
+    count: transformedCenotaphs.length,
   });
 }
