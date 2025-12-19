@@ -1,104 +1,108 @@
-<html lang="en"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SOIL - Marble Button Concepts</title>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOIL - Marble Button Concepts</title>
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=Cinzel:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=Cinzel:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
 
-  <style>
-    :root {
-      /* Marble colors */
-      --marble-white: #f8f6f3;
-      --marble-cream: #f2efe9;
-      --marble-vein-light: #e8e4dd;
-      --marble-vein-mid: #d4cfc5;
-      --marble-vein-dark: #b8b0a3;
-      --marble-shadow: #9a9285;
+    <style>
+      :root {
+        /* Marble colors */
+        --marble-white: #f8f6f3;
+        --marble-cream: #f2efe9;
+        --marble-vein-light: #e8e4dd;
+        --marble-vein-mid: #d4cfc5;
+        --marble-vein-dark: #b8b0a3;
+        --marble-shadow: #9a9285;
 
-      /* Text on marble */
-      --text-carved: #4a4640;
-      --text-carved-deep: #2d2a26;
-      --text-gold-inlay: #8b7355;
+        /* Text on marble */
+        --text-carved: #4a4640;
+        --text-carved-deep: #2d2a26;
+        --text-gold-inlay: #8b7355;
 
-      /* Background */
-      --bg-dark: #1a1916;
-      --bg-darker: #12110f;
-    }
+        /* Background */
+        --bg-dark: #1a1916;
+        --bg-darker: #12110f;
+      }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      background: var(--bg-dark);
-      min-height: 100vh;
-      padding: 60px 40px;
-      font-family: 'Cormorant Garamond', Georgia, serif;
-    }
+      body {
+        background: var(--bg-dark);
+        min-height: 100vh;
+        padding: 60px 40px;
+        font-family: "Cormorant Garamond", Georgia, serif;
+      }
 
-    h1 {
-      font-family: 'Cinzel', serif;
-      color: var(--marble-cream);
-      font-size: 28px;
-      font-weight: 400;
-      letter-spacing: 0.15em;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
+      h1 {
+        font-family: "Cinzel", serif;
+        color: var(--marble-cream);
+        font-size: 28px;
+        font-weight: 400;
+        letter-spacing: 0.15em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
 
-    h1::before {
-      content: '';
-      width: 40px;
-      height: 2px;
-      background: linear-gradient(90deg, #8b7355, transparent);
-    }
+      h1::before {
+        content: "";
+        width: 40px;
+        height: 2px;
+        background: linear-gradient(90deg, #8b7355, transparent);
+      }
 
-    h2 {
-      font-family: 'Cinzel', serif;
-      color: var(--marble-vein-mid);
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      margin: 50px 0 24px;
-    }
+      h2 {
+        font-family: "Cinzel", serif;
+        color: var(--marble-vein-mid);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        margin: 50px 0 24px;
+      }
 
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      padding: 40px;
-      background: var(--bg-darker);
-      border-radius: 4px;
-      margin-bottom: 20px;
-    }
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 40px;
+        background: var(--bg-darker);
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
 
-    /* ================================================
+      /* ================================================
        CONCEPT 1: Polished Marble with Carved Text
        ================================================ */
-    .btn-marble-carved {
-      position: relative;
-      padding: 16px 36px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      transition: all 0.3s ease;
+      .btn-marble-carved {
+        position: relative;
+        padding: 16px 36px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: "Cinzel", serif;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
 
-      /* Marble base with subtle gradient */
-      background:
-        linear-gradient(135deg,
+        /* Marble base with subtle gradient */
+        background: linear-gradient(
+          135deg,
           var(--marble-white) 0%,
           var(--marble-cream) 25%,
           var(--marble-white) 50%,
@@ -106,57 +110,57 @@
           var(--marble-cream) 100%
         );
 
-      /* Carved text effect */
-      color: var(--text-carved);
-      text-shadow:
-        1px 1px 1px rgba(255,255,255,0.8),
-        -0.5px -0.5px 0.5px rgba(0,0,0,0.15);
+        /* Carved text effect */
+        color: var(--text-carved);
+        text-shadow:
+          1px 1px 1px rgba(255, 255, 255, 0.8),
+          -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.15);
 
-      /* Stone depth */
-      box-shadow:
-        0 2px 4px rgba(0,0,0,0.2),
-        0 4px 12px rgba(0,0,0,0.15),
-        inset 0 1px 0 rgba(255,255,255,0.6),
-        inset 0 -1px 2px rgba(0,0,0,0.05);
-    }
+        /* Stone depth */
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, 0.2),
+          0 4px 12px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          inset 0 -1px 2px rgba(0, 0, 0, 0.05);
+      }
 
-    .btn-marble-carved:hover {
-      transform: translateY(-1px);
-      box-shadow:
-        0 4px 8px rgba(0,0,0,0.25),
-        0 8px 20px rgba(0,0,0,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.7),
-        inset 0 -1px 2px rgba(0,0,0,0.05);
-    }
+      .btn-marble-carved:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.25),
+          0 8px 20px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          inset 0 -1px 2px rgba(0, 0, 0, 0.05);
+      }
 
-    .btn-marble-carved:active {
-      transform: translateY(0);
-      box-shadow:
-        0 1px 2px rgba(0,0,0,0.2),
-        0 2px 6px rgba(0,0,0,0.15),
-        inset 0 1px 3px rgba(0,0,0,0.1);
-    }
+      .btn-marble-carved:active {
+        transform: translateY(0);
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.2),
+          0 2px 6px rgba(0, 0, 0, 0.15),
+          inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
 
-    /* ================================================
+      /* ================================================
        CONCEPT 2: Marble with Gold Inlay Text
        ================================================ */
-    .btn-marble-gold {
-      position: relative;
-      padding: 16px 36px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      transition: all 0.35s ease;
-      overflow: hidden;
+      .btn-marble-gold {
+        position: relative;
+        padding: 16px 36px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-family: "Cinzel", serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        transition: all 0.35s ease;
+        overflow: hidden;
 
-      /* Marble with veining pattern */
-      background:
-        linear-gradient(160deg,
+        /* Marble with veining pattern */
+        background: linear-gradient(
+          160deg,
           var(--marble-white) 0%,
           var(--marble-cream) 30%,
           var(--marble-vein-light) 45%,
@@ -166,262 +170,265 @@
           var(--marble-cream) 100%
         );
 
-      /* Gold inlay effect */
-      color: #6b5a42;
-      background-clip: padding-box;
+        /* Gold inlay effect */
+        color: #6b5a42;
+        background-clip: padding-box;
 
-      /* Polished edge */
-      border: 1px solid var(--marble-vein-mid);
+        /* Polished edge */
+        border: 1px solid var(--marble-vein-mid);
 
-      box-shadow:
-        0 3px 8px rgba(0,0,0,0.18),
-        0 6px 20px rgba(0,0,0,0.12),
-        inset 0 1px 0 rgba(255,255,255,0.9);
-    }
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.18),
+          0 6px 20px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
 
-    .btn-marble-gold::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,0.4),
-        transparent
-      );
-      transition: left 0.5s ease;
-    }
+      .btn-marble-gold::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transition: left 0.5s ease;
+      }
 
-    .btn-marble-gold:hover::before {
-      left: 100%;
-    }
+      .btn-marble-gold:hover::before {
+        left: 100%;
+      }
 
-    .btn-marble-gold:hover {
-      border-color: var(--marble-vein-dark);
-      box-shadow:
-        0 4px 12px rgba(0,0,0,0.22),
-        0 8px 28px rgba(0,0,0,0.15),
-        inset 0 1px 0 rgba(255,255,255,0.9);
-    }
+      .btn-marble-gold:hover {
+        border-color: var(--marble-vein-dark);
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.22),
+          0 8px 28px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
 
-    /* ================================================
+      /* ================================================
        CONCEPT 3: Veined Marble with Depth
        ================================================ */
-    .btn-marble-veined {
-      position: relative;
-      padding: 18px 40px;
-      border: none;
-      border-radius: 2px;
-      cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--text-carved-deep);
-      transition: all 0.3s ease;
+      .btn-marble-veined {
+        position: relative;
+        padding: 18px 40px;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        font-family: "Cinzel", serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-carved-deep);
+        transition: all 0.3s ease;
 
-      /* Complex marble gradient with veins */
-      background:
-        radial-gradient(ellipse at 20% 80%, var(--marble-vein-light) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, var(--marble-vein-mid) 0%, transparent 40%),
-        radial-gradient(ellipse at 40% 40%, var(--marble-white) 0%, transparent 60%),
-        linear-gradient(135deg, var(--marble-cream) 0%, var(--marble-white) 50%, var(--marble-cream) 100%);
+        /* Complex marble gradient with veins */
+        background:
+          radial-gradient(ellipse at 20% 80%, var(--marble-vein-light) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 20%, var(--marble-vein-mid) 0%, transparent 40%),
+          radial-gradient(ellipse at 40% 40%, var(--marble-white) 0%, transparent 60%),
+          linear-gradient(
+            135deg,
+            var(--marble-cream) 0%,
+            var(--marble-white) 50%,
+            var(--marble-cream) 100%
+          );
 
-      /* Chiseled edge effect */
-      box-shadow:
-        0 1px 0 rgba(255,255,255,0.5),
-        0 3px 6px rgba(0,0,0,0.15),
-        0 6px 16px rgba(0,0,0,0.1),
-        inset 0 1px 0 rgba(255,255,255,0.8),
-        inset 0 -2px 4px rgba(0,0,0,0.03);
+        /* Chiseled edge effect */
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.5),
+          0 3px 6px rgba(0, 0, 0, 0.15),
+          0 6px 16px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.03);
 
-      text-shadow: 0.5px 0.5px 0 rgba(255,255,255,0.7);
-    }
+        text-shadow: 0.5px 0.5px 0 rgba(255, 255, 255, 0.7);
+      }
 
-    .btn-marble-veined:hover {
-      background:
-        radial-gradient(ellipse at 20% 80%, var(--marble-vein-mid) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, var(--marble-vein-dark) 0%, transparent 40%),
-        radial-gradient(ellipse at 40% 40%, var(--marble-cream) 0%, transparent 60%),
-        linear-gradient(135deg, var(--marble-vein-light) 0%, var(--marble-cream) 50%, var(--marble-vein-light) 100%);
+      .btn-marble-veined:hover {
+        background:
+          radial-gradient(ellipse at 20% 80%, var(--marble-vein-mid) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 20%, var(--marble-vein-dark) 0%, transparent 40%),
+          radial-gradient(ellipse at 40% 40%, var(--marble-cream) 0%, transparent 60%),
+          linear-gradient(
+            135deg,
+            var(--marble-vein-light) 0%,
+            var(--marble-cream) 50%,
+            var(--marble-vein-light) 100%
+          );
 
-      box-shadow:
-        0 1px 0 rgba(255,255,255,0.5),
-        0 5px 10px rgba(0,0,0,0.18),
-        0 10px 24px rgba(0,0,0,0.12),
-        inset 0 1px 0 rgba(255,255,255,0.8),
-        inset 0 -2px 4px rgba(0,0,0,0.03);
-    }
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.5),
+          0 5px 10px rgba(0, 0, 0, 0.18),
+          0 10px 24px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.03);
+      }
 
-    /* ================================================
+      /* ================================================
        CONCEPT 4: Minimal Marble Slab
        ================================================ */
-    .btn-marble-slab {
-      position: relative;
-      padding: 14px 32px;
-      border: none;
-      border-radius: 0;
-      cursor: pointer;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-carved-deep);
-      transition: all 0.25s ease;
+      .btn-marble-slab {
+        position: relative;
+        padding: 14px 32px;
+        border: none;
+        border-radius: 0;
+        cursor: pointer;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-carved-deep);
+        transition: all 0.25s ease;
 
-      /* Clean marble */
-      background: linear-gradient(
-        180deg,
-        var(--marble-white) 0%,
-        var(--marble-cream) 100%
-      );
+        /* Clean marble */
+        background: linear-gradient(180deg, var(--marble-white) 0%, var(--marble-cream) 100%);
 
-      /* Sharp slab shadow */
-      box-shadow:
-        4px 4px 0 var(--marble-vein-dark),
-        0 0 0 1px var(--marble-vein-mid);
-    }
+        /* Sharp slab shadow */
+        box-shadow:
+          4px 4px 0 var(--marble-vein-dark),
+          0 0 0 1px var(--marble-vein-mid);
+      }
 
-    .btn-marble-slab:hover {
-      transform: translate(-2px, -2px);
-      box-shadow:
-        6px 6px 0 var(--marble-vein-dark),
-        0 0 0 1px var(--marble-vein-mid);
-    }
+      .btn-marble-slab:hover {
+        transform: translate(-2px, -2px);
+        box-shadow:
+          6px 6px 0 var(--marble-vein-dark),
+          0 0 0 1px var(--marble-vein-mid);
+      }
 
-    .btn-marble-slab:active {
-      transform: translate(2px, 2px);
-      box-shadow:
-        2px 2px 0 var(--marble-vein-dark),
-        0 0 0 1px var(--marble-vein-mid);
-    }
+      .btn-marble-slab:active {
+        transform: translate(2px, 2px);
+        box-shadow:
+          2px 2px 0 var(--marble-vein-dark),
+          0 0 0 1px var(--marble-vein-mid);
+      }
 
-    /* ================================================
+      /* ================================================
        SECONDARY VARIANTS
        ================================================ */
-    .btn-marble-outline {
-      padding: 14px 32px;
-      border: 2px solid var(--marble-vein-mid);
-      border-radius: 3px;
-      background: transparent;
-      cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--marble-cream);
-      transition: all 0.3s ease;
-    }
+      .btn-marble-outline {
+        padding: 14px 32px;
+        border: 2px solid var(--marble-vein-mid);
+        border-radius: 3px;
+        background: transparent;
+        cursor: pointer;
+        font-family: "Cinzel", serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--marble-cream);
+        transition: all 0.3s ease;
+      }
 
-    .btn-marble-outline:hover {
-      background: var(--marble-cream);
-      border-color: var(--marble-cream);
-      color: var(--text-carved-deep);
-    }
+      .btn-marble-outline:hover {
+        background: var(--marble-cream);
+        border-color: var(--marble-cream);
+        color: var(--text-carved-deep);
+      }
 
-    .btn-marble-ghost {
-      padding: 14px 32px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--marble-vein-mid);
-      transition: all 0.3s ease;
-      position: relative;
-    }
+      .btn-marble-ghost {
+        padding: 14px 32px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-family: "Cinzel", serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--marble-vein-mid);
+        transition: all 0.3s ease;
+        position: relative;
+      }
 
-    .btn-marble-ghost::after {
-      content: '';
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 1px;
-      background: var(--marble-cream);
-      transition: width 0.3s ease;
-    }
+      .btn-marble-ghost::after {
+        content: "";
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 1px;
+        background: var(--marble-cream);
+        transition: width 0.3s ease;
+      }
 
-    .btn-marble-ghost:hover {
-      color: var(--marble-cream);
-    }
+      .btn-marble-ghost:hover {
+        color: var(--marble-cream);
+      }
 
-    .btn-marble-ghost:hover::after {
-      width: 60%;
-    }
+      .btn-marble-ghost:hover::after {
+        width: 60%;
+      }
 
-    /* ================================================
+      /* ================================================
        SIZES
        ================================================ */
-    .btn-sm {
-      padding: 10px 20px !important;
-      font-size: 10px !important;
-    }
+      .btn-sm {
+        padding: 10px 20px !important;
+        font-size: 10px !important;
+      }
 
-    .btn-lg {
-      padding: 20px 48px !important;
-      font-size: 13px !important;
-    }
+      .btn-lg {
+        padding: 20px 48px !important;
+        font-size: 13px !important;
+      }
 
-    /* ================================================
+      /* ================================================
        STATES
        ================================================ */
-    .btn-loading {
-      pointer-events: none;
-      opacity: 0.7;
-    }
+      .btn-loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
 
-    .btn-loading::after {
-      content: '';
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      margin-left: 10px;
-      border: 2px solid var(--text-carved);
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
+      .btn-loading::after {
+        content: "";
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        margin-left: 10px;
+        border: 2px solid var(--text-carved);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-    .btn-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
+      .btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
 
-    /* ================================================
+      /* ================================================
        DARK MARBLE VARIANT (for light backgrounds)
        ================================================ */
-    .btn-marble-dark {
-      position: relative;
-      padding: 16px 36px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      transition: all 0.3s ease;
+      .btn-marble-dark {
+        position: relative;
+        padding: 16px 36px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-family: "Cinzel", serif;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
 
-      /* Dark marble */
-      background:
-        linear-gradient(135deg,
+        /* Dark marble */
+        background: linear-gradient(
+          135deg,
           #3d3a36 0%,
           #2d2a26 25%,
           #3d3a36 50%,
@@ -429,116 +436,112 @@
           #2d2a26 100%
         );
 
-      color: var(--marble-cream);
-      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        color: var(--marble-cream);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 
-      box-shadow:
-        0 2px 4px rgba(0,0,0,0.3),
-        0 4px 12px rgba(0,0,0,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-    }
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, 0.3),
+          0 4px 12px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
 
-    .btn-marble-dark:hover {
-      background:
-        linear-gradient(135deg,
+      .btn-marble-dark:hover {
+        background: linear-gradient(
+          135deg,
           #4a4640 0%,
           #3d3a36 25%,
           #4a4640 50%,
           #5a5650 75%,
           #3d3a36 100%
         );
-    }
+      }
 
-    /* Preview container for light bg */
-    .light-bg {
-      background: var(--marble-cream) !important;
-    }
+      /* Preview container for light bg */
+      .light-bg {
+        background: var(--marble-cream) !important;
+      }
 
-    /* ================================================
+      /* ================================================
        ICON BUTTON
        ================================================ */
-    .btn-with-icon {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-    }
+      .btn-with-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
 
-    .btn-with-icon svg {
-      width: 16px;
-      height: 16px;
-    }
+      .btn-with-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Marble Buttons</h1>
 
-  </style>
-</head>
-<body>
+    <h2>Concept 1 — Polished with Carved Text</h2>
+    <div class="button-row">
+      <button class="btn-marble-carved">Primary</button>
+      <button class="btn-marble-carved btn-sm">Small</button>
+      <button class="btn-marble-carved btn-lg">Large</button>
+      <button class="btn-marble-carved btn-loading">Loading</button>
+      <button class="btn-marble-carved btn-disabled">Disabled</button>
+    </div>
 
-  <h1>Marble Buttons</h1>
+    <h2>Concept 2 — Gold Inlay Text</h2>
+    <div class="button-row">
+      <button class="btn-marble-gold">Primary</button>
+      <button class="btn-marble-gold btn-sm">Small</button>
+      <button class="btn-marble-gold btn-lg">Large</button>
+      <button class="btn-marble-gold btn-loading">Loading</button>
+      <button class="btn-marble-gold btn-disabled">Disabled</button>
+    </div>
 
-  <h2>Concept 1 — Polished with Carved Text</h2>
-  <div class="button-row">
-    <button class="btn-marble-carved">Primary</button>
-    <button class="btn-marble-carved btn-sm">Small</button>
-    <button class="btn-marble-carved btn-lg">Large</button>
-    <button class="btn-marble-carved btn-loading">Loading</button>
-    <button class="btn-marble-carved btn-disabled">Disabled</button>
-  </div>
+    <h2>Concept 3 — Veined Marble with Depth</h2>
+    <div class="button-row">
+      <button class="btn-marble-veined">Primary</button>
+      <button class="btn-marble-veined btn-sm">Small</button>
+      <button class="btn-marble-veined btn-lg">Large</button>
+      <button class="btn-marble-veined btn-loading">Loading</button>
+      <button class="btn-marble-veined btn-disabled">Disabled</button>
+    </div>
 
-  <h2>Concept 2 — Gold Inlay Text</h2>
-  <div class="button-row">
-    <button class="btn-marble-gold">Primary</button>
-    <button class="btn-marble-gold btn-sm">Small</button>
-    <button class="btn-marble-gold btn-lg">Large</button>
-    <button class="btn-marble-gold btn-loading">Loading</button>
-    <button class="btn-marble-gold btn-disabled">Disabled</button>
-  </div>
+    <h2>Concept 4 — Minimal Marble Slab</h2>
+    <div class="button-row">
+      <button class="btn-marble-slab">Primary</button>
+      <button class="btn-marble-slab btn-sm">Small</button>
+      <button class="btn-marble-slab btn-lg">Large</button>
+      <button class="btn-marble-slab btn-disabled">Disabled</button>
+    </div>
 
-  <h2>Concept 3 — Veined Marble with Depth</h2>
-  <div class="button-row">
-    <button class="btn-marble-veined">Primary</button>
-    <button class="btn-marble-veined btn-sm">Small</button>
-    <button class="btn-marble-veined btn-lg">Large</button>
-    <button class="btn-marble-veined btn-loading">Loading</button>
-    <button class="btn-marble-veined btn-disabled">Disabled</button>
-  </div>
+    <h2>Secondary Variants</h2>
+    <div class="button-row">
+      <button class="btn-marble-outline">Outline</button>
+      <button class="btn-marble-ghost">Ghost</button>
+      <button class="btn-marble-dark">Dark Marble</button>
+    </div>
 
-  <h2>Concept 4 — Minimal Marble Slab</h2>
-  <div class="button-row">
-    <button class="btn-marble-slab">Primary</button>
-    <button class="btn-marble-slab btn-sm">Small</button>
-    <button class="btn-marble-slab btn-lg">Large</button>
-    <button class="btn-marble-slab btn-disabled">Disabled</button>
-  </div>
+    <h2>With Icons</h2>
+    <div class="button-row">
+      <button class="btn-marble-carved btn-with-icon">
+        Create Cenotaph
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+      </button>
+      <button class="btn-marble-gold btn-with-icon">
+        View Memorial
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
 
-  <h2>Secondary Variants</h2>
-  <div class="button-row">
-    <button class="btn-marble-outline">Outline</button>
-    <button class="btn-marble-ghost">Ghost</button>
-    <button class="btn-marble-dark">Dark Marble</button>
-  </div>
-
-  <h2>With Icons</h2>
-  <div class="button-row">
-    <button class="btn-marble-carved btn-with-icon">
-      Create Cenotaph
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 5v14M5 12h14"></path>
-      </svg>
-    </button>
-    <button class="btn-marble-gold btn-with-icon">
-      View Memorial
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M5 12h14M12 5l7 7-7 7"></path>
-      </svg>
-    </button>
-  </div>
-
-  <h2>Dark Marble on Light Background</h2>
-  <div class="button-row light-bg">
-    <button class="btn-marble-dark">Primary</button>
-    <button class="btn-marble-dark btn-sm">Small</button>
-    <button class="btn-marble-dark btn-lg">Large</button>
-  </div>
-
-
-
-</body></html>
+    <h2>Dark Marble on Light Background</h2>
+    <div class="button-row light-bg">
+      <button class="btn-marble-dark">Primary</button>
+      <button class="btn-marble-dark btn-sm">Small</button>
+      <button class="btn-marble-dark btn-lg">Large</button>
+    </div>
+  </body>
+</html>

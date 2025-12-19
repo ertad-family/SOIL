@@ -1,7 +1,8 @@
 # SOIL Design System - Roman Heritage Edition
 
-**Status**: Awaiting Approval
-**Date**: December 10, 2025
+**Status**: Implemented
+**Date**: December 16, 2025
+**Theme**: Dark Mode Only (Scientific/Research Focus)
 **Concept**: Ancient Roman elegance meets modern digital design
 
 ---
@@ -9,95 +10,74 @@
 ## 1. Design Philosophy
 
 ### Core Concept
+
 The SOIL design system draws inspiration from ancient Roman aesthetics - marble textures, classical typography, gold accents - while maintaining a contemporary, functional interface suitable for a modern research platform.
 
-### Two Aesthetic Modes
+### Single Theme Strategy: Dark Mode
 
-**SOIL Core (Research/Scientific)**
-- Tilts toward modernity
-- Clean, data-focused interfaces
-- Roman heritage as subtle undertone
-- Professional, authoritative feel
+We've adopted a unified dark theme that balances:
 
-**Cenotaphery (Memorial/Therapeutic)**
-- Embraces classical warmth more fully
-- Marble textures, warmer tones
-- Gold accents more prominent
-- Dignified, peaceful, healing atmosphere
+- Scientific professionalism (slate backgrounds)
+- Roman heritage warmth (gold accents, marble typography)
+- Memorial dignity (cenotaph-specific components)
 
 ---
 
 ## 2. Color System
 
-### 2.1 Primary Palette - Marble & Stone
+### 2.1 Background Colors - Slate
 
 ```
-Marble (Primary Backgrounds)
-├── marble-50:   #FDFCFB    // Pure marble white
-├── marble-100:  #F9F7F4    // Warm white
-├── marble-200:  #F3EFE9    // Light cream
-├── marble-300:  #E8E2D9    // Soft stone
-├── marble-400:  #D4CBC0    // Weathered marble
-├── marble-500:  #B8ADA0    // Medium stone
-├── marble-600:  #9A8D7F    // Aged marble
-├── marble-700:  #7A6E62    // Dark stone
-├── marble-800:  #5A5048    // Deep earth
-├── marble-900:  #3D3632    // Charcoal brown
-├── marble-950:  #252220    // Near black (text)
+Slate (Primary Backgrounds)
+├── slate-700:   #334155    // Elevated surfaces
+├── slate-800:   #1E293B    // Cards, panels
+├── slate-900:   #0F172A    // Page background (PRIMARY)
+├── slate-950:   #020617    // Deepest dark
 ```
 
-### 2.2 Accent - Roman Gold
+### 2.2 Typography Colors - Marble
+
+```
+Marble (Text & Highlights)
+├── marble-50:   #FDFCFB    // Pure white highlights
+├── marble-100:  #F9F7F4    // Primary headings
+├── marble-200:  #F3EFE9    // Secondary text
+├── marble-400:  #D4CBC0    // Muted text
+├── marble-950:  #252220    // Dark text (on light surfaces)
+```
+
+**Text Color Usage:**
+
+- Headings: `text-marble-100`
+- Body text: `text-slate-400`
+- Muted/caption: `text-slate-500`
+- Links: `text-gold-400` (hover: `text-gold-300`)
+
+### 2.3 Accent - Roman Gold
 
 ```
 Gold (Primary Accent)
-├── gold-50:    #FDF9EF     // Lightest gold tint
-├── gold-100:   #FBF0D9     // Pale gold
-├── gold-200:   #F6DFB3     // Light gold
-├── gold-300:   #EDCA85     // Soft gold
-├── gold-400:   #E2B055     // Medium gold
-├── gold-500:   #C9943D     // True Roman gold (primary)
-├── gold-600:   #A67A2E     // Deep gold
-├── gold-700:   #845F23     // Bronze gold
-├── gold-800:   #6B4C1C     // Dark bronze
-├── gold-900:   #563D17     // Deepest bronze
+├── gold-300:   #EDCA85     // Light gold (highlights)
+├── gold-400:   #E2B055     // Primary accent
+├── gold-500:   #C9943D     // True Roman gold
+├── gold-600:   #A67A2E     // Deep gold (hover states)
 ```
 
-### 2.3 Supporting Colors
+**Gold Usage:**
 
-```
-Terra (Earth Tones - Secondary)
-├── terra-400:  #C4A484     // Light terracotta
-├── terra-500:  #A68968     // Terracotta
-├── terra-600:  #8B6F4E     // Deep terra
-
-Slate (Cool Neutral - SOIL Scientific)
-├── slate-400:  #94A3B8     // Light slate
-├── slate-500:  #64748B     // Medium slate
-├── slate-600:  #475569     // Dark slate
-├── slate-800:  #1E293B     // Deep slate (dark mode bg)
-├── slate-900:  #0F172A     // Darkest slate
-```
+- Buttons: gold gradient backgrounds
+- Accents: `gold-400` for icons, borders
+- Borders: `gold-500` for emphasis
+- Glow effects: `shadow-glow-gold`
 
 ### 2.4 Semantic Colors
 
 ```
-Success:   #5D8A66    // Muted sage green (Roman garden)
+Success:   #4A7052    // Muted sage green
 Warning:   #C9943D    // Gold (reuse accent)
 Error:     #B85450    // Pompeii red (muted)
 Info:      #5B7C99    // Roman blue (muted)
 ```
-
-### 2.5 Theme Strategy
-
-**Light Mode (Cenotaphery Default)**
-- Background: marble-50 to marble-200
-- Text: marble-950, marble-800
-- Accents: gold-500, gold-600
-
-**Dark Mode (SOIL Scientific Default)**
-- Background: slate-900, slate-800
-- Text: marble-100, marble-200
-- Accents: gold-400, gold-500
 
 ---
 
@@ -105,415 +85,339 @@ Info:      #5B7C99    // Roman blue (muted)
 
 ### 3.1 Font Stack
 
-**Headings: Cinzel**
-- Free Google Font, inspired by Roman inscriptions
-- Elegant serifs, classical proportions
-- Use: All headings (h1-h6), logo text, important labels
+| Role             | Font           | Usage                                 |
+| ---------------- | -------------- | ------------------------------------- |
+| **Display/Logo** | Cinzel         | Logo, Roman numerals, decorative text |
+| **Headings**     | Sora           | h1-h6, section titles                 |
+| **Body/UI**      | Manrope        | Body text, buttons, inputs, labels    |
+| **Monospace**    | JetBrains Mono | Code, data, technical content         |
 
-**Body: Source Sans 3** (or Raleway)
-- Clean, highly readable sans-serif
-- Modern feel that complements Cinzel
-- Use: Body text, UI elements, forms
+### 3.2 Typography Classes
 
-**Monospace: JetBrains Mono**
-- For code, data, technical content
-- Clean and readable
-
-### 3.2 Typography Scale
-
-```
-Display:   72px / 1.0   (Cinzel, 600)     // Hero headlines
-H1:        48px / 1.1   (Cinzel, 600)     // Page titles
-H2:        36px / 1.2   (Cinzel, 600)     // Section headers
-H3:        28px / 1.3   (Cinzel, 500)     // Subsections
-H4:        22px / 1.4   (Cinzel, 500)     // Card titles
-H5:        18px / 1.4   (Cinzel, 500)     // Small headers
-H6:        16px / 1.5   (Cinzel, 500)     // Labels
-
-Body XL:   20px / 1.6   (Source Sans, 400)
-Body LG:   18px / 1.6   (Source Sans, 400)
-Body:      16px / 1.6   (Source Sans, 400) // Default
-Body SM:   14px / 1.5   (Source Sans, 400)
-Caption:   12px / 1.4   (Source Sans, 400)
+```css
+font-serif    → Cinzel (Roman heritage)
+font-display  → Sora (modern headings)
+font-sans     → Manrope (body text)
+font-ui       → Manrope (UI elements)
+font-mono     → JetBrains Mono
 ```
 
-### 3.3 Font Weights
-- Cinzel: 400 (Regular), 500 (Medium), 600 (Semibold), 700 (Bold)
-- Source Sans 3: 300 (Light), 400 (Regular), 500 (Medium), 600 (Semibold)
-
----
-
-## 4. Visual Elements
-
-### 4.1 Subtle Textures (CSS/SVG)
-
-**Marble Veining**
-- Very subtle, low-opacity background pattern
-- Used sparingly: hero sections, special cards, cenotaph pages
-- Implementation: CSS gradient or subtle SVG pattern
-
-**Paper/Parchment**
-- Warm, organic texture for Cenotaphery sections
-- Subtle noise overlay
-- Light mode only
-
-### 4.2 Borders & Dividers
+### 3.3 Text Styles
 
 ```
-Border Widths:
-├── thin:   1px
-├── medium: 2px
-├── thick:  3px
-
-Border Colors:
-├── default:  marble-300 (light) / slate-700 (dark)
-├── subtle:   marble-200 (light) / slate-800 (dark)
-├── accent:   gold-500 (both modes)
+Display:     font-serif text-6xl font-semibold tracking-wider
+Heading 1:   font-display text-5xl font-semibold
+Heading 2:   font-display text-4xl font-semibold
+Heading 3:   font-display text-3xl font-medium
+Heading 4:   font-display text-2xl font-medium
+Body XL:     text-xl text-marble-100
+Body Large:  text-lg text-slate-300
+Body:        text-base text-slate-400
+Small:       text-sm text-slate-400
+Caption:     text-xs text-slate-500
 ```
 
-### 4.3 Border Radius
+### 3.4 Special Text Effects
 
-```
-none:   0
-sm:     4px     // Buttons, inputs (subtle, Roman-inspired squareness)
-md:     6px     // Cards
-lg:     8px     // Modals, larger containers
-xl:     12px    // Special elements
-full:   9999px  // Pills, avatars
-```
+**Gold Gradient Text:**
 
-*Note: Keep radius subtle - Roman aesthetics favor cleaner lines*
-
-### 4.4 Shadows (Elevation)
-
-```
-sm:     0 1px 2px rgba(61, 54, 50, 0.06)
-md:     0 2px 4px rgba(61, 54, 50, 0.08), 0 1px 2px rgba(61, 54, 50, 0.04)
-lg:     0 4px 8px rgba(61, 54, 50, 0.10), 0 2px 4px rgba(61, 54, 50, 0.06)
-xl:     0 8px 16px rgba(61, 54, 50, 0.12), 0 4px 8px rgba(61, 54, 50, 0.08)
-2xl:    0 16px 32px rgba(61, 54, 50, 0.14), 0 8px 16px rgba(61, 54, 50, 0.10)
-
-glow-gold:  0 0 20px rgba(201, 148, 61, 0.25)  // For gold accents
+```css
+.text-gradient-gold {
+  background: linear-gradient(135deg, #e2b055 0%, #c9943d 50%, #a67a2e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 ```
 
 ---
 
-## 5. Spacing System
+## 4. Components
 
-### 5.1 Base Unit: 4px
+### 4.1 Buttons
 
+| Variant          | Description                      | Use Case              |
+| ---------------- | -------------------------------- | --------------------- |
+| `dark-primary`   | Light marble gradient, dark text | Primary CTA           |
+| `dark-secondary` | Transparent, marble border       | Secondary actions     |
+| `dark-ghost`     | Transparent, underline on hover  | Tertiary/links        |
+| `dark-outline`   | Transparent, solid border        | Alternative secondary |
+| `marble`         | Dark stone gradient, light text  | Accent contrast       |
+| `cenotaph`       | Gold gradient with glow          | Memorial CTAs         |
+
+**Button Sizes:** sm, md, lg, xl, icon, icon-sm, icon-lg
+
+### 4.2 Cards
+
+| Variant         | Background | Border               | Use Case        |
+| --------------- | ---------- | -------------------- | --------------- |
+| `dark`          | slate-800  | slate-700            | Default cards   |
+| `dark-elevated` | slate-800  | slate-700 + shadow   | Prominent cards |
+| `dark-cenotaph` | slate-800  | gold-500 left accent | Memorial cards  |
+
+**Card Props:** `interactive` adds hover effects
+
+### 4.3 Form Inputs
+
+All inputs use `variant="dark"`:
+
+- Background: `slate-800`
+- Border: `slate-700`
+- Focus: `gold-500` ring
+- Text: `marble-100`
+- Placeholder: `slate-500`
+
+**Components:** Input, Textarea, Select, Combobox, Checkbox, Radio, Switch
+
+### 4.4 Badges
+
+| Variant         | Use Case         |
+| --------------- | ---------------- |
+| `dark-marble`   | Default status   |
+| `dark-outline`  | Outlined style   |
+| `dark-ghost`    | Subtle indicator |
+| `dark-success`  | Positive status  |
+| `dark-warning`  | Warning status   |
+| `dark-error`    | Error status     |
+| `dark-verified` | Verified badge   |
+
+**Badge Props:** `dot` adds status indicator dot
+
+### 4.5 Other Components
+
+- **Dialog:** `variant="dark"` for all parts
+- **Tabs:** `variant="dark"` for TabsList, TabsTrigger, TabsContent
+- **Progress:** Linear and Circular variants
+- **Spinner:** Standard and DotsSpinner variants
+- **Toast:** `dark`, `dark-warning` variants
+
+---
+
+## 5. Decorative Elements
+
+### 5.1 Section Label
+
+Bracketed labels for section introductions:
+
+```tsx
+<SectionLabel>how it works</SectionLabel>
 ```
-0:    0px
-1:    4px
-2:    8px
-3:    12px
-4:    16px
-5:    20px
-6:    24px
-8:    32px
-10:   40px
-12:   48px
-16:   64px
-20:   80px
-24:   96px
-32:   128px
+
+Renders as: `[ how it works ]`
+
+### 5.2 Roman Numerals
+
+Decorative background numerals for wizard steps:
+
+```tsx
+<RomanNumeral value={3} size="lg" variant="dark" />
+<PositionedRomanNumeral value={5} position="top-right" />
 ```
 
-### 5.2 Layout Widths
+### 5.3 Roman Divider
 
+Full-width decorative divider with symbol:
+
+```html
+<div class="divider-roman">
+  <span class="text-gold-500 font-serif">MMXXV</span>
+</div>
 ```
-Prose:      65ch        // Optimal reading width
-Content:    1200px      // Main content max-width
-Wide:       1440px      // Full-width sections
+
+### 5.4 Icon Containers
+
+Circular gold-tinted icon backgrounds:
+
+```tsx
+<div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400">
+  <Icon className="w-8 h-8" />
+</div>
+```
+
+### 5.5 Gold Accent Border
+
+Left border accent for quotes/highlights:
+
+```html
+<div class="gold-accent-left p-4 bg-slate-800">Content with gold accent</div>
+```
+
+### 5.6 Gradient Transitions
+
+Smooth transitions between sections:
+
+```tsx
+// Page bg → Section bg
+<div className="h-12 bg-gradient-to-b from-slate-900 to-marble-950" />
+
+// Section bg → Page bg
+<div className="h-12 bg-gradient-to-b from-marble-950 to-slate-900" />
+```
+
+### 5.7 Gold Glow Effects
+
+Box shadows for gold elements:
+
+```css
+shadow-glow-gold-sm: 0 0 10px rgba(201, 148, 61, 0.20)
+shadow-glow-gold:    0 0 20px rgba(201, 148, 61, 0.25)
+shadow-glow-gold-lg: 0 0 40px rgba(201, 148, 61, 0.30)
 ```
 
 ---
 
-## 6. Animation & Transitions
+## 6. Spacing & Layout
 
-### 6.1 Timing
+### 6.1 Spacing Scale (4px base)
+
+```
+0:   0px      6:   24px     16:  64px
+1:   4px      7:   28px     18:  72px
+2:   8px      8:   32px     20:  80px
+3:   12px     10:  40px     24:  96px
+4:   16px     12:  48px     32:  128px
+5:   20px     14:  56px
+```
+
+### 6.2 Layout Widths
+
+```
+prose:    65ch      // Optimal reading width
+content:  1440px    // Main content max-width
+wide:     1840px    // Full-width sections
+```
+
+### 6.3 Border Radius
+
+```
+none:     0         lg:   20px
+sm:       8px       xl:   25px
+DEFAULT:  12px      2xl:  32px
+md:       16px      full: 9999px
+```
+
+---
+
+## 7. Animations
+
+### 7.1 Timing
 
 ```
 fast:     150ms
-default:  250ms
+DEFAULT:  250ms
 slow:     400ms
 slower:   600ms
 ```
 
-### 6.2 Easing
+### 7.2 Standard Animations
 
-```
-ease-out:     cubic-bezier(0.0, 0.0, 0.2, 1)
-ease-in-out:  cubic-bezier(0.4, 0.0, 0.2, 1)
-spring:       cubic-bezier(0.34, 1.56, 0.64, 1)
-```
-
-### 6.3 Standard Animations
-
-- **fade-in**: Opacity 0 → 1
-- **slide-up**: translateY(10px) → 0 + fade
-- **scale-in**: scale(0.95) → 1 + fade
-- **shimmer**: For loading states (gold tint)
-
-*Animation philosophy: Subtle and refined, never flashy*
-
----
-
-## 7. Component Specifications
-
-### 7.1 Bracketed Section Labels
-
-Inspired by modern tech aesthetics - a distinctive typographic treatment for section introductions.
-
-```
-Pattern: [ section name ]
-
-Styling:
-├── Font: Source Sans 3, 14px
-├── Weight: 500 (Medium)
-├── Color: gold-500 (both modes)
-├── Letter-spacing: 0.05em
-├── Text-transform: lowercase
-├── Brackets: included with inner spacing
-
-Usage:
-├── Above main section headings
-├── Card category labels
-├── Navigation breadcrumbs
-├── Step indicators in wizard
-```
-
-**Example HTML/CSS:**
 ```css
-.section-label {
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: var(--gold-500);
-  text-transform: lowercase;
-}
-.section-label::before { content: '[ '; }
-.section-label::after { content: ' ]'; }
+animate-fade-in       // Opacity 0 → 1
+animate-fade-out      // Opacity 1 → 0
+animate-slide-up      // translateY + fade
+animate-slide-down    // translateY + fade
+animate-scale-in      // scale + fade
+animate-shimmer-gold  // Gold shimmer effect
+animate-pulse-subtle  // Subtle opacity pulse
 ```
 
-**Usage examples:**
-- `[ how it works ]`
-- `[ about soil ]`
-- `[ cenotaphery ]`
-- `[ step iii ]`
+### 7.3 Stagger Classes
 
----
+For cascading animations:
 
-### 7.2 Decorative Roman Numerals
-
-Large outline numerals as visual anchors - reinforces our Roman heritage theme.
-
-```
-Style:
-├── Font: Cinzel, Display size (72-120px)
-├── Weight: 400 (Regular)
-├── Color: transparent fill, gold-500/20 stroke (subtle)
-├── Stroke-width: 1-2px
-├── Position: Background decorative element
-
-Numerals:
-├── I, II, III, IV, V, VI (for 6-step wizard)
-├── Can extend to X, L, C for larger numbers
-
-Usage:
-├── Interview wizard steps
-├── Feature section numbering
-├── Timeline markers
-├── Process flow indicators
-```
-
-**Example CSS:**
 ```css
-.roman-numeral {
-  font-family: 'Cinzel', serif;
-  font-size: 96px;
-  font-weight: 400;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(201, 148, 61, 0.2);
-  position: absolute;
-  user-select: none;
-  pointer-events: none;
-}
+.stagger-1  // delay: 100ms
+.stagger-2  // delay: 200ms
+.stagger-3  // delay: 300ms
 ```
 
 ---
 
-### 7.3 Feature Cards
-
-Icon + title + description pattern for showcasing features, services, or concepts.
-
-```
-Structure:
-├── Icon/Visual (48-64px, top-aligned)
-├── Title (H4, Cinzel)
-├── Description (Body, Source Sans 3)
-├── Optional: Link/CTA
-
-Spacing:
-├── Icon to title: 16px
-├── Title to description: 8px
-├── Card padding: 24-32px
-├── Between cards: 24px (grid gap)
-
-Grid Layout:
-├── Desktop: 4 columns
-├── Tablet: 2 columns
-├── Mobile: 1 column
-```
-
-**Variants:**
-
-**Default Feature Card**
-- Background: transparent or marble-50 (light) / slate-800 (dark)
-- Border: none or 1px subtle
-- Icon: Abstract shape or simple line icon
-
-**Highlighted Feature Card**
-- Background: subtle gradient or marble-100
-- Border: 1px gold-500/30 (left accent)
-- Icon: Gold-tinted
-
-**Example structure:**
-```html
-<div class="feature-card">
-  <div class="feature-icon">{icon}</div>
-  <h4 class="feature-title">Feature Name</h4>
-  <p class="feature-description">
-    Brief description of the feature or concept.
-  </p>
-</div>
-```
-
----
-
-### 7.4 Buttons
-
-**Primary** (Gold)
-- Background: gold-500
-- Text: marble-950
-- Hover: gold-600
-- Border-radius: sm (4px)
-
-**Secondary** (Outlined)
-- Border: 2px marble-400
-- Text: marble-700
-- Hover: marble-100 bg
-
-**Ghost** (Text only)
-- Text: gold-600
-- Hover: gold-50 bg
-
-**Sizes**: sm (32px), md (40px), lg (48px)
-
-### 7.2 Form Inputs
-
-- Background: marble-50 (light) / slate-800 (dark)
-- Border: 1px marble-400
-- Focus: gold-500 border, subtle gold glow
-- Border-radius: sm (4px)
-- Height: 44px (touch-friendly)
-
-### 7.3 Cards
-
-- Background: white (light) / slate-800 (dark)
-- Border: 1px marble-300 (light) / slate-700 (dark)
-- Border-radius: md (6px)
-- Shadow: md on hover
-
-### 7.4 Special: Cenotaph Card
-
-- Subtle marble texture background
-- Gold accent border (top or left)
-- Warm shadow with slight gold tint
-
----
-
-## 8. Implementation Checklist
-
-### Phase 1: Foundation
-- [ ] Configure Tailwind with color tokens
-- [ ] Set up Google Fonts (Cinzel, Source Sans 3)
-- [ ] Create globals.css with CSS variables
-- [ ] Create utility classes (cn helper, etc.)
-
-### Phase 2: Base Components
-- [ ] Button (all variants)
-- [ ] Input, Textarea
-- [ ] Select
-- [ ] Checkbox, Radio, Switch
-- [ ] Label
-
-### Phase 3: Complex Components
-- [ ] Section Label (bracketed `[ label ]` pattern)
-- [ ] Roman Numeral decorator
-- [ ] Feature Card (icon + title + description)
-- [ ] Card (default, cenotaph variant)
-- [ ] Dialog/Modal
-- [ ] Toast notifications
-- [ ] Tabs
-- [ ] Progress bar
-- [ ] Spinner/Loader
-- [ ] Badge
-
-### Phase 4: Layout & Navigation
-- [ ] Header/Navbar
-- [ ] Footer
-- [ ] Sidebar
-- [ ] Page layouts (main, auth, dashboard, wizard)
-
-### Phase 5: Special Components
-- [ ] Cenotaph preview card
-- [ ] Step indicator (wizard)
-- [ ] Data visualization components
-
----
-
-## 9. File Structure
+## 8. File Structure
 
 ```
 src/
 ├── app/
-│   ├── globals.css          # Tailwind + CSS variables
-│   └── fonts.ts             # Font configuration
+│   ├── globals.css           # Tailwind + CSS variables + animations
+│   ├── layout.tsx            # Root layout with fonts
+│   └── design-system/        # Design system showcase
 ├── components/
-│   ├── ui/                  # Base components
-│   ├── forms/               # Form components
-│   ├── navigation/          # Nav components
-│   └── layouts/             # Layout components
+│   ├── ui/                   # Base components (Button, Card, Input...)
+│   ├── sections/             # Page sections
+│   └── layout/               # AppShell, Header, Footer
 ├── lib/
-│   └── utils.ts             # cn() helper, etc.
-└── tailwind.config.ts       # Design tokens
+│   └── utils.ts              # cn() helper
+└── tailwind.config.ts        # Design tokens
 ```
 
 ---
 
-## 10. Questions for Approval
+## 9. Usage Examples
 
-1. **Color Palette**: Does the marble/stone + gold combination feel right for SOIL's brand?
+### Hero Section
 
-2. **Typography**: Cinzel for headings + Source Sans 3 for body - approved?
+```tsx
+<section className="py-20 md:py-32">
+  <h1 className="font-display text-4xl md:text-6xl font-semibold text-marble-100">
+    <span className="text-gradient-gold">Golden Headline</span>
+  </h1>
+  <p className="text-slate-400 leading-relaxed">Description text here</p>
+  <div className="flex gap-4">
+    <Button variant="dark-primary" size="lg">
+      Primary CTA
+    </Button>
+    <Button variant="dark-secondary" size="lg">
+      Secondary CTA
+    </Button>
+  </div>
+</section>
+```
 
-3. **Texture Usage**: Subtle marble veining for Cenotaphery sections - yes/no?
+### Feature Card Grid
 
-4. **Border Radius**: Keeping it subtle (4-8px max) for Roman-inspired clean lines?
+```tsx
+<div className="grid md:grid-cols-3 gap-6">
+  <Card variant="dark-elevated">
+    <CardHeader>
+      <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-4">
+        <Icon className="w-8 h-8" />
+      </div>
+      <CardTitle variant="dark">Title</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p className="text-slate-400">Description</p>
+    </CardContent>
+  </Card>
+</div>
+```
 
-5. **Any adjustments** to the overall direction before I proceed?
+### Form Section
+
+```tsx
+<Card variant="dark">
+  <CardHeader>
+    <CardTitle variant="dark">Form Title</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="space-y-2">
+      <Label variant="dark">Email</Label>
+      <Input placeholder="you@example.com" variant="dark" />
+    </div>
+    <Button variant="dark-primary" className="w-full">
+      Submit
+    </Button>
+  </CardContent>
+</Card>
+```
 
 ---
 
-## Sources
+## 10. Design System Page
 
-Typography research:
-- [Google Fonts Similar to Trajan](https://similarfont.io/2-google-fonts-similar-to-trajan)
-- [Fonts Similar to Cinzel & Pairings](https://design.tutsplus.com/articles/fonts-similar-to-cinzel-what-font-goes-well-with-cinzel--cms-108526)
-- [Cinzel Font Pairings](https://maxibestof.one/typefaces/cinzel)
+View the complete component showcase at:
+**`/design-system`**
+
+This page demonstrates all components, colors, typography, and patterns documented above.
 
 ---
 
-**Awaiting your approval, Dima.**
+**Last Updated:** December 16, 2025

@@ -1,53 +1,45 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import * as React from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export interface FooterLink {
-  label: string
-  href: string
+  label: string;
+  href: string;
 }
 
 export interface FooterColumn {
-  title: string
-  links: FooterLink[]
+  title: string;
+  links: FooterLink[];
 }
 
 export interface FooterProps {
-  variant?: 'default' | 'dark'
-  columns?: FooterColumn[]
-  logo?: React.ReactNode
-  tagline?: string
-  bottomLinks?: FooterLink[]
-  socialLinks?: React.ReactNode
-  className?: string
+  variant?: "default" | "dark";
+  columns?: FooterColumn[];
+  logo?: React.ReactNode;
+  tagline?: string;
+  bottomLinks?: FooterLink[];
+  socialLinks?: React.ReactNode;
+  className?: string;
 }
 
 const Footer = React.forwardRef<HTMLElement, FooterProps>(
   (
-    {
-      variant = 'default',
-      columns = [],
-      logo,
-      tagline,
-      bottomLinks = [],
-      socialLinks,
-      className,
-    },
+    { variant = "default", columns = [], logo, tagline, bottomLinks = [], socialLinks, className },
     ref
   ) => {
-    const currentYear = new Date().getFullYear()
-    const isDark = variant === 'dark'
+    const currentYear = new Date().getFullYear();
+    const isDark = variant === "dark";
 
     return (
       <footer
         ref={ref}
         className={cn(
-          'w-full',
+          "w-full",
           isDark
-            ? 'bg-slate-900 border-t border-slate-700'
-            : 'bg-marble-50 border-t border-marble-300',
+            ? "bg-slate-900 border-t border-slate-700"
+            : "bg-marble-50 border-t border-marble-300",
           className
         )}
       >
@@ -59,15 +51,17 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               {logo || (
                 <Link href="/" className="inline-block">
                   <span className="font-serif text-xl font-semibold tracking-wide">
-                    S<span className="text-gold-500">·</span>O<span className="text-gold-500">·</span>I<span className="text-gold-500">·</span>L
+                    S<span className="text-gold-500">·</span>O
+                    <span className="text-gold-500">·</span>I
+                    <span className="text-gold-500">·</span>L
                   </span>
                 </Link>
               )}
               {tagline && (
                 <p
                   className={cn(
-                    'mt-4 text-sm max-w-xs',
-                    isDark ? 'text-slate-400' : 'text-marble-600'
+                    "mt-4 text-sm max-w-xs",
+                    isDark ? "text-slate-400" : "text-marble-600"
                   )}
                 >
                   {tagline}
@@ -81,8 +75,8 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               <div key={column.title}>
                 <h3
                   className={cn(
-                    'text-sm font-semibold',
-                    isDark ? 'text-marble-100' : 'text-marble-950'
+                    "text-sm font-semibold",
+                    isDark ? "text-marble-100" : "text-marble-950"
                   )}
                 >
                   {column.title}
@@ -93,10 +87,10 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                       <Link
                         href={link.href}
                         className={cn(
-                          'text-sm transition-colors',
+                          "text-sm transition-colors",
                           isDark
-                            ? 'text-slate-400 hover:text-marble-100'
-                            : 'text-marble-600 hover:text-marble-950'
+                            ? "text-slate-400 hover:text-marble-100"
+                            : "text-marble-600 hover:text-marble-950"
                         )}
                       >
                         {link.label}
@@ -111,16 +105,11 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
           {/* Bottom bar */}
           <div
             className={cn(
-              'py-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4',
-              isDark ? 'border-slate-700' : 'border-marble-300'
+              "py-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4",
+              isDark ? "border-slate-700" : "border-marble-300"
             )}
           >
-            <p
-              className={cn(
-                'text-sm',
-                isDark ? 'text-slate-500' : 'text-marble-500'
-              )}
-            >
+            <p className={cn("text-sm", isDark ? "text-slate-500" : "text-marble-500")}>
               {currentYear} SOIL. All rights reserved.
             </p>
 
@@ -131,10 +120,10 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      'text-sm transition-colors',
+                      "text-sm transition-colors",
                       isDark
-                        ? 'text-slate-500 hover:text-marble-100'
-                        : 'text-marble-500 hover:text-marble-950'
+                        ? "text-slate-500 hover:text-marble-100"
+                        : "text-marble-500 hover:text-marble-950"
                     )}
                   >
                     {link.label}
@@ -145,9 +134,9 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
           </div>
         </div>
       </footer>
-    )
+    );
   }
-)
-Footer.displayName = 'Footer'
+);
+Footer.displayName = "Footer";
 
-export { Footer }
+export { Footer };

@@ -1,139 +1,124 @@
-# CLAUDE.md — AI Assistant Instructions for SOIL
+# CLAUDE.md
 
-## Project Context
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-SOIL (Social Organizational Intelligence Lab) is building a research platform for organizational autopsy data collection. The MVP includes a website, user accounts, interview wizard, cenotaph creation, and 2D cemetery visualization.
+## Project Overview
+
+SOIL (Social Organizational Intelligence Lab) is a research platform for organizational autopsy data collection. The MVP includes a website with 3D navigation, user accounts, interview wizard, cenotaph creation, and cemetery visualization.
 
 **Call me Dima** for all communications.
 
-## Core Instructions (From Global CLAUDE.md)
+## Development Commands
 
-1. **Plan before coding** - Never write code without a user-approved plan
-2. **Search for root causes** - Understand why problems occur before fixing
-3. **Simplify solutions** - Minimize complexity; build MVPs with core functionality
-4. **Be radically honest** - Admit when something doesn't work; don't fake success
-5. **Test thoroughly** - Check everything twice; don't celebrate until verified
-6. **Avoid over-engineering** - Only make requested changes; don't add unwanted features
-7. **Use Playwright for testing** - For frontend testing when available
-8. **Minimize git commit messages** - Use backtick escaping in GitHub issues
-9. **Request JSON format** - For GitHub issue data: `gh ... --json title,body,comments`
-10. **Database checks** - Always verify table structure before migrations/scripts
-11. **No `as any` type casting** - Avoid TypeScript escape hatches
-12. **Real testing** - No mocking for integration/E2E tests; test real queries, APIs, connections
-13. **Simplify code** - Reduce size, increase transparency and maintainability
+```bash
+npm run dev      # Start development server at localhost:3000
+npm run build    # Production build
+npm run lint     # Run ESLint
+npm run start    # Start production server
 
-## SOIL-Specific Conventions
+# Playwright E2E tests
+npx playwright test                           # Run all tests
+npx playwright test tests/visual-test.spec.ts # Run specific test
+npx playwright test --headed                  # Run with visible browser
+npx playwright install chromium               # Install browser if needed
+```
 
-### Technology Stack
-- **Frontend**: Next.js 14+ (App Router) + TypeScript
-- **Styling**: Tailwind CSS + Design System (provided by Dima)
-- **Backend**: Next.js API Routes initially, Supabase for database/auth
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Hosting**: Vercel
-- **Testing**: Playwright for E2E tests
+## Architecture
 
-### Repository Structure
-- **Repo**: Private at `https://github.com/ertad-family/soil`
-- **Branches**:
-  - `main` - Production-ready code (protected)
-  - `develop` - Integration branch
-  - `feature/xxx` - Feature branches
-  - `release/x.x.x` - Release branches
-  - `hotfix/xxx` - Hotfix branches
+### App Structure (Next.js 14+ App Router)
 
-### MVP Components (Priority Order)
+```
+src/
+├── app/                    # Pages and routes
+│   ├── layout.tsx          # Root layout with fonts, metadata, AppShell
+│   ├── page.tsx            # Home page
+│   ├── globals.css         # Global styles + Tailwind
+│   ├── research/           # /research route
+│   └── community/          # /community route
+├── components/
+│   ├── layout/             # Global wrappers: AppShell, Header, Footer
+│   ├── layouts/            # Page-specific layouts (dashboard, wizard, auth)
+│   ├── navigation/         # Navigation components
+│   ├── sections/           # Page section components (Hero, About, etc.)
+│   ├── three/              # React Three Fiber 3D components
+│   ├── transitions/        # Page transition components
+│   ├── ui/                 # Radix-based design system components
+│   └── forms/              # Form components
+├── contexts/               # React contexts (MenuContext)
+└── lib/                    # Utilities (cn, formatNumber, etc.)
+```
 
-**Phase 1 (P0 - Core):**
-1. Mother website with section navigation (Cenotaphery, Research, Diagnostics, Education, Clinic)
-2. User account page (profile, settings, data)
-3. Interview Framework & Wizard (6-step process for data intake)
-4. Cenotaph creation flow (with 3D/visual preview)
+### Global Architecture Pattern
 
-**Phase 2 (P1 - Discovery):**
-5. Searchable/filterable cenotaph directory
-6. 2D Cenotaphery visualization
-7. Individual cenotaph detail pages
+The app uses a single `AppShell` wrapper in `layout.tsx` that provides:
 
-### Data Model (Simplified for MVP)
+- `MenuProvider` - global menu state with route-to-section mapping
+- `Header` - sticky header with menu button
+- `Footer` - footer with 3D Tuscan landscape
+- `MenuTransition` - single global instance for portal navigation
+- `GlobalParticles` - floating visitor particles
+- Dark mode state (default: dark)
 
-**Users**
-- id, email, password (via Supabase Auth)
-- name, location, role
-- created_at, updated_at
+### 3D Navigation System
 
-**Cenotaphs**
-- id, user_id (founder)
-- name, description, organization_type
-- founded_date, closed_date
-- status (draft, partial, complete, verified, public)
-- data (structured JSON from wizard)
-- visibility (private, anonymous, public)
-- created_at, updated_at
+The centerpiece is a dodecahedron portal navigation built with React Three Fiber:
 
-**Interview Data** (within cenotaph.data JSON)
-- basic_info, functional_mapping, financial, timeline, environment, founder_context, narrative
-- respects_earned, respects_spent
-- verification_status, verified_by (array of user_ids)
+**Key Files:**
 
-### Design System (To Be Provided)
+- [DodecahedronScene.tsx](src/components/three/DodecahedronScene.tsx) - Main 3D scene with camera animations
+- [Dodecahedron.tsx](src/components/three/Dodecahedron.tsx) - The 12-faced polyhedron with portals
+- [MenuContext.tsx](src/contexts/MenuContext.tsx) - Menu state and route mapping
+- [MenuTransition.tsx](src/components/transitions/MenuTransition.tsx) - Orchestrates fly-in/fly-out
 
-Awaiting design system from Dima before implementing UI components. Will integrate Tailwind tokens once received.
+**Portal Navigation Flow:**
 
-### Code Style
+1. User double-clicks a portal face
+2. Camera flies INTO dodecahedron (`flythrough` → `fadeout` phases)
+3. Fade overlay covers screen
+4. Next.js navigates to new route under the overlay
+5. Camera flies OUT of dodecahedron (arc trajectory)
+6. Fade overlay reveals new page
 
-- Use TypeScript; prefer explicit types
-- Component organization: small, focused, reusable components
-- Hooks over class components
-- API routes in `src/app/api/`
-- Utilities in `src/lib/`
-- Custom hooks in `src/hooks/`
-- Type definitions in `src/types/`
+**Route-Section Mapping (MenuContext):**
 
-### Testing
+```typescript
+'/': 'home'
+'/research': 'research'
+'/community': 'community'
+```
 
-- E2E tests with Playwright
-- Focus on real user flows, not implementation details
-- Test actual Supabase queries and API endpoints
-- No mocking of database or API calls
+### Design System
 
-### Security Considerations
+Tailwind configuration in [tailwind.config.ts](tailwind.config.ts) with Roman-inspired theme:
 
-- All user data is private by default
-- Founder owns their cenotaph data
-- Financial data never shown publicly (only anonymized aggregates)
-- Verification required before public visibility
-- API rate limiting for production
-- HTTPS only
-- Secure session handling via Supabase
+- **Colors:** marble (warm whites), gold (accent), terra (earth), slate (scientific/dark)
+- **Fonts:** Sora (headings), Manrope (body), Cinzel (decorative/Roman)
+- **Components:** Radix UI primitives in `src/components/ui/`
+- **Utility:** `cn()` helper from `src/lib/utils.ts` for className merging
 
-### Communication
+## Core Principles
 
-- Keep responses concise; we're in a CLI environment
-- Use markdown for formatting
-- Reference file locations as `file_path:line_number` when relevant
-- Explain your reasoning; don't skip context
-- Ask for clarification if requirements are ambiguous
+1. **Plan before coding** - Never write code without user-approved plan
+2. **Search for root causes** - Understand problems before fixing
+3. **Simplify solutions** - Build MVPs with minimum required functionality
+4. **Be radically honest** - Admit when something doesn't work
+5. **Test thoroughly** - Check everything twice before celebrating
+6. **No `as any`** - Avoid TypeScript escape hatches
+7. **Real testing** - No mocking for integration/E2E tests
+8. **Hot reload** - do not build the project after every edit
+9. **Dev Server** - next dev server is allways running
 
----
+## Tech Stack
 
-## When to Use Tasks/Agents
+- **Framework:** Next.js 15.x (App Router) + React 19 + TypeScript
+- **3D:** React Three Fiber + Drei + Three.js + Postprocessing
+- **Styling:** Tailwind CSS 3.4
+- **UI:** Radix UI primitives + custom design system
+- **Testing:** Playwright (E2E)
+- **Future:** Supabase (auth/database), Vercel (hosting)
 
-- **Explore agent**: For exploring the codebase, answering "where is X" questions
-- **Plan agent**: For designing implementation strategy for complex features
-- **General-purpose agent**: For multi-step research tasks
-- **claude-code-guide**: For questions about Claude Code features (if using that)
+## Documentation
 
-## Getting Help
+Strategic documents are stored in a separate private repository: [SOIL-strategy](https://github.com/ertad-family/SOIL-strategy)
 
-If stuck:
-1. Re-read the relevant documentation (docs/ folder)
-2. Check SOIL_Master_Strategy_v3.md for context
-3. Ask Dima for clarification
-4. Use Bash to explore and test locally
-
----
-
-**Last Updated**: December 10, 2025
-**Project Phase**: MVP Development
-**Design System**: Pending
+Local access via symlink: `docs/` → `../SOIL-strategy/` (gitignored)
