@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { WizardLayout } from "@/components/layouts/wizard-layout";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ export default function CenotaphWizardPage() {
       clearInterval(pollInterval);
       clearInterval(progressInterval);
     };
-  }, [memorial?.design_status, isGenerating, memorialId, supabase]);
+  }, [memorial, isGenerating, memorialId, supabase]);
 
   // Animate progress bar during generation
   useEffect(() => {
@@ -150,7 +151,7 @@ export default function CenotaphWizardPage() {
     });
 
     return () => timers.forEach((t) => clearInterval(t));
-  }, [isGenerating]);
+  }, [isGenerating, memorial?.design_status]);
 
   // Fetch memorial data
   useEffect(() => {
@@ -304,7 +305,7 @@ export default function CenotaphWizardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [memorialId, selectedDesignId, memorial?.slug, router]);
+  }, [memorialId, selectedDesignId]);
 
   const handleNext = () => {
     if (currentStep === 1) {
@@ -538,11 +539,13 @@ export default function CenotaphWizardPage() {
               <h3 className="text-xl text-marble-100 font-medium mb-2">Design Complete</h3>
               <p className="text-slate-400 mb-6">Your cenotaph design has been saved.</p>
               {memorial.cenotaph_image_url && (
-                <div className="max-w-sm mx-auto rounded-lg overflow-hidden border border-slate-600">
-                  <img
+                <div className="relative max-w-sm mx-auto rounded-lg overflow-hidden border border-slate-600 aspect-square">
+                  <Image
                     src={memorial.cenotaph_image_url}
                     alt="Your cenotaph design"
-                    className="w-full h-auto"
+                    fill
+                    sizes="(max-width: 640px) 100vw, 384px"
+                    className="object-cover"
                   />
                 </div>
               )}
@@ -603,11 +606,15 @@ export default function CenotaphWizardPage() {
                         : "border-slate-700 hover:border-slate-500"
                     )}
                   >
-                    <img
-                      src={option.url}
-                      alt={`Design option ${index + 1}`}
-                      className="w-full aspect-square object-cover"
-                    />
+                    <div className="relative w-full aspect-square">
+                      <Image
+                        src={option.url}
+                        alt={`Design option ${index + 1}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
                     {selectedDesignId === option.id && (
                       <div className="absolute top-4 right-4 bg-gold-500 rounded-full p-2 shadow-lg">
                         <CheckCircle2 className="h-8 w-8 text-slate-900" />

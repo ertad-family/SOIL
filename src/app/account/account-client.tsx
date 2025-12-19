@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,11 +102,11 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
       pageTitle={`Welcome, ${user.name}`}
       pageDescription="Manage your organizations and cenotaphs"
       pageActions={
-        <a href="/organization/create?returnTo=interview">
+        <Link href="/organization/create?returnTo=interview">
           <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
             Create Organization
           </Button>
-        </a>
+        </Link>
       }
     >
       {/* Organizations Tabs */}

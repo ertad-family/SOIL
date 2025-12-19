@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -903,10 +904,12 @@ function CenotaphAvatar({
             >
               {/* AI-generated cenotaph image */}
               {hasDesign && memorial.cenotaph_image_url && (
-                <img
+                <Image
                   src={memorial.cenotaph_image_url}
                   alt="Cenotaph design"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 300px"
+                  className="object-cover"
                 />
               )}
 
@@ -967,12 +970,18 @@ function CenotaphAvatar({
             >
               <XCircle className="w-8 h-8" />
             </button>
-            <img
-              src={memorial.cenotaph_image_url}
-              alt="Cenotaph design"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            <div
+              className="relative max-w-full max-h-[90vh] w-[90vw] h-[90vh]"
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <Image
+                src={memorial.cenotaph_image_url}
+                alt="Cenotaph design"
+                fill
+                sizes="90vw"
+                className="object-contain rounded-lg shadow-2xl"
+              />
+            </div>
           </div>
         )}
 
