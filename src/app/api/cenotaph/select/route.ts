@@ -1,12 +1,13 @@
 /**
  * POST /api/cenotaph/select
  * Select a design option as the final cenotaph
+ * Also saves the selected concept to the catalog for future diversity
  * Issue: #23 Cenotaph creation wizard
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import type { SelectDesignRequest, SelectDesignResponse, CenotaphDesign } from '@/types/cenotaph'
+import type { SelectDesignRequest, SelectDesignResponse, CenotaphDesign, DesignConcept } from '@/types/cenotaph'
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -26,10 +27,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
       )
     }
 
-    // Fetch memorial with design options
+    // Fetch memorial with design options and organization data
     const { data: memorial, error: fetchError } = await supabase
       .from('memorials')
-      .select('id, design_status, cenotaph_design')
+      .select(`
+        id,
+        design_status,
+        cenotaph_design,
+        organization_type,
+        organization:organizations (
+          organization_type,
+          industry
+        )
+      `)
       .eq('id', memorialId)
       .single()
 
@@ -64,15 +74,53 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
       )
     }
 
-    // Update memorial with selection (keep only selected option)
+    // Find the concept that generated this design
+    let selectedConcept: DesignConcept | undefined
+
+    // First check if design has conceptId reference
+    if (selectedDesign.conceptId) {
+      // Look for concept in pendingConcepts or try to reconstruct from design data
+      const allConcepts = design.pendingConcepts || []
+      selectedConcept = allConcepts.find(c => c.id === selectedDesign.conceptId)
+    }
+
+    // If concept found, save to catalog for future diversity
+    if (selectedConcept || selectedDesign.prompt) {
+      const orgData = memorial.organization as { organization_type?: string; industry?: string } | null
+
+      const conceptToSave = {
+        memorial_id: memorialId,
+        concept_title: selectedConcept?.title || 'Untitled Concept',
+        concept_description: selectedConcept?.description || selectedDesign.prompt || '',
+        style_keywords: selectedConcept?.styleKeywords || [],
+        organization_type: orgData?.organization_type || memorial.organization_type,
+        industry: orgData?.industry
+      }
+
+      // Save to used concepts catalog (async, non-blocking)
+      supabase
+        .from('used_cenotaph_concepts')
+        .insert(conceptToSave)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Failed to save concept to catalog:', error)
+          } else {
+            console.log(`Saved concept "${conceptToSave.concept_title}" to catalog`)
+          }
+        })
+    }
+
+    // Update memorial with selection (keep only selected option, clear pending concepts)
     const { error: updateError } = await supabase
       .from('memorials')
       .update({
         design_status: 'completed',
         cenotaph_image_url: selectedDesign.url,
         cenotaph_design: {
-          options: [selectedDesign], // Keep only the selected design
-          selectedId: selectedDesignId
+          options: [selectedDesign],
+          selectedId: selectedDesignId,
+          selectedConcept: selectedConcept,
+          pendingConcepts: []  // Clear pending concepts
         }
       })
       .eq('id', memorialId)

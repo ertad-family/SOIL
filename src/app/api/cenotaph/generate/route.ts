@@ -1,14 +1,18 @@
 /**
  * POST /api/cenotaph/generate
- * Generate AI cenotaph design options
+ * Generate AI cenotaph design options using two-step creative process:
+ * 1. Gemini generates 9 unique creative concepts
+ * 2. Imagen renders first 3 (or next 3 from pending) as images
+ *
  * Issue: #23 Cenotaph creation wizard
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { buildCenotaphPrompt, validateUserPrompt } from '@/lib/cenotaph/prompt-builder'
+import { buildOrganizationContext, validateUserPrompt } from '@/lib/cenotaph/prompt-builder'
 import {
-  generateCenotaphDesigns,
+  generateCreativeConcepts,
+  generateImagesFromConcepts,
   processAndUploadDesigns,
   estimateCost
 } from '@/lib/cenotaph/gemini'
@@ -16,7 +20,8 @@ import type {
   GenerateDesignRequest,
   GenerateDesignResponse,
   OrganizationContext,
-  StoryContext
+  StoryContext,
+  DesignConcept
 } from '@/types/cenotaph'
 
 // Initialize Supabase client with service role for storage operations
@@ -144,34 +149,74 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       .update({
         design_status: 'generating',
         user_design_prompt: userPrompt || null,
-        design_metadata: {
-          attempts: 1,
-          lastError: null,
-          modelUsed: 'imagen-4.0-generate-001',
-          costEstimate: estimateCost(3),
-          generatedAt: new Date().toISOString()
-        }
       })
       .eq('id', memorialId)
 
-    // Build prompts for 3 variations
-    const prompts = [0, 1, 2].map(i =>
-      buildCenotaphPrompt(organization, story, userPrompt, i)
-    )
+    // Check if we have pending concepts to render
+    let pendingConcepts: DesignConcept[] = memorial.cenotaph_design?.pendingConcepts || []
+    let conceptsToRender: DesignConcept[]
+    let remainingConcepts: DesignConcept[]
 
-    // Generate designs
-    console.log(`Generating cenotaph designs for memorial ${memorialId}...`)
-    const designs = await generateCenotaphDesigns(prompts, memorialId)
+    if (pendingConcepts.length >= 3) {
+      // Use existing pending concepts
+      console.log(`Using ${pendingConcepts.length} pending concepts...`)
+      conceptsToRender = pendingConcepts.slice(0, 3)
+      remainingConcepts = pendingConcepts.slice(3)
+    } else {
+      // Generate new concepts
+      console.log('Generating new creative concepts...')
+
+      // Fetch all previously used concepts to avoid repetition
+      const { data: usedConcepts } = await supabase
+        .from('used_cenotaph_concepts')
+        .select('concept_title, concept_description, style_keywords')
+        .order('created_at', { ascending: false })
+        .limit(100)  // Get last 100 used concepts
+
+      // Build organization context for concept generation
+      const orgContext = buildOrganizationContext(organization, story, userPrompt)
+
+      // Generate 9 unique concepts
+      const allConcepts = await generateCreativeConcepts(orgContext, usedConcepts || [])
+
+      if (allConcepts.length === 0) {
+        await supabase
+          .from('memorials')
+          .update({
+            design_status: 'failed',
+            design_metadata: {
+              attempts: 1,
+              lastError: 'Failed to generate creative concepts',
+              modelUsed: 'gemini-2.0-flash-001',
+              costEstimate: 0,
+              generatedAt: new Date().toISOString()
+            }
+          })
+          .eq('id', memorialId)
+
+        return NextResponse.json(
+          { success: false, error: 'Failed to generate creative concepts. Please try again.' },
+          { status: 500 }
+        )
+      }
+
+      conceptsToRender = allConcepts.slice(0, 3)
+      remainingConcepts = allConcepts.slice(3)
+      console.log(`Generated ${allConcepts.length} concepts. Rendering first 3, saving ${remainingConcepts.length} for later.`)
+    }
+
+    // Generate images from the first 3 concepts
+    console.log(`Generating images for ${conceptsToRender.length} concepts...`)
+    const designs = await generateImagesFromConcepts(conceptsToRender, memorialId)
 
     if (designs.length === 0) {
-      // Update status to failed
       await supabase
         .from('memorials')
         .update({
           design_status: 'failed',
           design_metadata: {
             attempts: 1,
-            lastError: 'Failed to generate any design options',
+            lastError: 'Failed to generate any images',
             modelUsed: 'imagen-4.0-generate-001',
             costEstimate: 0,
             generatedAt: new Date().toISOString()
@@ -180,12 +225,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
         .eq('id', memorialId)
 
       return NextResponse.json(
-        { success: false, error: 'Failed to generate design options. Please try again.' },
+        { success: false, error: 'Failed to generate design images. Please try again.' },
         { status: 500 }
       )
     }
 
-    // Upload designs to storage and get public URLs
+    // Upload designs to storage
     console.log(`Uploading ${designs.length} designs to storage...`)
     const processedDesigns = await processAndUploadDesigns(supabase, memorialId, designs)
 
@@ -193,26 +238,28 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
     const existingOptions = memorial.cenotaph_design?.options || []
     const allOptions = [...existingOptions, ...processedDesigns]
 
-    // Update memorial with combined design options
+    // Update memorial with design options and pending concepts
     await supabase
       .from('memorials')
       .update({
         design_status: 'options_ready',
         cenotaph_design: {
           options: allOptions,
-          selectedId: memorial.cenotaph_design?.selectedId || null
+          selectedId: memorial.cenotaph_design?.selectedId || null,
+          pendingConcepts: remainingConcepts,  // Save remaining concepts for "Generate More"
         },
         design_metadata: {
-          attempts: (memorial.cenotaph_design?.options?.length || 0) / 3 + 1,
+          attempts: (existingOptions.length / 3) + 1,
           lastError: null,
           modelUsed: 'imagen-4.0-generate-001',
           costEstimate: estimateCost(allOptions.length),
-          generatedAt: new Date().toISOString()
+          generatedAt: new Date().toISOString(),
+          pendingConceptsCount: remainingConcepts.length
         }
       })
       .eq('id', memorialId)
 
-    console.log(`Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options`)
+    console.log(`Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options. Pending concepts: ${remainingConcepts.length}`)
 
     return NextResponse.json({
       success: true,

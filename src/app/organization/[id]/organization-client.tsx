@@ -806,14 +806,23 @@ function CenotaphAvatar({
   organizationId: string
   isOwner: boolean
 }) {
+  const [showImagePopup, setShowImagePopup] = useState(false)
+
   if (memorial) {
     // Check if memorial has AI-generated cenotaph image
-    const hasDesign = memorial.cenotaph_image_url && memorial.design_status === 'completed'
+    // Show existing design even if regeneration is in progress (cenotaph_image_url persists until new one is selected)
+    const hasDesign = !!memorial.cenotaph_image_url
+    const isRegenerating = memorial.design_status === 'generating' || memorial.design_status === 'options_ready'
     const needsDesign = !hasDesign && isOwner
 
     return (
       <div className="relative">
-        <a href={`/memorials/${memorial.slug}`} className="block group">
+        <button
+          type="button"
+          onClick={() => hasDesign && setShowImagePopup(true)}
+          className="block group w-full text-left cursor-pointer"
+          disabled={!hasDesign}
+        >
           {/* Roman Marble Frame */}
           <div className={marbleFrameStyles}>
             {/* Inner content */}
@@ -850,12 +859,14 @@ function CenotaphAvatar({
                 </div>
               )}
 
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button variant="dark-primary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
-                  View Cenotaph
-                </Button>
-              </div>
+              {/* Hover Overlay (only when has design) */}
+              {hasDesign && (
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 text-slate-900 text-sm font-medium rounded-md">
+                    View Cenotaph
+                  </span>
+                </div>
+              )}
 
               {/* Stats */}
               <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-4 text-sm text-slate-400">
@@ -870,7 +881,29 @@ function CenotaphAvatar({
               </div>
             </div>
           </div>
-        </a>
+        </button>
+
+        {/* Image Popup Modal */}
+        {showImagePopup && memorial.cenotaph_image_url && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            onClick={() => setShowImagePopup(false)}
+          >
+            <button
+              type="button"
+              className="absolute top-4 right-4 text-marble-300 hover:text-marble-100 transition-colors"
+              onClick={() => setShowImagePopup(false)}
+            >
+              <XCircle className="w-8 h-8" />
+            </button>
+            <img
+              src={memorial.cenotaph_image_url}
+              alt="Cenotaph design"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
 
         {/* Design Cenotaph button (shown when no AI design yet) */}
         {needsDesign && (
@@ -878,6 +911,17 @@ function CenotaphAvatar({
             <a href={`/cenotaph/create/${memorial.id}`}>
               <Button variant="dark-secondary" size="sm" leftIcon={<Sparkles className="w-4 h-4" />}>
                 Design Cenotaph
+              </Button>
+            </a>
+          </div>
+        )}
+
+        {/* Change Design / Continue Designing button (shown when design exists and user is owner) */}
+        {hasDesign && isOwner && (
+          <div className="mt-3 text-center">
+            <a href={`/cenotaph/create/${memorial.id}`}>
+              <Button variant="dark-ghost" size="sm" leftIcon={isRegenerating ? <Sparkles className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}>
+                {isRegenerating ? 'Continue Designing' : 'Change Design'}
               </Button>
             </a>
           </div>

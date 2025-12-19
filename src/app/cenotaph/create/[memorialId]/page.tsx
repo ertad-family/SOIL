@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 interface MemorialData {
   id: string
   slug: string
+  organization_id: string | null
   organization_name: string
   organization_type: string | null
   epitaph: string | null
@@ -56,10 +57,64 @@ export default function CenotaphWizardPage() {
   const [error, setError] = useState<string | null>(null)
   const [generationProgress, setGenerationProgress] = useState(0)
 
+  // Poll for generation completion when status is 'generating'
+  useEffect(() => {
+    // Only poll if we loaded with 'generating' status and aren't actively generating ourselves
+    if (!memorial || memorial.design_status !== 'generating' || isGenerating) {
+      return
+    }
+
+    // Start showing progress animation for returning user
+    setGenerationProgress(30) // Start at 30% since generation already in progress
+
+    // Slowly animate progress while polling (30% -> 85% over ~30 seconds)
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => Math.min(prev + 1.5, 85))
+    }, 1000)
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('memorials')
+          .select('design_status, cenotaph_design')
+          .eq('id', memorialId)
+          .single()
+
+        if (error) {
+          console.error('Polling error:', error)
+          return
+        }
+
+        if (data?.design_status === 'options_ready' && data?.cenotaph_design?.options?.length > 0) {
+          // Generation completed - update state and move to select step
+          setMemorial(prev => prev ? {
+            ...prev,
+            design_status: 'options_ready',
+            cenotaph_design: data.cenotaph_design
+          } : null)
+          setGenerationProgress(100)
+          clearInterval(progressInterval)
+          setTimeout(() => setCurrentStep(3), 500) // Brief delay to show 100%
+          clearInterval(pollInterval)
+        }
+      } catch (err) {
+        console.error('Poll failed:', err)
+      }
+    }, 3000) // Poll every 3 seconds
+
+    return () => {
+      clearInterval(pollInterval)
+      clearInterval(progressInterval)
+    }
+  }, [memorial?.design_status, isGenerating, memorialId, supabase])
+
   // Animate progress bar during generation
   useEffect(() => {
     if (!isGenerating) {
-      setGenerationProgress(0)
+      // Don't reset if we're polling (returning user)
+      if (memorial?.design_status !== 'generating') {
+        setGenerationProgress(0)
+      }
       return
     }
 
@@ -103,6 +158,7 @@ export default function CenotaphWizardPage() {
           .select(`
             id,
             slug,
+            organization_id,
             organization_name,
             organization_type,
             epitaph,
@@ -225,8 +281,7 @@ export default function CenotaphWizardPage() {
         } : null
       } : null)
 
-      // Redirect to memorial page
-      router.push(`/memorials/${memorial?.slug}`)
+      // Stay on wizard page - design selection complete
     } catch (err) {
       console.error('Selection error:', err)
       setError(err instanceof Error ? err.message : 'Failed to save selection')
@@ -291,7 +346,7 @@ export default function CenotaphWizardPage() {
       onNext={handleNext}
       title={WIZARD_STEPS[currentStep].label}
       subtitle={currentStep === 3 ? undefined : WIZARD_STEPS[currentStep].description}
-      cancelHref={`/organization/${memorial.organization_name}`}
+      cancelHref={memorial.organization_id ? `/organization/${memorial.organization_id}` : '/account'}
       isLoading={isLoading || isGenerating}
       canGoBack={currentStep > 0 && currentStep !== 2 && !isGenerating}
       canGoNext={
@@ -400,41 +455,49 @@ export default function CenotaphWizardPage() {
       )}
 
       {/* Step 3: Generate (loading state) */}
-      {currentStep === 2 && (
-        <div className="py-12 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-500/20 mb-6">
-            <Sparkles className="h-8 w-8 text-gold-500" />
-          </div>
-          <h3 className="text-xl text-marble-100 font-medium mb-4">
-            Creating Your Cenotaph Designs
-          </h3>
+      {currentStep === 2 && (() => {
+        // Check if we're polling (returned to in-progress generation) vs actively generating
+        const isPolling = !isGenerating && memorial?.design_status === 'generating'
 
-          {/* Progress bar */}
-          <div className="max-w-md mx-auto mb-4">
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gold-500 transition-all duration-300 ease-out"
-                style={{ width: `${generationProgress}%` }}
-              />
+        return (
+          <div className="py-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-500/20 mb-6">
+              <Sparkles className="h-8 w-8 text-gold-500" />
             </div>
-            <div className="flex justify-between mt-2 text-sm">
-              <span className="text-slate-400">
-                {generationProgress < 30 ? 'Preparing prompts...' :
-                 generationProgress < 60 ? 'Generating design 1 of 3...' :
-                 generationProgress < 80 ? 'Generating design 2 of 3...' :
-                 'Generating design 3 of 3...'}
-              </span>
-              <span className="text-gold-400 font-medium tabular-nums">
-                {Math.round(generationProgress)}%
-              </span>
-            </div>
-          </div>
+            <h3 className="text-xl text-marble-100 font-medium mb-4">
+              {isPolling ? 'Generation in Progress' : 'Creating Your Cenotaph Designs'}
+            </h3>
 
-          <p className="text-slate-500 text-sm max-w-md mx-auto">
-            This usually takes 30-45 seconds
-          </p>
-        </div>
-      )}
+            {/* Progress bar */}
+            <div className="max-w-md mx-auto mb-4">
+              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gold-500 transition-all duration-300 ease-out"
+                  style={{ width: `${generationProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-2 text-sm">
+                <span className="text-slate-400">
+                  {isPolling ? 'Checking status...' :
+                   generationProgress < 30 ? 'Preparing prompts...' :
+                   generationProgress < 60 ? 'Generating design 1 of 3...' :
+                   generationProgress < 80 ? 'Generating design 2 of 3...' :
+                   'Generating design 3 of 3...'}
+                </span>
+                <span className="text-gold-400 font-medium tabular-nums">
+                  {Math.round(generationProgress)}%
+                </span>
+              </div>
+            </div>
+
+            <p className="text-slate-500 text-sm max-w-md mx-auto">
+              {isPolling
+                ? 'Your designs are being generated. Please wait...'
+                : 'This usually takes 30-45 seconds'}
+            </p>
+          </div>
+        )
+      })()}
 
       {/* Step 4: Select */}
       {currentStep === 3 && (
@@ -457,13 +520,31 @@ export default function CenotaphWizardPage() {
                   />
                 </div>
               )}
-              <Button
-                variant="dark-primary"
-                className="mt-6"
-                onClick={() => router.push(`/memorials/${memorial.slug}`)}
-              >
-                View Memorial
-              </Button>
+              <div className="mt-6 flex gap-3 justify-center">
+                <Button
+                  variant="dark-ghost"
+                  onClick={() => {
+                    // Reset to allow generating new designs
+                    setMemorial(prev => prev ? {
+                      ...prev,
+                      design_status: 'options_ready',
+                      cenotaph_design: { options: [], selectedId: null }
+                    } : null)
+                    setSelectedDesignId(null)
+                    setCurrentStep(2)
+                    handleGenerate()
+                  }}
+                  leftIcon={<Sparkles className="h-4 w-4" />}
+                >
+                  Create New Design
+                </Button>
+                <Button
+                  variant="dark-primary"
+                  onClick={() => router.push('/account')}
+                >
+                  Back to Account
+                </Button>
+              </div>
             </div>
           ) : (
             <>
