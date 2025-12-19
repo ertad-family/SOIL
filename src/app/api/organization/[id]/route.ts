@@ -38,7 +38,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Parse body
     const body = await request.json();
-    const { is_public, name, description, organization_type } = body;
+    const {
+      is_public,
+      name,
+      description,
+      organization_type,
+      business_model,
+      industry,
+      location_country,
+      location_city,
+      founded_date,
+      closed_date,
+      stage_at_closure,
+      peak_team_size,
+    } = body;
 
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
@@ -46,6 +59,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (typeof name === "string") updates.name = name;
     if (typeof description === "string") updates.description = description;
     if (typeof organization_type === "string") updates.organization_type = organization_type;
+    if (typeof business_model === "string" || business_model === null)
+      updates.business_model = business_model;
+    if (typeof industry === "string" || industry === null) updates.industry = industry;
+    if (typeof location_country === "string" || location_country === null)
+      updates.location_country = location_country;
+    if (typeof location_city === "string" || location_city === null)
+      updates.location_city = location_city;
+    if (typeof founded_date === "string" || founded_date === null)
+      updates.founded_date = founded_date;
+    if (typeof closed_date === "string" || closed_date === null) updates.closed_date = closed_date;
+    if (typeof stage_at_closure === "string" || stage_at_closure === null)
+      updates.stage_at_closure = stage_at_closure;
+    if (typeof peak_team_size === "number" || peak_team_size === null)
+      updates.peak_team_size = peak_team_size;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
