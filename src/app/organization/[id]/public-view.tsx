@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -285,10 +286,12 @@ function HeroSection({
                 className="group absolute inset-0 w-full h-full cursor-pointer"
               >
                 {/* Full-column cenotaph image */}
-                <img
+                <Image
                   src={memorial.cenotaph_image_url}
                   alt="Memorial cenotaph"
-                  className="absolute inset-0 w-full h-full object-contain object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-contain object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 />
                 {/* Subtle golden glow on hover */}
                 <div
@@ -395,11 +398,15 @@ function HeroSection({
             className="fixed inset-0 z-50 bg-marble-950/98 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setShowFullImage(false)}
           >
-            <img
-              src={memorial.cenotaph_image_url}
-              alt="Memorial cenotaph"
-              className="max-w-full max-h-[90vh] object-contain"
-            />
+            <div className="relative w-[90vw] h-[90vh] max-w-full max-h-[90vh]">
+              <Image
+                src={memorial.cenotaph_image_url}
+                alt="Memorial cenotaph"
+                fill
+                sizes="90vw"
+                className="object-contain"
+              />
+            </div>
             <button
               className="absolute top-6 right-6 w-12 h-12 rounded-full bg-marble-900/80 border border-marble-700 text-marble-300 hover:text-marble-100 hover:bg-marble-800 transition-colors flex items-center justify-center"
               onClick={() => setShowFullImage(false)}
