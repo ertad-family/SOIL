@@ -241,6 +241,22 @@ function HeroSection({
         {/* Mobile: single dark background */}
         <div className="absolute inset-0 lg:hidden bg-marble-950" />
 
+        {/* Top gradient - smooth transition from header */}
+        <div
+          className="absolute inset-x-0 top-0 h-32 z-[5] pointer-events-none"
+          style={{
+            background: "linear-gradient(180deg, #0f172a 0%, transparent 100%)",
+          }}
+        />
+
+        {/* Bottom gradient - smooth transition to Roman divider */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-32 z-[5] pointer-events-none"
+          style={{
+            background: "linear-gradient(0deg, #0f172a 0%, transparent 100%)",
+          }}
+        />
+
         {/* Content grid */}
         <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
           {/* Left: Cenotaph as full-column background */}
