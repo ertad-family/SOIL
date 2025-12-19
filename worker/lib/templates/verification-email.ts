@@ -1,4 +1,4 @@
-import type { PendingEmailRequest } from "../supabase";
+import type { PendingEmailRequest } from "../supabase.js";
 
 // Role labels for display in emails
 const ROLE_LABELS: Record<string, string> = {

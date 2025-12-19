@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createSupabaseClient, type PendingEmailRequest } from "../../lib/supabase";
-import { getResendClient, classifyResendError, calculateNextRetryTime } from "../../lib/resend";
-import { generateVerificationEmail } from "../../lib/templates/verification-email";
+import { createSupabaseClient, type PendingEmailRequest } from "../../lib/supabase.js";
+import { getResendClient, classifyResendError, calculateNextRetryTime } from "../../lib/resend.js";
+import { generateVerificationEmail } from "../../lib/templates/verification-email.js";
 
 // Maximum emails to process per cron run (to avoid timeouts)
 const BATCH_SIZE = 10;
