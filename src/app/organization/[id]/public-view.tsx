@@ -7,10 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SectionLabel } from "@/components/ui/section-label";
 import {
-  Calendar,
   MapPin,
   Building2,
-  Briefcase,
   Users,
   Quote,
   Lightbulb,
@@ -126,6 +124,60 @@ function formatDateRange(founded: string | null, closed: string | null): string 
   return `${formatYear(founded)} — ${formatYear(closed)}`;
 }
 
+/** Convert year to Roman numerals */
+function toRomanNumerals(year: number): string {
+  const romanNumerals: [number, string][] = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"],
+  ];
+
+  let result = "";
+  let remaining = year;
+
+  for (const [value, numeral] of romanNumerals) {
+    while (remaining >= value) {
+      result += numeral;
+      remaining -= value;
+    }
+  }
+
+  return result;
+}
+
+/** Format date range as Roman numerals */
+function formatDateRangeRoman(founded: string | null, closed: string | null): string | null {
+  if (!founded && !closed) return null;
+
+  const getYear = (date: string | null) => {
+    if (!date) return null;
+    return new Date(date).getFullYear();
+  };
+
+  const foundedYear = getYear(founded);
+  const closedYear = getYear(closed);
+
+  if (foundedYear && closedYear) {
+    return `${toRomanNumerals(foundedYear)} — ${toRomanNumerals(closedYear)}`;
+  } else if (foundedYear) {
+    return toRomanNumerals(foundedYear);
+  } else if (closedYear) {
+    return toRomanNumerals(closedYear);
+  }
+
+  return null;
+}
+
 function getDisplayName(
   organization: OrganizationData,
   authorName: string | null,
@@ -145,7 +197,7 @@ function getDisplayName(
 // SUB-COMPONENTS
 // =============================================================================
 
-/** Hero section with cenotaph monument */
+/** Hero section with cenotaph monument - dramatic full-width design */
 function HeroSection({
   organization,
   memorial,
@@ -159,171 +211,193 @@ function HeroSection({
 }) {
   const [showFullImage, setShowFullImage] = useState(false);
   const { orgName } = getDisplayName(organization, null, null);
+  const romanDateRange = formatDateRangeRoman(organization.founded_date, organization.closed_date);
 
   return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800" />
+    <>
+      <section className="relative min-h-[85vh] overflow-hidden">
+        {/* Split background - marble-950 for cenotaph, gradient to slate for info */}
+        <div className="absolute inset-0 grid grid-cols-1 lg:grid-cols-2">
+          {/* Left: Dark marble background for cenotaph */}
+          <div className="relative bg-marble-950">
+            {/* Subtle ambient glow behind cenotaph */}
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 60% at 50% 60%, rgba(201, 148, 61, 0.12) 0%, transparent 70%)",
+              }}
+            />
+          </div>
+          {/* Right: Gradient to slate */}
+          <div
+            className="hidden lg:block"
+            style={{
+              background: "linear-gradient(90deg, #252220 0%, #1e293b 30%, #0f172a 100%)",
+            }}
+          />
+        </div>
 
-      {/* Subtle radial glow */}
-      <div className="absolute inset-0 opacity-30">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, rgba(201, 148, 61, 0.15) 0%, transparent 70%)",
-          }}
-        />
-      </div>
+        {/* Mobile: single dark background */}
+        <div className="absolute inset-0 lg:hidden bg-marble-950" />
 
-      {/* Content */}
-      <div className="relative z-10 container-content py-16 md:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left: Cenotaph Monument */}
-          <div className="flex justify-center lg:justify-end">
+        {/* Content grid */}
+        <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
+          {/* Left: Cenotaph - the sacred centerpiece */}
+          <div className="relative flex items-center justify-center py-16 lg:py-0">
             {memorial?.cenotaph_image_url ? (
               <button
                 onClick={() => setShowFullImage(true)}
-                className="group relative max-w-sm w-full"
+                className="group relative w-full max-w-md lg:max-w-none lg:w-auto lg:h-[75vh] flex items-center justify-center px-8 lg:px-16"
               >
-                {/* Marble frame */}
-                <div
-                  className={cn(
-                    "relative aspect-[3/4] rounded-sm overflow-hidden",
-                    "bg-gradient-to-b from-marble-100 via-marble-200 to-marble-300",
-                    "p-[4px]",
-                    "shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_60px_rgba(201,148,61,0.15)]",
-                    "transition-all duration-500",
-                    "group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_80px_rgba(201,148,61,0.25)]",
-                    "group-hover:-translate-y-1"
-                  )}
-                >
+                {/* The cenotaph image - no frame, emerging from darkness */}
+                <div className="relative">
+                  {/* Subtle glow effect */}
+                  <div
+                    className="absolute -inset-8 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
+                    style={{
+                      background:
+                        "radial-gradient(ellipse at center, rgba(201, 148, 61, 0.2) 0%, transparent 70%)",
+                    }}
+                  />
                   <img
                     src={memorial.cenotaph_image_url}
                     alt="Memorial cenotaph"
-                    className="w-full h-full object-cover rounded-sm"
+                    className={cn(
+                      "relative z-10 w-full lg:h-[70vh] object-contain",
+                      "transition-all duration-700 ease-out",
+                      "group-hover:scale-[1.02]",
+                      "drop-shadow-[0_0_60px_rgba(0,0,0,0.8)]"
+                    )}
                   />
-
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="px-4 py-2 bg-marble-100 text-slate-900 text-sm font-medium rounded">
-                      View Full Size
+                  {/* Hover hint */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="px-4 py-2 bg-marble-950/90 backdrop-blur-sm text-marble-300 text-sm font-medium rounded-full border border-marble-800">
+                      Click to enlarge
                     </span>
                   </div>
-
-                  {/* Corner ornaments */}
-                  <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-gold-400/50" />
-                  <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-gold-400/50" />
-                  <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-gold-400/50" />
-                  <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-gold-400/50" />
                 </div>
               </button>
             ) : (
               /* Placeholder when no cenotaph image */
-              <div className="max-w-sm w-full aspect-[3/4] rounded-sm bg-slate-800 border border-slate-700 flex items-center justify-center">
+              <div className="w-full max-w-sm aspect-[3/4] flex items-center justify-center">
                 <div className="text-center p-8">
-                  <Sparkles className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-500">Cenotaph design in progress</p>
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-marble-900/50 border border-marble-800 flex items-center justify-center">
+                    <Sparkles className="w-10 h-10 text-marble-600" />
+                  </div>
+                  <p className="text-marble-500 font-medium">Cenotaph design in progress</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Right: Organization Info */}
-          <div className="text-center lg:text-left">
-            {/* Verification badge */}
-            {organization.verification_status === "verified" && (
-              <Badge variant="dark-verified" size="sm" className="mb-4">
-                <ShieldCheck className="w-3 h-3 mr-1" />
-                Verified
-              </Badge>
-            )}
+          <div className="relative flex items-center lg:pl-8 xl:pl-16 px-6 lg:px-12 pb-16 lg:pb-0">
+            {/* Mobile gradient overlay */}
+            <div
+              className="absolute inset-0 lg:hidden"
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.95) 20%, #0f172a 100%)",
+              }}
+            />
 
-            {/* Organization name */}
-            <h1
-              className={cn(
-                "font-display text-4xl md:text-5xl lg:text-6xl font-semibold mb-6",
-                organization.is_public ? "text-marble-100" : "text-slate-400 italic"
+            <div className="relative z-10 max-w-xl">
+              {/* Verification badge */}
+              {organization.verification_status === "verified" && (
+                <Badge variant="dark-verified" size="sm" className="mb-6">
+                  <ShieldCheck className="w-3 h-3 mr-1" />
+                  Verified
+                </Badge>
               )}
-            >
-              {orgName}
-            </h1>
 
-            {/* Epitaph */}
-            {memorial?.epitaph && (
-              <blockquote className="relative mb-8">
-                <Quote className="absolute -top-2 -left-4 w-8 h-8 text-gold-500/30" />
-                <p className="font-serif text-xl md:text-2xl text-gold-300/90 italic leading-relaxed pl-6">
-                  &ldquo;{memorial.epitaph}&rdquo;
-                </p>
-              </blockquote>
-            )}
+              {/* Organization name */}
+              <h1
+                className={cn(
+                  "font-display text-4xl md:text-5xl xl:text-6xl font-semibold mb-6 leading-tight",
+                  organization.is_public ? "text-marble-100" : "text-slate-400 italic"
+                )}
+              >
+                {orgName}
+              </h1>
 
-            {/* Metadata */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-sm text-slate-400">
-              {organization.organization_type && (
-                <span className="flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4" />
-                  {ORG_TYPE_LABELS[organization.organization_type]}
-                </span>
+              {/* Epitaph */}
+              {memorial?.epitaph && (
+                <blockquote className="relative mb-10">
+                  <Quote className="absolute -top-1 -left-6 w-8 h-8 text-gold-500/20" />
+                  <p className="font-serif text-xl md:text-2xl text-gold-400/80 italic leading-relaxed">
+                    &ldquo;{memorial.epitaph}&rdquo;
+                  </p>
+                </blockquote>
               )}
-              {organization.industry && (
-                <span className="flex items-center gap-1.5">
-                  <Briefcase className="w-4 h-4" />
-                  {organization.industry}
-                </span>
-              )}
-              {dateRange && (
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" />
-                  {dateRange}
-                </span>
-              )}
-              {location && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" />
-                  {location}
-                </span>
-              )}
-              {organization.peak_team_size && (
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-4 h-4" />
-                  Peak: {organization.peak_team_size} people
-                </span>
-              )}
+
+              {/* Metadata - vertical stack for elegance */}
+              <div className="space-y-3 text-sm">
+                {organization.organization_type && (
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <Building2 className="w-4 h-4 text-slate-500" />
+                    <span>{ORG_TYPE_LABELS[organization.organization_type]}</span>
+                    {organization.industry && (
+                      <>
+                        <span className="text-slate-600">·</span>
+                        <span>{organization.industry}</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                {location && (
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <MapPin className="w-4 h-4 text-slate-500" />
+                    <span>{location}</span>
+                  </div>
+                )}
+                {organization.peak_team_size && (
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <Users className="w-4 h-4 text-slate-500" />
+                    <span>Peak team: {organization.peak_team_size} people</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Full image modal */}
-      {showFullImage && memorial?.cenotaph_image_url && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setShowFullImage(false)}
-        >
-          <img
-            src={memorial.cenotaph_image_url}
-            alt="Memorial cenotaph"
-            className="max-w-full max-h-[90vh] object-contain rounded-lg"
-          />
-          <button
-            className="absolute top-4 right-4 text-marble-300 hover:text-marble-100"
+        {/* Full image modal */}
+        {showFullImage && memorial?.cenotaph_image_url && (
+          <div
+            className="fixed inset-0 z-50 bg-marble-950/98 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setShowFullImage(false)}
           >
-            <span className="sr-only">Close</span>
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-      )}
-    </section>
+            <img
+              src={memorial.cenotaph_image_url}
+              alt="Memorial cenotaph"
+              className="max-w-full max-h-[90vh] object-contain"
+            />
+            <button
+              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-marble-900/80 border border-marble-700 text-marble-300 hover:text-marble-100 hover:bg-marble-800 transition-colors flex items-center justify-center"
+              onClick={() => setShowFullImage(false)}
+            >
+              <span className="sr-only">Close</span>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* Roman divider with lifespan in Roman numerals */}
+      <div className="divider-roman bg-slate-900 py-8">
+        <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">
+          {romanDateRange || "✦"}
+        </span>
+      </div>
+    </>
   );
 }
 
