@@ -45,10 +45,7 @@ function StoryCard({ story }: { story: FeaturedStory }) {
       {/* Company info */}
       <div className="space-y-1">
         <p
-          className={cn(
-            "font-medium",
-            story.isPrivate ? "text-slate-400 italic" : "text-marble-100"
-          )}
+          className={cn("font-medium", story.isPrivate ? "text-slate-400" : "text-marble-100")}
           title={story.isPrivate ? "This organization has chosen to remain private" : undefined}
         >
           {story.companyName}

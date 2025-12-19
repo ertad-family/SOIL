@@ -135,7 +135,7 @@ export function CenotaphCard({
             className={cn(
               "font-display text-lg font-medium leading-tight transition-colors duration-300",
               isPrivate
-                ? "text-slate-400 italic group-hover:text-slate-300"
+                ? "text-slate-400 group-hover:text-slate-300"
                 : "text-marble-100 group-hover:text-gold-300"
             )}
             title={isPrivate ? "This organization has chosen to remain private" : undefined}
