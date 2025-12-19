@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { usePagePrivacy } from "@/contexts/PagePrivacyContext";
 import Image from "next/image";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -234,6 +235,15 @@ export function OrganizationClient({
   publicNarratives,
   currentUserStoryId,
 }: OrganizationClientProps) {
+  const { setPagePublic } = usePagePrivacy();
+
+  // Control visitor particles based on view mode
+  // Owner view = dashboard (no particles), Visitor view = public page (particles)
+  useEffect(() => {
+    setPagePublic(viewMode === "visitor");
+    return () => setPagePublic(true); // Reset on unmount
+  }, [viewMode, setPagePublic]);
+
   // For visitor mode, render the public view
   if (viewMode === "visitor") {
     return (
