@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useInterview } from "@/contexts/InterviewContext";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { WizardLayout } from "@/components/layouts/wizard-layout";
 import { FormField, FormSection } from "@/components/forms/form-field";
 import { Input } from "@/components/ui/input";
@@ -31,28 +32,88 @@ import {
   LIFECYCLE_STAGE_DESCRIPTIONS,
 } from "@/data/function-matrix";
 
-// Wizard steps for Basic Info module
+// Wizard steps for Organization creation
 const STEPS = [
-  { id: "basics", label: "The Basics", description: "Let's start with the essentials" },
-  { id: "timeline", label: "Timeline", description: "When did this story happen?" },
-  { id: "about-you", label: "About You", description: "And a bit about you" },
+  { id: "basics", label: "The Basics", description: "Tell us about the organization" },
+  { id: "timeline", label: "Timeline", description: "When did this organization exist?" },
+  { id: "about-you", label: "About You", description: "Your relationship to this organization" },
 ];
 
-/**
- * Module 0: Basic Info
- * Collects organization basics, timeline, and founder role.
- */
-export default function BasicInfoPage() {
-  const router = useRouter();
-  const { story, isLoading, error, updateBasicInfo, completeModule, saveStory } = useInterview();
+// Organization data state
+interface OrganizationFormData {
+  // Step 1: The Basics
+  name: string;
+  description: string;
+  organizationType: OrganizationType | null;
+  businessModel: string | null;
+  industry: string | null;
+  location: {
+    country: string | null;
+    city: string | null;
+  };
 
+  // Step 2: Timeline
+  foundedDate: string | null;
+  closedDate: string | null;
+  stageAtClosure: LifecycleStage | null;
+  peakTeamSize: number | null;
+
+  // Step 3: About You
+  founderRole: FounderRole | null;
+  publicNaming: PublicNamingPreference | null;
+}
+
+const createEmptyFormData = (): OrganizationFormData => ({
+  name: "",
+  description: "",
+  organizationType: null,
+  businessModel: null,
+  industry: null,
+  location: { country: null, city: null },
+  foundedDate: null,
+  closedDate: null,
+  stageAtClosure: null,
+  peakTeamSize: null,
+  founderRole: null,
+  publicNaming: null,
+});
+
+/**
+ * Organization Creation Wizard Content
+ * Creates an organization and optionally starts an interview.
+ */
+function OrganizationCreateContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClient();
+
+  const returnTo = searchParams.get("returnTo"); // e.g., "interview"
+
+  const [formData, setFormData] = React.useState<OrganizationFormData>(createEmptyFormData);
   const [currentStep, setCurrentStep] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [validationErrors, setValidationErrors] = React.useState<Record<string, string>>({});
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Check if user is authenticated
+  React.useEffect(() => {
+    async function checkAuth() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login?redirect=/organization/create");
+        return;
+      }
+      setIsLoading(false);
+    }
+    checkAuth();
+  }, [supabase, router]);
 
   // Get business models for selected org type
-  const businessModels = story?.basicInfo.organizationType
-    ? getBusinessModelsForOrgType(story.basicInfo.organizationType)
+  const businessModels = formData.organizationType
+    ? getBusinessModelsForOrgType(formData.organizationType)
     : [];
 
   // Validation
@@ -60,25 +121,25 @@ export default function BasicInfoPage() {
     const errors: Record<string, string> = {};
 
     if (step === 0) {
-      if (!story?.basicInfo.organizationName?.trim()) {
-        errors.organizationName = "Organization name is required";
+      if (!formData.name?.trim()) {
+        errors.name = "Organization name is required";
       }
-      if (!story?.basicInfo.description?.trim()) {
+      if (!formData.description?.trim()) {
         errors.description = "Please provide a brief description";
       }
-      if (!story?.basicInfo.organizationType) {
+      if (!formData.organizationType) {
         errors.organizationType = "Please select an organization type";
       }
     }
 
     if (step === 1) {
-      if (!story?.basicInfo.foundedDate) {
+      if (!formData.foundedDate) {
         errors.foundedDate = "Please enter when the organization was founded";
       }
     }
 
     if (step === 2) {
-      if (!story?.basicInfo.founderRole) {
+      if (!formData.founderRole) {
         errors.founderRole = "Please select your role";
       }
     }
@@ -93,7 +154,12 @@ export default function BasicInfoPage() {
       setCurrentStep(currentStep - 1);
       setValidationErrors({});
     } else {
-      router.push(`/interview/${story?.id}`);
+      // Go back to where we came from
+      if (returnTo === "interview") {
+        router.push("/interview");
+      } else {
+        router.push("/account");
+      }
     }
   };
 
@@ -104,23 +170,101 @@ export default function BasicInfoPage() {
       setCurrentStep(currentStep + 1);
       setValidationErrors({});
     } else {
-      // Complete the module
-      setIsSubmitting(true);
-      try {
-        await completeModule("basic_info");
-        router.push(`/interview/${story?.id}`);
-      } catch (err) {
-        console.error("Failed to complete module:", err);
-      } finally {
-        setIsSubmitting(false);
+      // Complete - create organization and story
+      await handleComplete();
+    }
+  };
+
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Must be logged in to create an organization");
       }
+
+      // 1. Create organization
+      const { data: orgData, error: orgError } = await supabase
+        .from("organizations")
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          organization_type: formData.organizationType,
+          business_model: formData.businessModel,
+          industry: formData.industry,
+          location_country: formData.location.country,
+          location_city: formData.location.city,
+          founded_date: formData.foundedDate,
+          closed_date: formData.closedDate,
+          stage_at_closure: formData.stageAtClosure,
+          peak_team_size: formData.peakTeamSize,
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
+
+      if (orgError) {
+        throw new Error(orgError.message);
+      }
+
+      const organizationId = orgData.id;
+
+      // 2. Create story linked to organization
+      const { data: storyData, error: storyError } = await supabase
+        .from("stories")
+        .insert({
+          organization_id: organizationId,
+          user_id: user.id,
+          status: "in_progress", // Skip draft since org info is complete
+          current_module: "functional", // Start at functional (skip basic_info)
+          completed_modules: ["basic_info"], // Mark basic_info as complete
+          founder_role: formData.founderRole,
+          public_naming: formData.publicNaming,
+          // Keep basic_info for backward compatibility
+          basic_info: {
+            organizationName: formData.name,
+            description: formData.description,
+            organizationType: formData.organizationType,
+            businessModel: formData.businessModel,
+            industry: formData.industry,
+            location: formData.location,
+            foundedDate: formData.foundedDate,
+            closedDate: formData.closedDate,
+            stageAtClosure: formData.stageAtClosure,
+            peakTeamSize: formData.peakTeamSize,
+            founderRole: formData.founderRole,
+            publicNaming: formData.publicNaming,
+            contactEmail: null, // Deprecated
+          },
+        })
+        .select("id")
+        .single();
+
+      if (storyError) {
+        throw new Error(storyError.message);
+      }
+
+      // 3. Navigate to interview
+      if (returnTo === "interview" || !returnTo) {
+        router.push(`/interview/${storyData.id}`);
+      } else {
+        router.push(`/organization/${organizationId}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create organization");
+      setIsSubmitting(false);
     }
   };
 
   // Update handlers
   const handleTextChange =
-    (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      updateBasicInfo({ [field]: e.target.value });
+    (field: keyof OrganizationFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
       if (validationErrors[field]) {
         setValidationErrors((prev) => {
           const next = { ...prev };
@@ -130,8 +274,8 @@ export default function BasicInfoPage() {
       }
     };
 
-  const handleSelectChange = (field: string) => (value: string) => {
-    updateBasicInfo({ [field]: value });
+  const handleSelectChange = (field: keyof OrganizationFormData) => (value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (validationErrors[field]) {
       setValidationErrors((prev) => {
         const next = { ...prev };
@@ -142,10 +286,11 @@ export default function BasicInfoPage() {
   };
 
   const handleOrgTypeChange = (value: string) => {
-    updateBasicInfo({
+    setFormData((prev) => ({
+      ...prev,
       organizationType: value as OrganizationType,
       businessModel: null, // Reset business model when org type changes
-    });
+    }));
     if (validationErrors.organizationType) {
       setValidationErrors((prev) => {
         const next = { ...prev };
@@ -157,19 +302,18 @@ export default function BasicInfoPage() {
 
   const handleLocationChange =
     (field: "country" | "city") => (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!story) return;
-      updateBasicInfo({
+      setFormData((prev) => ({
+        ...prev,
         location: {
-          country: story.basicInfo.location.country,
-          city: story.basicInfo.location.city,
+          ...prev.location,
           [field]: e.target.value || null,
         },
-      });
+      }));
     };
 
-  if (isLoading || !story) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-marble-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-slate-gradient flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
@@ -182,25 +326,32 @@ export default function BasicInfoPage() {
       currentStep={currentStep}
       onBack={handleBack}
       onNext={handleNext}
-      cancelHref={`/interview/${story.id}`}
+      cancelHref={returnTo === "interview" ? "/interview" : "/account"}
       isLoading={isSubmitting}
-      nextLabel={currentStep === STEPS.length - 1 ? "Complete" : "Continue"}
+      nextLabel={currentStep === STEPS.length - 1 ? "Create & Continue" : "Continue"}
     >
+      {/* Error message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-md text-red-300">
+          {error}
+        </div>
+      )}
+
       {/* Step 0: The Basics */}
       {currentStep === 0 && (
         <div className="space-y-6">
           <FormField
             label="Organization Name"
-            htmlFor="organizationName"
+            htmlFor="name"
             required
-            error={validationErrors.organizationName}
+            error={validationErrors.name}
           >
             <Input
-              id="organizationName"
-              value={story.basicInfo.organizationName}
-              onChange={handleTextChange("organizationName")}
+              id="name"
+              value={formData.name}
+              onChange={handleTextChange("name")}
               placeholder="What was it called?"
-              error={!!validationErrors.organizationName}
+              error={!!validationErrors.name}
             />
           </FormField>
 
@@ -213,7 +364,7 @@ export default function BasicInfoPage() {
           >
             <Textarea
               id="description"
-              value={story.basicInfo.description}
+              value={formData.description}
               onChange={handleTextChange("description")}
               placeholder="e.g., A B2B SaaS platform that helped small businesses manage inventory"
               rows={2}
@@ -223,7 +374,7 @@ export default function BasicInfoPage() {
 
           <FormField label="Organization Type" required error={validationErrors.organizationType}>
             <RadioGroup
-              value={story.basicInfo.organizationType || ""}
+              value={formData.organizationType || ""}
               onValueChange={handleOrgTypeChange}
               className="grid gap-3 sm:grid-cols-2"
             >
@@ -232,20 +383,20 @@ export default function BasicInfoPage() {
                   <RadioGroupItem value={type} id={type} className="peer sr-only" />
                   <Label
                     htmlFor={type}
-                    className="flex flex-col p-4 border rounded-lg cursor-pointer hover:border-gold-300 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-50 transition-colors"
+                    className="flex flex-col p-4 border rounded-lg cursor-pointer border-slate-600 hover:border-gold-500/50 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-500/10 transition-colors"
                   >
-                    <span className="font-medium text-marble-900">{ORG_TYPE_LABELS[type]}</span>
-                    <span className="text-sm text-marble-500">{ORG_TYPE_DESCRIPTIONS[type]}</span>
+                    <span className="font-medium text-marble-100">{ORG_TYPE_LABELS[type]}</span>
+                    <span className="text-sm text-slate-400">{ORG_TYPE_DESCRIPTIONS[type]}</span>
                   </Label>
                 </div>
               ))}
             </RadioGroup>
           </FormField>
 
-          {story.basicInfo.organizationType && businessModels.length > 0 && (
+          {formData.organizationType && businessModels.length > 0 && (
             <FormField label="Business Model" htmlFor="businessModel">
               <Select
-                value={story.basicInfo.businessModel || ""}
+                value={formData.businessModel || ""}
                 onValueChange={handleSelectChange("businessModel")}
               >
                 <SelectTrigger>
@@ -265,7 +416,7 @@ export default function BasicInfoPage() {
           <FormField label="Industry" htmlFor="industry">
             <Input
               id="industry"
-              value={story.basicInfo.industry || ""}
+              value={formData.industry || ""}
               onChange={handleTextChange("industry")}
               placeholder="e.g., Fintech, Healthcare, Education"
             />
@@ -276,7 +427,7 @@ export default function BasicInfoPage() {
               <FormField label="Country" htmlFor="country">
                 <Input
                   id="country"
-                  value={story.basicInfo.location.country || ""}
+                  value={formData.location.country || ""}
                   onChange={handleLocationChange("country")}
                   placeholder="Country"
                 />
@@ -284,7 +435,7 @@ export default function BasicInfoPage() {
               <FormField label="City" htmlFor="city">
                 <Input
                   id="city"
-                  value={story.basicInfo.location.city || ""}
+                  value={formData.location.city || ""}
                   onChange={handleLocationChange("city")}
                   placeholder="City"
                 />
@@ -307,7 +458,7 @@ export default function BasicInfoPage() {
               <Input
                 id="foundedDate"
                 type="month"
-                value={story.basicInfo.foundedDate || ""}
+                value={formData.foundedDate || ""}
                 onChange={handleTextChange("foundedDate")}
                 error={!!validationErrors.foundedDate}
               />
@@ -317,7 +468,7 @@ export default function BasicInfoPage() {
               <Input
                 id="closedDate"
                 type="month"
-                value={story.basicInfo.closedDate || ""}
+                value={formData.closedDate || ""}
                 onChange={handleTextChange("closedDate")}
               />
             </FormField>
@@ -325,9 +476,9 @@ export default function BasicInfoPage() {
 
           <FormField label="What stage was it at when it closed?">
             <RadioGroup
-              value={story.basicInfo.stageAtClosure || ""}
+              value={formData.stageAtClosure || ""}
               onValueChange={(value) =>
-                updateBasicInfo({ stageAtClosure: value as LifecycleStage })
+                setFormData((prev) => ({ ...prev, stageAtClosure: value as LifecycleStage }))
               }
               className="grid gap-3 sm:grid-cols-2"
             >
@@ -336,12 +487,12 @@ export default function BasicInfoPage() {
                   <RadioGroupItem value={stage} id={`stage-${stage}`} className="peer sr-only" />
                   <Label
                     htmlFor={`stage-${stage}`}
-                    className="flex flex-col p-4 border rounded-lg cursor-pointer hover:border-gold-300 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-50 transition-colors"
+                    className="flex flex-col p-4 border rounded-lg cursor-pointer border-slate-600 hover:border-gold-500/50 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-500/10 transition-colors"
                   >
-                    <span className="font-medium text-marble-900">
+                    <span className="font-medium text-marble-100">
                       {LIFECYCLE_STAGE_LABELS[stage]}
                     </span>
-                    <span className="text-sm text-marble-500">
+                    <span className="text-sm text-slate-400">
                       {LIFECYCLE_STAGE_DESCRIPTIONS[stage]}
                     </span>
                   </Label>
@@ -359,8 +510,13 @@ export default function BasicInfoPage() {
               id="peakTeamSize"
               type="number"
               min={1}
-              value={story.basicInfo.peakTeamSize || ""}
-              onChange={(e) => updateBasicInfo({ peakTeamSize: parseInt(e.target.value) || null })}
+              value={formData.peakTeamSize || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  peakTeamSize: parseInt(e.target.value) || null,
+                }))
+              }
               placeholder="e.g., 25"
             />
           </FormField>
@@ -372,9 +528,9 @@ export default function BasicInfoPage() {
         <div className="space-y-6">
           <FormField label="What was your role?" required error={validationErrors.founderRole}>
             <RadioGroup
-              value={story.basicInfo.founderRole || ""}
+              value={formData.founderRole || ""}
               onValueChange={(value) => {
-                updateBasicInfo({ founderRole: value as FounderRole });
+                setFormData((prev) => ({ ...prev, founderRole: value as FounderRole }));
                 if (validationErrors.founderRole) {
                   setValidationErrors((prev) => {
                     const next = { ...prev };
@@ -393,7 +549,10 @@ export default function BasicInfoPage() {
               ].map((option) => (
                 <div key={option.value} className="flex items-center space-x-3">
                   <RadioGroupItem value={option.value} id={`role-${option.value}`} />
-                  <Label htmlFor={`role-${option.value}`} className="cursor-pointer">
+                  <Label
+                    htmlFor={`role-${option.value}`}
+                    className="cursor-pointer text-marble-100"
+                  >
                     {option.label}
                   </Label>
                 </div>
@@ -406,9 +565,9 @@ export default function BasicInfoPage() {
             hint="Your story can be shared anonymously if you prefer"
           >
             <RadioGroup
-              value={story.basicInfo.publicNaming || ""}
+              value={formData.publicNaming || ""}
               onValueChange={(value) =>
-                updateBasicInfo({ publicNaming: value as PublicNamingPreference })
+                setFormData((prev) => ({ ...prev, publicNaming: value as PublicNamingPreference }))
               }
               className="space-y-2"
             >
@@ -419,29 +578,35 @@ export default function BasicInfoPage() {
               ].map((option) => (
                 <div key={option.value} className="flex items-center space-x-3">
                   <RadioGroupItem value={option.value} id={`naming-${option.value}`} />
-                  <Label htmlFor={`naming-${option.value}`} className="cursor-pointer">
+                  <Label
+                    htmlFor={`naming-${option.value}`}
+                    className="cursor-pointer text-marble-100"
+                  >
                     {option.label}
                   </Label>
                 </div>
               ))}
             </RadioGroup>
           </FormField>
-
-          <FormField
-            label="Contact email"
-            htmlFor="contactEmail"
-            hint="We'll only use this to contact you about your story"
-          >
-            <Input
-              id="contactEmail"
-              type="email"
-              value={story.basicInfo.contactEmail || ""}
-              onChange={handleTextChange("contactEmail")}
-              placeholder="your@email.com"
-            />
-          </FormField>
         </div>
       )}
     </WizardLayout>
+  );
+}
+
+/**
+ * Organization Creation Page with Suspense boundary for useSearchParams
+ */
+export default function OrganizationCreatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-gradient flex items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <OrganizationCreateContent />
+    </Suspense>
   );
 }

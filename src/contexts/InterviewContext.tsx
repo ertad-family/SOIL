@@ -135,7 +135,6 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           completedModules: data.completed_modules || [],
           founderRole: data.founder_role,
           publicNaming: data.public_naming,
-          contactEmail: data.contact_email,
           basicInfo: data.basic_info,
           functionalMapping: data.functional_mapping,
           financialPicture: data.financial_picture,
@@ -222,7 +221,6 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           completed_modules: newStory.completedModules,
           founder_role: newStory.founderRole,
           public_naming: newStory.publicNaming,
-          contact_email: newStory.contactEmail,
           basic_info: newStory.basicInfo,
           functional_mapping: newStory.functionalMapping,
           financial_picture: newStory.financialPicture,
@@ -273,7 +271,6 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           founder_role: story.founderRole,
           author_role: authorRole,
           public_naming: story.publicNaming,
-          contact_email: story.contactEmail,
           basic_info: story.basicInfo,
           functional_mapping: story.functionalMapping,
           financial_picture: story.financialPicture,
@@ -457,14 +454,21 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     (moduleId: ModuleId): boolean => {
       if (!story) return false;
 
-      // Can always go to basic_info
-      if (moduleId === "basic_info") return true;
+      // basic_info is now handled by the Organization Wizard, not the interview
+      // Redirect to functional if someone tries to navigate to basic_info
+      if (moduleId === "basic_info") return false;
 
-      // Must have basic_info complete to access other modules
-      if (!story.completedModules.includes("basic_info")) return false;
+      // For stories created with the old flow (without org wizard),
+      // require basic_info to be complete before accessing other modules
+      // For new stories created via org wizard, basic_info is auto-completed
+      if (!story.completedModules.includes("basic_info")) {
+        // Legacy story without basic_info complete - can only go to functional
+        // which will prompt them to complete org info
+        return moduleId === "functional";
+      }
 
       // Can navigate to any module once basic_info is complete
-      // (non-linear navigation allowed after basic info)
+      // (non-linear navigation allowed)
       return true;
     },
     [story]
