@@ -243,44 +243,37 @@ function HeroSection({
 
         {/* Content grid */}
         <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
-          {/* Left: Cenotaph - the sacred centerpiece */}
-          <div className="relative flex items-center justify-center py-16 lg:py-0">
+          {/* Left: Cenotaph as full-column background */}
+          <div className="relative min-h-[50vh] lg:min-h-[85vh]">
             {memorial?.cenotaph_image_url ? (
               <button
                 onClick={() => setShowFullImage(true)}
-                className="group relative w-full max-w-md lg:max-w-none lg:w-auto lg:h-[75vh] flex items-center justify-center px-8 lg:px-16"
+                className="group absolute inset-0 w-full h-full cursor-pointer"
               >
-                {/* The cenotaph image - no frame, emerging from darkness */}
-                <div className="relative">
-                  {/* Subtle glow effect */}
-                  <div
-                    className="absolute -inset-8 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
-                    style={{
-                      background:
-                        "radial-gradient(ellipse at center, rgba(201, 148, 61, 0.2) 0%, transparent 70%)",
-                    }}
-                  />
-                  <img
-                    src={memorial.cenotaph_image_url}
-                    alt="Memorial cenotaph"
-                    className={cn(
-                      "relative z-10 w-full lg:h-[70vh] object-contain",
-                      "transition-all duration-700 ease-out",
-                      "group-hover:scale-[1.02]",
-                      "drop-shadow-[0_0_60px_rgba(0,0,0,0.8)]"
-                    )}
-                  />
-                  {/* Hover hint */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="px-4 py-2 bg-marble-950/90 backdrop-blur-sm text-marble-300 text-sm font-medium rounded-full border border-marble-800">
-                      Click to enlarge
-                    </span>
-                  </div>
+                {/* Full-column cenotaph image */}
+                <img
+                  src={memorial.cenotaph_image_url}
+                  alt="Memorial cenotaph"
+                  className="absolute inset-0 w-full h-full object-contain object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                />
+                {/* Subtle golden glow on hover */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(201, 148, 61, 0.08) 0%, transparent 70%)",
+                  }}
+                />
+                {/* Hover hint at bottom */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="px-4 py-2 bg-marble-950/90 backdrop-blur-sm text-marble-300 text-sm font-medium rounded-full border border-marble-800">
+                    Click to enlarge
+                  </span>
                 </div>
               </button>
             ) : (
               /* Placeholder when no cenotaph image */
-              <div className="w-full max-w-sm aspect-[3/4] flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center p-8">
                   <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-marble-900/50 border border-marble-800 flex items-center justify-center">
                     <Sparkles className="w-10 h-10 text-marble-600" />
