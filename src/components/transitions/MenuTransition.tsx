@@ -46,6 +46,12 @@ export function MenuTransition() {
   // Ref to trigger fly-out animation in the scene
   const triggerFlyOutRef = useRef<(() => void) | null>(null);
 
+  // Ref to trigger fly-in animation externally (for Return/ESC)
+  const triggerFlyInRef = useRef<((section: string) => void) | null>(null);
+
+  // Track if we're returning (close without navigation) vs navigating
+  const isReturningRef = useRef(false);
+
   // Track navigation
   const didNavigateRef = useRef(false);
 
@@ -144,6 +150,30 @@ export function MenuTransition() {
   }, [updatePhase]);
 
   // ============================================================================
+  // Handle Return (close menu without navigation via ESC or Return button)
+  // ============================================================================
+  const handleReturn = useCallback(() => {
+    if (phaseRef.current !== "menu") return; // Only allow return from menu phase
+
+    console.log("[MenuTransition] Return triggered, flying back to:", currentSection);
+    isReturningRef.current = true;
+    triggerFlyInRef.current?.(currentSection);
+  }, [currentSection]);
+
+  // ESC key listener - close menu when in menu phase
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && phaseRef.current === "menu") {
+        e.preventDefault();
+        handleReturn();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleReturn]);
+
+  // ============================================================================
   // Handle fade progress from scene (only during fly-in)
   // ============================================================================
   const handleFadeProgress = useCallback((progress: number) => {
@@ -175,6 +205,42 @@ export function MenuTransition() {
     (faceId: number, section: string | null) => {
       if (didNavigateRef.current) return;
       didNavigateRef.current = true;
+
+      // Check if this is a "return" (close without navigation)
+      if (isReturningRef.current) {
+        console.log("[MenuTransition] Returning to current page (no navigation)");
+        isReturningRef.current = false;
+
+        // Start fade-out animation immediately (no navigation needed)
+        let startTime: number | null = null;
+        const animate = (currentTime: number) => {
+          if (startTime === null) startTime = currentTime;
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / FADE_DURATION, 1);
+
+          const eased =
+            progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+          setFadeOpacity(1 - eased);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            console.log("[MenuTransition] Return fade-out complete");
+            setFadeOpacity(0);
+            updatePhase("idle");
+            closeMenu();
+            didNavigateRef.current = false;
+          }
+        };
+
+        requestAnimationFrame(animate);
+        return;
+      }
+
+      // Normal navigation flow
       console.log("[MenuTransition] Navigating to:", section);
 
       targetSectionRef.current = section;
@@ -182,7 +248,7 @@ export function MenuTransition() {
       navigateViaPortal(section);
       // Fade-out will be triggered by useEffect watching currentSection change
     },
-    [navigateViaPortal, updatePhase]
+    [navigateViaPortal, updatePhase, closeMenu]
   );
 
   // ============================================================================
@@ -330,9 +396,38 @@ export function MenuTransition() {
             onExternalFadeProgress={handleFadeProgress}
             hideInternalOverlay={true}
             triggerFlyOutRef={triggerFlyOutRef}
+            triggerFlyInRef={triggerFlyInRef}
             onReady={handleSceneReady}
           />
         </Suspense>
+
+        {/* Return button - visible in menu phase */}
+        {phase === "menu" && (
+          <button
+            onClick={handleReturn}
+            className="absolute top-8 left-8 z-[95] flex items-center gap-2 px-4 py-2
+                       bg-slate-900/80 backdrop-blur-sm border border-slate-700/50
+                       rounded-sm text-marble-100 hover:text-gold-400 hover:border-gold-400/50
+                       transition-colors duration-200 font-sans text-sm font-medium uppercase tracking-wide"
+            aria-label="Return to page (ESC)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Return
+            <span className="text-slate-500 text-xs ml-1">(ESC)</span>
+          </button>
+        )}
       </div>
     </>
   );
