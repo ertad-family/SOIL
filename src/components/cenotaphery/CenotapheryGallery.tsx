@@ -40,12 +40,10 @@ export function CenotapheryGallery({ cenotaphs, className }: CenotapheryGalleryP
         // CSS columns-based masonry
         "columns-1 md:columns-2 lg:columns-3 xl:columns-4",
         "gap-6",
-        // Animation for cards
-        "[&>*]:animate-fade-in",
         className
       )}
     >
-      {cenotaphs.map((cenotaph, index) => (
+      {cenotaphs.map((cenotaph) => (
         <CenotaphCard
           key={cenotaph.id}
           id={cenotaph.id}
@@ -59,8 +57,6 @@ export function CenotapheryGallery({ cenotaphs, className }: CenotapheryGalleryP
           location={cenotaph.location}
           cenotaphImageUrl={cenotaph.cenotaph_image_url}
           organizationId={cenotaph.organization_id}
-          // Stagger animation delay
-          style={{ animationDelay: `${index * 50}ms` }}
         />
       ))}
     </div>
