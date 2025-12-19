@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { Minus, Plus, RotateCcw, List, MapPin, Building2 } from "lucide-react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { CenotapheryMarker } from "@/types/cenotaphery";
@@ -172,16 +173,11 @@ function SidePanel({
 
       {/* Actions */}
       <div className="mt-auto space-y-3">
-        <Button
-          variant="cenotaph"
-          size="lg"
-          fullWidth
-          disabled
-          className="opacity-50 cursor-not-allowed"
-        >
-          Enter Memorial
-        </Button>
-        <p className="text-xs text-slate-500 text-center">Memorial exploration coming soon</p>
+        <Link href={`/cenotaphery/${selectedMarker.id}`}>
+          <Button variant="cenotaph" size="lg" fullWidth>
+            Enter Memorial
+          </Button>
+        </Link>
 
         <button
           onClick={onClose}
