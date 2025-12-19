@@ -29,6 +29,8 @@ import {
   ShieldCheck,
   ShieldQuestion,
   Mail,
+  MailCheck,
+  MailX,
   Clock,
   XCircle,
   Send,
@@ -38,6 +40,7 @@ import {
   File,
   AlertCircle,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import type {
   StoryStatus,
@@ -114,6 +117,8 @@ type VerificationRelationship =
   | "other";
 type VerificationRequestStatus = "pending" | "confirmed" | "declined" | "expired";
 
+type EmailErrorType = "resend_error" | "recipient_error";
+
 interface VerificationRequest {
   id: string;
   verifier_email: string;
@@ -123,6 +128,12 @@ interface VerificationRequest {
   created_at: string;
   expires_at: string;
   responded_at: string | null;
+  // Email tracking fields
+  email_sent_at: string | null;
+  email_error: string | null;
+  email_error_type: EmailErrorType | null;
+  retry_count: number;
+  next_retry_at: string | null;
 }
 
 type DocumentVerificationStatus = "pending_review" | "approved" | "rejected";
@@ -1105,6 +1116,50 @@ function StoryCard({
   );
 }
 
+// Email status helper for verification requests
+function getEmailStatus(request: VerificationRequest): {
+  icon: React.ReactNode;
+  label: string;
+  className: string;
+  tooltip?: string;
+} {
+  // Email sent successfully
+  if (request.email_sent_at) {
+    return {
+      icon: <MailCheck className="w-3.5 h-3.5" />,
+      label: "Sent",
+      className: "text-green-400",
+    };
+  }
+
+  // Permanent recipient error (no retry)
+  if (request.email_error_type === "recipient_error") {
+    return {
+      icon: <MailX className="w-3.5 h-3.5" />,
+      label: "Failed",
+      className: "text-red-400",
+      tooltip: request.email_error || "Invalid email address",
+    };
+  }
+
+  // Retrying after temporary error
+  if (request.retry_count > 0 && request.email_error_type === "resend_error") {
+    return {
+      icon: <RefreshCw className="w-3.5 h-3.5" />,
+      label: `Retry ${request.retry_count}/10`,
+      className: "text-amber-400",
+      tooltip: request.email_error || "Retrying...",
+    };
+  }
+
+  // Waiting to be sent (new request)
+  return {
+    icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
+    label: "Sending",
+    className: "text-slate-400",
+  };
+}
+
 // Verification Request Item Component
 function VerificationRequestItem({ request }: { request: VerificationRequest }) {
   const statusIcons = {
@@ -1121,6 +1176,9 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
     expired: "Expired",
   };
 
+  // Only show email status for pending requests
+  const emailStatus = request.status === "pending" ? getEmailStatus(request) : null;
+
   return (
     <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
       <div className="flex items-center gap-2 min-w-0">
@@ -1132,21 +1190,40 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
           ({RELATIONSHIP_LABELS[request.relationship]})
         </span>
       </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-        {statusIcons[request.status]}
-        <span
-          className={`${
-            request.status === "confirmed"
-              ? "text-green-400"
-              : request.status === "declined"
-                ? "text-red-400"
-                : request.status === "pending"
-                  ? "text-gold-400"
-                  : "text-slate-500"
-          }`}
-        >
-          {statusLabels[request.status]}
-        </span>
+      <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+        {/* Email status indicator (only for pending requests) */}
+        {emailStatus && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={`flex items-center gap-1 ${emailStatus.className}`}>
+                {emailStatus.icon}
+                <span className="text-xs">{emailStatus.label}</span>
+              </div>
+            </TooltipTrigger>
+            {emailStatus.tooltip && (
+              <TooltipContent>
+                <p className="max-w-xs text-xs">{emailStatus.tooltip}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        )}
+        {/* Verification status */}
+        <div className="flex items-center gap-1.5">
+          {statusIcons[request.status]}
+          <span
+            className={`${
+              request.status === "confirmed"
+                ? "text-green-400"
+                : request.status === "declined"
+                  ? "text-red-400"
+                  : request.status === "pending"
+                    ? "text-gold-400"
+                    : "text-slate-500"
+            }`}
+          >
+            {statusLabels[request.status]}
+          </span>
+        </div>
       </div>
     </div>
   );
