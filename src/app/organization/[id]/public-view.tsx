@@ -215,7 +215,7 @@ function HeroSection({
 
   return (
     <>
-      <section className="relative min-h-[85vh] overflow-hidden">
+      <section className="relative min-h-[85vh] overflow-hidden w-screen ml-[calc(-50vw+50%)]">
         {/* Split background - marble-950 for cenotaph, gradient to slate for info */}
         <div className="absolute inset-0 grid grid-cols-1 lg:grid-cols-2">
           {/* Left: Dark marble background for cenotaph */}
@@ -241,21 +241,39 @@ function HeroSection({
         {/* Mobile: single dark background */}
         <div className="absolute inset-0 lg:hidden bg-marble-950" />
 
-        {/* Top gradient - smooth transition from header */}
-        <div
-          className="absolute inset-x-0 top-0 h-32 z-[5] pointer-events-none"
-          style={{
-            background: "linear-gradient(180deg, #0f172a 0%, transparent 100%)",
-          }}
-        />
+        {/* Top gradients - smooth transition from header for both columns */}
+        <div className="absolute inset-x-0 top-0 h-48 z-20 pointer-events-none grid grid-cols-1 lg:grid-cols-2">
+          {/* Left column: blend from slate-900 (header) to marble-950 */}
+          <div
+            style={{
+              background: "linear-gradient(180deg, #0f172a 0%, transparent 100%)",
+            }}
+          />
+          {/* Right column: blend from slate-900 (header) to transparent */}
+          <div
+            className="hidden lg:block"
+            style={{
+              background: "linear-gradient(180deg, #0f172a 0%, transparent 100%)",
+            }}
+          />
+        </div>
 
-        {/* Bottom gradient - smooth transition to Roman divider */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-32 z-[5] pointer-events-none"
-          style={{
-            background: "linear-gradient(0deg, #0f172a 0%, transparent 100%)",
-          }}
-        />
+        {/* Bottom gradients - smooth transition to Roman divider */}
+        <div className="absolute inset-x-0 bottom-0 h-48 z-20 pointer-events-none grid grid-cols-1 lg:grid-cols-2">
+          {/* Left column: blend to slate-900 */}
+          <div
+            style={{
+              background: "linear-gradient(0deg, #0f172a 0%, transparent 100%)",
+            }}
+          />
+          {/* Right column: blend to slate-900 */}
+          <div
+            className="hidden lg:block"
+            style={{
+              background: "linear-gradient(0deg, #0f172a 0%, transparent 100%)",
+            }}
+          />
+        </div>
 
         {/* Content grid */}
         <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
@@ -401,7 +419,7 @@ function HeroSection({
       </section>
 
       {/* Roman divider with lifespan in Roman numerals */}
-      <div className="divider-roman bg-slate-900 py-8">
+      <div className="divider-roman bg-slate-900 py-8 w-screen ml-[calc(-50vw+50%)]">
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">
           {romanDateRange || "✦"}
         </span>
@@ -655,7 +673,7 @@ export function PublicView({
   const primaryNarrative = publicNarratives[0];
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900 overflow-x-hidden">
       {/* Hero with Cenotaph */}
       <HeroSection
         organization={organization}
