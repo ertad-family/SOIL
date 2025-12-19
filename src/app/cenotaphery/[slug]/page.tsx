@@ -209,7 +209,7 @@ function EmptyState() {
       </p>
 
       {/* CTA Button */}
-      <Link href="/interview">
+      <Link href="/organization/create?returnTo=interview">
         <Button variant="dark-primary" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
           Create Organization
         </Button>

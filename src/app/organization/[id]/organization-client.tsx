@@ -679,9 +679,9 @@ export function OrganizationClient({
             <div className="text-center py-8">
               <p className="text-slate-400 mb-4">No stories yet</p>
               {isOwner && (
-                <a href={`/interview?org=${organization.id}`}>
+                <a href="/organization/create?returnTo=interview">
                   <Button variant="dark-primary" rightIcon={<Plus className="w-4 h-4" />}>
-                    Share Your Story
+                    Add Your Story
                   </Button>
                 </a>
               )}
