@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { SectionLabel } from '@/components/ui/section-label'
-import { ContributionWidget } from '@/components/ui/contribution-widget'
+import { SectionLabel } from "@/components/ui/section-label";
+import { ContributionWidget } from "@/components/ui/contribution-widget";
 
 export function ContributionWaysSection() {
   return (
@@ -17,8 +17,8 @@ export function ContributionWaysSection() {
               Support SOIL Your Way
             </h2>
             <p className="text-lg text-slate-400 max-w-3xl mx-auto">
-              Every contribution matters. Whether you invest social capital, time, knowledge, or money —
-              you help preserve organizational wisdom for future generations.
+              Every contribution matters. Whether you invest social capital, time, knowledge, or
+              money — you help preserve organizational wisdom for future generations.
             </p>
           </div>
 
@@ -34,5 +34,5 @@ export function ContributionWaysSection() {
         <span className="text-gold-400 text-lg px-6">✦</span>
       </div>
     </>
-  )
+  );
 }

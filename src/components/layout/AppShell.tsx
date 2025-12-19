@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { Suspense, ReactNode } from 'react'
-import { usePathname } from 'next/navigation'
-import { MenuProvider } from '@/contexts/MenuContext'
-import { Header } from './Header'
-import { Footer } from './Footer'
-import { MenuTransition } from '@/components/transitions/MenuTransition'
-import { GlobalParticles } from '@/components/three/GlobalParticles'
-import { LiquidContributionFab } from '@/components/ui/liquid-contribution-fab'
+import { Suspense, ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { MenuProvider } from "@/contexts/MenuContext";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
+import { MenuTransition } from "@/components/transitions/MenuTransition";
+import { GlobalParticles } from "@/components/three/GlobalParticles";
+import { LiquidContributionFab } from "@/components/ui/liquid-contribution-fab";
 
 interface AppShellProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**
@@ -24,10 +24,10 @@ interface AppShellProps {
  * - GlobalParticles (floating visitor particles, disabled on interview pages)
  */
 export function AppShell({ children }: AppShellProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   // Disable particles on private/focused pages (interview wizard, account)
-  const showParticles = !pathname.startsWith('/interview') && !pathname.startsWith('/account')
+  const showParticles = !pathname.startsWith("/interview") && !pathname.startsWith("/account");
 
   return (
     <MenuProvider>
@@ -59,5 +59,5 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </div>
     </MenuProvider>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { useState, useRef, useCallback } from 'react'
-import dynamic from 'next/dynamic'
-import { Minus, Plus, RotateCcw, List, MapPin, Building2 } from 'lucide-react'
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import type { CenotapheryMarker } from '@/types/cenotaphery'
-import { Button } from '@/components/ui/button'
+import { useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
+import { Minus, Plus, RotateCcw, List, MapPin, Building2 } from "lucide-react";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import type { CenotapheryMarker } from "@/types/cenotaphery";
+import { Button } from "@/components/ui/button";
 
 // Dynamic import for GlobeScene (no SSR for Three.js)
 const GlobeScene = dynamic(
-  () => import('@/components/three/globe/GlobeScene').then((mod) => mod.GlobeScene),
+  () => import("@/components/three/globe/GlobeScene").then((mod) => mod.GlobeScene),
   {
     ssr: false,
     loading: () => (
@@ -21,15 +21,15 @@ const GlobeScene = dynamic(
       </div>
     ),
   }
-)
+);
 
 interface GlobeSectionProps {
-  markers: CenotapheryMarker[]
+  markers: CenotapheryMarker[];
   globalStats: {
-    totalStories: number
-    totalCountries: number
-    totalIndustries: number
-  }
+    totalStories: number;
+    totalCountries: number;
+    totalIndustries: number;
+  };
 }
 
 /**
@@ -40,9 +40,9 @@ function SidePanel({
   globalStats,
   onClose,
 }: {
-  selectedMarker: CenotapheryMarker | null
-  globalStats: GlobeSectionProps['globalStats']
-  onClose: () => void
+  selectedMarker: CenotapheryMarker | null;
+  globalStats: GlobeSectionProps["globalStats"];
+  onClose: () => void;
 }) {
   if (!selectedMarker) {
     // Default state - prompt to select
@@ -55,15 +55,22 @@ function SidePanel({
           <h3 className="text-xl font-display font-medium text-marble-100 mb-2">
             Select a memorial
           </h3>
-          <p className="text-slate-400 mb-6">
-            Click on a marker on the globe to explore
-          </p>
+          <p className="text-slate-400 mb-6">Click on a marker on the globe to explore</p>
 
           {/* Animated dots */}
           <div className="flex gap-2 mb-8">
-            <span className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" style={{ animationDelay: '0s' }} />
-            <span className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
-            <span className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
+            <span
+              className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"
+              style={{ animationDelay: "0s" }}
+            />
+            <span
+              className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"
+              style={{ animationDelay: "0.2s" }}
+            />
+            <span
+              className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"
+              style={{ animationDelay: "0.4s" }}
+            />
           </div>
         </div>
 
@@ -86,12 +93,12 @@ function SidePanel({
           </ul>
         </div>
       </div>
-    )
+    );
   }
 
   // Selected marker state
-  const fillPercentage = selectedMarker.statistics.fillPercentage
-  const isFull = selectedMarker.status === 'full'
+  const fillPercentage = selectedMarker.statistics.fillPercentage;
+  const isFull = selectedMarker.status === "full";
 
   return (
     <div className="h-full flex flex-col p-6 overflow-y-auto">
@@ -108,15 +115,13 @@ function SidePanel({
         </h3>
 
         {selectedMarker.honorificName && (
-          <p className="text-gold-400 italic mb-3">
-            &ldquo;{selectedMarker.honorificName}&rdquo;
-          </p>
+          <p className="text-gold-400 italic mb-3">&ldquo;{selectedMarker.honorificName}&rdquo;</p>
         )}
 
         <div className="flex flex-wrap gap-3 text-sm text-slate-400">
           <span className="flex items-center gap-1">
             <MapPin className="w-4 h-4" />
-            {selectedMarker.location.city ? `${selectedMarker.location.city}, ` : ''}
+            {selectedMarker.location.city ? `${selectedMarker.location.city}, ` : ""}
             {selectedMarker.location.country}
           </span>
           <span className="flex items-center gap-1">
@@ -131,7 +136,7 @@ function SidePanel({
         <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              isFull ? 'bg-gold-400' : fillPercentage >= 90 ? 'bg-gold-500' : 'bg-info-500'
+              isFull ? "bg-gold-400" : fillPercentage >= 90 ? "bg-gold-500" : "bg-info-500"
             }`}
             style={{ width: `${fillPercentage}%` }}
           />
@@ -140,9 +145,8 @@ function SidePanel({
           <span className="text-marble-100 font-medium">
             {selectedMarker.statistics.cenotaphCount.toLocaleString()}
           </span>
-          {' / '}
-          {selectedMarker.statistics.capacity.toLocaleString()}
-          {' '}
+          {" / "}
+          {selectedMarker.statistics.capacity.toLocaleString()}{" "}
           <span className="text-slate-500">({fillPercentage}%)</span>
         </p>
       </div>
@@ -177,9 +181,7 @@ function SidePanel({
         >
           Enter Memorial
         </Button>
-        <p className="text-xs text-slate-500 text-center">
-          Memorial exploration coming soon
-        </p>
+        <p className="text-xs text-slate-500 text-center">Memorial exploration coming soon</p>
 
         <button
           onClick={onClose}
@@ -189,7 +191,7 @@ function SidePanel({
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -202,11 +204,11 @@ function ControlBar({
   onToggleList,
   isListView,
 }: {
-  onZoomIn: () => void
-  onZoomOut: () => void
-  onReset: () => void
-  onToggleList: () => void
-  isListView: boolean
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onReset: () => void;
+  onToggleList: () => void;
+  isListView: boolean;
 }) {
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 p-2 bg-slate-900/90 backdrop-blur-sm rounded-full border border-slate-700/50">
@@ -241,14 +243,14 @@ function ControlBar({
       <button
         onClick={onToggleList}
         className={`p-2 rounded-full transition-colors ${
-          isListView ? 'bg-gold-500/20 text-gold-400' : 'hover:bg-slate-800 text-slate-400'
+          isListView ? "bg-gold-500/20 text-gold-400" : "hover:bg-slate-800 text-slate-400"
         }`}
-        aria-label={isListView ? 'Show globe' : 'Show list'}
+        aria-label={isListView ? "Show globe" : "Show list"}
       >
         <List className="w-5 h-5" />
       </button>
     </div>
-  )
+  );
 }
 
 /**
@@ -259,16 +261,16 @@ function ListView({
   selectedMarkerId,
   onSelect,
 }: {
-  markers: CenotapheryMarker[]
-  selectedMarkerId: string | null
-  onSelect: (marker: CenotapheryMarker) => void
+  markers: CenotapheryMarker[];
+  selectedMarkerId: string | null;
+  onSelect: (marker: CenotapheryMarker) => void;
 }) {
   return (
     <div className="w-full h-full overflow-y-auto p-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {markers.map((marker) => {
-          const isSelected = marker.id === selectedMarkerId
-          const isFull = marker.status === 'full'
+          const isSelected = marker.id === selectedMarkerId;
+          const isFull = marker.status === "full";
 
           return (
             <button
@@ -276,8 +278,8 @@ function ListView({
               onClick={() => onSelect(marker)}
               className={`text-left p-4 rounded-lg border transition-all ${
                 isSelected
-                  ? 'bg-gold-500/10 border-gold-500/50'
-                  : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
+                  ? "bg-gold-500/10 border-gold-500/50"
+                  : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
               }`}
             >
               <div className="flex items-start justify-between mb-2">
@@ -289,14 +291,12 @@ function ListView({
                 )}
               </div>
               <p className="text-sm text-slate-400 mb-3">
-                {marker.location.city ? `${marker.location.city}, ` : ''}
+                {marker.location.city ? `${marker.location.city}, ` : ""}
                 {marker.location.country}
               </p>
               <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${
-                    isFull ? 'bg-gold-400' : 'bg-info-500'
-                  }`}
+                  className={`h-full rounded-full ${isFull ? "bg-gold-400" : "bg-info-500"}`}
                   style={{ width: `${marker.statistics.fillPercentage}%` }}
                 />
               </div>
@@ -304,50 +304,50 @@ function ListView({
                 {marker.statistics.cenotaphCount} / {marker.statistics.capacity}
               </p>
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 /**
  * Main Globe Section with globe, side panel, and controls
  */
 export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
-  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
-  const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null)
-  const [isListView, setIsListView] = useState(false)
-  const controlsRef = useRef<OrbitControlsImpl>(null)
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
+  const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
+  const [isListView, setIsListView] = useState(false);
+  const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const handleMarkerSelect = useCallback((marker: CenotapheryMarker | null) => {
-    setSelectedMarkerId(marker?.id ?? null)
-  }, [])
+    setSelectedMarkerId(marker?.id ?? null);
+  }, []);
 
   const handleMarkerHover = useCallback((marker: CenotapheryMarker | null) => {
-    setHoveredMarkerId(marker?.id ?? null)
-  }, [])
+    setHoveredMarkerId(marker?.id ?? null);
+  }, []);
 
   const handleZoomIn = useCallback(() => {
     // Zoom is handled via OrbitControls wheel/pinch, buttons trigger custom event
-    const event = new CustomEvent('globe-zoom', { detail: { direction: 'in' } })
-    window.dispatchEvent(event)
-  }, [])
+    const event = new CustomEvent("globe-zoom", { detail: { direction: "in" } });
+    window.dispatchEvent(event);
+  }, []);
 
   const handleZoomOut = useCallback(() => {
-    const event = new CustomEvent('globe-zoom', { detail: { direction: 'out' } })
-    window.dispatchEvent(event)
-  }, [])
+    const event = new CustomEvent("globe-zoom", { detail: { direction: "out" } });
+    window.dispatchEvent(event);
+  }, []);
 
   const handleReset = useCallback(() => {
     if (controlsRef.current) {
-      controlsRef.current.reset()
-      controlsRef.current.autoRotate = true
+      controlsRef.current.reset();
+      controlsRef.current.autoRotate = true;
     }
-    setSelectedMarkerId(null)
-  }, [])
+    setSelectedMarkerId(null);
+  }, []);
 
-  const selectedMarker = markers.find((m) => m.id === selectedMarkerId) || null
+  const selectedMarker = markers.find((m) => m.id === selectedMarkerId) || null;
 
   return (
     <section className="relative min-h-[600px] h-[80vh] max-h-[900px] bg-gradient-to-b from-slate-950 to-slate-900">
@@ -396,9 +396,9 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
         {/* Bottom Sheet - Mobile/Tablet */}
         <div
           className={`lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 transition-transform duration-300 ease-out ${
-            selectedMarker ? 'translate-y-0' : 'translate-y-[calc(100%-80px)]'
+            selectedMarker ? "translate-y-0" : "translate-y-[calc(100%-80px)]"
           }`}
-          style={{ height: '70vh', maxHeight: '500px' }}
+          style={{ height: "70vh", maxHeight: "500px" }}
         >
           {/* Drag handle */}
           <div className="flex justify-center py-3">
@@ -427,5 +427,5 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
         </div>
       </div>
     </section>
-  )
+  );
 }

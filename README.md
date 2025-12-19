@@ -10,7 +10,7 @@ Just as pioneers centuries ago began systematically documenting human deaths and
 
 ## Mission
 
-*Transform organizational failure from wasted potential into collective wisdom.*
+_Transform organizational failure from wasted potential into collective wisdom._
 
 ## Project Status
 
@@ -31,12 +31,14 @@ We are building the foundational platform for data intake, cenotaph creation, an
 ## MVP Scope
 
 ### Phase 1: Core Platform
+
 - **A.** Mother website with sections (Cenotaphery, Research Center, Diagnostics Center, Educational Center, Clinic)
 - **B.** User account management
 - **C.** Interview Framework implementation
 - **D.** Cenotaph creation wizard (6-step process)
 
 ### Phase 2: Discovery & Visualization
+
 - **E.** Searchable and filterable directory
 - **F.** 2D Cenotaphery visualization
 - **G.** Individual cenotaph pages

@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   HeroSection,
@@ -9,7 +9,7 @@ import {
   TestimonialsSliderSection,
   ScopeSection,
   GetInvolvedSection,
-} from '@/components/sections'
+} from "@/components/sections";
 
 /**
  * Home page - Landing page for SOIL.
@@ -33,5 +33,5 @@ export default function LandingPage() {
       <ScopeSection />
       <GetInvolvedSection />
     </>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Landmark, Heart, DollarSign, RefreshCw } from 'lucide-react'
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Landmark, Heart, DollarSign, RefreshCw } from "lucide-react";
 
 // Custom SVG illustration for Founders
 function FoundersIllustrationSVG() {
@@ -12,27 +12,104 @@ function FoundersIllustrationSVG() {
       {/* Memorial/Temple structure - representing cenotaph */}
       <g>
         {/* Base platform */}
-        <rect x="60" y="220" width="180" height="12" fill="rgba(196,161,90,0.2)" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
-        <rect x="75" y="208" width="150" height="12" fill="rgba(196,161,90,0.15)" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
+        <rect
+          x="60"
+          y="220"
+          width="180"
+          height="12"
+          fill="rgba(196,161,90,0.2)"
+          stroke="rgba(196,161,90,0.4)"
+          strokeWidth="1"
+        />
+        <rect
+          x="75"
+          y="208"
+          width="150"
+          height="12"
+          fill="rgba(196,161,90,0.15)"
+          stroke="rgba(196,161,90,0.3)"
+          strokeWidth="1"
+        />
 
         {/* Columns */}
-        <rect x="85" y="120" width="16" height="88" fill="rgba(196,161,90,0.25)" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
-        <rect x="199" y="120" width="16" height="88" fill="rgba(196,161,90,0.25)" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
+        <rect
+          x="85"
+          y="120"
+          width="16"
+          height="88"
+          fill="rgba(196,161,90,0.25)"
+          stroke="rgba(196,161,90,0.4)"
+          strokeWidth="1"
+        />
+        <rect
+          x="199"
+          y="120"
+          width="16"
+          height="88"
+          fill="rgba(196,161,90,0.25)"
+          stroke="rgba(196,161,90,0.4)"
+          strokeWidth="1"
+        />
 
         {/* Column capitals */}
-        <rect x="82" y="115" width="22" height="8" fill="rgba(196,161,90,0.3)" stroke="rgba(196,161,90,0.5)" strokeWidth="1" />
-        <rect x="196" y="115" width="22" height="8" fill="rgba(196,161,90,0.3)" stroke="rgba(196,161,90,0.5)" strokeWidth="1" />
+        <rect
+          x="82"
+          y="115"
+          width="22"
+          height="8"
+          fill="rgba(196,161,90,0.3)"
+          stroke="rgba(196,161,90,0.5)"
+          strokeWidth="1"
+        />
+        <rect
+          x="196"
+          y="115"
+          width="22"
+          height="8"
+          fill="rgba(196,161,90,0.3)"
+          stroke="rgba(196,161,90,0.5)"
+          strokeWidth="1"
+        />
 
         {/* Pediment (triangular top) */}
-        <polygon points="150,55 70,105 230,105" fill="rgba(196,161,90,0.15)" stroke="rgba(196,161,90,0.4)" strokeWidth="1.5" />
+        <polygon
+          points="150,55 70,105 230,105"
+          fill="rgba(196,161,90,0.15)"
+          stroke="rgba(196,161,90,0.4)"
+          strokeWidth="1.5"
+        />
         <line x1="150" y1="65" x2="150" y2="95" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
 
         {/* Architrave */}
-        <rect x="70" y="105" width="160" height="10" fill="rgba(196,161,90,0.2)" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
+        <rect
+          x="70"
+          y="105"
+          width="160"
+          height="10"
+          fill="rgba(196,161,90,0.2)"
+          stroke="rgba(196,161,90,0.4)"
+          strokeWidth="1"
+        />
 
         {/* Central niche with cenotaph symbol */}
-        <rect x="115" y="135" width="70" height="73" fill="rgba(74,53,40,0.6)" stroke="rgba(196,161,90,0.3)" strokeWidth="1" rx="2" />
-        <circle cx="150" cy="165" r="18" fill="rgba(196,161,90,0.15)" stroke="rgba(196,161,90,0.5)" strokeWidth="1.5" />
+        <rect
+          x="115"
+          y="135"
+          width="70"
+          height="73"
+          fill="rgba(74,53,40,0.6)"
+          stroke="rgba(196,161,90,0.3)"
+          strokeWidth="1"
+          rx="2"
+        />
+        <circle
+          cx="150"
+          cy="165"
+          r="18"
+          fill="rgba(196,161,90,0.15)"
+          stroke="rgba(196,161,90,0.5)"
+          strokeWidth="1.5"
+        />
         <circle cx="150" cy="165" r="8" fill="rgba(196,161,90,0.6)" />
 
         {/* Flame symbol above cenotaph */}
@@ -65,37 +142,37 @@ function FoundersIllustrationSVG() {
         <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="rgba(196,161,90,0.4)" />
       ))}
     </svg>
-  )
+  );
 }
 
 const valueProps = [
   {
     icon: <Landmark className="w-5 h-5" />,
-    title: 'Digital Memorial',
-    description: 'Preserve your organization\'s story in a beautiful, permanent cenotaph.',
+    title: "Digital Memorial",
+    description: "Preserve your organization's story in a beautiful, permanent cenotaph.",
   },
   {
     icon: <DollarSign className="w-5 h-5" />,
-    title: 'Passive Asset',
-    description: 'Receive consultation requests from those seeking your specific experience.',
+    title: "Passive Asset",
+    description: "Receive consultation requests from those seeking your specific experience.",
   },
   {
     icon: <Heart className="w-5 h-5" />,
-    title: 'Peer Support',
-    description: 'Connect with others who understand the emotional weight of closure.',
+    title: "Peer Support",
+    description: "Connect with others who understand the emotional weight of closure.",
   },
   {
     icon: <RefreshCw className="w-5 h-5" />,
-    title: 'Redemption',
-    description: 'Transform the pain of ending into value for others starting fresh.',
+    title: "Redemption",
+    description: "Transform the pain of ending into value for others starting fresh.",
   },
-]
+];
 
 const steps = [
-  'Create your cenotaph — share your organization\'s story',
-  'Opt into the consultation network to receive relevant requests',
-  'Connect with peers for support and knowledge exchange',
-]
+  "Create your cenotaph — share your organization's story",
+  "Opt into the consultation network to receive relevant requests",
+  "Connect with peers for support and knowledge exchange",
+];
 
 export function FoundersRoleSection() {
   return (
@@ -109,9 +186,9 @@ export function FoundersRoleSection() {
               Your Experience Has Value
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-              You built something. You learned things that can&apos;t be found in any book.
-              Whether your organization ended last month or years ago, your experience
-              can help others avoid the same pitfalls and find their way forward.
+              You built something. You learned things that can&apos;t be found in any book. Whether
+              your organization ended last month or years ago, your experience can help others avoid
+              the same pitfalls and find their way forward.
             </p>
 
             {/* Value propositions */}
@@ -125,9 +202,7 @@ export function FoundersRoleSection() {
                     <h4 className="font-display text-sm font-medium text-marble-100 mb-1">
                       {prop.title}
                     </h4>
-                    <p className="text-slate-400 text-xs leading-relaxed">
-                      {prop.description}
-                    </p>
+                    <p className="text-slate-400 text-xs leading-relaxed">{prop.description}</p>
                   </div>
                 </div>
               ))}
@@ -154,7 +229,13 @@ export function FoundersRoleSection() {
                 variant="dark-primary"
                 size="lg"
                 rightIcon={
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="w-5 h-5"
+                  >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
                 }
@@ -166,7 +247,11 @@ export function FoundersRoleSection() {
 
           {/* Right: Illustration */}
           <div className="animate-fade-in-up stagger-1">
-            <Card variant="dark-elevated" padding="none" className="aspect-square relative overflow-hidden">
+            <Card
+              variant="dark-elevated"
+              padding="none"
+              className="aspect-square relative overflow-hidden"
+            >
               <div className="absolute inset-0 bg-gradient-radial from-gold-500/5 via-transparent to-transparent" />
               <FoundersIllustrationSVG />
 
@@ -179,5 +264,5 @@ export function FoundersRoleSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

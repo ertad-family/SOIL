@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { Heart, X, ArrowRight, Users, Clock, Brain, DollarSign } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { tabsData, colorClasses, ContributionOption } from '@/lib/contribution-data'
-import { cn } from '@/lib/utils'
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Heart, X, ArrowRight, Users, Clock, Brain, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { tabsData, colorClasses, ContributionOption } from "@/lib/contribution-data";
+import { cn } from "@/lib/utils";
 
 const menuItems = Object.entries(tabsData).map(([key, data]) => ({
   key,
   ...data,
-}))
+}));
 
-const allTabKeys = Object.keys(tabsData)
+const allTabKeys = Object.keys(tabsData);
 
 // Menu item icons mapping
 const menuIcons: Record<string, React.ReactNode> = {
@@ -20,19 +20,31 @@ const menuIcons: Record<string, React.ReactNode> = {
   time: <Clock className="w-5 h-5" />,
   knowledge: <Brain className="w-5 h-5" />,
   money: <DollarSign className="w-5 h-5" />,
-}
+};
 
-function ContributionCard({ option, color }: { option: ContributionOption; color: keyof typeof colorClasses }) {
-  const colors = colorClasses[color]
+function ContributionCard({
+  option,
+  color,
+}: {
+  option: ContributionOption;
+  color: keyof typeof colorClasses;
+}) {
+  const colors = colorClasses[color];
 
   return (
-    <Card variant="dark" padding="md" className="flex flex-col w-[240px] h-[280px] bg-transparent border-white/10">
+    <Card
+      variant="dark"
+      padding="md"
+      className="flex flex-col w-[240px] h-[280px] bg-transparent border-white/10"
+    >
       <CardHeader className="pb-2">
-        <div className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center mb-2',
-          colors.iconBg,
-          colors.iconText
-        )}>
+        <div
+          className={cn(
+            "w-10 h-10 rounded-full flex items-center justify-center mb-2",
+            colors.iconBg,
+            colors.iconText
+          )}
+        >
           {option.icon}
         </div>
         <CardTitle variant="dark" className="text-base">
@@ -68,185 +80,191 @@ function ContributionCard({ option, color }: { option: ContributionOption; color
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
-type MenuState = 'closed' | 'menu' | 'cards'
+type MenuState = "closed" | "menu" | "cards";
 
 export function LiquidContributionFab() {
-  const [menuState, setMenuState] = useState<MenuState>('closed')
-  const [activeItem, setActiveItem] = useState<string | null>(null)
-  const [isMobile, setIsMobile] = useState(false)
-  const [expandedItem, setExpandedItem] = useState<string | null>(null)
-  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const switchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [menuState, setMenuState] = useState<MenuState>("closed");
+  const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const switchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && menuState !== 'closed') {
-        setMenuState('closed')
-        setActiveItem(null)
-        setExpandedItem(null)
+      if (e.key === "Escape" && menuState !== "closed") {
+        setMenuState("closed");
+        setActiveItem(null);
+        setExpandedItem(null);
       }
-    }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [menuState])
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [menuState]);
 
   useEffect(() => {
-    if (menuState === 'closed') return
+    if (menuState === "closed") return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (!target.closest('[data-liquid-fab]')) {
-        setMenuState('closed')
-        setActiveItem(null)
-        setExpandedItem(null)
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-liquid-fab]")) {
+        setMenuState("closed");
+        setActiveItem(null);
+        setExpandedItem(null);
       }
-    }
+    };
 
     const timer = setTimeout(() => {
-      document.addEventListener('click', handleClickOutside)
-    }, 100)
+      document.addEventListener("click", handleClickOutside);
+    }, 100);
 
     return () => {
-      clearTimeout(timer)
-      document.removeEventListener('click', handleClickOutside)
-    }
-  }, [menuState])
+      clearTimeout(timer);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [menuState]);
 
   useEffect(() => {
     return () => {
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
-      if (switchTimeoutRef.current) clearTimeout(switchTimeoutRef.current)
-    }
-  }, [])
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+      if (switchTimeoutRef.current) clearTimeout(switchTimeoutRef.current);
+    };
+  }, []);
 
   // Update menu state based on activeItem
   useEffect(() => {
     if (activeItem) {
-      setMenuState('cards')
-    } else if (menuState === 'cards') {
-      setMenuState('menu')
+      setMenuState("cards");
+    } else if (menuState === "cards") {
+      setMenuState("menu");
     }
-  }, [activeItem, menuState])
+  }, [activeItem, menuState]);
 
   const handleFabClick = useCallback(() => {
-    if (menuState === 'closed') {
-      setMenuState('menu')
+    if (menuState === "closed") {
+      setMenuState("menu");
     } else {
-      setMenuState('closed')
-      setActiveItem(null)
-      setExpandedItem(null)
+      setMenuState("closed");
+      setActiveItem(null);
+      setExpandedItem(null);
     }
-  }, [menuState])
+  }, [menuState]);
 
   const handleFabHover = useCallback(() => {
-    if (isMobile) return
+    if (isMobile) return;
     if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current)
-      hideTimeoutRef.current = null
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
     }
-    if (menuState === 'closed') {
-      setMenuState('menu')
+    if (menuState === "closed") {
+      setMenuState("menu");
     }
-  }, [isMobile, menuState])
+  }, [isMobile, menuState]);
 
   const handleWidgetLeave = useCallback(() => {
-    if (isMobile) return
+    if (isMobile) return;
     hideTimeoutRef.current = setTimeout(() => {
-      setMenuState('closed')
-      setActiveItem(null)
-    }, 300)
-  }, [isMobile])
+      setMenuState("closed");
+      setActiveItem(null);
+    }, 300);
+  }, [isMobile]);
 
   const handleWidgetEnter = useCallback(() => {
-    if (isMobile) return
+    if (isMobile) return;
     if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current)
-      hideTimeoutRef.current = null
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
     }
-  }, [isMobile])
+  }, [isMobile]);
 
-  const handleMenuItemHover = useCallback((key: string) => {
-    if (isMobile) return
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current)
-      hideTimeoutRef.current = null
-    }
-
-    if (!activeItem) {
-      setActiveItem(key)
-      return
-    }
-
-    if (activeItem === key) {
-      if (switchTimeoutRef.current) {
-        clearTimeout(switchTimeoutRef.current)
-        switchTimeoutRef.current = null
+  const handleMenuItemHover = useCallback(
+    (key: string) => {
+      if (isMobile) return;
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
       }
-      return
-    }
 
-    if (switchTimeoutRef.current) {
-      clearTimeout(switchTimeoutRef.current)
-    }
-    switchTimeoutRef.current = setTimeout(() => {
-      setActiveItem(key)
-    }, 150)
-  }, [isMobile, activeItem])
+      if (!activeItem) {
+        setActiveItem(key);
+        return;
+      }
+
+      if (activeItem === key) {
+        if (switchTimeoutRef.current) {
+          clearTimeout(switchTimeoutRef.current);
+          switchTimeoutRef.current = null;
+        }
+        return;
+      }
+
+      if (switchTimeoutRef.current) {
+        clearTimeout(switchTimeoutRef.current);
+      }
+      switchTimeoutRef.current = setTimeout(() => {
+        setActiveItem(key);
+      }, 150);
+    },
+    [isMobile, activeItem]
+  );
 
   const handleMenuItemLeave = useCallback(() => {
-    if (isMobile) return
+    if (isMobile) return;
     if (switchTimeoutRef.current) {
-      clearTimeout(switchTimeoutRef.current)
-      switchTimeoutRef.current = null
+      clearTimeout(switchTimeoutRef.current);
+      switchTimeoutRef.current = null;
     }
-  }, [isMobile])
+  }, [isMobile]);
 
-  const handleMenuItemClick = useCallback((key: string) => {
-    if (isMobile) {
-      setExpandedItem(prev => prev === key ? null : key)
-    }
-  }, [isMobile])
+  const handleMenuItemClick = useCallback(
+    (key: string) => {
+      if (isMobile) {
+        setExpandedItem((prev) => (prev === key ? null : key));
+      }
+    },
+    [isMobile]
+  );
 
   const handleCardsEnter = useCallback(() => {
-    if (isMobile) return
+    if (isMobile) return;
     if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current)
-      hideTimeoutRef.current = null
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
     }
     if (switchTimeoutRef.current) {
-      clearTimeout(switchTimeoutRef.current)
-      switchTimeoutRef.current = null
+      clearTimeout(switchTimeoutRef.current);
+      switchTimeoutRef.current = null;
     }
-  }, [isMobile])
+  }, [isMobile]);
 
   const handleCardsLeave = useCallback(() => {
-    if (isMobile) return
+    if (isMobile) return;
     hideTimeoutRef.current = setTimeout(() => {
-      setActiveItem(null)
-    }, 200)
-  }, [isMobile])
+      setActiveItem(null);
+    }, 200);
+  }, [isMobile]);
 
   // Get container dimensions based on state
   // Menu: 4 items × 44px + gaps (3 × 12px) + padding (16px top + 72px bottom for FAB) = 264px height
   const getDimensions = () => {
-    if (menuState === 'closed') return { width: 56, height: 56 }
-    if (menuState === 'menu' || !activeItem) return { width: 200, height: 280 }
-    return { width: 1000, height: 340 }
-  }
+    if (menuState === "closed") return { width: 56, height: 56 };
+    if (menuState === "menu" || !activeItem) return { width: 200, height: 280 };
+    return { width: 1000, height: 340 };
+  };
 
-  const { width, height } = getDimensions()
-  const showMenu = menuState !== 'closed'
-  const showCards = menuState === 'cards' && activeItem
+  const { width, height } = getDimensions();
+  const showMenu = menuState !== "closed";
+  const showCards = menuState === "cards" && activeItem;
 
   return (
     <div
@@ -280,12 +298,7 @@ export function LiquidContributionFab() {
             {/* Blur for glass effect */}
             <feGaussianBlur in="displaced" stdDeviation="0.5" result="blurred" />
             {/* Color matrix for saturation boost */}
-            <feColorMatrix
-              in="blurred"
-              type="saturate"
-              values="1.2"
-              result="saturated"
-            />
+            <feColorMatrix in="blurred" type="saturate" values="1.2" result="saturated" />
             {/* Specular lighting for shine */}
             <feSpecularLighting
               in="turbulence"
@@ -297,12 +310,7 @@ export function LiquidContributionFab() {
               <fePointLight x="-50" y="-100" z="200" />
             </feSpecularLighting>
             {/* Composite specular with main image */}
-            <feComposite
-              in="specular"
-              in2="saturated"
-              operator="in"
-              result="specularComposite"
-            />
+            <feComposite in="specular" in2="saturated" operator="in" result="specularComposite" />
             {/* Blend everything together */}
             <feBlend in="saturated" in2="specularComposite" mode="screen" result="final" />
           </filter>
@@ -326,16 +334,16 @@ export function LiquidContributionFab() {
         style={{
           width: `${width}px`,
           height: `${height}px`,
-          background: 'rgba(37, 34, 32, 0.65)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
+          background: "rgba(37, 34, 32, 0.65)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
           boxShadow: `
             0 8px 32px rgba(0, 0, 0, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.1),
             inset 0 -1px 0 rgba(0, 0, 0, 0.1)
           `,
-          filter: 'url(#liquid-glow)',
+          filter: "url(#liquid-glow)",
         }}
       >
         {/* Inner shine gradient */}
@@ -353,8 +361,9 @@ export function LiquidContributionFab() {
         <div
           className="absolute inset-0 pointer-events-none opacity-30"
           style={{
-            background: 'linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
-            animation: 'liquidShine 3s ease-in-out infinite',
+            background:
+              "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
+            animation: "liquidShine 3s ease-in-out infinite",
           }}
         />
       </div>
@@ -363,46 +372,48 @@ export function LiquidContributionFab() {
       {!isMobile && (
         <div
           className={cn(
-            'absolute bottom-4 right-[220px] transition-all duration-400 ease-out',
-            showCards ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            "absolute bottom-4 right-[220px] transition-all duration-400 ease-out",
+            showCards ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           )}
           onMouseEnter={handleCardsEnter}
           onMouseLeave={handleCardsLeave}
         >
           <div className="p-4">
-            <div className="relative" style={{ width: 'calc(240px * 3 + 12px * 2)', height: '280px' }}>
+            <div
+              className="relative"
+              style={{ width: "calc(240px * 3 + 12px * 2)", height: "280px" }}
+            >
               {allTabKeys.map((tabKey) => {
-                const isVisible = activeItem === tabKey
-                const tab = tabsData[tabKey]
+                const isVisible = activeItem === tabKey;
+                const tab = tabsData[tabKey];
 
                 return (
                   <div
                     key={tabKey}
                     className={cn(
-                      'absolute inset-0 flex flex-row-reverse gap-3',
-                      'transition-opacity duration-300 ease-in-out',
-                      isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                      "absolute inset-0 flex flex-row-reverse gap-3",
+                      "transition-opacity duration-300 ease-in-out",
+                      isVisible
+                        ? "opacity-100 pointer-events-auto"
+                        : "opacity-0 pointer-events-none"
                     )}
                   >
                     {tab.options.map((option, optIndex) => (
                       <div
                         key={`${tabKey}-${optIndex}`}
                         className={cn(
-                          'transition-all duration-300 ease-out',
-                          isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
+                          "transition-all duration-300 ease-out",
+                          isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
                         )}
                         style={{
-                          transitionDelay: isVisible ? `${optIndex * 75}ms` : '0ms',
+                          transitionDelay: isVisible ? `${optIndex * 75}ms` : "0ms",
                         }}
                       >
-                        <ContributionCard
-                          option={option}
-                          color={tab.color}
-                        />
+                        <ContributionCard option={option} color={tab.color} />
                       </div>
                     ))}
                   </div>
-                )
+                );
               })}
             </div>
           </div>
@@ -412,24 +423,24 @@ export function LiquidContributionFab() {
       {/* Menu items */}
       <div
         className={cn(
-          'absolute bottom-[72px] right-4 flex flex-col-reverse gap-3',
-          'transition-all duration-400',
-          showMenu ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          "absolute bottom-[72px] right-4 flex flex-col-reverse gap-3",
+          "transition-all duration-400",
+          showMenu ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
       >
         {menuItems.map((item, index) => {
-          const isExpanded = expandedItem === item.key
-          const isActive = isMobile ? isExpanded : activeItem === item.key
+          const isExpanded = expandedItem === item.key;
+          const isActive = isMobile ? isExpanded : activeItem === item.key;
 
           return (
             <div
               key={item.key}
               className={cn(
-                'relative transition-all duration-300 ease-out',
-                showMenu ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                "relative transition-all duration-300 ease-out",
+                showMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
               style={{
-                transitionDelay: showMenu ? `${index * 50}ms` : '0ms',
+                transitionDelay: showMenu ? `${index * 50}ms` : "0ms",
               }}
               onMouseEnter={() => handleMenuItemHover(item.key)}
               onMouseLeave={handleMenuItemLeave}
@@ -455,20 +466,18 @@ export function LiquidContributionFab() {
               <button
                 onClick={() => handleMenuItemClick(item.key)}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-2.5 rounded-full whitespace-nowrap',
-                  'text-marble-100 text-sm font-medium',
-                  'transition-all duration-200',
-                  'hover:bg-white/5',
-                  isActive && 'bg-white/10'
+                  "flex items-center gap-3 px-4 py-2.5 rounded-full whitespace-nowrap",
+                  "text-marble-100 text-sm font-medium",
+                  "transition-all duration-200",
+                  "hover:bg-white/5",
+                  isActive && "bg-white/10"
                 )}
               >
-                <span className="w-5 h-5 text-marble-300">
-                  {menuIcons[item.key]}
-                </span>
+                <span className="w-5 h-5 text-marble-300">{menuIcons[item.key]}</span>
                 <span>{item.label}</span>
               </button>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -477,33 +486,34 @@ export function LiquidContributionFab() {
         onClick={handleFabClick}
         onMouseEnter={handleFabHover}
         className={cn(
-          'relative z-10 rounded-full w-14 h-14 p-0 transition-all duration-300',
-          'flex items-center justify-center',
-          menuState !== 'closed' && 'rotate-45'
+          "relative z-10 rounded-full w-14 h-14 p-0 transition-all duration-300",
+          "flex items-center justify-center",
+          menuState !== "closed" && "rotate-45"
         )}
         style={{
-          background: 'rgba(37, 34, 32, 0.65)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
+          background: "rgba(37, 34, 32, 0.65)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
           boxShadow: `
             0 8px 32px rgba(0, 0, 0, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.15),
             inset 0 -1px 0 rgba(0, 0, 0, 0.1)
           `,
-          filter: 'url(#liquid-glow)',
+          filter: "url(#liquid-glow)",
         }}
-        aria-label={menuState === 'closed' ? 'Ways to contribute' : 'Close menu'}
-        aria-expanded={menuState !== 'closed'}
+        aria-label={menuState === "closed" ? "Ways to contribute" : "Close menu"}
+        aria-expanded={menuState !== "closed"}
       >
         {/* Inner shine for FAB */}
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 80% 50% at 30% 20%, rgba(255,255,255,0.15) 0%, transparent 50%)',
+            background:
+              "radial-gradient(ellipse 80% 50% at 30% 20%, rgba(255,255,255,0.15) 0%, transparent 50%)",
           }}
         />
-        {menuState !== 'closed' ? (
+        {menuState !== "closed" ? (
           <X className="w-6 h-6 text-marble-300 relative z-10" />
         ) : (
           <Heart className="w-6 h-6 text-marble-300 relative z-10" />
@@ -513,7 +523,8 @@ export function LiquidContributionFab() {
       {/* CSS Animation for liquid shine */}
       <style jsx>{`
         @keyframes liquidShine {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateX(-100%) rotate(135deg);
             opacity: 0;
           }
@@ -524,5 +535,5 @@ export function LiquidContributionFab() {
         }
       `}</style>
     </div>
-  )
+  );
 }

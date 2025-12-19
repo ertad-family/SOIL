@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
@@ -17,8 +17,8 @@ export function HeroSection() {
           <div className="animate-fade-in-up stagger-1">
             <p className="text-slate-400 leading-relaxed mb-8">
               Join a pioneering research initiative transforming how we understand organizations.
-              Your experience becomes part of a growing body of knowledge that will help future generations of founders
-              navigate their journeys with greater insight.
+              Your experience becomes part of a growing body of knowledge that will help future
+              generations of founders navigate their journeys with greater insight.
             </p>
 
             <div className="flex flex-col gap-4">
@@ -27,7 +27,13 @@ export function HeroSection() {
                 size="lg"
                 className="w-full sm:w-auto"
                 rightIcon={
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="w-5 h-5"
+                  >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
                 }
@@ -47,5 +53,5 @@ export function HeroSection() {
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">MMXXV</span>
       </div>
     </section>
-  )
+  );
 }

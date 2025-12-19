@@ -1,19 +1,13 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { DashboardLayout } from '@/components/layouts/dashboard-layout'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { SwitchWithLabel } from '@/components/ui/switch'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/components/layouts/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { SwitchWithLabel } from "@/components/ui/switch";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Building2,
   Calendar,
@@ -43,142 +37,148 @@ import {
   File,
   AlertCircle,
   Sparkles,
-} from 'lucide-react'
+} from "lucide-react";
 import type {
   StoryStatus,
   ModuleId,
   OrganizationType,
   LifecycleStage,
   VerificationStatus,
-} from '@/types/interview'
-import { MODULES } from '@/types/interview'
+} from "@/types/interview";
+import { MODULES } from "@/types/interview";
 
 interface OrganizationData {
-  id: string
-  slug: string
-  name: string
-  organization_type: OrganizationType | null
-  business_model: string | null
-  industry: string | null
-  description: string | null
-  location_country: string | null
-  location_city: string | null
-  founded_date: string | null
-  closed_date: string | null
-  stage_at_closure: LifecycleStage | null
-  peak_team_size: number | null
-  verification_status: VerificationStatus
-  verification_count: number
-  is_public: boolean
-  created_by: string
-  created_at: string
-  updated_at: string
+  id: string;
+  slug: string;
+  name: string;
+  organization_type: OrganizationType | null;
+  business_model: string | null;
+  industry: string | null;
+  description: string | null;
+  location_country: string | null;
+  location_city: string | null;
+  founded_date: string | null;
+  closed_date: string | null;
+  stage_at_closure: LifecycleStage | null;
+  peak_team_size: number | null;
+  verification_status: VerificationStatus;
+  verification_count: number;
+  is_public: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface StoryData {
-  id: string
-  user_id: string
-  status: StoryStatus
-  current_module: ModuleId
-  completed_modules: ModuleId[]
-  coined_at: string | null
-  created_at: string
-  updated_at: string
+  id: string;
+  user_id: string;
+  status: StoryStatus;
+  current_module: ModuleId;
+  completed_modules: ModuleId[];
+  coined_at: string | null;
+  created_at: string;
+  updated_at: string;
   profile: {
-    display_name: string | null
-  } | null
+    display_name: string | null;
+  } | null;
 }
 
 interface MemorialData {
-  id: string
-  slug: string
-  epitaph: string | null
-  tombstone_style: string
-  tombstone_color: string
-  views_count: number
-  respects_count: number
-  cenotaph_image_url: string | null
-  design_status: string | null
+  id: string;
+  slug: string;
+  epitaph: string | null;
+  tombstone_style: string;
+  tombstone_color: string;
+  views_count: number;
+  respects_count: number;
+  cenotaph_image_url: string | null;
+  design_status: string | null;
 }
 
-type VerificationRelationship = 'colleague' | 'customer' | 'supplier' | 'partner' | 'investor' | 'other'
-type VerificationRequestStatus = 'pending' | 'confirmed' | 'declined' | 'expired'
+type VerificationRelationship =
+  | "colleague"
+  | "customer"
+  | "supplier"
+  | "partner"
+  | "investor"
+  | "other";
+type VerificationRequestStatus = "pending" | "confirmed" | "declined" | "expired";
 
 interface VerificationRequest {
-  id: string
-  verifier_email: string
-  verifier_name: string | null
-  relationship: VerificationRelationship
-  status: VerificationRequestStatus
-  created_at: string
-  expires_at: string
-  responded_at: string | null
+  id: string;
+  verifier_email: string;
+  verifier_name: string | null;
+  relationship: VerificationRelationship;
+  status: VerificationRequestStatus;
+  created_at: string;
+  expires_at: string;
+  responded_at: string | null;
 }
 
-type DocumentVerificationStatus = 'pending_review' | 'approved' | 'rejected'
-type DocumentType = 'registration' | 'extract' | 'charter' | 'shareholder_list' | 'other'
+type DocumentVerificationStatus = "pending_review" | "approved" | "rejected";
+type DocumentType = "registration" | "extract" | "charter" | "shareholder_list" | "other";
 
 interface VerificationDocument {
-  id: string
-  file_path: string
-  file_name: string
-  file_size: number | null
-  file_type: string | null
-  document_type: DocumentType
-  description: string | null
-  status: DocumentVerificationStatus
-  rejection_reason: string | null
-  created_at: string
+  id: string;
+  file_path: string;
+  file_name: string;
+  file_size: number | null;
+  file_type: string | null;
+  document_type: DocumentType;
+  description: string | null;
+  status: DocumentVerificationStatus;
+  rejection_reason: string | null;
+  created_at: string;
 }
 
 const RELATIONSHIP_LABELS: Record<VerificationRelationship, string> = {
-  colleague: 'Ex-Colleague',
-  customer: 'Ex-Customer',
-  supplier: 'Ex-Supplier',
-  partner: 'Ex-Partner',
-  investor: 'Ex-Investor',
-  other: 'Other',
-}
+  colleague: "Ex-Colleague",
+  customer: "Ex-Customer",
+  supplier: "Ex-Supplier",
+  partner: "Ex-Partner",
+  investor: "Ex-Investor",
+  other: "Other",
+};
 
 const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
-  registration: 'Registration Certificate',
-  extract: 'Registry Extract',
-  charter: 'Company Charter',
-  shareholder_list: 'Shareholder List',
-  other: 'Other Document',
-}
+  registration: "Registration Certificate",
+  extract: "Registry Extract",
+  charter: "Company Charter",
+  shareholder_list: "Shareholder List",
+  other: "Other Document",
+};
 
-type VerificationTab = 'social' | 'documents'
+type VerificationTab = "social" | "documents";
 
 interface CurrentUserData {
-  name: string
-  role: string | null
+  name: string;
+  role: string | null;
 }
 
 interface OrganizationClientProps {
-  organization: OrganizationData
-  stories: StoryData[]
-  memorial: MemorialData | null
-  currentUserId: string
-  currentUserData: CurrentUserData
-  isOwner: boolean
+  organization: OrganizationData;
+  stories: StoryData[];
+  memorial: MemorialData | null;
+  currentUserId: string;
+  currentUserData: CurrentUserData;
+  isOwner: boolean;
 }
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: 'Tech Product',
-  services: 'Services',
-  ecommerce: 'E-commerce',
-  manufacturing: 'Manufacturing',
-  ngo: 'NGO',
-  media: 'Media',
-}
+  tech_product: "Tech Product",
+  services: "Services",
+  ecommerce: "E-commerce",
+  manufacturing: "Manufacturing",
+  ngo: "NGO",
+  media: "Media",
+};
 
 const STAGE_LABELS: Record<LifecycleStage, string> = {
-  formation: 'Formation',
-  establishment: 'Establishment',
-  growth: 'Growth',
-  maturity: 'Maturity',
-}
+  formation: "Formation",
+  establishment: "Establishment",
+  growth: "Growth",
+  maturity: "Maturity",
+};
 
 export function OrganizationClient({
   organization,
@@ -188,132 +188,135 @@ export function OrganizationClient({
   currentUserData,
   isOwner,
 }: OrganizationClientProps) {
-  const router = useRouter()
-  const [isPublic, setIsPublic] = useState(organization.is_public)
-  const [isSaving, setIsSaving] = useState(false)
+  const router = useRouter();
+  const [isPublic, setIsPublic] = useState(organization.is_public);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Verification state
-  const [verificationTab, setVerificationTab] = useState<VerificationTab>('social')
-  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([])
-  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocument[]>([])
-  const [isLoadingRequests, setIsLoadingRequests] = useState(false)
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
-  const [showVerificationForm, setShowVerificationForm] = useState(false)
-  const [showDocumentUpload, setShowDocumentUpload] = useState(false)
-  const [isSubmittingVerification, setIsSubmittingVerification] = useState(false)
+  const [verificationTab, setVerificationTab] = useState<VerificationTab>("social");
+  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocument[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [showVerificationForm, setShowVerificationForm] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [isSubmittingVerification, setIsSubmittingVerification] = useState(false);
 
   // Fetch verification requests
   const fetchVerificationRequests = useCallback(async () => {
-    if (!isOwner) return
+    if (!isOwner) return;
 
-    setIsLoadingRequests(true)
+    setIsLoadingRequests(true);
     try {
-      const res = await fetch(`/api/verification/request?organizationId=${organization.id}`)
+      const res = await fetch(`/api/verification/request?organizationId=${organization.id}`);
       if (res.ok) {
-        const data = await res.json()
-        setVerificationRequests(data.requests || [])
+        const data = await res.json();
+        setVerificationRequests(data.requests || []);
       }
     } catch (err) {
-      console.error('Failed to fetch verification requests:', err)
+      console.error("Failed to fetch verification requests:", err);
     } finally {
-      setIsLoadingRequests(false)
+      setIsLoadingRequests(false);
     }
-  }, [organization.id, isOwner])
+  }, [organization.id, isOwner]);
 
   // Fetch verification documents
   const fetchVerificationDocuments = useCallback(async () => {
-    if (!isOwner) return
+    if (!isOwner) return;
 
-    setIsLoadingDocuments(true)
+    setIsLoadingDocuments(true);
     try {
-      const res = await fetch(`/api/verification/documents?organizationId=${organization.id}`)
+      const res = await fetch(`/api/verification/documents?organizationId=${organization.id}`);
       if (res.ok) {
-        const data = await res.json()
-        setVerificationDocuments(data.documents || [])
+        const data = await res.json();
+        setVerificationDocuments(data.documents || []);
       }
     } catch (err) {
-      console.error('Failed to fetch verification documents:', err)
+      console.error("Failed to fetch verification documents:", err);
     } finally {
-      setIsLoadingDocuments(false)
+      setIsLoadingDocuments(false);
     }
-  }, [organization.id, isOwner])
+  }, [organization.id, isOwner]);
 
   useEffect(() => {
-    fetchVerificationRequests()
-    fetchVerificationDocuments()
-  }, [fetchVerificationRequests, fetchVerificationDocuments])
+    fetchVerificationRequests();
+    fetchVerificationDocuments();
+  }, [fetchVerificationRequests, fetchVerificationDocuments]);
 
   // Calculate verification progress
-  const confirmedCount = verificationRequests.filter(r => r.status === 'confirmed').length
-  const pendingCount = verificationRequests.filter(r => r.status === 'pending').length
-  const approvedDocs = verificationDocuments.filter(d => d.status === 'approved').length
-  const pendingDocs = verificationDocuments.filter(d => d.status === 'pending_review').length
-  const hasDocumentVerification = approvedDocs > 0
+  const confirmedCount = verificationRequests.filter((r) => r.status === "confirmed").length;
+  const pendingCount = verificationRequests.filter((r) => r.status === "pending").length;
+  const approvedDocs = verificationDocuments.filter((d) => d.status === "approved").length;
+  const pendingDocs = verificationDocuments.filter((d) => d.status === "pending_review").length;
+  const hasDocumentVerification = approvedDocs > 0;
 
   // My story (if I have one)
-  const myStory = stories.find(s => s.user_id === currentUserId)
-  const otherStories = stories.filter(s => s.user_id !== currentUserId)
+  const myStory = stories.find((s) => s.user_id === currentUserId);
+  const otherStories = stories.filter((s) => s.user_id !== currentUserId);
 
   // Format dates
   const formatDate = (date: string | null) => {
-    if (!date) return null
-    return date.replace('-', '.')
-  }
+    if (!date) return null;
+    return date.replace("-", ".");
+  };
 
-  const lifespan = organization.founded_date && organization.closed_date
-    ? `${formatDate(organization.founded_date)} — ${formatDate(organization.closed_date)}`
-    : null
+  const lifespan =
+    organization.founded_date && organization.closed_date
+      ? `${formatDate(organization.founded_date)} — ${formatDate(organization.closed_date)}`
+      : null;
 
   const location = [organization.location_city, organization.location_country]
     .filter(Boolean)
-    .join(', ')
+    .join(", ");
 
   // Toggle visibility via API
   const handleVisibilityChange = async (checked: boolean) => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       const res = await fetch(`/api/organization/${organization.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_public: checked }),
-      })
+      });
 
       if (!res.ok) {
-        throw new Error('Failed to update visibility')
+        throw new Error("Failed to update visibility");
       }
 
-      setIsPublic(checked)
+      setIsPublic(checked);
     } catch (err) {
-      console.error('Failed to update visibility:', err)
+      console.error("Failed to update visibility:", err);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   // Delete organization via API
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this organization? This action cannot be undone.')) {
-      return
+    if (
+      !confirm("Are you sure you want to delete this organization? This action cannot be undone.")
+    ) {
+      return;
     }
 
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       const res = await fetch(`/api/organization/${organization.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (!res.ok) {
-        throw new Error('Failed to delete organization')
+        throw new Error("Failed to delete organization");
       }
 
-      router.push('/account')
+      router.push("/account");
     } catch (err) {
-      console.error('Failed to delete organization:', err)
-      alert('Failed to delete organization')
+      console.error("Failed to delete organization:", err);
+      alert("Failed to delete organization");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <DashboardLayout
@@ -402,36 +405,38 @@ export function OrganizationClient({
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {organization.verification_status === 'verified' ? (
+                  {organization.verification_status === "verified" ? (
                     <ShieldCheck className="w-5 h-5 text-gold-400" />
-                  ) : organization.verification_status === 'pending' ? (
+                  ) : organization.verification_status === "pending" ? (
                     <ShieldQuestion className="w-5 h-5 text-gold-400" />
                   ) : (
                     <Shield className="w-5 h-5 text-slate-500" />
                   )}
-                  <CardTitle variant="dark" className="text-base">Verification</CardTitle>
+                  <CardTitle variant="dark" className="text-base">
+                    Verification
+                  </CardTitle>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge
                       variant={
-                        organization.verification_status === 'verified'
-                          ? 'dark-verified'
+                        organization.verification_status === "verified"
+                          ? "dark-verified"
                           : hasDocumentVerification
-                          ? 'dark-warning'
-                          : 'dark-error'
+                            ? "dark-warning"
+                            : "dark-error"
                       }
                       size="sm"
                       className="cursor-help"
                     >
-                      {organization.verification_status === 'verified' && (
+                      {organization.verification_status === "verified" && (
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                       )}
-                      {organization.verification_status === 'verified'
-                        ? 'Verified'
+                      {organization.verification_status === "verified"
+                        ? "Verified"
                         : hasDocumentVerification
-                        ? 'Doc Verified'
-                        : 'Unverified'}
+                          ? "Doc Verified"
+                          : "Unverified"}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent variant="dark" side="bottom" className="max-w-sm p-5">
@@ -441,22 +446,17 @@ export function OrganizationClient({
                       </div>
                       <div>
                         <h4 className="text-base font-semibold text-marble-100 mb-2">
-                          {organization.verification_status === 'verified'
-                            ? 'This organization is verified'
-                            : 'Why verify?'}
+                          {organization.verification_status === "verified"
+                            ? "This organization is verified"
+                            : "Why verify?"}
                         </h4>
                         <p className="text-sm text-slate-400 leading-relaxed">
-                          {organization.verification_status === 'verified'
-                            ? 'Your story can now be used in research, your cenotaph is public and searchable, and you can offer consulting to the founder community.'
-                            : 'Verification unlocks publishing your cenotaph publicly, making your experience searchable, enabling research use, and opening consulting opportunities.'}
+                          {organization.verification_status === "verified"
+                            ? "Your story can now be used in research, your cenotaph is public and searchable, and you can offer consulting to the founder community."
+                            : "Verification unlocks publishing your cenotaph publicly, making your experience searchable, enabling research use, and opening consulting opportunities."}
                         </p>
                       </div>
-                      <Button
-                        variant="dark-secondary"
-                        size="sm"
-                        fullWidth
-                        asChild
-                      >
+                      <Button variant="dark-secondary" size="sm" fullWidth asChild>
                         <a href="/about/verification">
                           Learn more
                           <ArrowRight className="w-4 h-4" />
@@ -469,25 +469,25 @@ export function OrganizationClient({
             </CardHeader>
             <CardContent className="pt-0 space-y-4">
               {/* Verification Tabs */}
-              {isOwner && organization.verification_status !== 'verified' && (
+              {isOwner && organization.verification_status !== "verified" && (
                 <div className="flex gap-2 border-b border-slate-700 pb-3">
                   <button
-                    onClick={() => setVerificationTab('social')}
+                    onClick={() => setVerificationTab("social")}
                     className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      verificationTab === 'social'
-                        ? 'bg-gold-500/20 text-gold-400'
-                        : 'text-slate-400 hover:text-slate-300'
+                      verificationTab === "social"
+                        ? "bg-gold-500/20 text-gold-400"
+                        : "text-slate-400 hover:text-slate-300"
                     }`}
                   >
                     <Users className="w-4 h-4" />
                     References
                   </button>
                   <button
-                    onClick={() => setVerificationTab('documents')}
+                    onClick={() => setVerificationTab("documents")}
                     className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      verificationTab === 'documents'
-                        ? 'bg-gold-500/20 text-gold-400'
-                        : 'text-slate-400 hover:text-slate-300'
+                      verificationTab === "documents"
+                        ? "bg-gold-500/20 text-gold-400"
+                        : "text-slate-400 hover:text-slate-300"
                     }`}
                   >
                     <FileText className="w-4 h-4" />
@@ -497,7 +497,7 @@ export function OrganizationClient({
               )}
 
               {/* Social Verification Tab */}
-              {verificationTab === 'social' && (
+              {verificationTab === "social" && (
                 <>
                   {/* Progress bar */}
                   <div>
@@ -505,7 +505,7 @@ export function OrganizationClient({
                       <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
-                            confirmedCount >= 3 ? 'bg-gold-500' : 'bg-gold-500/60'
+                            confirmedCount >= 3 ? "bg-gold-500" : "bg-gold-500/60"
                           }`}
                           style={{ width: `${Math.min((confirmedCount / 3) * 100, 100)}%` }}
                         />
@@ -513,14 +513,14 @@ export function OrganizationClient({
                     </div>
                     <p className="text-sm text-slate-500">
                       {confirmedCount >= 3
-                        ? 'Organization verified!'
-                        : `${3 - confirmedCount} more confirmation${3 - confirmedCount !== 1 ? 's' : ''} needed`}
+                        ? "Organization verified!"
+                        : `${3 - confirmedCount} more confirmation${3 - confirmedCount !== 1 ? "s" : ""} needed`}
                       {pendingCount > 0 && ` (${pendingCount} pending)`}
                     </p>
                   </div>
 
                   {/* Verification steps */}
-                  {isOwner && organization.verification_status !== 'verified' && (
+                  {isOwner && organization.verification_status !== "verified" && (
                     <div className="border-t border-slate-700 pt-4">
                       <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-2">
                         How it works
@@ -565,24 +565,24 @@ export function OrganizationClient({
               )}
 
               {/* Documents Verification Tab */}
-              {verificationTab === 'documents' && (
+              {verificationTab === "documents" && (
                 <>
                   {/* Document status */}
                   <div>
                     <p className="text-sm text-slate-400 mb-3">
-                      Upload registration documents showing you as owner/founder.
-                      Documents are reviewed manually (1-3 business days).
+                      Upload registration documents showing you as owner/founder. Documents are
+                      reviewed manually (1-3 business days).
                     </p>
                     {pendingDocs > 0 && (
                       <div className="flex items-center gap-2 text-sm text-gold-400 mb-3">
                         <Clock className="w-4 h-4" />
-                        {pendingDocs} document{pendingDocs !== 1 ? 's' : ''} pending review
+                        {pendingDocs} document{pendingDocs !== 1 ? "s" : ""} pending review
                       </div>
                     )}
                   </div>
 
                   {/* Upload button */}
-                  {isOwner && organization.verification_status !== 'verified' && (
+                  {isOwner && organization.verification_status !== "verified" && (
                     <Button
                       variant="dark-primary"
                       size="sm"
@@ -632,8 +632,8 @@ export function OrganizationClient({
               requesterRole={currentUserData.role}
               onClose={() => setShowVerificationForm(false)}
               onSuccess={() => {
-                setShowVerificationForm(false)
-                fetchVerificationRequests()
+                setShowVerificationForm(false);
+                fetchVerificationRequests();
               }}
             />
           )}
@@ -644,8 +644,8 @@ export function OrganizationClient({
               organizationId={organization.id}
               onClose={() => setShowDocumentUpload(false)}
               onSuccess={() => {
-                setShowDocumentUpload(false)
-                fetchVerificationDocuments()
+                setShowDocumentUpload(false);
+                fetchVerificationDocuments();
               }}
             />
           )}
@@ -653,11 +653,7 @@ export function OrganizationClient({
 
         {/* Cenotaph Avatar (Right Column) */}
         <div className="lg:col-span-1 order-1 lg:order-2">
-          <CenotaphAvatar
-            memorial={memorial}
-            organizationId={organization.id}
-            isOwner={isOwner}
-          />
+          <CenotaphAvatar memorial={memorial} organizationId={organization.id} isOwner={isOwner} />
         </div>
       </div>
 
@@ -667,9 +663,7 @@ export function OrganizationClient({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle variant="dark">Perspectives</CardTitle>
-              <CardDescription variant="dark">
-                Stories told about this organization
-              </CardDescription>
+              <CardDescription variant="dark">Stories told about this organization</CardDescription>
             </div>
             {isOwner && !myStory && (
               <a href={`/interview?org=${organization.id}`}>
@@ -695,20 +689,14 @@ export function OrganizationClient({
           ) : (
             <div className="space-y-4">
               {/* My Story First */}
-              {myStory && (
-                <StoryCard
-                  story={myStory}
-                  isOwn={true}
-                  authorName="You"
-                />
-              )}
+              {myStory && <StoryCard story={myStory} isOwn={true} authorName="You" />}
               {/* Other Stories */}
-              {otherStories.map(story => (
+              {otherStories.map((story) => (
                 <StoryCard
                   key={story.id}
                   story={story}
                   isOwn={false}
-                  authorName={story.profile?.display_name || 'Anonymous'}
+                  authorName={story.profile?.display_name || "Anonymous"}
                 />
               ))}
             </div>
@@ -726,9 +714,7 @@ export function OrganizationClient({
               </div>
               <div>
                 <CardTitle variant="dark">Settings</CardTitle>
-                <CardDescription variant="dark">
-                  Manage this organization
-                </CardDescription>
+                <CardDescription variant="dark">Manage this organization</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -770,7 +756,7 @@ export function OrganizationClient({
         </Card>
       )}
     </DashboardLayout>
-  )
+  );
 }
 
 // Roman marble frame styles
@@ -784,7 +770,7 @@ const marbleFrameStyles = `
   before:absolute before:inset-[3px] before:rounded-sm
   before:border before:border-marble-400/30
   before:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]
-`
+`;
 
 const marbleFrameEmptyStyles = `
   relative
@@ -794,7 +780,7 @@ const marbleFrameEmptyStyles = `
   p-[3px]
   shadow-[0_4px_20px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]
   border border-dashed border-slate-600
-`
+`;
 
 // Cenotaph Avatar Component
 function CenotaphAvatar({
@@ -802,18 +788,19 @@ function CenotaphAvatar({
   organizationId,
   isOwner,
 }: {
-  memorial: MemorialData | null
-  organizationId: string
-  isOwner: boolean
+  memorial: MemorialData | null;
+  organizationId: string;
+  isOwner: boolean;
 }) {
-  const [showImagePopup, setShowImagePopup] = useState(false)
+  const [showImagePopup, setShowImagePopup] = useState(false);
 
   if (memorial) {
     // Check if memorial has AI-generated cenotaph image
     // Show existing design even if regeneration is in progress (cenotaph_image_url persists until new one is selected)
-    const hasDesign = !!memorial.cenotaph_image_url
-    const isRegenerating = memorial.design_status === 'generating' || memorial.design_status === 'options_ready'
-    const needsDesign = !hasDesign && isOwner
+    const hasDesign = !!memorial.cenotaph_image_url;
+    const isRegenerating =
+      memorial.design_status === "generating" || memorial.design_status === "options_ready";
+    const needsDesign = !hasDesign && isOwner;
 
     return (
       <div className="relative">
@@ -828,7 +815,9 @@ function CenotaphAvatar({
             {/* Inner content */}
             <div
               className="relative w-full h-full rounded-sm overflow-hidden transition-all"
-              style={{ backgroundColor: hasDesign ? 'transparent' : (memorial.tombstone_color || '#1e293b') }}
+              style={{
+                backgroundColor: hasDesign ? "transparent" : memorial.tombstone_color || "#1e293b",
+              }}
             >
               {/* AI-generated cenotaph image */}
               {hasDesign && memorial.cenotaph_image_url && (
@@ -854,7 +843,7 @@ function CenotaphAvatar({
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                   <Landmark className="w-10 h-10 text-marble-300/80 mb-3" />
                   <p className="text-marble-200 font-serif text-sm italic line-clamp-3 px-2">
-                    {memorial.epitaph || 'In memoriam'}
+                    {memorial.epitaph || "In memoriam"}
                   </p>
                 </div>
               )}
@@ -909,7 +898,11 @@ function CenotaphAvatar({
         {needsDesign && (
           <div className="mt-3 text-center">
             <a href={`/cenotaph/create/${memorial.id}`}>
-              <Button variant="dark-secondary" size="sm" leftIcon={<Sparkles className="w-4 h-4" />}>
+              <Button
+                variant="dark-secondary"
+                size="sm"
+                leftIcon={<Sparkles className="w-4 h-4" />}
+              >
                 Design Cenotaph
               </Button>
             </a>
@@ -920,14 +913,20 @@ function CenotaphAvatar({
         {hasDesign && isOwner && (
           <div className="mt-3 text-center">
             <a href={`/cenotaph/create/${memorial.id}`}>
-              <Button variant="dark-ghost" size="sm" leftIcon={isRegenerating ? <Sparkles className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}>
-                {isRegenerating ? 'Continue Designing' : 'Change Design'}
+              <Button
+                variant="dark-ghost"
+                size="sm"
+                leftIcon={
+                  isRegenerating ? <Sparkles className="w-4 h-4" /> : <Pencil className="w-4 h-4" />
+                }
+              >
+                {isRegenerating ? "Continue Designing" : "Change Design"}
               </Button>
             </a>
           </div>
         )}
       </div>
-    )
+    );
   }
 
   // No cenotaph - show invitation with Roman frame style
@@ -943,9 +942,7 @@ function CenotaphAvatar({
         <div className="w-14 h-14 rounded-full bg-slate-700/50 flex items-center justify-center mb-3 border border-slate-600">
           <Landmark className="w-7 h-7 text-slate-500" />
         </div>
-        <h3 className="font-display text-base text-marble-300 mb-2">
-          No Cenotaph Yet
-        </h3>
+        <h3 className="font-display text-base text-marble-300 mb-2">No Cenotaph Yet</h3>
         <p className="text-slate-500 text-sm mb-4 px-2">
           Create a memorial to preserve this legacy
         </p>
@@ -958,7 +955,7 @@ function CenotaphAvatar({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Story Card Component
@@ -967,12 +964,12 @@ function StoryCard({
   isOwn,
   authorName,
 }: {
-  story: StoryData
-  isOwn: boolean
-  authorName: string
+  story: StoryData;
+  isOwn: boolean;
+  authorName: string;
 }) {
-  const progress = Math.round((story.completed_modules.length / MODULES.length) * 100)
-  const isCoined = story.status === 'coined'
+  const progress = Math.round((story.completed_modules.length / MODULES.length) * 100);
+  const isCoined = story.status === "coined";
 
   return (
     <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50">
@@ -1008,13 +1005,13 @@ function StoryCard({
         {isOwn && (
           <a href={`/interview/${story.id}`}>
             <Button variant="dark-ghost" size="sm" rightIcon={<ChevronRight className="w-4 h-4" />}>
-              {isCoined ? 'View' : 'Continue'}
+              {isCoined ? "View" : "Continue"}
             </Button>
           </a>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Verification Request Item Component
@@ -1024,14 +1021,14 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
     confirmed: <CheckCircle2 className="w-4 h-4 text-green-400" />,
     declined: <XCircle className="w-4 h-4 text-red-400" />,
     expired: <Clock className="w-4 h-4 text-slate-500" />,
-  }
+  };
 
   const statusLabels = {
-    pending: 'Pending',
-    confirmed: 'Confirmed',
-    declined: 'Declined',
-    expired: 'Expired',
-  }
+    pending: "Pending",
+    confirmed: "Confirmed",
+    declined: "Declined",
+    expired: "Expired",
+  };
 
   return (
     <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
@@ -1046,33 +1043,38 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
         {statusIcons[request.status]}
-        <span className={`${
-          request.status === 'confirmed' ? 'text-green-400' :
-          request.status === 'declined' ? 'text-red-400' :
-          request.status === 'pending' ? 'text-gold-400' :
-          'text-slate-500'
-        }`}>
+        <span
+          className={`${
+            request.status === "confirmed"
+              ? "text-green-400"
+              : request.status === "declined"
+                ? "text-red-400"
+                : request.status === "pending"
+                  ? "text-gold-400"
+                  : "text-slate-500"
+          }`}
+        >
           {statusLabels[request.status]}
         </span>
       </div>
     </div>
-  )
+  );
 }
 
 // Role labels for email preview
 const ROLE_LABELS_FOR_EMAIL: Record<string, string> = {
-  founder: 'the Founder',
-  co_founder: 'a Co-Founder',
-  cofounder: 'a Co-Founder',
-  executive: 'an Executive',
-  ceo_non_founder: 'the CEO',
-  employee: 'a team member',
-  customer: 'a customer',
-  supplier: 'a supplier',
-  partner: 'a partner',
-  investor: 'an investor',
-  other: 'a team member',
-}
+  founder: "the Founder",
+  co_founder: "a Co-Founder",
+  cofounder: "a Co-Founder",
+  executive: "an Executive",
+  ceo_non_founder: "the CEO",
+  employee: "a team member",
+  customer: "a customer",
+  supplier: "a supplier",
+  partner: "a partner",
+  investor: "an investor",
+  other: "a team member",
+};
 
 // Verification Form Modal Component
 function VerificationFormModal({
@@ -1084,100 +1086,104 @@ function VerificationFormModal({
   onClose,
   onSuccess,
 }: {
-  organizationId: string
-  organizationName: string
-  confirmedCount: number
-  requesterName: string
-  requesterRole: string | null
-  onClose: () => void
-  onSuccess: () => void
+  organizationId: string;
+  organizationName: string;
+  confirmedCount: number;
+  requesterName: string;
+  requesterRole: string | null;
+  onClose: () => void;
+  onSuccess: () => void;
 }) {
-  const neededCount = Math.max(1, 3 - confirmedCount)
+  const neededCount = Math.max(1, 3 - confirmedCount);
 
   // Format role for display
-  const roleLabel = requesterRole ? ROLE_LABELS_FOR_EMAIL[requesterRole] || 'a team member' : 'a team member'
+  const roleLabel = requesterRole
+    ? ROLE_LABELS_FOR_EMAIL[requesterRole] || "a team member"
+    : "a team member";
 
   // Initialize with the required number of contact fields
-  const [contacts, setContacts] = useState<Array<{
-    email: string
-    name: string
-    relationship: VerificationRelationship
-  }>>(() =>
+  const [contacts, setContacts] = useState<
+    Array<{
+      email: string;
+      name: string;
+      relationship: VerificationRelationship;
+    }>
+  >(() =>
     Array.from({ length: neededCount }, () => ({
-      email: '',
-      name: '',
-      relationship: 'colleague' as VerificationRelationship,
+      email: "",
+      name: "",
+      relationship: "colleague" as VerificationRelationship,
     }))
-  )
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const addContact = () => {
     if (contacts.length < 10) {
-      setContacts([...contacts, { email: '', name: '', relationship: 'colleague' }])
+      setContacts([...contacts, { email: "", name: "", relationship: "colleague" }]);
     }
-  }
+  };
 
   const removeContact = (index: number) => {
     // Don't allow removing below the required minimum
     if (contacts.length > neededCount) {
-      setContacts(contacts.filter((_, i) => i !== index))
+      setContacts(contacts.filter((_, i) => i !== index));
     }
-  }
+  };
 
   const updateContact = (index: number, field: string, value: string) => {
-    const newContacts = [...contacts]
-    newContacts[index] = { ...newContacts[index], [field]: value }
-    setContacts(newContacts)
-  }
+    const newContacts = [...contacts];
+    newContacts[index] = { ...newContacts[index], [field]: value };
+    setContacts(newContacts);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     // Validate
-    const validContacts = contacts.filter(c => c.email.trim())
+    const validContacts = contacts.filter((c) => c.email.trim());
     if (validContacts.length === 0) {
-      setError('Please add at least one contact')
-      return
+      setError("Please add at least one contact");
+      return;
     }
 
     // Check email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     for (const contact of validContacts) {
       if (!emailRegex.test(contact.email)) {
-        setError(`Invalid email format: ${contact.email}`)
-        return
+        setError(`Invalid email format: ${contact.email}`);
+        return;
       }
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const res = await fetch('/api/verification/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/verification/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId,
-          contacts: validContacts.map(c => ({
+          contacts: validContacts.map((c) => ({
             email: c.email.trim(),
             name: c.name.trim() || undefined,
             relationship: c.relationship,
           })),
         }),
-      })
+      });
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to send verification requests')
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send verification requests");
       }
 
-      onSuccess()
+      onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send requests')
+      setError(err instanceof Error ? err.message : "Failed to send requests");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -1185,9 +1191,7 @@ function VerificationFormModal({
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-display text-marble-100">
-              Request Verification
-            </h2>
+            <h2 className="text-lg font-display text-marble-100">Request Verification</h2>
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-200 transition-colors"
@@ -1197,8 +1201,10 @@ function VerificationFormModal({
           </div>
 
           <p className="text-sm text-slate-400 mb-4">
-            Ask people who can confirm that <strong className="text-marble-200">{organizationName}</strong> existed
-            and your role in it. You need <strong className="text-gold-400">{neededCount} more</strong> confirmation{neededCount !== 1 ? 's' : ''}.
+            Ask people who can confirm that{" "}
+            <strong className="text-marble-200">{organizationName}</strong> existed and your role in
+            it. You need <strong className="text-gold-400">{neededCount} more</strong> confirmation
+            {neededCount !== 1 ? "s" : ""}.
           </p>
 
           {error && (
@@ -1219,7 +1225,8 @@ function VerificationFormModal({
                 {/* Tip */}
                 <div className="bg-gold-500/10 border border-gold-500/20 rounded-lg p-3 mb-4">
                   <p className="text-sm text-gold-300">
-                    <strong>Tip:</strong> The more people you ask, the faster verification will complete.
+                    <strong>Tip:</strong> The more people you ask, the faster verification will
+                    complete.
                   </p>
                 </div>
 
@@ -1231,7 +1238,7 @@ function VerificationFormModal({
                           type="email"
                           placeholder="Email *"
                           value={contact.email}
-                          onChange={(e) => updateContact(index, 'email', e.target.value)}
+                          onChange={(e) => updateContact(index, "email", e.target.value)}
                           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
                         />
                         <div className="flex gap-2">
@@ -1239,12 +1246,12 @@ function VerificationFormModal({
                             type="text"
                             placeholder="Name (optional)"
                             value={contact.name}
-                            onChange={(e) => updateContact(index, 'name', e.target.value)}
+                            onChange={(e) => updateContact(index, "name", e.target.value)}
                             className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
                           />
                           <select
                             value={contact.relationship}
-                            onChange={(e) => updateContact(index, 'relationship', e.target.value)}
+                            onChange={(e) => updateContact(index, "relationship", e.target.value)}
                             className="px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
                           >
                             <option value="colleague">Ex-Colleague</option>
@@ -1290,41 +1297,53 @@ function VerificationFormModal({
 
                 <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-sm">
                   <p className="text-slate-300 mb-3">
-                    <strong className="text-marble-200">Subject:</strong> {requesterName} asks for your help preserving {organizationName}&apos;s legacy
+                    <strong className="text-marble-200">Subject:</strong> {requesterName} asks for
+                    your help preserving {organizationName}&apos;s legacy
                   </p>
                   <div className="text-slate-400 space-y-2.5">
-                    <p>Hi <span className="text-marble-200">[Recipient Name]</span>,</p>
-
                     <p>
-                      <strong className="text-marble-200">{requesterName}</strong>, who was{' '}
-                      <strong className="text-gold-400">{roleLabel}</strong> of{' '}
-                      <strong className="text-marble-200">{organizationName}</strong>, is documenting the organization&apos;s
-                      story on SOIL — a platform dedicated to preserving the legacies of organizations that have closed.
+                      Hi <span className="text-marble-200">[Recipient Name]</span>,
                     </p>
 
                     <p>
-                      Every year, millions of companies close their doors. Their stories, lessons, and the people
-                      who built them risk being forgotten. SOIL exists to change that — creating digital cenotaphs
-                      that honor these journeys and help future founders learn from the past.
+                      <strong className="text-marble-200">{requesterName}</strong>, who was{" "}
+                      <strong className="text-gold-400">{roleLabel}</strong> of{" "}
+                      <strong className="text-marble-200">{organizationName}</strong>, is
+                      documenting the organization&apos;s story on SOIL — a platform dedicated to
+                      preserving the legacies of organizations that have closed.
                     </p>
 
                     <p>
-                      <strong className="text-marble-200">{requesterName}</strong> listed you as{' '}
-                      <strong className="text-gold-400">an {contacts[0] ? RELATIONSHIP_LABELS[contacts[0].relationship].toLowerCase() : 'contact'}</strong> who
-                      can confirm that {organizationName} existed and their role in it. Your verification helps ensure
-                      authenticity and honors the real story.
+                      Every year, millions of companies close their doors. Their stories, lessons,
+                      and the people who built them risk being forgotten. SOIL exists to change that
+                      — creating digital cenotaphs that honor these journeys and help future
+                      founders learn from the past.
+                    </p>
+
+                    <p>
+                      <strong className="text-marble-200">{requesterName}</strong> listed you as{" "}
+                      <strong className="text-gold-400">
+                        an{" "}
+                        {contacts[0]
+                          ? RELATIONSHIP_LABELS[contacts[0].relationship].toLowerCase()
+                          : "contact"}
+                      </strong>{" "}
+                      who can confirm that {organizationName} existed and their role in it. Your
+                      verification helps ensure authenticity and honors the real story.
                     </p>
 
                     <div className="bg-gold-500/10 border border-gold-500/20 rounded p-2.5 my-2">
                       <p className="text-gold-300 text-xs">
-                        <strong>It takes just 30 seconds:</strong> Click the button below, review the details, and confirm.
+                        <strong>It takes just 30 seconds:</strong> Click the button below, review
+                        the details, and confirm.
                       </p>
                     </div>
 
                     <p className="text-gold-400 font-medium">[Verify Now Button]</p>
 
                     <p className="text-slate-500 text-xs pt-2 border-t border-slate-700">
-                      If you don&apos;t recognize {requesterName} or {organizationName}, simply ignore this email.
+                      If you don&apos;t recognize {requesterName} or {organizationName}, simply
+                      ignore this email.
                     </p>
                   </div>
                 </div>
@@ -1347,16 +1366,22 @@ function VerificationFormModal({
                 variant="dark-primary"
                 size="sm"
                 disabled={isSubmitting}
-                leftIcon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                leftIcon={
+                  isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )
+                }
               >
-                {isSubmitting ? 'Sending...' : 'Send Requests'}
+                {isSubmitting ? "Sending..." : "Send Requests"}
               </Button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Document Item Component
@@ -1364,50 +1389,48 @@ function DocumentItem({
   document,
   onDelete,
 }: {
-  document: VerificationDocument
-  onDelete: () => void
+  document: VerificationDocument;
+  onDelete: () => void;
 }) {
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const statusIcons = {
     pending_review: <Clock className="w-4 h-4 text-gold-400" />,
     approved: <CheckCircle2 className="w-4 h-4 text-green-400" />,
     rejected: <XCircle className="w-4 h-4 text-red-400" />,
-  }
+  };
 
   const statusLabels = {
-    pending_review: 'Pending Review',
-    approved: 'Approved',
-    rejected: 'Rejected',
-  }
+    pending_review: "Pending Review",
+    approved: "Approved",
+    rejected: "Rejected",
+  };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this document?')) return
+    if (!confirm("Delete this document?")) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/verification/documents?id=${document.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (res.ok) {
-        onDelete()
+        onDelete();
       }
     } catch (err) {
-      console.error('Failed to delete document:', err)
+      console.error("Failed to delete document:", err);
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
       <div className="flex items-center gap-2 min-w-0">
         <File className="w-4 h-4 text-slate-500 flex-shrink-0" />
         <div className="min-w-0">
-          <span className="text-slate-300 truncate block">
-            {document.file_name}
-          </span>
+          <span className="text-slate-300 truncate block">{document.file_name}</span>
           <span className="text-slate-500 text-xs">
             {DOCUMENT_TYPE_LABELS[document.document_type]}
           </span>
@@ -1416,15 +1439,19 @@ function DocumentItem({
       <div className="flex items-center gap-2 flex-shrink-0 ml-2">
         <div className="flex items-center gap-1.5">
           {statusIcons[document.status]}
-          <span className={`${
-            document.status === 'approved' ? 'text-green-400' :
-            document.status === 'rejected' ? 'text-red-400' :
-            'text-gold-400'
-          }`}>
+          <span
+            className={`${
+              document.status === "approved"
+                ? "text-green-400"
+                : document.status === "rejected"
+                  ? "text-red-400"
+                  : "text-gold-400"
+            }`}
+          >
             {statusLabels[document.status]}
           </span>
         </div>
-        {document.status === 'pending_review' && (
+        {document.status === "pending_review" && (
           <button
             onClick={handleDelete}
             disabled={isDeleting}
@@ -1438,13 +1465,13 @@ function DocumentItem({
           </button>
         )}
       </div>
-      {document.status === 'rejected' && document.rejection_reason && (
+      {document.status === "rejected" && document.rejection_reason && (
         <div className="absolute left-0 right-0 -bottom-6 text-sm text-red-400 truncate">
           Reason: {document.rejection_reason}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // Document Upload Modal Component
@@ -1453,87 +1480,85 @@ function DocumentUploadModal({
   onClose,
   onSuccess,
 }: {
-  organizationId: string
-  onClose: () => void
-  onSuccess: () => void
+  organizationId: string;
+  onClose: () => void;
+  onSuccess: () => void;
 }) {
-  const [file, setFile] = useState<File | null>(null)
-  const [documentType, setDocumentType] = useState<DocumentType>('registration')
-  const [description, setDescription] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null);
+  const [documentType, setDocumentType] = useState<DocumentType>("registration");
+  const [description, setDescription] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useCallback((node: HTMLInputElement | null) => {
     if (node) {
-      node.value = ''
+      node.value = "";
     }
-  }, [])
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
     // Validate file size (10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB')
-      return
+      setError("File size must be less than 10MB");
+      return;
     }
 
     // Validate file type
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(selectedFile.type)) {
-      setError('File must be PDF, JPEG, PNG, or WebP')
-      return
+      setError("File must be PDF, JPEG, PNG, or WebP");
+      return;
     }
 
-    setFile(selectedFile)
-    setError(null)
-  }
+    setFile(selectedFile);
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     if (!file) {
-      setError('Please select a file')
-      return
+      setError("Please select a file");
+      return;
     }
 
-    setIsUploading(true)
+    setIsUploading(true);
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('organizationId', organizationId)
-      formData.append('documentType', documentType)
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("organizationId", organizationId);
+      formData.append("documentType", documentType);
       if (description.trim()) {
-        formData.append('description', description.trim())
+        formData.append("description", description.trim());
       }
 
-      const res = await fetch('/api/verification/documents', {
-        method: 'POST',
+      const res = await fetch("/api/verification/documents", {
+        method: "POST",
         body: formData,
-      })
+      });
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to upload document')
+        const data = await res.json();
+        throw new Error(data.error || "Failed to upload document");
       }
 
-      onSuccess()
+      onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload document')
+      setError(err instanceof Error ? err.message : "Failed to upload document");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-display text-marble-100">
-              Upload Document
-            </h2>
+            <h2 className="text-lg font-display text-marble-100">Upload Document</h2>
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-200 transition-colors"
@@ -1543,8 +1568,8 @@ function DocumentUploadModal({
           </div>
 
           <p className="text-sm text-slate-400 mb-4">
-            Upload a document that proves your ownership of this organization.
-            Accepted formats: PDF, JPEG, PNG, WebP (max 10MB).
+            Upload a document that proves your ownership of this organization. Accepted formats:
+            PDF, JPEG, PNG, WebP (max 10MB).
           </p>
 
           {error && (
@@ -1563,8 +1588,8 @@ function DocumentUploadModal({
               <div
                 className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                   file
-                    ? 'border-gold-500/50 bg-gold-500/5'
-                    : 'border-slate-700 hover:border-slate-600'
+                    ? "border-gold-500/50 bg-gold-500/5"
+                    : "border-slate-700 hover:border-slate-600"
                 }`}
               >
                 {file ? (
@@ -1582,9 +1607,7 @@ function DocumentUploadModal({
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400 mb-2">
-                      Click to select or drag and drop
-                    </p>
+                    <p className="text-sm text-slate-400 mb-2">Click to select or drag and drop</p>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -1644,14 +1667,20 @@ function DocumentUploadModal({
                 variant="dark-primary"
                 size="sm"
                 disabled={isUploading || !file}
-                leftIcon={isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                leftIcon={
+                  isUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )
+                }
               >
-                {isUploading ? 'Uploading...' : 'Upload'}
+                {isUploading ? "Uploading..." : "Upload"}
               </Button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  )
+  );
 }

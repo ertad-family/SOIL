@@ -1,33 +1,33 @@
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
 
 const methodologySteps = [
   {
-    title: 'Data Collection',
+    title: "Data Collection",
     description:
-      'Our Interview Framework captures comprehensive organizational data through 6 structured modules — from functional mapping to founder narrative.',
+      "Our Interview Framework captures comprehensive organizational data through 6 structured modules — from functional mapping to founder narrative.",
   },
   {
-    title: 'Anonymization',
+    title: "Anonymization",
     description:
-      'Privacy by default. All sensitive information is protected, ensuring safe participation for every contributor.',
+      "Privacy by default. All sensitive information is protected, ensuring safe participation for every contributor.",
   },
   {
-    title: 'Pattern Emergence',
+    title: "Pattern Emergence",
     description:
-      'Framework-agnostic analysis lets the data speak. We avoid imposing theories, allowing patterns to emerge naturally.',
+      "Framework-agnostic analysis lets the data speak. We avoid imposing theories, allowing patterns to emerge naturally.",
   },
   {
-    title: 'Open Research',
+    title: "Open Research",
     description:
-      'Anonymized datasets available to researchers worldwide, enabling collaborative advancement of organizational science.',
+      "Anonymized datasets available to researchers worldwide, enabling collaborative advancement of organizational science.",
   },
   {
-    title: 'Machine Learning',
+    title: "Machine Learning",
     description:
-      'Building specialized AI models trained on organizational data for future diagnostic and analytical tools.',
+      "Building specialized AI models trained on organizational data for future diagnostic and analytical tools.",
   },
-]
+];
 
 export function MethodologySection() {
   return (
@@ -70,7 +70,7 @@ export function MethodologySection() {
               <span className="text-slate-400 text-lg pb-2 md:pb-3 lg:pb-4">
                 organization autopsies globally
                 <br />
-                 is our minimal goal.
+                is our minimal goal.
               </span>
             </div>
           </div>
@@ -119,5 +119,5 @@ export function MethodologySection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

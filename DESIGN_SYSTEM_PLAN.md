@@ -10,10 +10,13 @@
 ## 1. Design Philosophy
 
 ### Core Concept
+
 The SOIL design system draws inspiration from ancient Roman aesthetics - marble textures, classical typography, gold accents - while maintaining a contemporary, functional interface suitable for a modern research platform.
 
 ### Single Theme Strategy: Dark Mode
+
 We've adopted a unified dark theme that balances:
+
 - Scientific professionalism (slate backgrounds)
 - Roman heritage warmth (gold accents, marble typography)
 - Memorial dignity (cenotaph-specific components)
@@ -44,6 +47,7 @@ Marble (Text & Highlights)
 ```
 
 **Text Color Usage:**
+
 - Headings: `text-marble-100`
 - Body text: `text-slate-400`
 - Muted/caption: `text-slate-500`
@@ -60,6 +64,7 @@ Gold (Primary Accent)
 ```
 
 **Gold Usage:**
+
 - Buttons: gold gradient backgrounds
 - Accents: `gold-400` for icons, borders
 - Borders: `gold-500` for emphasis
@@ -80,12 +85,12 @@ Info:      #5B7C99    // Roman blue (muted)
 
 ### 3.1 Font Stack
 
-| Role | Font | Usage |
-|------|------|-------|
-| **Display/Logo** | Cinzel | Logo, Roman numerals, decorative text |
-| **Headings** | Sora | h1-h6, section titles |
-| **Body/UI** | Manrope | Body text, buttons, inputs, labels |
-| **Monospace** | JetBrains Mono | Code, data, technical content |
+| Role             | Font           | Usage                                 |
+| ---------------- | -------------- | ------------------------------------- |
+| **Display/Logo** | Cinzel         | Logo, Roman numerals, decorative text |
+| **Headings**     | Sora           | h1-h6, section titles                 |
+| **Body/UI**      | Manrope        | Body text, buttons, inputs, labels    |
+| **Monospace**    | JetBrains Mono | Code, data, technical content         |
 
 ### 3.2 Typography Classes
 
@@ -115,9 +120,10 @@ Caption:     text-xs text-slate-500
 ### 3.4 Special Text Effects
 
 **Gold Gradient Text:**
+
 ```css
 .text-gradient-gold {
-  background: linear-gradient(135deg, #E2B055 0%, #C9943D 50%, #A67A2E 100%);
+  background: linear-gradient(135deg, #e2b055 0%, #c9943d 50%, #a67a2e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -129,30 +135,31 @@ Caption:     text-xs text-slate-500
 
 ### 4.1 Buttons
 
-| Variant | Description | Use Case |
-|---------|-------------|----------|
-| `dark-primary` | Light marble gradient, dark text | Primary CTA |
-| `dark-secondary` | Transparent, marble border | Secondary actions |
-| `dark-ghost` | Transparent, underline on hover | Tertiary/links |
-| `dark-outline` | Transparent, solid border | Alternative secondary |
-| `marble` | Dark stone gradient, light text | Accent contrast |
-| `cenotaph` | Gold gradient with glow | Memorial CTAs |
+| Variant          | Description                      | Use Case              |
+| ---------------- | -------------------------------- | --------------------- |
+| `dark-primary`   | Light marble gradient, dark text | Primary CTA           |
+| `dark-secondary` | Transparent, marble border       | Secondary actions     |
+| `dark-ghost`     | Transparent, underline on hover  | Tertiary/links        |
+| `dark-outline`   | Transparent, solid border        | Alternative secondary |
+| `marble`         | Dark stone gradient, light text  | Accent contrast       |
+| `cenotaph`       | Gold gradient with glow          | Memorial CTAs         |
 
 **Button Sizes:** sm, md, lg, xl, icon, icon-sm, icon-lg
 
 ### 4.2 Cards
 
-| Variant | Background | Border | Use Case |
-|---------|------------|--------|----------|
-| `dark` | slate-800 | slate-700 | Default cards |
-| `dark-elevated` | slate-800 | slate-700 + shadow | Prominent cards |
-| `dark-cenotaph` | slate-800 | gold-500 left accent | Memorial cards |
+| Variant         | Background | Border               | Use Case        |
+| --------------- | ---------- | -------------------- | --------------- |
+| `dark`          | slate-800  | slate-700            | Default cards   |
+| `dark-elevated` | slate-800  | slate-700 + shadow   | Prominent cards |
+| `dark-cenotaph` | slate-800  | gold-500 left accent | Memorial cards  |
 
 **Card Props:** `interactive` adds hover effects
 
 ### 4.3 Form Inputs
 
 All inputs use `variant="dark"`:
+
 - Background: `slate-800`
 - Border: `slate-700`
 - Focus: `gold-500` ring
@@ -163,15 +170,15 @@ All inputs use `variant="dark"`:
 
 ### 4.4 Badges
 
-| Variant | Use Case |
-|---------|----------|
-| `dark-marble` | Default status |
-| `dark-outline` | Outlined style |
-| `dark-ghost` | Subtle indicator |
-| `dark-success` | Positive status |
-| `dark-warning` | Warning status |
-| `dark-error` | Error status |
-| `dark-verified` | Verified badge |
+| Variant         | Use Case         |
+| --------------- | ---------------- |
+| `dark-marble`   | Default status   |
+| `dark-outline`  | Outlined style   |
+| `dark-ghost`    | Subtle indicator |
+| `dark-success`  | Positive status  |
+| `dark-warning`  | Warning status   |
+| `dark-error`    | Error status     |
+| `dark-verified` | Verified badge   |
 
 **Badge Props:** `dot` adds status indicator dot
 
@@ -190,14 +197,17 @@ All inputs use `variant="dark"`:
 ### 5.1 Section Label
 
 Bracketed labels for section introductions:
+
 ```tsx
 <SectionLabel>how it works</SectionLabel>
 ```
+
 Renders as: `[ how it works ]`
 
 ### 5.2 Roman Numerals
 
 Decorative background numerals for wizard steps:
+
 ```tsx
 <RomanNumeral value={3} size="lg" variant="dark" />
 <PositionedRomanNumeral value={5} position="top-right" />
@@ -206,6 +216,7 @@ Decorative background numerals for wizard steps:
 ### 5.3 Roman Divider
 
 Full-width decorative divider with symbol:
+
 ```html
 <div class="divider-roman">
   <span class="text-gold-500 font-serif">MMXXV</span>
@@ -215,6 +226,7 @@ Full-width decorative divider with symbol:
 ### 5.4 Icon Containers
 
 Circular gold-tinted icon backgrounds:
+
 ```tsx
 <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400">
   <Icon className="w-8 h-8" />
@@ -224,15 +236,15 @@ Circular gold-tinted icon backgrounds:
 ### 5.5 Gold Accent Border
 
 Left border accent for quotes/highlights:
+
 ```html
-<div class="gold-accent-left p-4 bg-slate-800">
-  Content with gold accent
-</div>
+<div class="gold-accent-left p-4 bg-slate-800">Content with gold accent</div>
 ```
 
 ### 5.6 Gradient Transitions
 
 Smooth transitions between sections:
+
 ```tsx
 // Page bg → Section bg
 <div className="h-12 bg-gradient-to-b from-slate-900 to-marble-950" />
@@ -244,6 +256,7 @@ Smooth transitions between sections:
 ### 5.7 Gold Glow Effects
 
 Box shadows for gold elements:
+
 ```css
 shadow-glow-gold-sm: 0 0 10px rgba(201, 148, 61, 0.20)
 shadow-glow-gold:    0 0 20px rgba(201, 148, 61, 0.25)
@@ -310,6 +323,7 @@ animate-pulse-subtle  // Subtle opacity pulse
 ### 7.3 Stagger Classes
 
 For cascading animations:
+
 ```css
 .stagger-1  // delay: 100ms
 .stagger-2  // delay: 200ms
@@ -340,22 +354,26 @@ src/
 ## 9. Usage Examples
 
 ### Hero Section
+
 ```tsx
 <section className="py-20 md:py-32">
   <h1 className="font-display text-4xl md:text-6xl font-semibold text-marble-100">
     <span className="text-gradient-gold">Golden Headline</span>
   </h1>
-  <p className="text-slate-400 leading-relaxed">
-    Description text here
-  </p>
+  <p className="text-slate-400 leading-relaxed">Description text here</p>
   <div className="flex gap-4">
-    <Button variant="dark-primary" size="lg">Primary CTA</Button>
-    <Button variant="dark-secondary" size="lg">Secondary CTA</Button>
+    <Button variant="dark-primary" size="lg">
+      Primary CTA
+    </Button>
+    <Button variant="dark-secondary" size="lg">
+      Secondary CTA
+    </Button>
   </div>
 </section>
 ```
 
 ### Feature Card Grid
+
 ```tsx
 <div className="grid md:grid-cols-3 gap-6">
   <Card variant="dark-elevated">
@@ -373,6 +391,7 @@ src/
 ```
 
 ### Form Section
+
 ```tsx
 <Card variant="dark">
   <CardHeader>
@@ -383,7 +402,9 @@ src/
       <Label variant="dark">Email</Label>
       <Input placeholder="you@example.com" variant="dark" />
     </div>
-    <Button variant="dark-primary" className="w-full">Submit</Button>
+    <Button variant="dark-primary" className="w-full">
+      Submit
+    </Button>
   </CardContent>
 </Card>
 ```

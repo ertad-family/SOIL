@@ -1,34 +1,34 @@
-import { BookOpen, Globe, Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { SectionLabel } from '@/components/ui/section-label'
+import { BookOpen, Globe, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SectionLabel } from "@/components/ui/section-label";
 
 const audiences = [
   {
     icon: <Sparkles className="w-8 h-8" />,
-    title: 'For Founders',
+    title: "For Founders",
     description:
-      'Coin your story and transform your experience into knowledge that helps others. Become a volunteer, mentor, or community keeper.',
-    cta: 'Coin Your Story',
-    buttonVariant: 'dark-primary' as const,
+      "Coin your story and transform your experience into knowledge that helps others. Become a volunteer, mentor, or community keeper.",
+    cta: "Coin Your Story",
+    buttonVariant: "dark-primary" as const,
   },
   {
     icon: <Globe className="w-8 h-8" />,
-    title: 'For Business Community',
+    title: "For Business Community",
     description:
-      'Support groundbreaking research, join our advisory board, or sponsor initiatives that advance organizational science and help future founders.',
-    cta: 'Support Research',
-    buttonVariant: 'marble' as const,
+      "Support groundbreaking research, join our advisory board, or sponsor initiatives that advance organizational science and help future founders.",
+    cta: "Support Research",
+    buttonVariant: "marble" as const,
   },
   {
     icon: <BookOpen className="w-8 h-8" />,
-    title: 'For Researchers',
+    title: "For Researchers",
     description:
-      'Access anonymized datasets, collaborate on publications, and join our research network. We welcome partnerships with academic institutions worldwide.',
-    cta: 'Partner With Us',
-    buttonVariant: 'dark-primary' as const,
+      "Access anonymized datasets, collaborate on publications, and join our research network. We welcome partnerships with academic institutions worldwide.",
+    cta: "Partner With Us",
+    buttonVariant: "dark-primary" as const,
   },
-]
+];
 
 export function GetInvolvedSection() {
   return (
@@ -61,5 +61,5 @@ export function GetInvolvedSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

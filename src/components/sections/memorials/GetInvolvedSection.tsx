@@ -1,39 +1,39 @@
-'use client'
+"use client";
 
-import { Shield, Users, MapPin } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { SectionLabel } from '@/components/ui/section-label'
+import { Shield, Users, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SectionLabel } from "@/components/ui/section-label";
 
 const audiences = [
   {
     icon: <Shield className="w-8 h-8" />,
-    title: 'For Future Keepers',
+    title: "For Future Keepers",
     description:
-      'Become a guardian of your regional cenotaphery. Curate stories, verify accounts, and build a local community that preserves organizational wisdom.',
-    cta: 'Apply to Be a Keeper',
-    href: '/community#keepers',
-    buttonVariant: 'dark-primary' as const,
+      "Become a guardian of your regional cenotaphery. Curate stories, verify accounts, and build a local community that preserves organizational wisdom.",
+    cta: "Apply to Be a Keeper",
+    href: "/community#keepers",
+    buttonVariant: "dark-primary" as const,
   },
   {
     icon: <Users className="w-8 h-8" />,
-    title: 'For Community Builders',
+    title: "For Community Builders",
     description:
-      'Organize local events, host Day of the Dead Venture celebrations, and connect founders in your region who can learn from each other.',
-    cta: 'Join the Community',
-    href: '/community',
-    buttonVariant: 'marble' as const,
+      "Organize local events, host Day of the Dead Venture celebrations, and connect founders in your region who can learn from each other.",
+    cta: "Join the Community",
+    href: "/community",
+    buttonVariant: "marble" as const,
   },
   {
     icon: <MapPin className="w-8 h-8" />,
-    title: 'For Regional Leaders',
+    title: "For Regional Leaders",
     description:
-      'Help us expand to new regions. Pioneer a cenotaphery where none exists yet and become the founding Keeper of your local chapter.',
-    cta: 'Start a Chapter',
-    href: '/community#keepers',
-    buttonVariant: 'dark-primary' as const,
+      "Help us expand to new regions. Pioneer a cenotaphery where none exists yet and become the founding Keeper of your local chapter.",
+    cta: "Start a Chapter",
+    href: "/community#keepers",
+    buttonVariant: "dark-primary" as const,
   },
-]
+];
 
 export function GetInvolvedSection() {
   return (
@@ -68,5 +68,5 @@ export function GetInvolvedSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

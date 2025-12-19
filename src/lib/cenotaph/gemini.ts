@@ -9,30 +9,30 @@
  * Cost: ~$0.04 per image (Imagen 4), ~$0.001 per concept generation (Gemini Flash)
  */
 
-import { GoogleGenAI } from '@google/genai'
-import type { DesignOption, DesignConcept } from '@/types/cenotaph'
+import { GoogleGenAI } from "@google/genai";
+import type { DesignOption, DesignConcept } from "@/types/cenotaph";
 
 // Initialize Google GenAI client with Vertex AI
 // Using Vertex AI requires project ID and location
 const ai = new GoogleGenAI({
   vertexai: true,
-  project: process.env.GOOGLE_CLOUD_PROJECT_ID || '',
-  location: process.env.VERTEX_AI_LOCATION || 'us-central1',
-})
+  project: process.env.GOOGLE_CLOUD_PROJECT_ID || "",
+  location: process.env.VERTEX_AI_LOCATION || "us-central1",
+});
 
 // Model configuration
-const TEXT_MODEL = 'gemini-2.0-flash-001'  // Fast text generation for concepts
-const IMAGE_MODEL = 'imagen-4.0-generate-001'  // High-quality image generation
+const TEXT_MODEL = "gemini-2.0-flash-001"; // Fast text generation for concepts
+const IMAGE_MODEL = "imagen-4.0-generate-001"; // High-quality image generation
 
 interface GeneratedImage {
-  base64Data: string
-  mimeType: string
+  base64Data: string;
+  mimeType: string;
 }
 
 interface UsedConcept {
-  concept_title: string
-  concept_description: string
-  style_keywords: string[]
+  concept_title: string;
+  concept_description: string;
+  style_keywords: string[];
 }
 
 /**
@@ -44,12 +44,20 @@ export async function generateCreativeConcepts(
   usedConcepts: UsedConcept[]
 ): Promise<DesignConcept[]> {
   try {
-    console.log(`Generating 9 creative concepts (avoiding ${usedConcepts.length} used concepts)...`)
+    console.log(
+      `Generating 9 creative concepts (avoiding ${usedConcepts.length} used concepts)...`
+    );
 
     // Build the list of used concepts to avoid
-    const usedConceptsList = usedConcepts.length > 0
-      ? usedConcepts.map((c, i) => `${i + 1}. "${c.concept_title}": ${c.concept_description.substring(0, 200)}...`).join('\n')
-      : 'None yet - you have complete creative freedom!'
+    const usedConceptsList =
+      usedConcepts.length > 0
+        ? usedConcepts
+            .map(
+              (c, i) =>
+                `${i + 1}. "${c.concept_title}": ${c.concept_description.substring(0, 200)}...`
+            )
+            .join("\n")
+        : "None yet - you have complete creative freedom!";
 
     const prompt = `You are a visionary artist and world-class sculptor. Generate 9 COMPLETELY UNIQUE and BREATHTAKING creative concepts for a CENOTAPH - an outdoor memorial monument.
 
@@ -107,51 +115,53 @@ Example format:
     "description": "A 3-meter tall weathered bronze sculpture of stylized flames rising upward, mounted on a rectangular black granite plinth. The bronze has a green-brown patina from outdoor exposure. The abstract flame forms twist elegantly, symbolizing rebirth and transformation...",
     "styleKeywords": ["bronze", "symbolic", "dynamic", "monumental"]
   }
-]`
+]`;
 
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
       contents: prompt,
       config: {
-        temperature: 1.2,  // High creativity
+        temperature: 1.2, // High creativity
         topP: 0.95,
         maxOutputTokens: 4000,
-      }
-    })
+      },
+    });
 
     // Parse the response
-    const text = response.text?.trim() || ''
+    const text = response.text?.trim() || "";
 
     // Try to extract JSON from the response
-    let concepts: Array<{ title: string; description: string; styleKeywords: string[] }> = []
+    let concepts: Array<{ title: string; description: string; styleKeywords: string[] }> = [];
 
     try {
       // Remove potential markdown code blocks
-      const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-      concepts = JSON.parse(jsonStr)
+      const jsonStr = text
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+      concepts = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error('Failed to parse concept response:', parseError)
-      console.error('Raw response:', text.substring(0, 500))
-      throw new Error('Failed to parse creative concepts from AI response')
+      console.error("Failed to parse concept response:", parseError);
+      console.error("Raw response:", text.substring(0, 500));
+      throw new Error("Failed to parse creative concepts from AI response");
     }
 
     if (!Array.isArray(concepts) || concepts.length === 0) {
-      throw new Error('No concepts generated')
+      throw new Error("No concepts generated");
     }
 
     // Transform to DesignConcept format
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     return concepts.slice(0, 9).map((c, i) => ({
       id: `concept_${Date.now()}_${i}`,
       title: c.title || `Concept ${i + 1}`,
-      description: c.description || '',
+      description: c.description || "",
       styleKeywords: Array.isArray(c.styleKeywords) ? c.styleKeywords : [],
-      createdAt: now
-    }))
-
+      createdAt: now,
+    }));
   } catch (error) {
-    console.error('Concept generation failed:', error)
-    throw error
+    console.error("Concept generation failed:", error);
+    throw error;
   }
 }
 
@@ -160,35 +170,35 @@ Example format:
  */
 async function generateSingleImage(prompt: string): Promise<GeneratedImage | null> {
   try {
-    console.log('Calling Imagen 4 with prompt:', prompt.substring(0, 100) + '...')
+    console.log("Calling Imagen 4 with prompt:", prompt.substring(0, 100) + "...");
 
     const response = await ai.models.generateImages({
       model: IMAGE_MODEL,
       prompt: prompt,
       config: {
         numberOfImages: 1,
-        aspectRatio: '1:1', // Square format for cenotaph designs
+        aspectRatio: "1:1", // Square format for cenotaph designs
       },
-    })
+    });
 
     // Check if we got generated images
     if (response.generatedImages && response.generatedImages.length > 0) {
-      const image = response.generatedImages[0]
+      const image = response.generatedImages[0];
 
       // imageBytes is a base64-encoded string in the SDK
       if (image.image?.imageBytes) {
         return {
           base64Data: image.image.imageBytes,
-          mimeType: 'image/png'
-        }
+          mimeType: "image/png",
+        };
       }
     }
 
-    console.error('No image found in Imagen response:', JSON.stringify(response, null, 2))
-    return null
+    console.error("No image found in Imagen response:", JSON.stringify(response, null, 2));
+    return null;
   } catch (error) {
-    console.error('Imagen 4 image generation failed:', error)
-    throw error
+    console.error("Imagen 4 image generation failed:", error);
+    throw error;
   }
 }
 
@@ -219,7 +229,7 @@ BASE/PLINTH REQUIREMENT:
 - The monument MUST stand on a solid base or plinth (stone, concrete, or granite)
 - The monument must be a SINGLE, UNIFIED structure
 - NO floating elements, NO hands holding things, NO multi-part compositions
-`
+`;
 
 /**
  * Generate images from creative concepts
@@ -229,12 +239,14 @@ export async function generateImagesFromConcepts(
   concepts: DesignConcept[],
   memorialId: string
 ): Promise<DesignOption[]> {
-  const options: DesignOption[] = []
+  const options: DesignOption[] = [];
 
   for (let i = 0; i < concepts.length; i++) {
-    const concept = concepts[i]
+    const concept = concepts[i];
     try {
-      console.log(`Generating image for concept "${concept.title}" (${i + 1}/${concepts.length})...`)
+      console.log(
+        `Generating image for concept "${concept.title}" (${i + 1}/${concepts.length})...`
+      );
 
       // Build the full prompt with visual requirements
       const fullPrompt = `Create an outdoor memorial monument (cenotaph):
@@ -243,35 +255,35 @@ ${concept.description}
 
 ${VISUAL_REQUIREMENTS}
 
-Style: ${concept.styleKeywords.join(', ')}`
+Style: ${concept.styleKeywords.join(", ")}`;
 
-      const image = await generateSingleImage(fullPrompt)
+      const image = await generateSingleImage(fullPrompt);
 
       if (image) {
-        const designId = `design_${memorialId}_${Date.now()}_${i}`
+        const designId = `design_${memorialId}_${Date.now()}_${i}`;
 
         options.push({
           id: designId,
           url: `data:${image.mimeType};base64,${image.base64Data}`,
           prompt: concept.description.substring(0, 500),
           createdAt: new Date().toISOString(),
-          conceptId: concept.id
-        })
+          conceptId: concept.id,
+        });
 
-        console.log(`Successfully generated image for "${concept.title}"`)
+        console.log(`Successfully generated image for "${concept.title}"`);
       }
 
       // Add delay between requests to avoid rate limiting
       if (i < concepts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      console.error(`Failed to generate image for concept "${concept.title}":`, error)
+      console.error(`Failed to generate image for concept "${concept.title}":`, error);
       // Continue with other concepts even if one fails
     }
   }
 
-  return options
+  return options;
 }
 
 /**
@@ -282,47 +294,51 @@ export async function generateCenotaphDesigns(
   prompts: string[],
   memorialId: string
 ): Promise<DesignOption[]> {
-  const options: DesignOption[] = []
+  const options: DesignOption[] = [];
 
   for (let i = 0; i < prompts.length; i++) {
     try {
-      console.log(`Generating design option ${i + 1}/${prompts.length}...`)
+      console.log(`Generating design option ${i + 1}/${prompts.length}...`);
 
-      const image = await generateSingleImage(prompts[i])
+      const image = await generateSingleImage(prompts[i]);
 
       if (image) {
-        const designId = `design_${memorialId}_${i}_${Date.now()}`
+        const designId = `design_${memorialId}_${i}_${Date.now()}`;
 
         options.push({
           id: designId,
           url: `data:${image.mimeType};base64,${image.base64Data}`,
           prompt: prompts[i].substring(0, 500),
-          createdAt: new Date().toISOString()
-        })
+          createdAt: new Date().toISOString(),
+        });
 
-        console.log(`Successfully generated design option ${i + 1}`)
+        console.log(`Successfully generated design option ${i + 1}`);
       }
 
       if (i < prompts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      console.error(`Failed to generate option ${i + 1}:`, error)
+      console.error(`Failed to generate option ${i + 1}:`, error);
     }
   }
 
-  return options
+  return options;
 }
 
 // Supabase client type for storage operations
 type SupabaseClientType = {
   storage: {
     from: (bucket: string) => {
-      upload: (path: string, data: Buffer, options?: { contentType: string; upsert: boolean }) => Promise<{ data: unknown; error: Error | null }>
-      getPublicUrl: (path: string) => { data: { publicUrl: string } }
-    }
-  }
-}
+      upload: (
+        path: string,
+        data: Buffer,
+        options?: { contentType: string; upsert: boolean }
+      ) => Promise<{ data: unknown; error: Error | null }>;
+      getPublicUrl: (path: string) => { data: { publicUrl: string } };
+    };
+  };
+};
 
 /**
  * Upload base64 image to Supabase Storage and return public URL
@@ -336,34 +352,30 @@ export async function uploadDesignToStorage(
 ): Promise<string | null> {
   try {
     // Convert base64 to buffer
-    const buffer = Buffer.from(base64Data, 'base64')
+    const buffer = Buffer.from(base64Data, "base64");
 
     // Determine file extension
-    const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg'
-    const fileName = `${memorialId}/${designId}.${ext}`
+    const ext = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
+    const fileName = `${memorialId}/${designId}.${ext}`;
 
     // Upload to Supabase Storage
-    const { error } = await supabase.storage
-      .from('cenotaph-designs')
-      .upload(fileName, buffer, {
-        contentType: mimeType,
-        upsert: true
-      })
+    const { error } = await supabase.storage.from("cenotaph-designs").upload(fileName, buffer, {
+      contentType: mimeType,
+      upsert: true,
+    });
 
     if (error) {
-      console.error('Storage upload error:', error)
-      return null
+      console.error("Storage upload error:", error);
+      return null;
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('cenotaph-designs')
-      .getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage.from("cenotaph-designs").getPublicUrl(fileName);
 
-    return urlData.publicUrl
+    return urlData.publicUrl;
   } catch (error) {
-    console.error('Failed to upload design:', error)
-    return null
+    console.error("Failed to upload design:", error);
+    return null;
   }
 }
 
@@ -375,13 +387,13 @@ export async function processAndUploadDesigns(
   memorialId: string,
   designs: DesignOption[]
 ): Promise<DesignOption[]> {
-  const processedDesigns: DesignOption[] = []
+  const processedDesigns: DesignOption[] = [];
 
   for (const design of designs) {
     // Check if URL is base64 data
-    if (design.url.startsWith('data:')) {
-      const [header, base64Data] = design.url.split(',')
-      const mimeType = header.split(':')[1]?.split(';')[0] || 'image/png'
+    if (design.url.startsWith("data:")) {
+      const [header, base64Data] = design.url.split(",");
+      const mimeType = header.split(":")[1]?.split(";")[0] || "image/png";
 
       const publicUrl = await uploadDesignToStorage(
         supabase,
@@ -389,23 +401,23 @@ export async function processAndUploadDesigns(
         design.id,
         base64Data,
         mimeType
-      )
+      );
 
       if (publicUrl) {
         processedDesigns.push({
           ...design,
-          url: publicUrl
-        })
+          url: publicUrl,
+        });
       } else {
         // Keep base64 as fallback (not ideal for production)
-        processedDesigns.push(design)
+        processedDesigns.push(design);
       }
     } else {
-      processedDesigns.push(design)
+      processedDesigns.push(design);
     }
   }
 
-  return processedDesigns
+  return processedDesigns;
 }
 
 /**
@@ -413,6 +425,6 @@ export async function processAndUploadDesigns(
  * Based on Imagen 4 pricing: ~$0.04 per image
  */
 export function estimateCost(numberOfImages: number): number {
-  const costPerImage = 0.04
-  return numberOfImages * costPerImage
+  const costPerImage = 0.04;
+  return numberOfImages * costPerImage;
 }

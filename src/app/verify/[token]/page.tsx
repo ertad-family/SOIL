@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Shield,
   ShieldCheck,
@@ -15,125 +15,132 @@ import {
   AlertCircle,
   User,
   BadgeCheck,
-} from 'lucide-react'
+} from "lucide-react";
 
 // Claimed role labels
 const ROLE_LABELS: Record<string, string> = {
-  founder: 'Founder',
-  co_founder: 'Co-Founder',
-  cofounder: 'Co-Founder',
-  executive: 'Executive',
-  ceo_non_founder: 'CEO (Non-Founder)',
-  employee: 'Employee',
-  customer: 'Customer',
-  supplier: 'Supplier',
-  partner: 'Partner',
-  investor: 'Investor',
-  other: 'Team Member',
-}
+  founder: "Founder",
+  co_founder: "Co-Founder",
+  cofounder: "Co-Founder",
+  executive: "Executive",
+  ceo_non_founder: "CEO (Non-Founder)",
+  employee: "Employee",
+  customer: "Customer",
+  supplier: "Supplier",
+  partner: "Partner",
+  investor: "Investor",
+  other: "Team Member",
+};
 
 interface Organization {
-  id: string
-  name: string
-  organization_type: string | null
-  founded_date: string | null
-  closed_date: string | null
+  id: string;
+  name: string;
+  organization_type: string | null;
+  founded_date: string | null;
+  closed_date: string | null;
 }
 
 interface VerificationRequest {
-  id: string
-  verifierEmail: string
-  verifierName: string | null
-  relationship: string
-  requesterName: string | null
-  claimedRole: string | null
-  organization: Organization | null
+  id: string;
+  verifierEmail: string;
+  verifierName: string | null;
+  relationship: string;
+  requesterName: string | null;
+  claimedRole: string | null;
+  organization: Organization | null;
 }
 
-type PageState = 'loading' | 'ready' | 'submitting' | 'success' | 'error' | 'expired' | 'already_responded'
+type PageState =
+  | "loading"
+  | "ready"
+  | "submitting"
+  | "success"
+  | "error"
+  | "expired"
+  | "already_responded";
 
 export default function VerifyPage() {
-  const params = useParams()
-  const token = params.token as string
+  const params = useParams();
+  const token = params.token as string;
 
-  const [pageState, setPageState] = useState<PageState>('loading')
-  const [request, setRequest] = useState<VerificationRequest | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [responseMessage, setResponseMessage] = useState('')
-  const [resultAction, setResultAction] = useState<'confirm' | 'decline' | null>(null)
+  const [pageState, setPageState] = useState<PageState>("loading");
+  const [request, setRequest] = useState<VerificationRequest | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [responseMessage, setResponseMessage] = useState("");
+  const [resultAction, setResultAction] = useState<"confirm" | "decline" | null>(null);
 
   // Fetch verification request info
   useEffect(() => {
     const fetchRequest = async () => {
       try {
-        const res = await fetch(`/api/verification/${token}`)
+        const res = await fetch(`/api/verification/${token}`);
 
         if (res.status === 410) {
-          setPageState('expired')
-          return
+          setPageState("expired");
+          return;
         }
 
         if (res.status === 400) {
-          const data = await res.json()
-          if (data.error?.includes('already been responded')) {
-            setPageState('already_responded')
-            return
+          const data = await res.json();
+          if (data.error?.includes("already been responded")) {
+            setPageState("already_responded");
+            return;
           }
         }
 
         if (!res.ok) {
-          throw new Error('Verification request not found')
+          throw new Error("Verification request not found");
         }
 
-        const data = await res.json()
-        setRequest(data.request)
-        setPageState('ready')
+        const data = await res.json();
+        setRequest(data.request);
+        setPageState("ready");
       } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : 'Failed to load verification request')
-        setPageState('error')
+        setErrorMessage(err instanceof Error ? err.message : "Failed to load verification request");
+        setPageState("error");
       }
-    }
+    };
 
-    fetchRequest()
-  }, [token])
+    fetchRequest();
+  }, [token]);
 
   // Handle verification response
-  const handleResponse = async (action: 'confirm' | 'decline') => {
-    setPageState('submitting')
-    setResultAction(action)
+  const handleResponse = async (action: "confirm" | "decline") => {
+    setPageState("submitting");
+    setResultAction(action);
 
     try {
       const res = await fetch(`/api/verification/${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action,
           message: responseMessage.trim() || undefined,
         }),
-      })
+      });
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to submit response')
+        const data = await res.json();
+        throw new Error(data.error || "Failed to submit response");
       }
 
-      setPageState('success')
+      setPageState("success");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to submit response')
-      setPageState('error')
+      setErrorMessage(err instanceof Error ? err.message : "Failed to submit response");
+      setPageState("error");
     }
-  }
+  };
 
   // Format lifespan
   const formatLifespan = (founded: string | null, closed: string | null) => {
-    if (!founded) return null
-    const start = founded.replace('-', '.')
-    const end = closed ? closed.replace('-', '.') : 'present'
-    return `${start} — ${end}`
-  }
+    if (!founded) return null;
+    const start = founded.replace("-", ".");
+    const end = closed ? closed.replace("-", ".") : "present";
+    return `${start} — ${end}`;
+  };
 
   // Loading state
-  if (pageState === 'loading') {
+  if (pageState === "loading") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <Card variant="dark" className="max-w-md w-full">
@@ -143,26 +150,26 @@ export default function VerifyPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Error state
-  if (pageState === 'error') {
+  if (pageState === "error") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <Card variant="dark" className="max-w-md w-full">
           <CardContent className="py-12 text-center">
             <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <h1 className="text-xl font-display text-marble-100 mb-2">Error</h1>
-            <p className="text-slate-400">{errorMessage || 'Something went wrong'}</p>
+            <p className="text-slate-400">{errorMessage || "Something went wrong"}</p>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Expired state
-  if (pageState === 'expired') {
+  if (pageState === "expired") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <Card variant="dark" className="max-w-md w-full">
@@ -170,16 +177,17 @@ export default function VerifyPage() {
             <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <h1 className="text-xl font-display text-marble-100 mb-2">Link Expired</h1>
             <p className="text-slate-400">
-              This verification link has expired. Please ask the organization owner to send a new invitation.
+              This verification link has expired. Please ask the organization owner to send a new
+              invitation.
             </p>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Already responded state
-  if (pageState === 'already_responded') {
+  if (pageState === "already_responded") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <Card variant="dark" className="max-w-md w-full">
@@ -192,32 +200,30 @@ export default function VerifyPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Success state
-  if (pageState === 'success') {
+  if (pageState === "success") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <Card variant="dark" className="max-w-md w-full">
           <CardContent className="py-12 text-center">
-            {resultAction === 'confirm' ? (
+            {resultAction === "confirm" ? (
               <>
                 <ShieldCheck className="w-12 h-12 text-green-400 mx-auto mb-4" />
                 <h1 className="text-xl font-display text-marble-100 mb-2">
                   Thank You for Verifying!
                 </h1>
                 <p className="text-slate-400">
-                  Your confirmation helps preserve the legacy of {request?.organization?.name}.
-                  The organization owner will be notified.
+                  Your confirmation helps preserve the legacy of {request?.organization?.name}. The
+                  organization owner will be notified.
                 </p>
               </>
             ) : (
               <>
                 <XCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h1 className="text-xl font-display text-marble-100 mb-2">
-                  Response Recorded
-                </h1>
+                <h1 className="text-xl font-display text-marble-100 mb-2">Response Recorded</h1>
                 <p className="text-slate-400">
                   Thank you for your response. The organization owner will be notified.
                 </p>
@@ -226,15 +232,15 @@ export default function VerifyPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Ready state - show verification form
-  const org = request?.organization
-  const requesterName = request?.requesterName || 'Someone'
+  const org = request?.organization;
+  const requesterName = request?.requesterName || "Someone";
   const claimedRole = request?.claimedRole
     ? ROLE_LABELS[request.claimedRole] || request.claimedRole
-    : null
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -242,9 +248,7 @@ export default function VerifyPage() {
         {/* Header */}
         <div className="text-center">
           <Shield className="w-12 h-12 text-gold-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-display text-marble-100 mb-2">
-            Verification Request
-          </h1>
+          <h1 className="text-2xl font-display text-marble-100 mb-2">Verification Request</h1>
           <p className="text-slate-400">
             You&apos;ve been asked to verify information about an organization
           </p>
@@ -267,9 +271,7 @@ export default function VerifyPage() {
                   <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                     Organization
                   </p>
-                  <p className="text-marble-100 font-medium">
-                    {org?.name || 'Unknown'}
-                  </p>
+                  <p className="text-marble-100 font-medium">{org?.name || "Unknown"}</p>
                   {org?.founded_date && (
                     <p className="text-sm text-slate-400 flex items-center gap-1 mt-1">
                       <Calendar className="w-3.5 h-3.5" />
@@ -308,7 +310,10 @@ export default function VerifyPage() {
               <p className="text-marble-200 font-medium">
                 Can you confirm that this organization existed
                 {claimedRole && (
-                  <> and that <strong>{requesterName}</strong> was {claimedRole.toLowerCase()}</>
+                  <>
+                    {" "}
+                    and that <strong>{requesterName}</strong> was {claimedRole.toLowerCase()}
+                  </>
                 )}
                 ?
               </p>
@@ -325,7 +330,7 @@ export default function VerifyPage() {
                 placeholder="Any additional comments..."
                 rows={2}
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 resize-none"
-                disabled={pageState === 'submitting'}
+                disabled={pageState === "submitting"}
               />
             </div>
 
@@ -334,11 +339,14 @@ export default function VerifyPage() {
               <Button
                 variant="dark-ghost"
                 className="flex-1"
-                onClick={() => handleResponse('decline')}
-                disabled={pageState === 'submitting'}
-                leftIcon={pageState === 'submitting' && resultAction === 'decline'
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <XCircle className="w-4 h-4" />
+                onClick={() => handleResponse("decline")}
+                disabled={pageState === "submitting"}
+                leftIcon={
+                  pageState === "submitting" && resultAction === "decline" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <XCircle className="w-4 h-4" />
+                  )
                 }
               >
                 I Cannot Confirm
@@ -346,11 +354,14 @@ export default function VerifyPage() {
               <Button
                 variant="dark-primary"
                 className="flex-1"
-                onClick={() => handleResponse('confirm')}
-                disabled={pageState === 'submitting'}
-                leftIcon={pageState === 'submitting' && resultAction === 'confirm'
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <CheckCircle2 className="w-4 h-4" />
+                onClick={() => handleResponse("confirm")}
+                disabled={pageState === "submitting"}
+                leftIcon={
+                  pageState === "submitting" && resultAction === "confirm" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )
                 }
               >
                 Yes, I Confirm
@@ -361,10 +372,10 @@ export default function VerifyPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-slate-500">
-          This verification helps preserve authentic organizational histories.
-          Your response is confidential.
+          This verification helps preserve authentic organizational histories. Your response is
+          confidential.
         </p>
       </div>
     </div>
-  )
+  );
 }

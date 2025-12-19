@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   CommunityHeroSection,
@@ -10,8 +10,8 @@ import {
   ContributionWaysSection,
   EventsSection,
   CommunityJoinSection,
-} from '@/components/sections/community'
-import { CommunityTestimonialsSection } from '@/components/sections/CommunityTestimonialsSection'
+} from "@/components/sections/community";
+import { CommunityTestimonialsSection } from "@/components/sections/CommunityTestimonialsSection";
 
 /**
  * Community page.
@@ -31,5 +31,5 @@ export default function CommunityPage() {
       <CommunityTestimonialsSection />
       <CommunityJoinSection />
     </>
-  )
+  );
 }

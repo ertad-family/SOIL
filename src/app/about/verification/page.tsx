@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+import { Metadata } from "next";
 import {
   Shield,
   ShieldCheck,
@@ -10,13 +10,14 @@ import {
   BookOpen,
   MessageCircle,
   ArrowRight,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: 'Verification - SOIL',
-  description: 'Learn how verification works on SOIL and why it matters for preserving authentic organizational stories.',
-}
+  title: "Verification - SOIL",
+  description:
+    "Learn how verification works on SOIL and why it matters for preserving authentic organizational stories.",
+};
 
 export default function VerificationPage() {
   return (
@@ -31,8 +32,8 @@ export default function VerificationPage() {
             Verification on SOIL
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed">
-            Verification ensures the authenticity of organizational stories.
-            It confirms that organizations existed and that founders played the roles they claim.
+            Verification ensures the authenticity of organizational stories. It confirms that
+            organizations existed and that founders played the roles they claim.
           </p>
         </div>
       </section>
@@ -40,17 +41,14 @@ export default function VerificationPage() {
       {/* Why Verification Matters */}
       <section className="py-12 px-4 border-t border-slate-800">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-display text-marble-100 mb-6">
-            Why Verification Matters
-          </h2>
+          <h2 className="text-2xl font-display text-marble-100 mb-6">Why Verification Matters</h2>
           <div className="space-y-4 text-slate-400">
             <p>
-              SOIL is building a repository of organizational knowledge — lessons learned from companies
-              that have closed their doors. For this knowledge to be valuable, it must be authentic.
+              SOIL is building a repository of organizational knowledge — lessons learned from
+              companies that have closed their doors. For this knowledge to be valuable, it must be
+              authentic.
             </p>
-            <p>
-              Verification serves two purposes:
-            </p>
+            <p>Verification serves two purposes:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>
                 <strong className="text-marble-200">Confirms existence</strong> — The organization
@@ -72,9 +70,7 @@ export default function VerificationPage() {
       {/* Two Paths */}
       <section className="py-12 px-4 border-t border-slate-800">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-display text-marble-100 mb-8">
-            Two Paths to Verification
-          </h2>
+          <h2 className="text-2xl font-display text-marble-100 mb-8">Two Paths to Verification</h2>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Social Verification */}
@@ -83,9 +79,7 @@ export default function VerificationPage() {
                 <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
                   <Users className="w-5 h-5 text-gold-400" />
                 </div>
-                <h3 className="text-lg font-display text-marble-100">
-                  Social Verification
-                </h3>
+                <h3 className="text-lg font-display text-marble-100">Social Verification</h3>
               </div>
               <p className="text-slate-400 text-sm mb-4">
                 Ask former colleagues, customers, partners, or investors to confirm your story.
@@ -112,9 +106,7 @@ export default function VerificationPage() {
                 <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
                   <FileText className="w-5 h-5 text-gold-400" />
                 </div>
-                <h3 className="text-lg font-display text-marble-100">
-                  Document Verification
-                </h3>
+                <h3 className="text-lg font-display text-marble-100">Document Verification</h3>
               </div>
               <p className="text-slate-400 text-sm mb-4">
                 Upload official documents that prove your ownership or founding role.
@@ -141,9 +133,7 @@ export default function VerificationPage() {
       {/* What Verification Unlocks */}
       <section className="py-12 px-4 border-t border-slate-800">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-display text-marble-100 mb-8">
-            What Verification Unlocks
-          </h2>
+          <h2 className="text-2xl font-display text-marble-100 mb-8">What Verification Unlocks</h2>
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-5">
@@ -154,7 +144,8 @@ export default function VerificationPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-1">Public Cenotaph</h3>
                   <p className="text-sm text-slate-400">
-                    Publish your memorial for the world to see. Unverified stories remain private drafts.
+                    Publish your memorial for the world to see. Unverified stories remain private
+                    drafts.
                   </p>
                 </div>
               </div>
@@ -168,7 +159,8 @@ export default function VerificationPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-1">Searchable Experience</h3>
                   <p className="text-sm text-slate-400">
-                    Your organization and experience become discoverable by other founders seeking wisdom.
+                    Your organization and experience become discoverable by other founders seeking
+                    wisdom.
                   </p>
                 </div>
               </div>
@@ -182,7 +174,8 @@ export default function VerificationPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-1">Research Contribution</h3>
                   <p className="text-sm text-slate-400">
-                    Your data can be used in organizational research, helping advance the science of startups.
+                    Your data can be used in organizational research, helping advance the science of
+                    startups.
                   </p>
                 </div>
               </div>
@@ -196,7 +189,8 @@ export default function VerificationPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-1">Consulting Opportunities</h3>
                   <p className="text-sm text-slate-400">
-                    Offer your expertise to the founder community. Help others avoid the pitfalls you faced.
+                    Offer your expertise to the founder community. Help others avoid the pitfalls
+                    you faced.
                   </p>
                 </div>
               </div>
@@ -214,9 +208,10 @@ export default function VerificationPage() {
               <div>
                 <h3 className="font-medium text-marble-100 mb-2">Privacy & Confidentiality</h3>
                 <p className="text-sm text-slate-400">
-                  Verifier responses are confidential. We only share that verification was successful —
-                  never who verified or what they said. Documents are reviewed by our team and never
-                  shared publicly. You control what information appears on your cenotaph.
+                  Verifier responses are confidential. We only share that verification was
+                  successful — never who verified or what they said. Documents are reviewed by our
+                  team and never shared publicly. You control what information appears on your
+                  cenotaph.
                 </p>
               </div>
             </div>
@@ -227,9 +222,7 @@ export default function VerificationPage() {
       {/* CTA */}
       <section className="py-16 px-4 border-t border-slate-800">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-display text-marble-100 mb-4">
-            Ready to Verify?
-          </h2>
+          <h2 className="text-2xl font-display text-marble-100 mb-4">Ready to Verify?</h2>
           <p className="text-slate-400 mb-6">
             Go to your organization page and click &quot;Request Verification&quot; to get started.
           </p>
@@ -242,5 +235,5 @@ export default function VerificationPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

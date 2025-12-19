@@ -1,57 +1,57 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from "react";
 
 interface AnimatedCounterProps {
-  end: number
-  duration?: number
-  delay?: number
+  end: number;
+  duration?: number;
+  delay?: number;
 }
 
 /**
  * Animated counter that counts up from 0 to the target value
  */
 function AnimatedCounter({ end, duration = 2000, delay = 600 }: AnimatedCounterProps) {
-  const [count, setCount] = useState(0)
-  const hasStarted = useRef(false)
+  const [count, setCount] = useState(0);
+  const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (hasStarted.current) return
-    hasStarted.current = true
+    if (hasStarted.current) return;
+    hasStarted.current = true;
 
-    const startTime = Date.now() + delay
+    const startTime = Date.now() + delay;
     const step = () => {
-      const now = Date.now()
+      const now = Date.now();
       if (now < startTime) {
-        requestAnimationFrame(step)
-        return
+        requestAnimationFrame(step);
+        return;
       }
 
-      const elapsed = now - startTime
-      const progress = Math.min(elapsed / duration, 1)
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
 
       // Ease out cubic for natural deceleration
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(eased * end))
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * end));
 
       if (progress < 1) {
-        requestAnimationFrame(step)
+        requestAnimationFrame(step);
       }
-    }
+    };
 
-    requestAnimationFrame(step)
-  }, [end, duration, delay])
+    requestAnimationFrame(step);
+  }, [end, duration, delay]);
 
-  return <span>{count.toLocaleString()}</span>
+  return <span>{count.toLocaleString()}</span>;
 }
 
 interface MemorialsHeroSectionProps {
   stats: {
-    countries: number
-    cities: number
-    founders: number
-    organizations: number
-  }
+    countries: number;
+    cities: number;
+    founders: number;
+    organizations: number;
+  };
 }
 
 /**
@@ -71,8 +71,7 @@ export function MemorialsHeroSection({ stats }: MemorialsHeroSectionProps) {
         {/* Subtitle */}
         <p className="mt-6 text-lg md:text-xl lg:text-2xl text-slate-400 max-w-2xl mx-auto">
           A global memorial where organizations find rest
-          <br className="hidden md:block" />
-          {' '}and their stories become immortal wisdom
+          <br className="hidden md:block" /> and their stories become immortal wisdom
         </p>
 
         {/* Statistics */}
@@ -118,8 +117,8 @@ export function MemorialsHeroSection({ stats }: MemorialsHeroSectionProps) {
         onClick={() => {
           window.scrollTo({
             top: window.innerHeight,
-            behavior: 'smooth',
-          })
+            behavior: "smooth",
+          });
         }}
         className="absolute bottom-20 left-0 right-0 cursor-pointer hover:opacity-80 transition-opacity"
         aria-label="Scroll to explore"
@@ -129,5 +128,5 @@ export function MemorialsHeroSection({ stats }: MemorialsHeroSectionProps) {
         </div>
       </button>
     </section>
-  )
+  );
 }

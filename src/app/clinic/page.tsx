@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { useState } from "react";
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Users,
   Target,
@@ -18,8 +18,8 @@ import {
   Shield,
   Database,
   Microscope,
-} from 'lucide-react'
-import Link from 'next/link'
+} from "lucide-react";
+import Link from "next/link";
 
 // ============================================================================
 // HERO SECTION
@@ -34,9 +34,7 @@ function HeroSection() {
             {/* Text content with left padding */}
             <div className="flex-1 pl-4 lg:pl-8">
               <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold tracking-wide mb-6 text-marble-100 leading-tight">
-                Targeted{' '}
-                <span className="text-gradient-gold">Intervention</span>{' '}
-                for Organizations
+                Targeted <span className="text-gradient-gold">Intervention</span> for Organizations
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
                 We are building toward a clinic staffed by a new class of professionals —
@@ -67,7 +65,11 @@ function HeroSection() {
 
           {/* Right: Decorative Graphic - 2/3 width */}
           <div className="animate-fade-in-up stagger-1 lg:w-2/3">
-            <Card variant="dark-elevated" padding="none" className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center">
+            <Card
+              variant="dark-elevated"
+              padding="none"
+              className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center"
+            >
               {/* Background glow */}
               <div className="absolute inset-0 bg-gradient-radial from-gold-500/10 via-transparent to-transparent" />
 
@@ -87,19 +89,14 @@ function HeroSection() {
                   stroke="rgba(196,161,90,0.5)"
                   strokeWidth="2"
                 />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="15"
-                  fill="rgba(196,161,90,0.3)"
-                />
+                <circle cx="200" cy="200" r="15" fill="rgba(196,161,90,0.3)" />
 
                 {/* Outer nodes (organizations seeking help) */}
                 {[
-                  { cx: 100, cy: 100, label: 'org' },
-                  { cx: 300, cy: 100, label: 'org' },
-                  { cx: 100, cy: 300, label: 'org' },
-                  { cx: 300, cy: 300, label: 'org' },
+                  { cx: 100, cy: 100, label: "org" },
+                  { cx: 300, cy: 100, label: "org" },
+                  { cx: 100, cy: 300, label: "org" },
+                  { cx: 300, cy: 300, label: "org" },
                 ].map((node, i) => (
                   <g key={`org-${i}`}>
                     {/* Connection line */}
@@ -121,12 +118,7 @@ function HeroSection() {
                       stroke="rgba(196,161,90,0.3)"
                       strokeWidth="1.5"
                     />
-                    <circle
-                      cx={node.cx}
-                      cy={node.cy}
-                      r="8"
-                      fill="rgba(196,161,90,0.4)"
-                    />
+                    <circle cx={node.cx} cy={node.cy} r="8" fill="rgba(196,161,90,0.4)" />
                   </g>
                 ))}
 
@@ -157,12 +149,7 @@ function HeroSection() {
                       strokeWidth="2"
                     />
                     {/* Star indicator */}
-                    <circle
-                      cx={node.cx}
-                      cy={node.cy}
-                      r="6"
-                      fill="rgba(196,161,90,0.6)"
-                    />
+                    <circle cx={node.cx} cy={node.cy} r="6" fill="rgba(196,161,90,0.6)" />
                   </g>
                 ))}
 
@@ -191,10 +178,7 @@ function HeroSection() {
                     refY="3.5"
                     orient="auto"
                   >
-                    <polygon
-                      points="0 0, 10 3.5, 0 7"
-                      fill="rgba(196,161,90,0.3)"
-                    />
+                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(196,161,90,0.3)" />
                   </marker>
                 </defs>
               </svg>
@@ -219,7 +203,7 @@ function HeroSection() {
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">MMXXV</span>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -234,12 +218,12 @@ function VisionSection() {
           From Diagnosis to Recovery
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          The Clinic represents the treatment arm of organizational medicine. Where the{' '}
+          The Clinic represents the treatment arm of organizational medicine. Where the{" "}
           <Link href="/diagnostics" className="text-gold-400 hover:text-gold-300 transition-colors">
             Diagnostics Center
-          </Link>{' '}
-          identifies issues, the Clinic provides targeted intervention — delivering
-          evidence-based treatment through trained organizational medicine specialists.
+          </Link>{" "}
+          identifies issues, the Clinic provides targeted intervention — delivering evidence-based
+          treatment through trained organizational medicine specialists.
         </p>
 
         {/* Diagnostics → Matching → Treatment flow */}
@@ -247,24 +231,27 @@ function VisionSection() {
           {[
             {
               icon: <Activity className="w-8 h-8" />,
-              step: 'I',
-              title: 'Diagnosis',
-              description: 'The Diagnostics Center identifies specific organizational health issues and risk patterns.',
-              status: 'Future',
+              step: "I",
+              title: "Diagnosis",
+              description:
+                "The Diagnostics Center identifies specific organizational health issues and risk patterns.",
+              status: "Future",
             },
             {
               icon: <Target className="w-8 h-8" />,
-              step: 'II',
-              title: 'Specialist Assignment',
-              description: 'Trained organizational medicine specialists are assigned based on the specific diagnosis and treatment requirements.',
-              status: 'Future',
+              step: "II",
+              title: "Specialist Assignment",
+              description:
+                "Trained organizational medicine specialists are assigned based on the specific diagnosis and treatment requirements.",
+              status: "Future",
             },
             {
               icon: <HeartHandshake className="w-8 h-8" />,
-              step: 'III',
-              title: 'Guided Recovery',
-              description: 'Structured intervention protocols guide organizations through treatment and recovery.',
-              status: 'Future',
+              step: "III",
+              title: "Guided Recovery",
+              description:
+                "Structured intervention protocols guide organizations through treatment and recovery.",
+              status: "Future",
             },
           ].map((item, index) => (
             <div key={index} className="relative">
@@ -296,7 +283,7 @@ function VisionSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -306,25 +293,29 @@ function PotentialCapabilitiesSection() {
   const capabilities = [
     {
       icon: <Target className="w-7 h-7" />,
-      title: 'Specialist-Led Consulting',
-      description: 'Organizations receive care from trained professionals who specialize in specific organizational conditions and treatment protocols.',
+      title: "Specialist-Led Consulting",
+      description:
+        "Organizations receive care from trained professionals who specialize in specific organizational conditions and treatment protocols.",
     },
     {
       icon: <Stethoscope className="w-7 h-7" />,
-      title: 'Treatment Protocols',
-      description: 'Research-based intervention frameworks tailored to specific organizational conditions and their severity.',
+      title: "Treatment Protocols",
+      description:
+        "Research-based intervention frameworks tailored to specific organizational conditions and their severity.",
     },
     {
       icon: <HeartHandshake className="w-7 h-7" />,
-      title: 'Recovery Support',
-      description: 'Ongoing guidance for organizations in crisis, with structured milestones and progress tracking.',
+      title: "Recovery Support",
+      description:
+        "Ongoing guidance for organizations in crisis, with structured milestones and progress tracking.",
     },
     {
       icon: <Shield className="w-7 h-7" />,
-      title: 'Prevention Programs',
-      description: 'For organizations showing early warning signs, intervention before issues become critical.',
+      title: "Prevention Programs",
+      description:
+        "For organizations showing early warning signs, intervention before issues become critical.",
     },
-  ]
+  ];
 
   return (
     <>
@@ -338,8 +329,8 @@ function PotentialCapabilitiesSection() {
             What the Clinic May Offer
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mb-12">
-            When the research foundation and diagnostic capabilities are in place, the Clinic
-            aims to provide these services. These represent our goals, not current offerings.
+            When the research foundation and diagnostic capabilities are in place, the Clinic aims
+            to provide these services. These represent our goals, not current offerings.
           </p>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -363,7 +354,7 @@ function PotentialCapabilitiesSection() {
       {/* Gradient transition out of section */}
       <div className="h-24 bg-gradient-to-b from-marble-950 to-slate-900" />
     </>
-  )
+  );
 }
 
 // ============================================================================
@@ -381,18 +372,18 @@ function NewProfessionSection() {
               Organizational Medicine Specialists
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              The Clinic represents the pinnacle of our research mission — enabling a new class
-              of professionals trained in organizational medicine. These specialists will diagnose
-              and treat organizational health issues using evidence-based protocols derived from
-              our mortality research.
+              The Clinic represents the pinnacle of our research mission — enabling a new class of
+              professionals trained in organizational medicine. These specialists will diagnose and
+              treat organizational health issues using evidence-based protocols derived from our
+              mortality research.
             </p>
 
             <ul className="space-y-4 mb-8">
               {[
-                'Rigorous training based on research findings',
-                'Evidence-based treatment protocols',
-                'Professional certification in organizational medicine',
-                'Continuous education as research evolves',
+                "Rigorous training based on research findings",
+                "Evidence-based treatment protocols",
+                "Professional certification in organizational medicine",
+                "Continuous education as research evolves",
               ].map((point, index) => (
                 <li key={index} className="flex items-start gap-3 text-slate-400">
                   <CheckCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
@@ -461,7 +452,7 @@ function NewProfessionSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -489,41 +480,41 @@ function CurrentStatusSection() {
           <div className="space-y-6">
             {[
               {
-                status: 'progress',
-                label: 'Collecting organizational autopsy data',
+                status: "progress",
+                label: "Collecting organizational autopsy data",
               },
               {
-                status: 'progress',
-                label: 'Building research foundation',
+                status: "progress",
+                label: "Building research foundation",
               },
               {
-                status: 'future',
-                label: 'Diagnostics Center capabilities',
+                status: "future",
+                label: "Diagnostics Center capabilities",
               },
               {
-                status: 'future',
-                label: 'Treatment protocol development',
+                status: "future",
+                label: "Treatment protocol development",
               },
               {
-                status: 'future',
-                label: 'Specialist training curriculum',
+                status: "future",
+                label: "Specialist training curriculum",
               },
               {
-                status: 'future',
-                label: 'Clinic launch',
+                status: "future",
+                label: "Clinic launch",
               },
             ].map((item, index) => (
               <div key={index} className="flex items-center gap-4">
-                <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                  item.status === 'complete'
-                    ? 'bg-success-500'
-                    : item.status === 'progress'
-                    ? 'bg-gold-500 animate-pulse'
-                    : 'bg-slate-600'
-                }`} />
-                <span className={
-                  item.status === 'future' ? 'text-slate-500' : 'text-marble-100'
-                }>
+                <div
+                  className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    item.status === "complete"
+                      ? "bg-success-500"
+                      : item.status === "progress"
+                        ? "bg-gold-500 animate-pulse"
+                        : "bg-slate-600"
+                  }`}
+                />
+                <span className={item.status === "future" ? "text-slate-500" : "text-marble-100"}>
                   {item.label}
                 </span>
               </div>
@@ -532,23 +523,23 @@ function CurrentStatusSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
 // WAITLIST SECTION
 // ============================================================================
 function WaitlistSection() {
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // TODO: Implement actual waitlist submission
     if (email) {
-      setSubmitted(true)
+      setSubmitted(true);
     }
-  }
+  };
 
   return (
     <section id="waitlist" className="py-16 md:py-24 bg-slate-900/50">
@@ -559,8 +550,8 @@ function WaitlistSection() {
             Join the Waitlist
           </h2>
           <p className="text-lg text-slate-400 mb-8">
-            Be the first to know when the Clinic becomes available.
-            We&apos;ll send occasional updates on our progress — no spam, ever.
+            Be the first to know when the Clinic becomes available. We&apos;ll send occasional
+            updates on our progress — no spam, ever.
           </p>
 
           {submitted ? (
@@ -572,9 +563,7 @@ function WaitlistSection() {
                 <h3 className="font-display text-xl font-medium text-marble-100">
                   You&apos;re on the list
                 </h3>
-                <p className="text-slate-400">
-                  We&apos;ll keep you updated on our progress.
-                </p>
+                <p className="text-slate-400">We&apos;ll keep you updated on our progress.</p>
               </div>
             </Card>
           ) : (
@@ -600,8 +589,7 @@ function WaitlistSection() {
                   </Button>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Your email will only be used for Clinic updates.
-                  You can unsubscribe at any time.
+                  Your email will only be used for Clinic updates. You can unsubscribe at any time.
                 </p>
               </form>
             </Card>
@@ -626,7 +614,7 @@ function WaitlistSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -642,5 +630,5 @@ export default function ClinicPage() {
       <CurrentStatusSection />
       <WaitlistSection />
     </>
-  )
+  );
 }

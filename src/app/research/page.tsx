@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   BookOpen,
   Database,
@@ -16,7 +16,7 @@ import {
   Globe,
   Mail,
   ArrowRight,
-} from 'lucide-react'
+} from "lucide-react";
 
 // ============================================================================
 // HERO SECTION
@@ -31,12 +31,13 @@ function HeroSection() {
             {/* Text content with left padding */}
             <div className="flex-1 pl-4 lg:pl-8">
               <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold tracking-wide mb-6 text-marble-100 leading-tight">
-                Building the Future of{' '}
+                Building the Future of{" "}
                 <span className="text-gradient-gold">Organizational Science</span>
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
                 A new scientific discipline based on systematic study of organizational mortality.
-                Join us in creating the infrastructure for Organizational Biology, Health, and Medicine.
+                Join us in creating the infrastructure for Organizational Biology, Health, and
+                Medicine.
               </p>
 
               {/* CTA Button */}
@@ -65,7 +66,11 @@ function HeroSection() {
 
           {/* Right: Decorative Graphic in Card - 2/3 width */}
           <div className="animate-fade-in-up stagger-1 lg:w-2/3">
-            <Card variant="dark-elevated" padding="none" className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center">
+            <Card
+              variant="dark-elevated"
+              padding="none"
+              className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center"
+            >
               {/* Background glow */}
               <div className="absolute inset-0 bg-gradient-radial from-gold-500/10 via-transparent to-transparent" />
 
@@ -162,12 +167,7 @@ function HeroSection() {
                   stroke="rgba(147,112,219,0.3)"
                   strokeWidth="1"
                 />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="15"
-                  fill="rgba(147,112,219,0.25)"
-                />
+                <circle cx="200" cy="200" r="15" fill="rgba(147,112,219,0.25)" />
 
                 {/* Data points on orbits around pentagon (radii 100-170 from center) */}
                 {[
@@ -224,7 +224,7 @@ function HeroSection() {
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">MMXXV</span>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -234,23 +234,23 @@ function ResearchGapSection() {
   const problems = [
     {
       icon: <BookOpen className="w-6 h-6" />,
-      title: 'No Systematic Study',
+      title: "No Systematic Study",
       description:
-        'Organizations close every day, yet there is no systematic approach to studying why and how they end. Each closure is treated as an isolated event.',
+        "Organizations close every day, yet there is no systematic approach to studying why and how they end. Each closure is treated as an isolated event.",
     },
     {
       icon: <Database className="w-6 h-6" />,
-      title: 'Fragmented Knowledge',
+      title: "Fragmented Knowledge",
       description:
-        'What we know about organizational closure is scattered across anecdotes, case studies, and personal stories — never aggregated or analyzed at scale.',
+        "What we know about organizational closure is scattered across anecdotes, case studies, and personal stories — never aggregated or analyzed at scale.",
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
-      title: 'Missing Data Approach',
+      title: "Missing Data Approach",
       description:
-        'Organizational theory lacks the structured data collection methods that transformed other fields. We need a systematic framework to understand patterns.',
+        "Organizational theory lacks the structured data collection methods that transformed other fields. We need a systematic framework to understand patterns.",
     },
-  ]
+  ];
 
   return (
     <section className="py-16 md:py-24 animate-fade-in-up">
@@ -260,10 +260,10 @@ function ResearchGapSection() {
           Why This Research Matters
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          Every year, millions of organizations die. Startups, NGOs, agencies, ventures of all
-          kinds — they close, dissolve, or simply fade away. Yet unlike medicine, which has
-          centuries of autopsy data informing how we understand human health, organizational
-          science has almost no systematic data on organizational death.
+          Every year, millions of organizations die. Startups, NGOs, agencies, ventures of all kinds
+          — they close, dissolve, or simply fade away. Yet unlike medicine, which has centuries of
+          autopsy data informing how we understand human health, organizational science has almost
+          no systematic data on organizational death.
         </p>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -279,7 +279,7 @@ function ResearchGapSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -288,24 +288,26 @@ function ResearchGapSection() {
 function WhatWeAreBuildingSection() {
   const metrics = [
     {
-      value: 'XX',
-      valueStyle: 'roman',
-      label: 'Target: 20,000 Autopsies',
-      description: 'Comprehensive organizational autopsies to build statistical power for pattern recognition and predictive modeling.',
+      value: "XX",
+      valueStyle: "roman",
+      label: "Target: 20,000 Autopsies",
+      description:
+        "Comprehensive organizational autopsies to build statistical power for pattern recognition and predictive modeling.",
     },
     {
-      value: 'Global',
-      valueStyle: 'text',
-      label: 'Worldwide Coverage',
-      description: 'Data collection across all countries, regions, and cities for truly representative insights.',
+      value: "Global",
+      valueStyle: "text",
+      label: "Worldwide Coverage",
+      description:
+        "Data collection across all countries, regions, and cities for truly representative insights.",
     },
     {
-      value: '∞',
-      valueStyle: 'symbol',
-      label: 'Open Access',
-      description: 'Anonymized datasets available to qualified researchers worldwide.',
+      value: "∞",
+      valueStyle: "symbol",
+      label: "Open Access",
+      description: "Anonymized datasets available to qualified researchers worldwide.",
     },
-  ]
+  ];
 
   // Custom SVG icons in Hero section style
   const DataCollectionIcon = () => (
@@ -338,7 +340,7 @@ function WhatWeAreBuildingSection() {
       <circle cx="44" cy="48" r="1.5" fill="rgba(196,161,90,0.6)" />
       <circle cx="20" cy="48" r="1.5" fill="rgba(196,161,90,0.6)" />
     </svg>
-  )
+  );
 
   const FrameworkIcon = () => (
     <svg viewBox="0 0 64 64" className="w-36 h-36" fill="none">
@@ -347,13 +349,20 @@ function WhatWeAreBuildingSection() {
       <circle cx="24" cy="38" r="14" fill="none" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
       <circle cx="40" cy="38" r="14" fill="none" stroke="rgba(196,161,90,0.4)" strokeWidth="1" />
       {/* Center intersection - neutral zone */}
-      <circle cx="32" cy="32" r="6" fill="rgba(147,112,219,0.15)" stroke="rgba(147,112,219,0.4)" strokeWidth="1.5" />
+      <circle
+        cx="32"
+        cy="32"
+        r="6"
+        fill="rgba(147,112,219,0.15)"
+        stroke="rgba(147,112,219,0.4)"
+        strokeWidth="1.5"
+      />
       {/* Radial lines showing multiple perspectives */}
       <line x1="32" y1="32" x2="32" y2="10" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
       <line x1="32" y1="32" x2="13" y2="43" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
       <line x1="32" y1="32" x2="51" y2="43" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
     </svg>
-  )
+  );
 
   const ScaleIcon = () => (
     <svg viewBox="0 0 64 64" className="w-36 h-36" fill="none">
@@ -381,40 +390,40 @@ function WhatWeAreBuildingSection() {
       <circle cx="32" cy="60" r="1.5" fill="rgba(196,161,90,0.4)" />
       <circle cx="4" cy="32" r="1.5" fill="rgba(196,161,90,0.4)" />
     </svg>
-  )
+  );
 
   const approaches = [
     {
       icon: <DataCollectionIcon />,
-      title: 'Systematic Data Collection',
+      title: "Systematic Data Collection",
       points: [
-        'Structured organizational autopsies',
-        'Full organizational state capture',
-        'Functional structure analysis',
-        'Environmental context mapping',
+        "Structured organizational autopsies",
+        "Full organizational state capture",
+        "Functional structure analysis",
+        "Environmental context mapping",
       ],
     },
     {
       icon: <FrameworkIcon />,
-      title: 'Framework-Agnostic Methodology',
+      title: "Framework-Agnostic Methodology",
       points: [
-        'No predetermined theoretical lens',
-        'Neutral data collection formats',
-        'Multi-framework post-hoc analysis',
-        'Pattern-driven theory development',
+        "No predetermined theoretical lens",
+        "Neutral data collection formats",
+        "Multi-framework post-hoc analysis",
+        "Pattern-driven theory development",
       ],
     },
     {
       icon: <ScaleIcon />,
-      title: 'Scale and Depth',
+      title: "Scale and Depth",
       points: [
-        'Thousands of comprehensive cases',
-        'Statistical power for patterns',
-        'Predictive modeling capability',
-        'Intervention design foundation',
+        "Thousands of comprehensive cases",
+        "Statistical power for patterns",
+        "Predictive modeling capability",
+        "Intervention design foundation",
       ],
     },
-  ]
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -429,15 +438,15 @@ function WhatWeAreBuildingSection() {
           {metrics.map((metric, index) => (
             <Card
               key={index}
-              variant={index === 0 ? 'dark-elevated' : 'dark'}
+              variant={index === 0 ? "dark-elevated" : "dark"}
               padding="lg"
               className="h-full"
             >
               <span
                 className={`inline-block mb-4 ${
-                  metric.valueStyle === 'roman'
-                    ? 'relative font-serif text-7xl md:text-8xl lg:text-9xl font-normal select-none leading-none [color:transparent] [-webkit-text-stroke:1.5px_rgba(226,176,85,0.25)] before:absolute before:top-[0.05em] before:left-0 before:w-full before:h-[2px] before:bg-[rgba(226,176,85,0.25)]'
-                    : 'font-display text-4xl md:text-5xl font-semibold text-gold-400'
+                  metric.valueStyle === "roman"
+                    ? "relative font-serif text-7xl md:text-8xl lg:text-9xl font-normal select-none leading-none [color:transparent] [-webkit-text-stroke:1.5px_rgba(226,176,85,0.25)] before:absolute before:top-[0.05em] before:left-0 before:w-full before:h-[2px] before:bg-[rgba(226,176,85,0.25)]"
+                    : "font-display text-4xl md:text-5xl font-semibold text-gold-400"
                 }`}
               >
                 {metric.value}
@@ -454,12 +463,8 @@ function WhatWeAreBuildingSection() {
         <div className="grid md:grid-cols-3 gap-8">
           {approaches.map((approach, index) => (
             <div key={index} className="space-y-6">
-              <div className="w-36 h-36">
-                {approach.icon}
-              </div>
-              <h3 className="font-display text-xl font-medium text-marble-100">
-                {approach.title}
-              </h3>
+              <div className="w-36 h-36">{approach.icon}</div>
+              <h3 className="font-display text-xl font-medium text-marble-100">{approach.title}</h3>
               <ul className="space-y-3">
                 {approach.points.map((point, pointIndex) => (
                   <li key={pointIndex} className="flex items-start gap-3 text-slate-400">
@@ -473,7 +478,7 @@ function WhatWeAreBuildingSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -481,13 +486,13 @@ function WhatWeAreBuildingSection() {
 // ============================================================================
 function ResearchQuestionsSection() {
   const questions = [
-    'What are the common failure modes across organizational types?',
-    'Can we identify early warning signals that predict organizational mortality?',
-    'How do different functional systems (financial, operational, cultural) interact in organizational decline?',
-    'What environmental conditions correlate with higher mortality rates?',
-    'Do existing organizational frameworks (McKinsey 7S, Porter\'s Five Forces, etc.) predict failure better than alternatives?',
-    'Can we develop diagnostic tools for organizational health?',
-  ]
+    "What are the common failure modes across organizational types?",
+    "Can we identify early warning signals that predict organizational mortality?",
+    "How do different functional systems (financial, operational, cultural) interact in organizational decline?",
+    "What environmental conditions correlate with higher mortality rates?",
+    "Do existing organizational frameworks (McKinsey 7S, Porter's Five Forces, etc.) predict failure better than alternatives?",
+    "Can we develop diagnostic tools for organizational health?",
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -503,7 +508,7 @@ function ResearchQuestionsSection() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {questions.map((question, index) => {
-            const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
+            const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
             return (
               <div
                 key={index}
@@ -518,12 +523,12 @@ function ResearchQuestionsSection() {
                 </span>
                 <p className="text-marble-100 leading-relaxed relative z-10">{question}</p>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -533,30 +538,30 @@ function CollaborationSection() {
   const opportunities = [
     {
       icon: <Database className="w-7 h-7" />,
-      title: 'Data Access Partnership',
+      title: "Data Access Partnership",
       description:
-        'Academic researchers can apply for access to anonymized SOIL datasets for scholarly research. We prioritize projects that advance fundamental understanding of organizational mortality.',
+        "Academic researchers can apply for access to anonymized SOIL datasets for scholarly research. We prioritize projects that advance fundamental understanding of organizational mortality.",
     },
     {
       icon: <Handshake className="w-7 h-7" />,
-      title: 'Methodology Co-Development',
+      title: "Methodology Co-Development",
       description:
-        'We\'re actively seeking input on our data collection instruments, analytical frameworks, and research protocols. Published methodological papers will include academic co-authors.',
+        "We're actively seeking input on our data collection instruments, analytical frameworks, and research protocols. Published methodological papers will include academic co-authors.",
     },
     {
       icon: <FileText className="w-7 h-7" />,
-      title: 'Joint Publications',
+      title: "Joint Publications",
       description:
-        'We welcome collaboration on peer-reviewed publications. Our commitment: rigorous methods, transparent limitations, and contribution to open science.',
+        "We welcome collaboration on peer-reviewed publications. Our commitment: rigorous methods, transparent limitations, and contribution to open science.",
     },
     {
       icon: <GraduationCap className="w-7 h-7" />,
-      title: 'Visiting Researcher Program',
+      title: "Visiting Researcher Program",
       description:
-        'Spend time with the SOIL team, work directly with emerging data, and contribute to building the field.',
+        "Spend time with the SOIL team, work directly with emerging data, and contribute to building the field.",
       comingSoon: true,
     },
-  ]
+  ];
 
   return (
     <>
@@ -605,7 +610,7 @@ function CollaborationSection() {
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">✦</span>
       </div>
     </>
-  )
+  );
 }
 
 // ============================================================================
@@ -614,26 +619,26 @@ function CollaborationSection() {
 function ComparisonSection() {
   const comparisons = [
     {
-      traditional: 'Case studies of notable failures',
-      soil: 'Systematic data across hundreds/thousands of organizations',
+      traditional: "Case studies of notable failures",
+      soil: "Systematic data across hundreds/thousands of organizations",
     },
     {
-      traditional: 'Post-hoc narrative reconstruction',
-      soil: 'Structured data collection with consistent methodology',
+      traditional: "Post-hoc narrative reconstruction",
+      soil: "Structured data collection with consistent methodology",
     },
     {
-      traditional: 'Single theoretical framework',
-      soil: 'Multi-framework analysis, letting data reveal patterns',
+      traditional: "Single theoretical framework",
+      soil: "Multi-framework analysis, letting data reveal patterns",
     },
     {
-      traditional: 'Focus on what went wrong',
-      soil: 'Comprehensive organizational state at peak and decline',
+      traditional: "Focus on what went wrong",
+      soil: "Comprehensive organizational state at peak and decline",
     },
     {
-      traditional: 'Anecdotal lessons',
-      soil: 'Statistical patterns and predictive models',
+      traditional: "Anecdotal lessons",
+      soil: "Statistical patterns and predictive models",
     },
-  ]
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -644,8 +649,8 @@ function ComparisonSection() {
             What Makes SOIL Different
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mx-auto">
-            We&apos;re not just studying failure differently — we&apos;re building the infrastructure
-            for an entirely new approach to organizational science.
+            We&apos;re not just studying failure differently — we&apos;re building the
+            infrastructure for an entirely new approach to organizational science.
           </p>
         </div>
 
@@ -677,7 +682,7 @@ function ComparisonSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -687,34 +692,34 @@ function CommitmentsSection() {
   const commitments = [
     {
       icon: <Shield className="w-7 h-7" />,
-      title: 'Research Integrity',
+      title: "Research Integrity",
       points: [
-        'Transparent methodology, publicly documented',
-        'Honest about limitations and selection biases',
-        'Peer review for all major publications',
-        'No predetermined conclusions',
+        "Transparent methodology, publicly documented",
+        "Honest about limitations and selection biases",
+        "Peer review for all major publications",
+        "No predetermined conclusions",
       ],
     },
     {
       icon: <Heart className="w-7 h-7" />,
-      title: 'Data Ethics',
+      title: "Data Ethics",
       points: [
-        'Founder consent and control over their data',
-        'Anonymization by default for research use',
-        'No harmful applications (discrimination, exploitation)',
-        'Clear separation between research and commercial operations',
+        "Founder consent and control over their data",
+        "Anonymization by default for research use",
+        "No harmful applications (discrimination, exploitation)",
+        "Clear separation between research and commercial operations",
       ],
     },
     {
       icon: <Globe className="w-7 h-7" />,
-      title: 'Open Science',
+      title: "Open Science",
       points: [
-        'Methodological papers publicly available',
-        'Anonymized datasets released for replication',
-        'Research findings shared with academic community',
+        "Methodological papers publicly available",
+        "Anonymized datasets released for replication",
+        "Research findings shared with academic community",
       ],
     },
-  ]
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -749,7 +754,7 @@ function CommitmentsSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -757,11 +762,11 @@ function CommitmentsSection() {
 // ============================================================================
 function CurrentStatusSection() {
   const statusItems = [
-    'Building data collection infrastructure',
-    'Conducting initial organizational autopsies',
-    'Forming academic advisory relationships',
-    'Preparing first methodological publications',
-  ]
+    "Building data collection infrastructure",
+    "Conducting initial organizational autopsies",
+    "Forming academic advisory relationships",
+    "Preparing first methodological publications",
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -775,16 +780,14 @@ function CurrentStatusSection() {
             </h2>
             <p className="text-lg text-slate-400">
               SOIL is in active development. This is the ground floor of a new field. The
-              foundational papers haven&apos;t been written. The canonical datasets don&apos;t exist. The
-              theoretical frameworks haven&apos;t been tested.
+              foundational papers haven&apos;t been written. The canonical datasets don&apos;t
+              exist. The theoretical frameworks haven&apos;t been tested.
             </p>
           </div>
 
           {/* Right column: Status items */}
           <div>
-            <p className="text-lg text-gold-400/80 italic mb-6">
-              We are currently:
-            </p>
+            <p className="text-lg text-gold-400/80 italic mb-6">We are currently:</p>
             <div className="space-y-4">
               {statusItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-4">
@@ -797,7 +800,7 @@ function CurrentStatusSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -807,23 +810,26 @@ function GetInvolvedSection() {
   const audiences = [
     {
       icon: <Users className="w-7 h-7" />,
-      title: 'For Academic Researchers',
-      description: 'Email us with your research interests and how they connect to organizational mortality, your institutional affiliation, and what form of collaboration interests you.',
-      email: 'research@soil.rip',
+      title: "For Academic Researchers",
+      description:
+        "Email us with your research interests and how they connect to organizational mortality, your institutional affiliation, and what form of collaboration interests you.",
+      email: "research@soil.rip",
     },
     {
       icon: <GraduationCap className="w-7 h-7" />,
-      title: 'For PhD Students',
-      description: 'We welcome dissertation projects using SOIL data and methodology. Contact us to discuss possibilities for your research.',
-      email: 'research@soil.rip',
+      title: "For PhD Students",
+      description:
+        "We welcome dissertation projects using SOIL data and methodology. Contact us to discuss possibilities for your research.",
+      email: "research@soil.rip",
     },
     {
       icon: <Handshake className="w-7 h-7" />,
-      title: 'For Institutional Partners',
-      description: 'Universities and research institutes interested in formal partnerships are welcome to reach out.',
-      email: 'partnerships@soil.rip',
+      title: "For Institutional Partners",
+      description:
+        "Universities and research institutes interested in formal partnerships are welcome to reach out.",
+      email: "partnerships@soil.rip",
     },
-  ]
+  ];
 
   return (
     <section id="get-involved" className="py-16 md:py-24 bg-slate-900/50">
@@ -833,7 +839,8 @@ function GetInvolvedSection() {
           Join the Research Community
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          We&apos;re building something new. If you&apos;re interested in being part of it, reach out.
+          We&apos;re building something new. If you&apos;re interested in being part of it, reach
+          out.
         </p>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -849,7 +856,7 @@ function GetInvolvedSection() {
                 <p className="text-slate-400 leading-relaxed flex-1 mb-6">{audience.description}</p>
                 <a href={`mailto:${audience.email}`}>
                   <Button
-                    variant={index === 2 ? 'marble' : 'dark-primary'}
+                    variant={index === 2 ? "marble" : "dark-primary"}
                     size="lg"
                     className="w-full"
                     rightIcon={<Mail className="w-4 h-4" />}
@@ -863,7 +870,7 @@ function GetInvolvedSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -871,10 +878,10 @@ function GetInvolvedSection() {
 // ============================================================================
 // Team Member Card Component
 interface TeamMemberProps {
-  name: string
-  role: string
-  imageUrl?: string
-  accentWord?: string
+  name: string;
+  role: string;
+  imageUrl?: string;
+  accentWord?: string;
 }
 
 function TeamMemberCard({ name, role, accentWord }: TeamMemberProps) {
@@ -884,9 +891,7 @@ function TeamMemberCard({ name, role, accentWord }: TeamMemberProps) {
       <div className="relative bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 rounded-2xl overflow-hidden aspect-[3/4] w-full max-w-[280px]">
         {/* Vertical accent word */}
         {accentWord && (
-          <span
-            className="absolute right-4 top-1/2 -translate-y-1/2 font-display text-6xl font-bold select-none pointer-events-none opacity-10 [writing-mode:vertical-rl] text-marble-100"
-          >
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 font-display text-6xl font-bold select-none pointer-events-none opacity-10 [writing-mode:vertical-rl] text-marble-100">
             {accentWord}
           </span>
         )}
@@ -895,7 +900,10 @@ function TeamMemberCard({ name, role, accentWord }: TeamMemberProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-24 h-24 rounded-full bg-slate-600/50 flex items-center justify-center">
             <span className="text-4xl text-slate-500 font-display font-semibold">
-              {name.split(' ').map(n => n[0]).join('')}
+              {name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </span>
           </div>
         </div>
@@ -910,18 +918,18 @@ function TeamMemberCard({ name, role, accentWord }: TeamMemberProps) {
         <p className="text-slate-500 text-sm">/ {role} /</p>
       </div>
     </div>
-  )
+  );
 }
 
 function AdvisoryBoardSection() {
   // Placeholder advisors - to be replaced with real data
   const advisors: TeamMemberProps[] = [
-    { name: 'To Be Announced', role: 'Organizational Studies', accentWord: 'Research' },
-    { name: 'To Be Announced', role: 'Entrepreneurship', accentWord: 'Strategy' },
-    { name: 'To Be Announced', role: 'Data Science', accentWord: 'Analytics' },
-    { name: 'To Be Announced', role: 'Systems Theory', accentWord: 'Systems' },
-    { name: 'To Be Announced', role: 'Economics', accentWord: 'Economics' },
-  ]
+    { name: "To Be Announced", role: "Organizational Studies", accentWord: "Research" },
+    { name: "To Be Announced", role: "Entrepreneurship", accentWord: "Strategy" },
+    { name: "To Be Announced", role: "Data Science", accentWord: "Analytics" },
+    { name: "To Be Announced", role: "Systems Theory", accentWord: "Systems" },
+    { name: "To Be Announced", role: "Economics", accentWord: "Economics" },
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -934,9 +942,9 @@ function AdvisoryBoardSection() {
               Research Advisory Board
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              We are actively forming our research advisory board. If you&apos;re a senior scholar in
-              organizational studies, entrepreneurship, or related fields and interested in shaping a
-              new discipline, we&apos;d welcome a conversation.
+              We are actively forming our research advisory board. If you&apos;re a senior scholar
+              in organizational studies, entrepreneurship, or related fields and interested in
+              shaping a new discipline, we&apos;d welcome a conversation.
             </p>
 
             {/* Stats placeholder */}
@@ -978,7 +986,7 @@ function AdvisoryBoardSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -999,5 +1007,5 @@ export default function ResearchPage() {
       <AdvisoryBoardSection />
       <GetInvolvedSection />
     </>
-  )
+  );
 }

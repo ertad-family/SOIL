@@ -1,4 +1,4 @@
-import { SectionLabel } from '@/components/ui/section-label'
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function PartnersSection() {
   return (
@@ -37,7 +37,9 @@ export function PartnersSection() {
 
           {/* BCG Henderson Institute */}
           <div className="flex items-center gap-2 px-4 py-3 border border-slate-600/50 bg-slate-800/30 rounded">
-            <span className="font-display text-2xl font-medium tracking-tight text-slate-300">BCG</span>
+            <span className="font-display text-2xl font-medium tracking-tight text-slate-300">
+              BCG
+            </span>
             <div className="text-[10px] text-slate-500 leading-tight border-l border-slate-600 pl-2">
               <div>Henderson</div>
               <div>Institute</div>
@@ -57,11 +59,13 @@ export function PartnersSection() {
           <div className="px-4 py-3 border border-slate-600/50 bg-slate-800/30 rounded">
             <div className="text-center">
               <div className="font-serif text-lg font-medium text-slate-300">Stanford</div>
-              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Graduate School of Business</div>
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider">
+                Graduate School of Business
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

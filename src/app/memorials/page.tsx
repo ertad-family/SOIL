@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   MemorialsHeroSection,
@@ -6,8 +6,13 @@ import {
   FeaturedStoriesSection,
   GetInvolvedSection,
   MemorialsCTASection,
-} from '@/components/sections/memorials'
-import { mockCenotapheries, globalStats, sidePanelStats, featuredStories } from '@/data/mock-cenotapheries'
+} from "@/components/sections/memorials";
+import {
+  mockCenotapheries,
+  globalStats,
+  sidePanelStats,
+  featuredStories,
+} from "@/data/mock-cenotapheries";
 
 /**
  * Memorials page - Global memorial with interactive 3D globe navigation
@@ -44,5 +49,5 @@ export default function MemorialsPage() {
       {/* Get Involved - appeal to future Keepers */}
       <GetInvolvedSection />
     </>
-  )
+  );
 }

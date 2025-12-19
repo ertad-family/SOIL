@@ -1,12 +1,15 @@
-'use client'
+"use client";
 
-import dynamic from 'next/dynamic'
+import dynamic from "next/dynamic";
 
 // Dynamic import with SSR disabled (Three.js requires window)
 const DodecahedronScene = dynamic(
-  () => import('@/components/three/DodecahedronScene').then(mod => ({ default: mod.DodecahedronScene })),
+  () =>
+    import("@/components/three/DodecahedronScene").then((mod) => ({
+      default: mod.DodecahedronScene,
+    })),
   { ssr: false }
-)
+);
 
 export default function Test3DPage() {
   return (
@@ -25,5 +28,5 @@ export default function Test3DPage() {
         </ul>
       </div>
     </div>
-  )
+  );
 }

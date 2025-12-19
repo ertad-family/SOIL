@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { SectionLabel } from '@/components/ui/section-label'
-import { Card } from '@/components/ui/card'
-import Link from 'next/link'
+import { SectionLabel } from "@/components/ui/section-label";
+import { Card } from "@/components/ui/card";
+import Link from "next/link";
 import {
   Database,
   Microscope,
@@ -15,7 +15,7 @@ import {
   Stethoscope,
   Activity,
   GraduationCap,
-} from 'lucide-react'
+} from "lucide-react";
 
 // ============================================================================
 // HERO SECTION
@@ -27,19 +27,22 @@ function HeroSection() {
         <div className="max-w-3xl animate-fade-in-up">
           <SectionLabel>about the project</SectionLabel>
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold tracking-wide mt-4 mb-6 text-marble-100 leading-tight">
-            What is{' '}
-            <span className="text-gradient-gold">SOIL</span>?
+            What is <span className="text-gradient-gold">SOIL</span>?
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed mb-6">
-            <strong className="text-marble-100">SOIL</strong> (Social Organizational Intelligence Lab) is a
-            research-first nonprofit project devoted to collecting organizational autopsy data at scale —
-            to ignite a completely new scientific field: <strong className="text-marble-100">Organizational
-            Biology, Health, and Medicine</strong>.
+            <strong className="text-marble-100">SOIL</strong> (Social Organizational Intelligence
+            Lab) is a research-first nonprofit project devoted to collecting organizational autopsy
+            data at scale — to ignite a completely new scientific field:{" "}
+            <strong className="text-marble-100">
+              Organizational Biology, Health, and Medicine
+            </strong>
+            .
           </p>
           <p className="text-lg text-slate-400 leading-relaxed">
-            We stand at the beginning of a new discipline. Organizations are born, grow, get sick, and die —
-            yet we have no systematic understanding of why. No taxonomy of organizational diseases. No diagnostic
-            frameworks. No preventive medicine. No treatment protocols. SOIL is building the foundation to change that.
+            We stand at the beginning of a new discipline. Organizations are born, grow, get sick,
+            and die — yet we have no systematic understanding of why. No taxonomy of organizational
+            diseases. No diagnostic frameworks. No preventive medicine. No treatment protocols. SOIL
+            is building the foundation to change that.
           </p>
         </div>
       </div>
@@ -49,7 +52,7 @@ function HeroSection() {
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">✦</span>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -64,9 +67,9 @@ function MedicalAnalogySection() {
           From Human Autopsies to Organizational Autopsies
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          Modern medicine developed through systematic autopsy — the careful examination of deceased bodies
-          to understand disease processes. Before autopsy became standard practice, medicine relied on theory
-          and speculation. SOIL proposes the same approach for organizations.
+          Modern medicine developed through systematic autopsy — the careful examination of deceased
+          bodies to understand disease processes. Before autopsy became standard practice, medicine
+          relied on theory and speculation. SOIL proposes the same approach for organizations.
         </p>
 
         {/* Visual comparison */}
@@ -82,11 +85,11 @@ function MedicalAnalogySection() {
               </h3>
               <div className="space-y-4">
                 {[
-                  'Systematic human autopsies',
-                  'Understanding of disease processes',
-                  'Diagnostic frameworks',
-                  'Preventive medicine',
-                  'Treatment protocols',
+                  "Systematic human autopsies",
+                  "Understanding of disease processes",
+                  "Diagnostic frameworks",
+                  "Preventive medicine",
+                  "Treatment protocols",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-medium">
@@ -113,11 +116,11 @@ function MedicalAnalogySection() {
               </h3>
               <div className="space-y-4">
                 {[
-                  'Systematic organizational autopsies',
-                  'Understanding of failure patterns',
-                  'Diagnostic frameworks',
-                  'Early warning systems',
-                  'Intervention protocols',
+                  "Systematic organizational autopsies",
+                  "Understanding of failure patterns",
+                  "Diagnostic frameworks",
+                  "Early warning systems",
+                  "Intervention protocols",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-medium">
@@ -128,14 +131,16 @@ function MedicalAnalogySection() {
                 ))}
               </div>
               <div className="mt-6 pt-4 border-t border-slate-700">
-                <span className="text-gold-400 text-sm font-medium">Goal: Organizational Medicine</span>
+                <span className="text-gold-400 text-sm font-medium">
+                  Goal: Organizational Medicine
+                </span>
               </div>
             </div>
           </Card>
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -144,39 +149,42 @@ function MedicalAnalogySection() {
 function EcosystemSection() {
   const pillars = [
     {
-      numeral: 'I',
-      title: 'Cenotaphery',
-      description: 'Digital memorials honoring organizations. Founders share their stories through structured interviews, contributing data while finding closure.',
+      numeral: "I",
+      title: "Cenotaphery",
+      description:
+        "Digital memorials honoring organizations. Founders share their stories through structured interviews, contributing data while finding closure.",
       icon: <Database className="w-7 h-7" />,
-      href: '/memorials',
-      linkText: 'Visit Memorials',
-      status: 'active',
+      href: "/memorials",
+      linkText: "Visit Memorials",
+      status: "active",
     },
     {
-      numeral: 'II',
-      title: 'Research Center',
-      description: 'Systematic analysis of organizational mortality. Pattern recognition, framework testing, and publication of findings.',
+      numeral: "II",
+      title: "Research Center",
+      description:
+        "Systematic analysis of organizational mortality. Pattern recognition, framework testing, and publication of findings.",
       icon: <Microscope className="w-7 h-7" />,
-      href: '/research',
-      linkText: 'Explore Research',
-      status: 'active',
+      href: "/research",
+      linkText: "Explore Research",
+      status: "active",
     },
     {
-      numeral: 'III',
-      title: 'Founder Community',
-      description: 'A network of founders who have experienced organizational closure. Peer support, knowledge sharing, and mentorship.',
+      numeral: "III",
+      title: "Founder Community",
+      description:
+        "A network of founders who have experienced organizational closure. Peer support, knowledge sharing, and mentorship.",
       icon: <Users className="w-7 h-7" />,
-      href: '/community',
-      linkText: 'Join Community',
-      status: 'active',
+      href: "/community",
+      linkText: "Join Community",
+      status: "active",
     },
-  ]
+  ];
 
   const futureInstitutions = [
-    { title: 'Diagnostics Center', href: '/diagnostics', icon: <Activity className="w-5 h-5" /> },
-    { title: 'Learning Hub', href: '/education', icon: <GraduationCap className="w-5 h-5" /> },
-    { title: 'Clinic', href: '/clinic', icon: <Stethoscope className="w-5 h-5" /> },
-  ]
+    { title: "Diagnostics Center", href: "/diagnostics", icon: <Activity className="w-5 h-5" /> },
+    { title: "Learning Hub", href: "/education", icon: <GraduationCap className="w-5 h-5" /> },
+    { title: "Clinic", href: "/clinic", icon: <Stethoscope className="w-5 h-5" /> },
+  ];
 
   return (
     <>
@@ -190,8 +198,8 @@ function EcosystemSection() {
             The SOIL Ecosystem
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mb-12">
-            SOIL is not a single product but an ecosystem of interconnected institutions,
-            each serving the broader mission of organizational health and longevity.
+            SOIL is not a single product but an ecosystem of interconnected institutions, each
+            serving the broader mission of organizational health and longevity.
           </p>
 
           {/* Three pillars */}
@@ -208,8 +216,8 @@ function EcosystemSection() {
                   <span
                     className="font-serif text-[140px] font-bold leading-none"
                     style={{
-                      WebkitTextStroke: '2px rgba(201, 148, 61, 0.15)',
-                      WebkitTextFillColor: 'transparent',
+                      WebkitTextStroke: "2px rgba(201, 148, 61, 0.15)",
+                      WebkitTextFillColor: "transparent",
                     }}
                   >
                     {pillar.numeral}
@@ -223,9 +231,7 @@ function EcosystemSection() {
                   <h3 className="font-display text-xl font-medium text-marble-100 mb-3">
                     {pillar.title}
                   </h3>
-                  <p className="text-slate-400 leading-relaxed flex-1 mb-6">
-                    {pillar.description}
-                  </p>
+                  <p className="text-slate-400 leading-relaxed flex-1 mb-6">{pillar.description}</p>
                   <Link
                     href={pillar.href}
                     className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 transition-colors text-sm font-medium"
@@ -260,7 +266,7 @@ function EcosystemSection() {
       {/* Gradient transition out of section */}
       <div className="h-24 bg-gradient-to-b from-marble-950 to-slate-900" />
     </>
-  )
+  );
 }
 
 // ============================================================================
@@ -270,25 +276,29 @@ function ValuesSection() {
   const values = [
     {
       icon: <Heart className="w-7 h-7" />,
-      title: 'Dignity',
-      description: 'Every founder and organization deserves respectful remembrance. Failure is human; our methodology honors rather than exploits this reality.',
+      title: "Dignity",
+      description:
+        "Every founder and organization deserves respectful remembrance. Failure is human; our methodology honors rather than exploits this reality.",
     },
     {
       icon: <Scale className="w-7 h-7" />,
-      title: 'Truth',
-      description: 'Honest, systematic understanding of why organizations die. No predetermined conclusions, no comfortable narratives — we let data reveal patterns.',
+      title: "Truth",
+      description:
+        "Honest, systematic understanding of why organizations die. No predetermined conclusions, no comfortable narratives — we let data reveal patterns.",
     },
     {
       icon: <Shield className="w-7 h-7" />,
-      title: 'Rigor',
-      description: 'Scientific standards for research and analysis. Peer review, transparent methodology, and honest acknowledgment of limitations.',
+      title: "Rigor",
+      description:
+        "Scientific standards for research and analysis. Peer review, transparent methodology, and honest acknowledgment of limitations.",
     },
     {
       icon: <Eye className="w-7 h-7" />,
-      title: 'Transparency',
-      description: 'Clear separation between nonprofit mission and commercial activities. Founders always know how their data is used and protected.',
+      title: "Transparency",
+      description:
+        "Clear separation between nonprofit mission and commercial activities. Founders always know how their data is used and protected.",
     },
-  ]
+  ];
 
   return (
     <section className="py-16 md:py-24">
@@ -304,18 +314,14 @@ function ValuesSection() {
               <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400">
                 {value.icon}
               </div>
-              <h3 className="font-display text-xl font-medium text-marble-100">
-                {value.title}
-              </h3>
-              <p className="text-slate-400 leading-relaxed text-sm">
-                {value.description}
-              </p>
+              <h3 className="font-display text-xl font-medium text-marble-100">{value.title}</h3>
+              <p className="text-slate-400 leading-relaxed text-sm">{value.description}</p>
             </div>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -329,5 +335,5 @@ export default function AboutPage() {
       <EcosystemSection />
       <ValuesSection />
     </>
-  )
+  );
 }

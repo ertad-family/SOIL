@@ -1,14 +1,17 @@
-'use client'
+"use client";
 
-import { Suspense } from 'react'
-import dynamic from 'next/dynamic'
-import Link from 'next/link'
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
 
 // Dynamic import to avoid SSR issues with Three.js
 const CenotapheryScene = dynamic(
-  () => import('@/components/three/cenotaphery/CenotapheryScene').then(mod => ({ default: mod.CenotapheryScene })),
+  () =>
+    import("@/components/three/cenotaphery/CenotapheryScene").then((mod) => ({
+      default: mod.CenotapheryScene,
+    })),
   { ssr: false }
-)
+);
 
 /**
  * Cenotaphery page - 3D pentagonal memorial space
@@ -20,13 +23,15 @@ const CenotapheryScene = dynamic(
 export default function CenotapheryPage() {
   return (
     <div className="fixed inset-0 z-50 bg-[#050508]">
-      <Suspense fallback={
-        <div className="flex items-center justify-center h-full">
-          <div className="text-marble-400 font-display text-xl tracking-wide">
-            Loading Cenotaphery...
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-full">
+            <div className="text-marble-400 font-display text-xl tracking-wide">
+              Loading Cenotaphery...
+            </div>
           </div>
-        </div>
-      }>
+        }
+      >
         <CenotapheryScene className="w-full h-full" />
       </Suspense>
 
@@ -45,15 +50,11 @@ export default function CenotapheryPage() {
         <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
           Drag: rotate view
         </p>
-        <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
-          Scroll: zoom
-        </p>
+        <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">Scroll: zoom</p>
         <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
           WASD / Arrows: move
         </p>
-        <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">
-          Q/E: up/down
-        </p>
+        <p className="text-slate-500 text-xs font-mono uppercase tracking-wider">Q/E: up/down</p>
       </div>
 
       {/* Back link */}
@@ -64,5 +65,5 @@ export default function CenotapheryPage() {
         &larr; Back to Memorials
       </Link>
     </div>
-  )
+  );
 }

@@ -51,6 +51,7 @@ src/
 ### Global Architecture Pattern
 
 The app uses a single `AppShell` wrapper in `layout.tsx` that provides:
+
 - `MenuProvider` - global menu state with route-to-section mapping
 - `Header` - sticky header with menu button
 - `Footer` - footer with 3D Tuscan landscape
@@ -63,12 +64,14 @@ The app uses a single `AppShell` wrapper in `layout.tsx` that provides:
 The centerpiece is a dodecahedron portal navigation built with React Three Fiber:
 
 **Key Files:**
+
 - [DodecahedronScene.tsx](src/components/three/DodecahedronScene.tsx) - Main 3D scene with camera animations
 - [Dodecahedron.tsx](src/components/three/Dodecahedron.tsx) - The 12-faced polyhedron with portals
 - [MenuContext.tsx](src/contexts/MenuContext.tsx) - Menu state and route mapping
 - [MenuTransition.tsx](src/components/transitions/MenuTransition.tsx) - Orchestrates fly-in/fly-out
 
 **Portal Navigation Flow:**
+
 1. User double-clicks a portal face
 2. Camera flies INTO dodecahedron (`flythrough` → `fadeout` phases)
 3. Fade overlay covers screen
@@ -77,6 +80,7 @@ The centerpiece is a dodecahedron portal navigation built with React Three Fiber
 6. Fade overlay reveals new page
 
 **Route-Section Mapping (MenuContext):**
+
 ```typescript
 '/': 'home'
 '/research': 'research'
@@ -86,6 +90,7 @@ The centerpiece is a dodecahedron portal navigation built with React Three Fiber
 ### Design System
 
 Tailwind configuration in [tailwind.config.ts](tailwind.config.ts) with Roman-inspired theme:
+
 - **Colors:** marble (warm whites), gold (accent), terra (earth), slate (scientific/dark)
 - **Fonts:** Sora (headings), Manrope (body), Cinzel (decorative/Roman)
 - **Components:** Radix UI primitives in `src/components/ui/`

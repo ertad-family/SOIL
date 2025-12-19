@@ -2,6 +2,6 @@
 const nextConfig = {
   // Enable strict mode for better error detection
   reactStrictMode: true,
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

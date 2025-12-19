@@ -3,19 +3,14 @@
  * Issue: #23 Cenotaph creation wizard
  */
 
-export type DesignStatus =
-  | 'not_started'
-  | 'generating'
-  | 'options_ready'
-  | 'completed'
-  | 'failed'
+export type DesignStatus = "not_started" | "generating" | "options_ready" | "completed" | "failed";
 
 export interface DesignOption {
-  id: string
-  url: string
-  prompt: string
-  createdAt: string
-  conceptId?: string  // Reference to the concept that generated this design
+  id: string;
+  url: string;
+  prompt: string;
+  createdAt: string;
+  conceptId?: string; // Reference to the concept that generated this design
 }
 
 /**
@@ -23,85 +18,85 @@ export interface DesignOption {
  * before being rendered into an image
  */
 export interface DesignConcept {
-  id: string
-  title: string           // Short creative name
-  description: string     // Full description for image generation
-  styleKeywords: string[] // Style tags for catalog matching
-  createdAt: string
+  id: string;
+  title: string; // Short creative name
+  description: string; // Full description for image generation
+  styleKeywords: string[]; // Style tags for catalog matching
+  createdAt: string;
 }
 
 export interface CenotaphDesign {
-  options: DesignOption[]
-  selectedId: string | null
-  pendingConcepts?: DesignConcept[]  // Concepts waiting to be rendered (4-9)
-  selectedConcept?: DesignConcept    // The concept that was selected
+  options: DesignOption[];
+  selectedId: string | null;
+  pendingConcepts?: DesignConcept[]; // Concepts waiting to be rendered (4-9)
+  selectedConcept?: DesignConcept; // The concept that was selected
 }
 
 export interface DesignMetadata {
-  attempts: number
-  lastError: string | null
-  modelUsed: string
-  costEstimate: number
-  generatedAt: string
+  attempts: number;
+  lastError: string | null;
+  modelUsed: string;
+  costEstimate: number;
+  generatedAt: string;
 }
 
 export interface MemorialWithDesign {
-  id: string
-  slug: string
-  organizationName: string
-  organizationType: string | null
-  epitaph: string | null
-  userDesignPrompt: string | null
-  designStatus: DesignStatus
-  cenotaphDesign: CenotaphDesign | null
-  cenotaphImageUrl: string | null
-  designMetadata: DesignMetadata | null
+  id: string;
+  slug: string;
+  organizationName: string;
+  organizationType: string | null;
+  epitaph: string | null;
+  userDesignPrompt: string | null;
+  designStatus: DesignStatus;
+  cenotaphDesign: CenotaphDesign | null;
+  cenotaphImageUrl: string | null;
+  designMetadata: DesignMetadata | null;
 }
 
 export interface OrganizationContext {
-  name: string
-  type: string | null
-  industry: string | null
-  foundedDate: string | null
-  closedDate: string | null
-  peakTeamSize: number | null
-  location: string | null
+  name: string;
+  type: string | null;
+  industry: string | null;
+  foundedDate: string | null;
+  closedDate: string | null;
+  peakTeamSize: number | null;
+  location: string | null;
 }
 
 export interface StoryContext {
-  epitaph: string | null
-  mainLesson: string | null
-  closureType: string | null
-  keyEvents: string[]
+  epitaph: string | null;
+  mainLesson: string | null;
+  closureType: string | null;
+  keyEvents: string[];
 }
 
 export interface GenerateDesignRequest {
-  memorialId: string
-  userPrompt: string
+  memorialId: string;
+  userPrompt: string;
 }
 
 export interface GenerateDesignResponse {
-  success: boolean
-  options?: DesignOption[]
-  error?: string
-  status?: DesignStatus
+  success: boolean;
+  options?: DesignOption[];
+  error?: string;
+  status?: DesignStatus;
 }
 
 export interface SelectDesignRequest {
-  memorialId: string
-  selectedDesignId: string
+  memorialId: string;
+  selectedDesignId: string;
 }
 
 export interface SelectDesignResponse {
-  success: boolean
-  imageUrl?: string
-  error?: string
+  success: boolean;
+  imageUrl?: string;
+  error?: string;
 }
 
 export interface DesignStatusResponse {
-  status: DesignStatus
-  options: DesignOption[] | null
-  selectedId: string | null
-  imageUrl: string | null
-  error?: string
+  status: DesignStatus;
+  options: DesignOption[] | null;
+  selectedId: string | null;
+  imageUrl: string | null;
+  error?: string;
 }

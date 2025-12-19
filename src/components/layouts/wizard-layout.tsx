@@ -1,46 +1,46 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, X } from 'lucide-react'
+import * as React from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, X } from "lucide-react";
 
 export interface WizardStep {
-  id: string
-  label: string
-  description?: string
+  id: string;
+  label: string;
+  description?: string;
 }
 
 export interface WizardLayoutProps {
-  variant?: 'default' | 'dark'
-  children: React.ReactNode
-  steps: WizardStep[]
-  currentStep: number
-  onBack?: () => void
-  onNext?: () => void
-  title?: string
-  subtitle?: string
-  backLabel?: string
-  nextLabel?: string
-  cancelHref?: string
-  isLoading?: boolean
-  canGoBack?: boolean
-  canGoNext?: boolean
-  footerContent?: React.ReactNode
-  className?: string
+  variant?: "default" | "dark";
+  children: React.ReactNode;
+  steps: WizardStep[];
+  currentStep: number;
+  onBack?: () => void;
+  onNext?: () => void;
+  title?: string;
+  subtitle?: string;
+  backLabel?: string;
+  nextLabel?: string;
+  cancelHref?: string;
+  isLoading?: boolean;
+  canGoBack?: boolean;
+  canGoNext?: boolean;
+  footerContent?: React.ReactNode;
+  className?: string;
   /** Custom progress percentage (0-100). If not provided, calculated from steps. */
-  progress?: number
+  progress?: number;
   /** Use wider content area (max-w-6xl instead of max-w-4xl) */
-  wide?: boolean
+  wide?: boolean;
   /** Hide the card wrapper around content */
-  noCard?: boolean
+  noCard?: boolean;
 }
 
 const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
   (
     {
-      variant = 'default',
+      variant = "default",
       children,
       steps,
       currentStep,
@@ -48,9 +48,9 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
       onNext,
       title,
       subtitle,
-      backLabel = 'Back',
-      nextLabel = 'Continue',
-      cancelHref = '/',
+      backLabel = "Back",
+      nextLabel = "Continue",
+      cancelHref = "/",
       isLoading = false,
       canGoBack = true,
       canGoNext = true,
@@ -62,46 +62,45 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
     },
     ref
   ) => {
-    const progress = customProgress ?? ((currentStep + 1) / steps.length) * 100
-    const currentStepData = steps[currentStep]
-    const isDark = variant === 'dark'
+    const progress = customProgress ?? ((currentStep + 1) / steps.length) * 100;
+    const currentStepData = steps[currentStep];
+    const isDark = variant === "dark";
 
     return (
       <div
         ref={ref}
         className={cn(
-          'min-h-screen flex flex-col',
-          isDark ? 'bg-slate-gradient' : 'bg-marble-gradient',
+          "min-h-screen flex flex-col",
+          isDark ? "bg-slate-gradient" : "bg-marble-gradient",
           className
         )}
       >
         {/* Header - compact single row */}
         <header
           className={cn(
-            'sticky top-0 z-40 w-full backdrop-blur-md',
+            "sticky top-0 z-40 w-full backdrop-blur-md",
             isDark
-              ? 'bg-slate-900/90 border-b border-slate-700'
-              : 'bg-white/90 border-b border-marble-300'
+              ? "bg-slate-900/90 border-b border-slate-700"
+              : "bg-white/90 border-b border-marble-300"
           )}
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
             <div className="flex items-center gap-4">
               {/* Cancel button */}
               <Link href={cancelHref}>
-                <Button
-                  variant={isDark ? 'dark-ghost' : 'ghost'}
-                  size="sm"
-                >
+                <Button variant={isDark ? "dark-ghost" : "ghost"} size="sm">
                   <X className="h-4 w-4 mr-2" />
                   Save & Exit
                 </Button>
               </Link>
 
               {/* Progress bar - flexible width */}
-              <div className={cn(
-                'flex-1 h-1.5 rounded-full overflow-hidden',
-                isDark ? 'bg-slate-700' : 'bg-marble-200'
-              )}>
+              <div
+                className={cn(
+                  "flex-1 h-1.5 rounded-full overflow-hidden",
+                  isDark ? "bg-slate-700" : "bg-marble-200"
+                )}
+              >
                 <div
                   className="h-full bg-gold-500 transition-all duration-300"
                   style={{ width: `${progress}%` }}
@@ -109,10 +108,12 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
               </div>
 
               {/* Progress percentage */}
-              <span className={cn(
-                'text-sm font-medium tabular-nums',
-                isDark ? 'text-slate-400' : 'text-marble-600'
-              )}>
+              <span
+                className={cn(
+                  "text-sm font-medium tabular-nums",
+                  isDark ? "text-slate-400" : "text-marble-600"
+                )}
+              >
                 {Math.round(progress)}%
               </span>
             </div>
@@ -121,27 +122,21 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
 
         {/* Main content */}
         <main className="flex-1">
-          <div className={cn(
-            'mx-auto px-4 sm:px-6 py-8',
-            wide ? 'max-w-7xl' : 'max-w-4xl'
-          )}>
+          <div className={cn("mx-auto px-4 sm:px-6 py-8", wide ? "max-w-7xl" : "max-w-4xl")}>
             {/* Step title */}
             {(title || currentStepData) && (
-              <div className={cn('text-center', noCard ? 'mb-4' : 'mb-8')}>
+              <div className={cn("text-center", noCard ? "mb-4" : "mb-8")}>
                 <h1
                   className={cn(
-                    'font-serif text-2xl sm:text-3xl font-semibold tracking-wide',
-                    isDark ? 'text-marble-100' : 'text-marble-950'
+                    "font-serif text-2xl sm:text-3xl font-semibold tracking-wide",
+                    isDark ? "text-marble-100" : "text-marble-950"
                   )}
                 >
                   {title || currentStepData.label}
                 </h1>
                 {(subtitle || currentStepData.description) && (
                   <p
-                    className={cn(
-                      'mt-2 text-base',
-                      isDark ? 'text-slate-400' : 'text-marble-600'
-                    )}
+                    className={cn("mt-2 text-base", isDark ? "text-slate-400" : "text-marble-600")}
                   >
                     {subtitle || currentStepData.description}
                   </p>
@@ -155,10 +150,10 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
             ) : (
               <div
                 className={cn(
-                  'rounded-md p-6 sm:p-8',
+                  "rounded-md p-6 sm:p-8",
                   isDark
-                    ? 'bg-slate-800 border border-slate-700'
-                    : 'bg-white border border-marble-300 shadow-sm'
+                    ? "bg-slate-800 border border-slate-700"
+                    : "bg-white border border-marble-300 shadow-sm"
                 )}
               >
                 {children}
@@ -170,10 +165,10 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
         {/* Footer */}
         <footer
           className={cn(
-            'w-full backdrop-blur-md',
+            "w-full backdrop-blur-md",
             isDark
-              ? 'bg-slate-900/90 border-t border-slate-700'
-              : 'bg-white/90 border-t border-marble-300'
+              ? "bg-slate-900/90 border-t border-slate-700"
+              : "bg-white/90 border-t border-marble-300"
           )}
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
@@ -182,7 +177,7 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
               <div>
                 {currentStep > 0 && canGoBack && (
                   <Button
-                    variant={isDark ? 'dark-secondary' : 'secondary'}
+                    variant={isDark ? "dark-secondary" : "secondary"}
                     onClick={onBack}
                     disabled={isLoading}
                   >
@@ -197,12 +192,12 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
                 {footerContent}
                 {canGoNext && (
                   <Button
-                    variant={isDark ? 'dark-primary' : 'primary'}
+                    variant={isDark ? "dark-primary" : "primary"}
                     onClick={onNext}
                     disabled={isLoading}
                     isLoading={isLoading}
                   >
-                    {currentStep === steps.length - 1 ? 'Complete' : nextLabel}
+                    {currentStep === steps.length - 1 ? "Complete" : nextLabel}
                   </Button>
                 )}
               </div>
@@ -211,20 +206,15 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
         </footer>
 
         {/* Bottom separator section - prevents gradient overlay from covering footer */}
-        <div
-          className={cn(
-            'w-full',
-            isDark ? 'bg-slate-900' : 'bg-marble-50'
-          )}
-        >
+        <div className={cn("w-full", isDark ? "bg-slate-900" : "bg-marble-50")}>
           <div className="divider-roman">
             <span className="text-gold-400 text-lg px-6">✦</span>
           </div>
         </div>
       </div>
-    )
+    );
   }
-)
-WizardLayout.displayName = 'WizardLayout'
+);
+WizardLayout.displayName = "WizardLayout";
 
-export { WizardLayout }
+export { WizardLayout };

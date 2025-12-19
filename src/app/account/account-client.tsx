@@ -1,18 +1,12 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { DashboardLayout } from '@/components/layouts/dashboard-layout'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { SwitchWithLabel } from '@/components/ui/switch'
+import { useState } from "react";
+import { DashboardLayout } from "@/components/layouts/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SwitchWithLabel } from "@/components/ui/switch";
 import {
   Plus,
   Building2,
@@ -23,81 +17,83 @@ import {
   ChevronRight,
   CheckCircle2,
   Landmark,
-} from 'lucide-react'
+} from "lucide-react";
 import type {
   StoryStatus,
   ModuleId,
   OrganizationType,
   VerificationStatus,
-} from '@/types/interview'
-import { MODULES } from '@/types/interview'
+} from "@/types/interview";
+import { MODULES } from "@/types/interview";
 
 interface AccountUser {
-  id: string
-  email: string
-  name: string
-  avatarUrl?: string
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
 }
 
 interface OrganizationData {
-  id: string
-  slug: string
-  name: string
-  organization_type: OrganizationType | null
-  description: string | null
-  founded_date: string | null
-  closed_date: string | null
-  verification_status: VerificationStatus
-  is_public: boolean
+  id: string;
+  slug: string;
+  name: string;
+  organization_type: OrganizationType | null;
+  description: string | null;
+  founded_date: string | null;
+  closed_date: string | null;
+  verification_status: VerificationStatus;
+  is_public: boolean;
 }
 
 interface StoryData {
-  id: string
-  organization_id: string
-  status: StoryStatus
-  current_module: ModuleId
-  completed_modules: ModuleId[]
-  created_at: string
-  updated_at: string
-  coined_at: string | null
-  organization: OrganizationData
+  id: string;
+  organization_id: string;
+  status: StoryStatus;
+  current_module: ModuleId;
+  completed_modules: ModuleId[];
+  created_at: string;
+  updated_at: string;
+  coined_at: string | null;
+  organization: OrganizationData;
 }
 
 interface MemorialData {
-  id: string
-  slug: string
-  organization_id: string | null
+  id: string;
+  slug: string;
+  organization_id: string | null;
 }
 
 interface AccountClientProps {
-  user: AccountUser
-  stories: StoryData[]
-  memorials: MemorialData[]
+  user: AccountUser;
+  stories: StoryData[];
+  memorials: MemorialData[];
 }
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: 'Tech Product',
-  services: 'Services',
-  ecommerce: 'E-commerce',
-  manufacturing: 'Manufacturing',
-  ngo: 'NGO',
-  media: 'Media',
-}
+  tech_product: "Tech Product",
+  services: "Services",
+  ecommerce: "E-commerce",
+  manufacturing: "Manufacturing",
+  ngo: "NGO",
+  media: "Media",
+};
 
 export function AccountClient({ user, stories, memorials }: AccountClientProps) {
   const [notifications, setNotifications] = useState({
     newRespects: true,
     newCondolences: true,
     weeklyDigest: false,
-  })
+  });
 
   // Categorize stories
-  const inProgressStories = stories.filter(s => s.status === 'draft' || s.status === 'in_progress')
-  const coinedStories = stories.filter(s => s.status === 'coined')
+  const inProgressStories = stories.filter(
+    (s) => s.status === "draft" || s.status === "in_progress"
+  );
+  const coinedStories = stories.filter((s) => s.status === "coined");
 
   // Find which organizations have cenotaphs
   const getMemorialForOrganization = (organizationId: string) =>
-    memorials.find(m => m.organization_id === organizationId)
+    memorials.find((m) => m.organization_id === organizationId);
 
   return (
     <DashboardLayout
@@ -225,7 +221,7 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
         </CardContent>
       </Card>
     </DashboardLayout>
-  )
+  );
 }
 
 // Empty state component
@@ -236,20 +232,18 @@ function EmptyState({
   actionLabel,
   actionHref,
 }: {
-  icon: React.ReactNode
-  title: string
-  description: string
-  actionLabel: string
-  actionHref: string
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionHref: string;
 }) {
   return (
     <div className="text-center py-12">
       <div className="w-20 h-20 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-slate-500 mb-4">
         {icon}
       </div>
-      <h3 className="font-display text-lg font-medium text-marble-100 mb-2">
-        {title}
-      </h3>
+      <h3 className="font-display text-lg font-medium text-marble-100 mb-2">{title}</h3>
       <p className="text-slate-400 mb-6">{description}</p>
       <a href={actionHref}>
         <Button variant="dark-primary" rightIcon={<Plus className="w-4 h-4" />}>
@@ -257,18 +251,16 @@ function EmptyState({
         </Button>
       </a>
     </div>
-  )
+  );
 }
 
 // Story card for in-progress stories
 function StoryCard({ story }: { story: StoryData }) {
-  const progress = Math.round((story.completed_modules.length / MODULES.length) * 100)
-  const org = story.organization
-  const orgName = org?.name || 'Untitled Organization'
-  const orgType = org?.organization_type
-    ? ORG_TYPE_LABELS[org.organization_type]
-    : null
-  const isVerified = org?.verification_status === 'verified'
+  const progress = Math.round((story.completed_modules.length / MODULES.length) * 100);
+  const org = story.organization;
+  const orgName = org?.name || "Untitled Organization";
+  const orgType = org?.organization_type ? ORG_TYPE_LABELS[org.organization_type] : null;
+  const isVerified = org?.verification_status === "verified";
 
   return (
     <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors">
@@ -276,12 +268,10 @@ function StoryCard({ story }: { story: StoryData }) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <a href={`/organization/${org?.id}`} className="hover:text-gold-400 transition-colors">
-              <h3 className="font-display text-lg font-medium text-marble-100">
-                {orgName}
-              </h3>
+              <h3 className="font-display text-lg font-medium text-marble-100">{orgName}</h3>
             </a>
             <Badge variant="dark-outline" size="sm">
-              {story.status === 'draft' ? 'Draft' : 'In Progress'}
+              {story.status === "draft" ? "Draft" : "In Progress"}
             </Badge>
             {isVerified && (
               <Badge variant="dark-verified" size="sm">
@@ -301,7 +291,7 @@ function StoryCard({ story }: { story: StoryData }) {
             {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {org.founded_date.replace('-', '.')} — {org.closed_date.replace('-', '.')}
+                {org.founded_date.replace("-", ".")} — {org.closed_date.replace("-", ".")}
               </span>
             )}
           </div>
@@ -323,31 +313,27 @@ function StoryCard({ story }: { story: StoryData }) {
 
         <div className="flex items-center gap-2">
           <a href={`/interview/${story.id}`}>
-            <Button variant="dark-primary" size="sm" rightIcon={<ChevronRight className="w-4 h-4" />}>
+            <Button
+              variant="dark-primary"
+              size="sm"
+              rightIcon={<ChevronRight className="w-4 h-4" />}
+            >
               Continue
             </Button>
           </a>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Coined story card with cenotaph status
-function CoinedStoryCard({
-  story,
-  memorial
-}: {
-  story: StoryData
-  memorial?: MemorialData
-}) {
-  const org = story.organization
-  const orgName = org?.name || 'Untitled Organization'
-  const orgType = org?.organization_type
-    ? ORG_TYPE_LABELS[org.organization_type]
-    : null
-  const hasCenotaph = !!memorial
-  const isVerified = org?.verification_status === 'verified'
+function CoinedStoryCard({ story, memorial }: { story: StoryData; memorial?: MemorialData }) {
+  const org = story.organization;
+  const orgName = org?.name || "Untitled Organization";
+  const orgType = org?.organization_type ? ORG_TYPE_LABELS[org.organization_type] : null;
+  const hasCenotaph = !!memorial;
+  const isVerified = org?.verification_status === "verified";
 
   return (
     <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors">
@@ -355,15 +341,17 @@ function CoinedStoryCard({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <a href={`/organization/${org?.id}`} className="hover:text-gold-400 transition-colors">
-              <h3 className="font-display text-lg font-medium text-marble-100">
-                {orgName}
-              </h3>
+              <h3 className="font-display text-lg font-medium text-marble-100">{orgName}</h3>
             </a>
             <a href={`/interview/${story.id}`} className="hover:opacity-80 transition-opacity">
               <Badge
                 variant="dark-success"
                 size="sm"
-                title={story.coined_at ? `Coined ${new Date(story.coined_at).toLocaleDateString()}` : undefined}
+                title={
+                  story.coined_at
+                    ? `Coined ${new Date(story.coined_at).toLocaleDateString()}`
+                    : undefined
+                }
                 className="cursor-pointer"
               >
                 Story Coined
@@ -393,7 +381,7 @@ function CoinedStoryCard({
             {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {org.founded_date.replace('-', '.')} — {org.closed_date.replace('-', '.')}
+                {org.founded_date.replace("-", ".")} — {org.closed_date.replace("-", ".")}
               </span>
             )}
           </div>
@@ -402,7 +390,11 @@ function CoinedStoryCard({
         <div className="flex items-center gap-2">
           {hasCenotaph ? (
             <a href={`/memorials/${memorial.slug}`}>
-              <Button variant="dark-secondary" size="sm" rightIcon={<ExternalLink className="w-4 h-4" />}>
+              <Button
+                variant="dark-secondary"
+                size="sm"
+                rightIcon={<ExternalLink className="w-4 h-4" />}
+              >
                 View Cenotaph
               </Button>
             </a>
@@ -416,5 +408,5 @@ function CoinedStoryCard({
         </div>
       </div>
     </div>
-  )
+  );
 }

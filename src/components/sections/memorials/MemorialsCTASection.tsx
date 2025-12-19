@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { Clock, Shield, Save } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Clock, Shield, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Call-to-action section encouraging users to create their own cenotaph
@@ -56,5 +56,5 @@ export function MemorialsCTASection() {
         </p>
       </div>
     </section>
-  )
+  );
 }

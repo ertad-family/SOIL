@@ -1,62 +1,62 @@
-import { SectionLabel } from '@/components/ui/section-label'
+import { SectionLabel } from "@/components/ui/section-label";
 
 interface Testimonial {
-  name: string
-  quote: string
+  name: string;
+  quote: string;
 }
 
 const testimonials: Testimonial[] = [
   {
-    name: 'alex_founder',
+    name: "alex_founder",
     quote:
-      'Finally, a place where my experience matters. Sharing my story helped me process what happened and maybe help someone avoid the same mistakes.',
+      "Finally, a place where my experience matters. Sharing my story helped me process what happened and maybe help someone avoid the same mistakes.",
   },
   {
-    name: 'maria_ceo',
+    name: "maria_ceo",
     quote:
-      'The interview process was surprisingly therapeutic. I expected it to be painful, but it felt more like closure. The framework really guides you through reflection.',
+      "The interview process was surprisingly therapeutic. I expected it to be painful, but it felt more like closure. The framework really guides you through reflection.",
   },
   {
-    name: 'david_tech',
+    name: "david_tech",
     quote:
-      'As a researcher, the data quality here is remarkable. Real founders, real stories, structured in a way that actually enables pattern discovery.',
+      "As a researcher, the data quality here is remarkable. Real founders, real stories, structured in a way that actually enables pattern discovery.",
   },
   {
-    name: 'sarah_ventures',
+    name: "sarah_ventures",
     quote:
-      'I wish this existed when I was starting out. Learning from others\' failures is just as important as learning from successes.',
+      "I wish this existed when I was starting out. Learning from others' failures is just as important as learning from successes.",
   },
   {
-    name: 'james_serial',
+    name: "james_serial",
     quote:
-      'Three startups, three different endings. SOIL helped me see the common threads I was blind to. Invaluable for my next venture.',
+      "Three startups, three different endings. SOIL helped me see the common threads I was blind to. Invaluable for my next venture.",
   },
   {
-    name: 'nina_advisor',
+    name: "nina_advisor",
     quote:
-      'The anonymization gave me confidence to be completely honest. No judgment, just contribution to collective knowledge.',
+      "The anonymization gave me confidence to be completely honest. No judgment, just contribution to collective knowledge.",
   },
   {
-    name: 'chen_founder',
+    name: "chen_founder",
     quote:
-      'Building something and watching it end is lonely. Here, I found a community that understands. We\'re not failures — we\'re data points for progress.',
+      "Building something and watching it end is lonely. Here, I found a community that understands. We're not failures — we're data points for progress.",
   },
   {
-    name: 'marcus_ops',
+    name: "marcus_ops",
     quote:
-      'Quick process, thoughtful questions. The team clearly understands what founders go through.',
+      "Quick process, thoughtful questions. The team clearly understands what founders go through.",
   },
   {
-    name: 'elena_startup',
+    name: "elena_startup",
     quote:
-      'The cenotaph concept is beautiful. My company deserves to be remembered, not just forgotten. This gives it dignity.',
+      "The cenotaph concept is beautiful. My company deserves to be remembered, not just forgotten. This gives it dignity.",
   },
   {
-    name: 'tom_investor',
+    name: "tom_investor",
     quote:
-      'I recommend SOIL to every founder in my portfolio who\'s winding down. It\'s part of a healthy closure process.',
+      "I recommend SOIL to every founder in my portfolio who's winding down. It's part of a healthy closure process.",
   },
-]
+];
 
 function StarRating() {
   return (
@@ -67,7 +67,7 @@ function StarRating() {
         </span>
       ))}
     </div>
-  )
+  );
 }
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
@@ -77,7 +77,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
       <StarRating />
       <p className="text-slate-400 text-sm leading-relaxed">{testimonial.quote}</p>
     </div>
-  )
+  );
 }
 
 export function CommunityTestimonialsSection() {
@@ -108,5 +108,5 @@ export function CommunityTestimonialsSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

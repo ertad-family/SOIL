@@ -1,29 +1,29 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { AuthLayout } from '@/components/layouts/auth-layout'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { createClient } from '@/lib/supabase/client'
-import { Loader2 } from 'lucide-react'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { AuthLayout } from "@/components/layouts/auth-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export default function SignupPage() {
-  const router = useRouter()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    const supabase = createClient()
+    const supabase = createClient();
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -34,27 +34,27 @@ export default function SignupPage() {
             display_name: name,
           },
         },
-      })
+      });
 
-      if (error) throw error
+      if (error) throw error;
 
-      router.push('/signup/success')
+      router.push("/signup/success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create account. Please try again.')
+      setError(err instanceof Error ? err.message : "Failed to create account. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <AuthLayout
       variant="dark"
       title="Create Account"
       subtitle="Join the community of founders preserving organizational knowledge"
-      backLink={{ href: '/', label: 'Back to Home' }}
+      backLink={{ href: "/", label: "Back to Home" }}
       footer={
         <p className="text-sm text-slate-400">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link href="/login" className="text-gold-400 hover:text-gold-300 transition-colors">
             Sign in
           </Link>
@@ -128,10 +128,10 @@ export default function SignupPage() {
               Creating account...
             </>
           ) : (
-            'Create Account'
+            "Create Account"
           )}
         </Button>
       </form>
     </AuthLayout>
-  )
+  );
 }

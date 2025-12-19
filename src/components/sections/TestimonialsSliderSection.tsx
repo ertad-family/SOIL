@@ -1,41 +1,41 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { SectionLabel } from '@/components/ui/section-label'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState } from "react";
+import { SectionLabel } from "@/components/ui/section-label";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Testimonial {
-  quote: string
-  author: string
-  role: string
+  quote: string;
+  author: string;
+  role: string;
 }
 
 const testimonials: Testimonial[] = [
   {
     quote:
-      'Sharing my story with SOIL was unexpectedly healing. The interview framework helped me see patterns I had missed while living through the chaos. This isn\'t just data collection — it\'s a form of closure.',
-    author: 'Sarah Chen',
-    role: 'Former CEO, TechStart Inc.',
+      "Sharing my story with SOIL was unexpectedly healing. The interview framework helped me see patterns I had missed while living through the chaos. This isn't just data collection — it's a form of closure.",
+    author: "Sarah Chen",
+    role: "Former CEO, TechStart Inc.",
   },
   {
     quote:
-      'I was skeptical at first, but the anonymization gave me confidence to be completely honest. Knowing my experience might help future founders avoid the same mistakes made it worthwhile.',
-    author: 'Marcus Webb',
-    role: 'Serial Entrepreneur',
+      "I was skeptical at first, but the anonymization gave me confidence to be completely honest. Knowing my experience might help future founders avoid the same mistakes made it worthwhile.",
+    author: "Marcus Webb",
+    role: "Serial Entrepreneur",
   },
   {
     quote:
-      'The structured reflection process helped me understand why we failed, not just how. That insight is invaluable for my next venture. I recommend SOIL to every founder winding down.',
-    author: 'Elena Rodriguez',
-    role: 'Founder, GreenPath Solutions',
+      "The structured reflection process helped me understand why we failed, not just how. That insight is invaluable for my next venture. I recommend SOIL to every founder winding down.",
+    author: "Elena Rodriguez",
+    role: "Founder, GreenPath Solutions",
   },
   {
     quote:
-      'Finally, a place where failure isn\'t stigmatized but studied. SOIL treats organizational endings with the dignity they deserve. My company\'s story now contributes to something larger.',
-    author: 'David Kim',
-    role: 'Co-founder, DataSync',
+      "Finally, a place where failure isn't stigmatized but studied. SOIL treats organizational endings with the dignity they deserve. My company's story now contributes to something larger.",
+    author: "David Kim",
+    role: "Co-founder, DataSync",
   },
-]
+];
 
 // Quote icon SVG
 function QuoteIcon() {
@@ -53,21 +53,21 @@ function QuoteIcon() {
         fill="currentColor"
       />
     </svg>
-  )
+  );
 }
 
 export function TestimonialsSliderSection() {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length)
-  }
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)
-  }
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
 
-  const currentTestimonial = testimonials[currentIndex]
+  const currentTestimonial = testimonials[currentIndex];
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden">
@@ -161,5 +161,5 @@ export function TestimonialsSliderSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

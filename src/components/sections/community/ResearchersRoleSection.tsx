@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { ArrowRight, Database, FlaskConical, FileText, Users } from 'lucide-react'
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ArrowRight, Database, FlaskConical, FileText, Users } from "lucide-react";
 
 // Custom SVG illustration for Researchers
 function ResearchersIllustrationSVG() {
@@ -68,9 +68,32 @@ function ResearchersIllustrationSVG() {
 
       {/* Central magnifying glass / research symbol */}
       <g transform="translate(150, 80)">
-        <circle cx="0" cy="0" r="30" fill="rgba(147,112,219,0.1)" stroke="rgba(147,112,219,0.5)" strokeWidth="2" />
-        <circle cx="0" cy="0" r="20" fill="none" stroke="rgba(147,112,219,0.3)" strokeWidth="1" strokeDasharray="3 3" />
-        <line x1="22" y1="22" x2="40" y2="40" stroke="rgba(147,112,219,0.5)" strokeWidth="3" strokeLinecap="round" />
+        <circle
+          cx="0"
+          cy="0"
+          r="30"
+          fill="rgba(147,112,219,0.1)"
+          stroke="rgba(147,112,219,0.5)"
+          strokeWidth="2"
+        />
+        <circle
+          cx="0"
+          cy="0"
+          r="20"
+          fill="none"
+          stroke="rgba(147,112,219,0.3)"
+          strokeWidth="1"
+          strokeDasharray="3 3"
+        />
+        <line
+          x1="22"
+          y1="22"
+          x2="40"
+          y2="40"
+          stroke="rgba(147,112,219,0.5)"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
 
         {/* Pattern inside lens */}
         <circle cx="-5" cy="-5" r="3" fill="rgba(147,112,219,0.4)" />
@@ -80,56 +103,109 @@ function ResearchersIllustrationSVG() {
 
       {/* Connection nodes - representing collaboration */}
       <g>
-        <circle cx="50" cy="70" r="8" fill="rgba(147,112,219,0.2)" stroke="rgba(147,112,219,0.4)" strokeWidth="1" />
-        <circle cx="250" cy="80" r="10" fill="rgba(147,112,219,0.2)" stroke="rgba(147,112,219,0.4)" strokeWidth="1" />
-        <circle cx="40" cy="200" r="6" fill="rgba(147,112,219,0.2)" stroke="rgba(147,112,219,0.4)" strokeWidth="1" />
-        <circle cx="260" cy="180" r="8" fill="rgba(147,112,219,0.2)" stroke="rgba(147,112,219,0.4)" strokeWidth="1" />
+        <circle
+          cx="50"
+          cy="70"
+          r="8"
+          fill="rgba(147,112,219,0.2)"
+          stroke="rgba(147,112,219,0.4)"
+          strokeWidth="1"
+        />
+        <circle
+          cx="250"
+          cy="80"
+          r="10"
+          fill="rgba(147,112,219,0.2)"
+          stroke="rgba(147,112,219,0.4)"
+          strokeWidth="1"
+        />
+        <circle
+          cx="40"
+          cy="200"
+          r="6"
+          fill="rgba(147,112,219,0.2)"
+          stroke="rgba(147,112,219,0.4)"
+          strokeWidth="1"
+        />
+        <circle
+          cx="260"
+          cy="180"
+          r="8"
+          fill="rgba(147,112,219,0.2)"
+          stroke="rgba(147,112,219,0.4)"
+          strokeWidth="1"
+        />
 
         {/* Connection lines */}
-        <line x1="50" y1="70" x2="120" y2="80" stroke="rgba(147,112,219,0.2)" strokeWidth="1" strokeDasharray="4 4" />
-        <line x1="250" y1="80" x2="180" y2="80" stroke="rgba(147,112,219,0.2)" strokeWidth="1" strokeDasharray="4 4" />
+        <line
+          x1="50"
+          y1="70"
+          x2="120"
+          y2="80"
+          stroke="rgba(147,112,219,0.2)"
+          strokeWidth="1"
+          strokeDasharray="4 4"
+        />
+        <line
+          x1="250"
+          y1="80"
+          x2="180"
+          y2="80"
+          stroke="rgba(147,112,219,0.2)"
+          strokeWidth="1"
+          strokeDasharray="4 4"
+        />
       </g>
 
       {/* Document/publication symbols */}
       <g transform="translate(240, 240)">
-        <rect x="-15" y="-20" width="30" height="40" fill="rgba(196,161,90,0.15)" stroke="rgba(196,161,90,0.4)" strokeWidth="1" rx="2" />
+        <rect
+          x="-15"
+          y="-20"
+          width="30"
+          height="40"
+          fill="rgba(196,161,90,0.15)"
+          stroke="rgba(196,161,90,0.4)"
+          strokeWidth="1"
+          rx="2"
+        />
         <line x1="-10" y1="-12" x2="10" y2="-12" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
         <line x1="-10" y1="-4" x2="8" y2="-4" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
         <line x1="-10" y1="4" x2="10" y2="4" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
         <line x1="-10" y1="12" x2="5" y2="12" stroke="rgba(196,161,90,0.3)" strokeWidth="1" />
       </g>
     </svg>
-  )
+  );
 }
 
 const valueProps = [
   {
     icon: <Database className="w-5 h-5" />,
-    title: 'Unique Dataset',
-    description: 'Access structured data on organizational mortality unavailable anywhere else.',
+    title: "Unique Dataset",
+    description: "Access structured data on organizational mortality unavailable anywhere else.",
   },
   {
     icon: <FlaskConical className="w-5 h-5" />,
-    title: 'Research Questions',
-    description: 'Explore uncharted territory in organizational science and failure studies.',
+    title: "Research Questions",
+    description: "Explore uncharted territory in organizational science and failure studies.",
   },
   {
     icon: <FileText className="w-5 h-5" />,
-    title: 'Publication Support',
-    description: 'Co-author papers with our team and access data for your research.',
+    title: "Publication Support",
+    description: "Co-author papers with our team and access data for your research.",
   },
   {
     icon: <Users className="w-5 h-5" />,
-    title: 'Collaboration Network',
-    description: 'Connect with other researchers studying organizational mortality.',
+    title: "Collaboration Network",
+    description: "Connect with other researchers studying organizational mortality.",
   },
-]
+];
 
 const steps = [
-  'Explore our research program and methodology',
-  'Propose your research project or join existing initiatives',
-  'Access anonymized datasets for scholarly work',
-]
+  "Explore our research program and methodology",
+  "Propose your research project or join existing initiatives",
+  "Access anonymized datasets for scholarly work",
+];
 
 export function ResearchersRoleSection() {
   return (
@@ -138,7 +214,11 @@ export function ResearchersRoleSection() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Illustration (reversed layout) */}
           <div className="animate-fade-in-up order-2 lg:order-1">
-            <Card variant="dark-elevated" padding="none" className="aspect-square relative overflow-hidden">
+            <Card
+              variant="dark-elevated"
+              padding="none"
+              className="aspect-square relative overflow-hidden"
+            >
               <div className="absolute inset-0 bg-gradient-radial from-purple-500/5 via-transparent to-transparent" />
               <ResearchersIllustrationSVG />
 
@@ -157,8 +237,8 @@ export function ResearchersRoleSection() {
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
               Organizational mortality is understudied because the data doesn&apos;t exist.
-              We&apos;re building the first systematic dataset of organizational autopsies —
-              and we need researchers to help us make sense of it.
+              We&apos;re building the first systematic dataset of organizational autopsies — and we
+              need researchers to help us make sense of it.
             </p>
 
             {/* Value propositions */}
@@ -172,9 +252,7 @@ export function ResearchersRoleSection() {
                     <h4 className="font-display text-sm font-medium text-marble-100 mb-1">
                       {prop.title}
                     </h4>
-                    <p className="text-slate-400 text-xs leading-relaxed">
-                      {prop.description}
-                    </p>
+                    <p className="text-slate-400 text-xs leading-relaxed">{prop.description}</p>
                   </div>
                 </div>
               ))}
@@ -209,5 +287,5 @@ export function ResearchersRoleSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { useState } from "react";
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Activity,
   TrendingUp,
@@ -16,8 +16,8 @@ import {
   Clock,
   Microscope,
   Shield,
-} from 'lucide-react'
-import Link from 'next/link'
+} from "lucide-react";
+import Link from "next/link";
 
 // ============================================================================
 // HERO SECTION
@@ -32,13 +32,12 @@ function HeroSection() {
             {/* Text content with left padding */}
             <div className="flex-1 pl-4 lg:pl-8">
               <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold tracking-wide mb-6 text-marble-100 leading-tight">
-                The Future of{' '}
-                <span className="text-gradient-gold">Organizational Health</span>
+                The Future of <span className="text-gradient-gold">Organizational Health</span>
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
-                We are building toward a diagnostic center that will help organizations
-                identify risks early — powered by patterns discovered through systematic
-                research on organizational mortality.
+                We are building toward a diagnostic center that will help organizations identify
+                risks early — powered by patterns discovered through systematic research on
+                organizational mortality.
               </p>
 
               {/* CTA Button */}
@@ -64,7 +63,11 @@ function HeroSection() {
 
           {/* Right: Decorative Graphic - 2/3 width */}
           <div className="animate-fade-in-up stagger-1 lg:w-2/3">
-            <Card variant="dark-elevated" padding="none" className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center">
+            <Card
+              variant="dark-elevated"
+              padding="none"
+              className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center"
+            >
               {/* Background glow */}
               <div className="absolute inset-0 bg-gradient-radial from-gold-500/10 via-transparent to-transparent" />
 
@@ -106,12 +109,7 @@ function HeroSection() {
                   stroke="rgba(196,161,90,0.5)"
                   strokeWidth="2"
                 />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="10"
-                  fill="rgba(196,161,90,0.3)"
-                />
+                <circle cx="200" cy="200" r="10" fill="rgba(196,161,90,0.3)" />
 
                 {/* Data points on rings */}
                 {[
@@ -168,7 +166,7 @@ function HeroSection() {
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">MMXXV</span>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -193,24 +191,27 @@ function VisionSection() {
           {[
             {
               icon: <Database className="w-8 h-8" />,
-              step: 'I',
-              title: 'Research Foundation',
-              description: 'Thousands of organizational autopsies collected through the Cenotaphery, creating the first comprehensive mortality database.',
-              status: 'In Progress',
+              step: "I",
+              title: "Research Foundation",
+              description:
+                "Thousands of organizational autopsies collected through the Cenotaphery, creating the first comprehensive mortality database.",
+              status: "In Progress",
             },
             {
               icon: <Microscope className="w-8 h-8" />,
-              step: 'II',
-              title: 'Pattern Discovery',
-              description: 'Statistical analysis reveals recurring patterns, failure archetypes, and early warning indicators across organizations.',
-              status: 'Future',
+              step: "II",
+              title: "Pattern Discovery",
+              description:
+                "Statistical analysis reveals recurring patterns, failure archetypes, and early warning indicators across organizations.",
+              status: "Future",
             },
             {
               icon: <Activity className="w-8 h-8" />,
-              step: 'III',
-              title: 'Diagnostic Tools',
-              description: 'Validated predictive models enable health assessment and risk scoring for living organizations.',
-              status: 'Future',
+              step: "III",
+              title: "Diagnostic Tools",
+              description:
+                "Validated predictive models enable health assessment and risk scoring for living organizations.",
+              status: "Future",
             },
           ].map((item, index) => (
             <div key={index} className="relative">
@@ -229,12 +230,14 @@ function VisionSection() {
                 </div>
 
                 {/* Status badge */}
-                <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
-                  item.status === 'In Progress'
-                    ? 'bg-gold-500/20 text-gold-400'
-                    : 'bg-slate-700/50 text-slate-500'
-                }`}>
-                  {item.status === 'In Progress' ? (
+                <div
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                    item.status === "In Progress"
+                      ? "bg-gold-500/20 text-gold-400"
+                      : "bg-slate-700/50 text-slate-500"
+                  }`}
+                >
+                  {item.status === "In Progress" ? (
                     <div className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />
                   ) : (
                     <Clock className="w-3 h-3" />
@@ -250,7 +253,7 @@ function VisionSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -260,25 +263,29 @@ function PotentialCapabilitiesSection() {
   const capabilities = [
     {
       icon: <AlertTriangle className="w-7 h-7" />,
-      title: 'Early Warning Systems',
-      description: 'The research aims to identify indicators that precede organizational failure, potentially enabling early detection of risks.',
+      title: "Early Warning Systems",
+      description:
+        "The research aims to identify indicators that precede organizational failure, potentially enabling early detection of risks.",
     },
     {
       icon: <BarChart3 className="w-7 h-7" />,
-      title: 'Health Benchmarking',
-      description: 'Organizations may be able to compare their health metrics against patterns from the mortality database.',
+      title: "Health Benchmarking",
+      description:
+        "Organizations may be able to compare their health metrics against patterns from the mortality database.",
     },
     {
       icon: <TrendingUp className="w-7 h-7" />,
-      title: 'Risk Assessment',
-      description: 'Predictive models could help identify which organizational characteristics correlate with higher mortality risk.',
+      title: "Risk Assessment",
+      description:
+        "Predictive models could help identify which organizational characteristics correlate with higher mortality risk.",
     },
     {
       icon: <Shield className="w-7 h-7" />,
-      title: 'Prevention Protocols',
-      description: 'Research findings may lead to evidence-based intervention recommendations for at-risk organizations.',
+      title: "Prevention Protocols",
+      description:
+        "Research findings may lead to evidence-based intervention recommendations for at-risk organizations.",
     },
-  ]
+  ];
 
   return (
     <>
@@ -292,8 +299,8 @@ function PotentialCapabilitiesSection() {
             What Diagnostics May Enable
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mb-12">
-            When sufficient research data is collected and validated, the Diagnostics Center
-            aims to provide the following capabilities. These are goals, not guarantees.
+            When sufficient research data is collected and validated, the Diagnostics Center aims to
+            provide the following capabilities. These are goals, not guarantees.
           </p>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -317,7 +324,7 @@ function PotentialCapabilitiesSection() {
       {/* Gradient transition out of section */}
       <div className="h-24 bg-gradient-to-b from-marble-950 to-slate-900" />
     </>
-  )
+  );
 }
 
 // ============================================================================
@@ -335,16 +342,16 @@ function ResearchFoundationSection() {
               Data Integrity First
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              The Diagnostics Center will be a commercial service that licenses aggregated
-              patterns and anonymized models from SOIL&apos;s nonprofit Research Center. This ensures:
+              The Diagnostics Center will be a commercial service that licenses aggregated patterns
+              and anonymized models from SOIL&apos;s nonprofit Research Center. This ensures:
             </p>
 
             <ul className="space-y-4 mb-8">
               {[
-                'Raw founder stories are never sold or shared',
-                'Only aggregated, anonymized patterns power diagnostics',
-                'Revenue flows back to fund continued research',
-                'Clear separation between nonprofit mission and commercial services',
+                "Raw founder stories are never sold or shared",
+                "Only aggregated, anonymized patterns power diagnostics",
+                "Revenue flows back to fund continued research",
+                "Clear separation between nonprofit mission and commercial services",
               ].map((point, index) => (
                 <li key={index} className="flex items-start gap-3 text-slate-400">
                   <CheckCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
@@ -396,7 +403,7 @@ function ResearchFoundationSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -414,9 +421,9 @@ function CurrentStatusSection() {
               Honest About Our Progress
             </h2>
             <p className="text-lg text-slate-400">
-              Building a diagnostic system for organizational health requires a research
-              foundation that does not yet exist. We are transparent about what we have
-              and what we are working toward.
+              Building a diagnostic system for organizational health requires a research foundation
+              that does not yet exist. We are transparent about what we have and what we are working
+              toward.
             </p>
           </div>
 
@@ -424,41 +431,41 @@ function CurrentStatusSection() {
           <div className="space-y-6">
             {[
               {
-                status: 'complete',
-                label: 'Research methodology designed',
+                status: "complete",
+                label: "Research methodology designed",
               },
               {
-                status: 'progress',
-                label: 'Data collection infrastructure built',
+                status: "progress",
+                label: "Data collection infrastructure built",
               },
               {
-                status: 'progress',
-                label: 'Initial organizational autopsies being collected',
+                status: "progress",
+                label: "Initial organizational autopsies being collected",
               },
               {
-                status: 'future',
-                label: 'Statistical significance for pattern detection',
+                status: "future",
+                label: "Statistical significance for pattern detection",
               },
               {
-                status: 'future',
-                label: 'Predictive model development',
+                status: "future",
+                label: "Predictive model development",
               },
               {
-                status: 'future',
-                label: 'Diagnostics Center launch',
+                status: "future",
+                label: "Diagnostics Center launch",
               },
             ].map((item, index) => (
               <div key={index} className="flex items-center gap-4">
-                <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                  item.status === 'complete'
-                    ? 'bg-success-500'
-                    : item.status === 'progress'
-                    ? 'bg-gold-500 animate-pulse'
-                    : 'bg-slate-600'
-                }`} />
-                <span className={
-                  item.status === 'future' ? 'text-slate-500' : 'text-marble-100'
-                }>
+                <div
+                  className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    item.status === "complete"
+                      ? "bg-success-500"
+                      : item.status === "progress"
+                        ? "bg-gold-500 animate-pulse"
+                        : "bg-slate-600"
+                  }`}
+                />
+                <span className={item.status === "future" ? "text-slate-500" : "text-marble-100"}>
                   {item.label}
                 </span>
               </div>
@@ -467,23 +474,23 @@ function CurrentStatusSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
 // WAITLIST SECTION
 // ============================================================================
 function WaitlistSection() {
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // TODO: Implement actual waitlist submission
     if (email) {
-      setSubmitted(true)
+      setSubmitted(true);
     }
-  }
+  };
 
   return (
     <section id="waitlist" className="py-16 md:py-24 bg-slate-900/50">
@@ -494,8 +501,8 @@ function WaitlistSection() {
             Join the Waitlist
           </h2>
           <p className="text-lg text-slate-400 mb-8">
-            Be the first to know when the Diagnostics Center becomes available.
-            We&apos;ll send occasional updates on our research progress — no spam, ever.
+            Be the first to know when the Diagnostics Center becomes available. We&apos;ll send
+            occasional updates on our research progress — no spam, ever.
           </p>
 
           {submitted ? (
@@ -507,9 +514,7 @@ function WaitlistSection() {
                 <h3 className="font-display text-xl font-medium text-marble-100">
                   You&apos;re on the list
                 </h3>
-                <p className="text-slate-400">
-                  We&apos;ll keep you updated on our progress.
-                </p>
+                <p className="text-slate-400">We&apos;ll keep you updated on our progress.</p>
               </div>
             </Card>
           ) : (
@@ -535,8 +540,8 @@ function WaitlistSection() {
                   </Button>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Your email will only be used for Diagnostics Center updates.
-                  You can unsubscribe at any time.
+                  Your email will only be used for Diagnostics Center updates. You can unsubscribe
+                  at any time.
                 </p>
               </form>
             </Card>
@@ -561,7 +566,7 @@ function WaitlistSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // ============================================================================
@@ -577,5 +582,5 @@ export default function DiagnosticsPage() {
       <CurrentStatusSection />
       <WaitlistSection />
     </>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardHeader,
@@ -13,7 +13,7 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogTrigger,
@@ -22,66 +22,66 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog'
-import { CheckboxWithLabel } from '@/components/ui/checkbox'
+} from "@/components/ui/dialog";
+import { CheckboxWithLabel } from "@/components/ui/checkbox";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Progress, CircularProgress } from '@/components/ui/progress'
-import { Switch, SwitchWithLabel } from '@/components/ui/switch'
-import { RadioGroup, RadioGroupItemWithLabel } from '@/components/ui/radio-group'
-import { Spinner, DotsSpinner } from '@/components/ui/spinner'
-import { useToast } from '@/components/ui/use-toast'
-import { Toaster } from '@/components/ui/toaster'
-import { Combobox } from '@/components/ui/combobox'
-import { SectionLabel } from '@/components/ui/section-label'
-import { RomanNumeral, PositionedRomanNumeral } from '@/components/ui/roman-numeral'
-import { FeatureCard, FeatureCardGrid } from '@/components/ui/feature-card'
-import { Search, Mail, ArrowRight, Layers, Zap, Shield, Globe } from 'lucide-react'
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Progress, CircularProgress } from "@/components/ui/progress";
+import { Switch, SwitchWithLabel } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItemWithLabel } from "@/components/ui/radio-group";
+import { Spinner, DotsSpinner } from "@/components/ui/spinner";
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import { Combobox } from "@/components/ui/combobox";
+import { SectionLabel } from "@/components/ui/section-label";
+import { RomanNumeral, PositionedRomanNumeral } from "@/components/ui/roman-numeral";
+import { FeatureCard, FeatureCardGrid } from "@/components/ui/feature-card";
+import { Search, Mail, ArrowRight, Layers, Zap, Shield, Globe } from "lucide-react";
 
 // Sample data for combobox
 const countries = [
-  { value: 'us', label: 'United States' },
-  { value: 'uk', label: 'United Kingdom' },
-  { value: 'de', label: 'Germany' },
-  { value: 'fr', label: 'France' },
-  { value: 'it', label: 'Italy' },
-  { value: 'es', label: 'Spain' },
-  { value: 'nl', label: 'Netherlands' },
-  { value: 'be', label: 'Belgium' },
-  { value: 'ch', label: 'Switzerland' },
-  { value: 'at', label: 'Austria' },
-  { value: 'se', label: 'Sweden' },
-  { value: 'no', label: 'Norway' },
-  { value: 'dk', label: 'Denmark' },
-  { value: 'fi', label: 'Finland' },
-  { value: 'pl', label: 'Poland' },
-  { value: 'cz', label: 'Czech Republic' },
-  { value: 'pt', label: 'Portugal' },
-  { value: 'ie', label: 'Ireland' },
-]
+  { value: "us", label: "United States" },
+  { value: "uk", label: "United Kingdom" },
+  { value: "de", label: "Germany" },
+  { value: "fr", label: "France" },
+  { value: "it", label: "Italy" },
+  { value: "es", label: "Spain" },
+  { value: "nl", label: "Netherlands" },
+  { value: "be", label: "Belgium" },
+  { value: "ch", label: "Switzerland" },
+  { value: "at", label: "Austria" },
+  { value: "se", label: "Sweden" },
+  { value: "no", label: "Norway" },
+  { value: "dk", label: "Denmark" },
+  { value: "fi", label: "Finland" },
+  { value: "pl", label: "Poland" },
+  { value: "cz", label: "Czech Republic" },
+  { value: "pt", label: "Portugal" },
+  { value: "ie", label: "Ireland" },
+];
 
 const roles = [
-  { value: 'founder', label: 'Founder / CEO' },
-  { value: 'cofounder', label: 'Co-Founder' },
-  { value: 'executive', label: 'Executive (C-Suite)' },
-  { value: 'director', label: 'Director' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'employee', label: 'Employee' },
-  { value: 'advisor', label: 'Advisor / Board Member' },
-  { value: 'investor', label: 'Investor' },
-  { value: 'consultant', label: 'Consultant' },
-  { value: 'other', label: 'Other' },
-]
+  { value: "founder", label: "Founder / CEO" },
+  { value: "cofounder", label: "Co-Founder" },
+  { value: "executive", label: "Executive (C-Suite)" },
+  { value: "director", label: "Director" },
+  { value: "manager", label: "Manager" },
+  { value: "employee", label: "Employee" },
+  { value: "advisor", label: "Advisor / Board Member" },
+  { value: "investor", label: "Investor" },
+  { value: "consultant", label: "Consultant" },
+  { value: "other", label: "Other" },
+];
 
 export default function DesignSystemDemo() {
-  const [progressValue] = useState(65)
-  const { toast } = useToast()
+  const [progressValue] = useState(65);
+  const { toast } = useToast();
 
   return (
     <div className="dark">
@@ -130,25 +130,25 @@ export default function DesignSystemDemo() {
             <div className="space-y-8">
               {/* Slate - Primary dark background */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">
-                  Slate (Background)
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">Slate (Background)</h3>
                 <div className="flex gap-2 flex-wrap">
                   {[700, 800, 900, 950].map((shade) => (
                     <div key={shade} className="text-center">
-                      <div className={`w-14 h-14 rounded-sm bg-slate-${shade} border border-slate-600`} />
+                      <div
+                        className={`w-14 h-14 rounded-sm bg-slate-${shade} border border-slate-600`}
+                      />
                       <span className="text-xs text-slate-500 mt-1 block">{shade}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Primary: slate-900 (page bg), slate-800 (cards)</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Primary: slate-900 (page bg), slate-800 (cards)
+                </p>
               </div>
 
               {/* Marble - Typography */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">
-                  Marble (Typography)
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">Marble (Typography)</h3>
                 <div className="flex gap-2 flex-wrap">
                   <div className="text-center">
                     <div className="w-14 h-14 rounded-sm bg-marble-50 border border-slate-600" />
@@ -171,14 +171,14 @@ export default function DesignSystemDemo() {
                     <span className="text-xs text-slate-500 mt-1 block">950</span>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Primary: marble-100 (headings), slate-400 (body text)</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Primary: marble-100 (headings), slate-400 (body text)
+                </p>
               </div>
 
               {/* Gold - Accent */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">
-                  Gold (Accent)
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">Gold (Accent)</h3>
                 <div className="flex gap-2 flex-wrap">
                   <div className="text-center">
                     <div className="w-14 h-14 rounded-sm bg-gold-300 border border-slate-600" />
@@ -197,14 +197,14 @@ export default function DesignSystemDemo() {
                     <span className="text-xs text-slate-500 mt-1 block">600</span>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Primary: gold-400 (buttons, accents), gold-500 (borders)</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Primary: gold-400 (buttons, accents), gold-500 (borders)
+                </p>
               </div>
 
               {/* Semantic */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">
-                  Semantic
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">Semantic</h3>
                 <div className="flex gap-4">
                   <div className="text-center">
                     <div className="w-14 h-14 rounded-sm bg-success-500" />
@@ -234,14 +234,20 @@ export default function DesignSystemDemo() {
               Typography
             </h2>
             <div className="space-y-4">
-              <div className="font-serif text-display font-semibold tracking-wide text-marble-100">Display (Cinzel)</div>
-              <div className="font-display text-5xl font-semibold text-marble-100">Heading 1 (Sora)</div>
+              <div className="font-serif text-display font-semibold tracking-wide text-marble-100">
+                Display (Cinzel)
+              </div>
+              <div className="font-display text-5xl font-semibold text-marble-100">
+                Heading 1 (Sora)
+              </div>
               <div className="font-display text-4xl font-semibold text-marble-100">Heading 2</div>
               <div className="font-display text-3xl font-medium text-marble-100">Heading 3</div>
               <div className="font-display text-2xl font-medium text-marble-100">Heading 4</div>
               <div className="text-xl text-marble-100">Body XL (Manrope)</div>
               <div className="text-lg text-slate-300">Body Large</div>
-              <div className="text-base text-slate-400">Body Base - The quick brown fox jumps over the lazy dog.</div>
+              <div className="text-base text-slate-400">
+                Body Base - The quick brown fox jumps over the lazy dog.
+              </div>
               <div className="text-sm text-slate-400">Body Small</div>
               <div className="text-xs text-slate-500">Caption</div>
             </div>
@@ -265,9 +271,7 @@ export default function DesignSystemDemo() {
             <div className="space-y-8">
               {/* Primary & Secondary */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  Variants
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">Variants</h3>
                 <div className="flex flex-wrap gap-4 p-6 bg-slate-800 rounded-xl">
                   <Button variant="dark-primary">Primary</Button>
                   <Button variant="dark-secondary">Secondary</Button>
@@ -283,50 +287,77 @@ export default function DesignSystemDemo() {
                   Marble Button (Dark Stone Accent)
                 </h3>
                 <div className="flex flex-wrap items-center gap-4 p-6 bg-slate-800 rounded-xl">
-                  <Button variant="marble" size="sm">Small</Button>
-                  <Button variant="marble" size="md">Medium</Button>
-                  <Button variant="marble" size="lg">Large</Button>
-                  <Button variant="marble" rightIcon={<ArrowRight className="h-4 w-4" />}>With Icon</Button>
+                  <Button variant="marble" size="sm">
+                    Small
+                  </Button>
+                  <Button variant="marble" size="md">
+                    Medium
+                  </Button>
+                  <Button variant="marble" size="lg">
+                    Large
+                  </Button>
+                  <Button variant="marble" rightIcon={<ArrowRight className="h-4 w-4" />}>
+                    With Icon
+                  </Button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Dark polished stone button with shine effect. Used for accent contrast in cards or sections.
+                  Dark polished stone button with shine effect. Used for accent contrast in cards or
+                  sections.
                 </p>
               </div>
 
               {/* Sizes */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  Sizes
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">Sizes</h3>
                 <div className="flex flex-wrap items-center gap-4 p-6 bg-slate-800 rounded-xl">
-                  <Button variant="dark-primary" size="sm">Small</Button>
-                  <Button variant="dark-primary" size="md">Medium</Button>
-                  <Button variant="dark-primary" size="lg">Large</Button>
-                  <Button variant="dark-primary" size="xl">Extra Large</Button>
+                  <Button variant="dark-primary" size="sm">
+                    Small
+                  </Button>
+                  <Button variant="dark-primary" size="md">
+                    Medium
+                  </Button>
+                  <Button variant="dark-primary" size="lg">
+                    Large
+                  </Button>
+                  <Button variant="dark-primary" size="xl">
+                    Extra Large
+                  </Button>
                 </div>
               </div>
 
               {/* States */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  States
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">States</h3>
                 <div className="flex flex-wrap items-center gap-4 p-6 bg-slate-800 rounded-xl">
-                  <Button variant="dark-primary" isLoading>Loading</Button>
-                  <Button variant="dark-primary" disabled>Disabled</Button>
-                  <Button variant="dark-primary" rightIcon={<ArrowRight className="h-4 w-4" />}>With Icon</Button>
+                  <Button variant="dark-primary" isLoading>
+                    Loading
+                  </Button>
+                  <Button variant="dark-primary" disabled>
+                    Disabled
+                  </Button>
+                  <Button variant="dark-primary" rightIcon={<ArrowRight className="h-4 w-4" />}>
+                    With Icon
+                  </Button>
                 </div>
               </div>
 
               {/* Secondary Variants */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  Secondary States
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">Secondary States</h3>
                 <div className="flex flex-wrap items-center gap-4 p-6 bg-slate-800 rounded-xl">
-                  <Button variant="dark-secondary" size="lg">Secondary Large</Button>
-                  <Button variant="dark-secondary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>With Icon</Button>
-                  <Button variant="dark-secondary" disabled>Disabled</Button>
+                  <Button variant="dark-secondary" size="lg">
+                    Secondary Large
+                  </Button>
+                  <Button
+                    variant="dark-secondary"
+                    size="lg"
+                    rightIcon={<ArrowRight className="h-4 w-4" />}
+                  >
+                    With Icon
+                  </Button>
+                  <Button variant="dark-secondary" disabled>
+                    Disabled
+                  </Button>
                 </div>
               </div>
             </div>
@@ -359,7 +390,9 @@ export default function DesignSystemDemo() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label variant="dark" required>Email</Label>
+                    <Label variant="dark" required>
+                      Email
+                    </Label>
                     <Input
                       type="email"
                       placeholder="you@example.com"
@@ -387,9 +420,15 @@ export default function DesignSystemDemo() {
                         <SelectValue placeholder="Select an option" />
                       </SelectTrigger>
                       <SelectContent variant="dark">
-                        <SelectItem value="opt1" variant="dark">Option 1</SelectItem>
-                        <SelectItem value="opt2" variant="dark">Option 2</SelectItem>
-                        <SelectItem value="opt3" variant="dark">Option 3</SelectItem>
+                        <SelectItem value="opt1" variant="dark">
+                          Option 1
+                        </SelectItem>
+                        <SelectItem value="opt2" variant="dark">
+                          Option 2
+                        </SelectItem>
+                        <SelectItem value="opt3" variant="dark">
+                          Option 3
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -407,21 +446,9 @@ export default function DesignSystemDemo() {
                     description="With a description"
                     variant="dark"
                   />
-                  <CheckboxWithLabel
-                    label="Checked"
-                    checked={true}
-                    variant="dark"
-                  />
-                  <CheckboxWithLabel
-                    label="Indeterminate"
-                    indeterminate
-                    variant="dark"
-                  />
-                  <CheckboxWithLabel
-                    label="Disabled"
-                    disabled
-                    variant="dark"
-                  />
+                  <CheckboxWithLabel label="Checked" checked={true} variant="dark" />
+                  <CheckboxWithLabel label="Indeterminate" indeterminate variant="dark" />
+                  <CheckboxWithLabel label="Disabled" disabled variant="dark" />
                 </CardContent>
               </Card>
             </div>
@@ -437,9 +464,7 @@ export default function DesignSystemDemo() {
             <div className="space-y-8">
               {/* Variants */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  Variants
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">Variants</h3>
                 <div className="flex flex-wrap gap-3 p-6 bg-slate-800 rounded-xl">
                   <Badge variant="dark-marble">Default</Badge>
                   <Badge variant="dark-outline">Outline</Badge>
@@ -449,9 +474,7 @@ export default function DesignSystemDemo() {
 
               {/* Semantic */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  Semantic
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">Semantic</h3>
                 <div className="flex flex-wrap gap-3 p-6 bg-slate-800 rounded-xl">
                   <Badge variant="dark-success">Success</Badge>
                   <Badge variant="dark-warning">Warning</Badge>
@@ -464,9 +487,15 @@ export default function DesignSystemDemo() {
               <div>
                 <h3 className="text-sm font-medium text-slate-400 mb-4">Sizes</h3>
                 <div className="flex flex-wrap items-center gap-3 p-6 bg-slate-800 rounded-xl">
-                  <Badge variant="dark-marble" size="sm">Small</Badge>
-                  <Badge variant="dark-marble" size="md">Medium</Badge>
-                  <Badge variant="dark-marble" size="lg">Large</Badge>
+                  <Badge variant="dark-marble" size="sm">
+                    Small
+                  </Badge>
+                  <Badge variant="dark-marble" size="md">
+                    Medium
+                  </Badge>
+                  <Badge variant="dark-marble" size="lg">
+                    Large
+                  </Badge>
                 </div>
               </div>
 
@@ -474,19 +503,31 @@ export default function DesignSystemDemo() {
               <div>
                 <h3 className="text-sm font-medium text-slate-400 mb-4">With Dot Indicator</h3>
                 <div className="flex flex-wrap items-center gap-3 p-6 bg-slate-800 rounded-xl">
-                  <Badge variant="dark-marble" dot>Active</Badge>
-                  <Badge variant="dark-success" dot>Online</Badge>
-                  <Badge variant="dark-warning" dot>Pending</Badge>
-                  <Badge variant="dark-error" dot>Offline</Badge>
+                  <Badge variant="dark-marble" dot>
+                    Active
+                  </Badge>
+                  <Badge variant="dark-success" dot>
+                    Online
+                  </Badge>
+                  <Badge variant="dark-warning" dot>
+                    Pending
+                  </Badge>
+                  <Badge variant="dark-error" dot>
+                    Offline
+                  </Badge>
                 </div>
               </div>
 
               {/* Button + Badge alignment demo */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">Button + Badge Alignment</h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">
+                  Button + Badge Alignment
+                </h3>
                 <div className="p-6 bg-slate-800 rounded-xl">
                   <div className="flex items-center gap-4">
-                    <Button variant="dark-primary" size="sm">Action</Button>
+                    <Button variant="dark-primary" size="sm">
+                      Action
+                    </Button>
                     <Badge variant="dark-marble">Status</Badge>
                     <Badge variant="dark-verified">Verified</Badge>
                   </div>
@@ -506,24 +547,22 @@ export default function DesignSystemDemo() {
               <Card variant="dark">
                 <CardHeader>
                   <CardTitle variant="dark">Default Card</CardTitle>
-                  <CardDescription variant="dark">
-                    Card description goes here
-                  </CardDescription>
+                  <CardDescription variant="dark">Card description goes here</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-slate-400">Card content area</p>
                 </CardContent>
                 <CardFooter>
-                  <Button size="sm" variant="dark-primary">Action</Button>
+                  <Button size="sm" variant="dark-primary">
+                    Action
+                  </Button>
                 </CardFooter>
               </Card>
 
               <Card variant="dark-elevated">
                 <CardHeader>
                   <CardTitle variant="dark">Elevated Card</CardTitle>
-                  <CardDescription variant="dark">
-                    With shadow
-                  </CardDescription>
+                  <CardDescription variant="dark">With shadow</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-slate-400">More prominent</p>
@@ -597,9 +636,15 @@ export default function DesignSystemDemo() {
               <CardContent>
                 <Tabs defaultValue="tab1">
                   <TabsList variant="dark">
-                    <TabsTrigger value="tab1" variant="dark">Account</TabsTrigger>
-                    <TabsTrigger value="tab2" variant="dark">Security</TabsTrigger>
-                    <TabsTrigger value="tab3" variant="dark">Notifications</TabsTrigger>
+                    <TabsTrigger value="tab1" variant="dark">
+                      Account
+                    </TabsTrigger>
+                    <TabsTrigger value="tab2" variant="dark">
+                      Security
+                    </TabsTrigger>
+                    <TabsTrigger value="tab3" variant="dark">
+                      Notifications
+                    </TabsTrigger>
                   </TabsList>
                   <TabsContent value="tab1" variant="dark">
                     <p className="text-slate-400">Manage your account settings and preferences.</p>
@@ -636,11 +681,21 @@ export default function DesignSystemDemo() {
                         <SelectValue placeholder="Select organization type" />
                       </SelectTrigger>
                       <SelectContent variant="dark">
-                        <SelectItem value="startup" variant="dark">Startup</SelectItem>
-                        <SelectItem value="scaleup" variant="dark">Scale-up</SelectItem>
-                        <SelectItem value="enterprise" variant="dark">Enterprise</SelectItem>
-                        <SelectItem value="nonprofit" variant="dark">Non-profit</SelectItem>
-                        <SelectItem value="government" variant="dark">Government</SelectItem>
+                        <SelectItem value="startup" variant="dark">
+                          Startup
+                        </SelectItem>
+                        <SelectItem value="scaleup" variant="dark">
+                          Scale-up
+                        </SelectItem>
+                        <SelectItem value="enterprise" variant="dark">
+                          Enterprise
+                        </SelectItem>
+                        <SelectItem value="nonprofit" variant="dark">
+                          Non-profit
+                        </SelectItem>
+                        <SelectItem value="government" variant="dark">
+                          Government
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -651,10 +706,18 @@ export default function DesignSystemDemo() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent variant="dark">
-                        <SelectItem value="tech" variant="dark">Technology</SelectItem>
-                        <SelectItem value="finance" variant="dark">Finance</SelectItem>
-                        <SelectItem value="healthcare" variant="dark">Healthcare</SelectItem>
-                        <SelectItem value="retail" variant="dark">Retail</SelectItem>
+                        <SelectItem value="tech" variant="dark">
+                          Technology
+                        </SelectItem>
+                        <SelectItem value="finance" variant="dark">
+                          Finance
+                        </SelectItem>
+                        <SelectItem value="healthcare" variant="dark">
+                          Healthcare
+                        </SelectItem>
+                        <SelectItem value="retail" variant="dark">
+                          Retail
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -885,21 +948,25 @@ export default function DesignSystemDemo() {
                 <CardContent className="space-y-4">
                   <Button
                     variant="dark-primary"
-                    onClick={() => toast({
-                      title: 'Success!',
-                      description: 'Your action was completed successfully.',
-                      variant: 'dark',
-                    })}
+                    onClick={() =>
+                      toast({
+                        title: "Success!",
+                        description: "Your action was completed successfully.",
+                        variant: "dark",
+                      })
+                    }
                   >
                     Show Default Toast
                   </Button>
                   <Button
                     variant="dark-secondary"
-                    onClick={() => toast({
-                      title: 'Warning',
-                      description: 'Please review your input before continuing.',
-                      variant: 'dark-warning',
-                    })}
+                    onClick={() =>
+                      toast({
+                        title: "Warning",
+                        description: "Please review your input before continuing.",
+                        variant: "dark-warning",
+                      })
+                    }
                   >
                     Show Warning Toast
                   </Button>
@@ -989,9 +1056,7 @@ export default function DesignSystemDemo() {
 
               {/* Feature Cards */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-4">
-                  Feature Cards
-                </h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-4">Feature Cards</h3>
                 <FeatureCardGrid columns={4}>
                   <FeatureCard
                     icon={<Layers className="w-8 h-8" />}
@@ -1055,7 +1120,9 @@ export default function DesignSystemDemo() {
                 <div className="divider-roman">
                   <span className="text-gold-500 font-serif text-lg px-4">SPQR</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-4">Used between sections with decorative symbol (✦, MMXXV, etc.)</p>
+                <p className="text-xs text-slate-500 mt-4">
+                  Used between sections with decorative symbol (✦, MMXXV, etc.)
+                </p>
               </div>
 
               {/* Gold Accent Border */}
@@ -1082,7 +1149,9 @@ export default function DesignSystemDemo() {
                     <Shield className="w-8 h-8" />
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Pattern: bg-gold-500/20 + text-gold-400</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Pattern: bg-gold-500/20 + text-gold-400
+                </p>
               </div>
 
               {/* Gold Bullet Points */}
@@ -1122,7 +1191,9 @@ export default function DesignSystemDemo() {
                     <span className="text-slate-500">slate-900 (page bg)</span>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Used to transition between different background sections</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Used to transition between different background sections
+                </p>
               </div>
 
               {/* Gold Glow Effect */}
@@ -1145,5 +1216,5 @@ export default function DesignSystemDemo() {
         </main>
       </div>
     </div>
-  )
+  );
 }

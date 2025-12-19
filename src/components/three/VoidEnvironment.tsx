@@ -1,38 +1,38 @@
-'use client'
+"use client";
 
-import { useRef, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
-import { FACE_CONFIG, RADIUS, getDodecahedronFaceCenters } from './Dodecahedron'
-import { TuscanLandscape } from './TuscanLandscape'
+import { useRef, useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { FACE_CONFIG, RADIUS, getDodecahedronFaceCenters } from "./Dodecahedron";
+import { TuscanLandscape } from "./TuscanLandscape";
 
 // Dim white color for grid lines (kept for reference)
-const GRID_COLOR = '#888888' // Light gray
+const GRID_COLOR = "#888888"; // Light gray
 
 // Dodecahedron vertical offset (must match DodecahedronScene.tsx)
-const DODECAHEDRON_Y_OFFSET = 8
+const DODECAHEDRON_Y_OFFSET = 8;
 
 // Get active portals (faces with holes that particles can pass through)
 // Portal centers are offset to match dodecahedron position
 const ACTIVE_PORTALS = (() => {
-  const faces = getDodecahedronFaceCenters(RADIUS)
+  const faces = getDodecahedronFaceCenters(RADIUS);
   return faces
     .map((face, idx) => ({
       center: face.center.clone().add(new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)),
       normal: face.normal,
       config: FACE_CONFIG[idx],
     }))
-    .filter(p => p.config?.active)
-})()
+    .filter((p) => p.config?.active);
+})();
 
 // Get a random active portal
 function getRandomPortal() {
-  return ACTIVE_PORTALS[Math.floor(Math.random() * ACTIVE_PORTALS.length)]
+  return ACTIVE_PORTALS[Math.floor(Math.random() * ACTIVE_PORTALS.length)];
 }
 
 interface VoidGridProps {
-  size?: number // Total grid size
-  divisions?: number // Number of grid divisions
+  size?: number; // Total grid size
+  divisions?: number; // Number of grid divisions
 }
 
 // Infinite-style grid with dim white lines
@@ -40,90 +40,90 @@ export function VoidGrid({
   size = 200,
   divisions = 13, // ~15 units per cell
 }: VoidGridProps) {
-  const linesRef = useRef<THREE.LineSegments>(null)
+  const linesRef = useRef<THREE.LineSegments>(null);
 
   // Generate simple grid geometry
   const geometry = useMemo(() => {
-    const positions: number[] = []
+    const positions: number[] = [];
 
-    const step = size / divisions
-    const halfSize = size / 2
+    const step = size / divisions;
+    const halfSize = size / 2;
 
     // Create lines along X axis (horizontal)
     for (let i = 0; i <= divisions; i++) {
-      const z = -halfSize + i * step
-      positions.push(-halfSize, 0, z)
-      positions.push(halfSize, 0, z)
+      const z = -halfSize + i * step;
+      positions.push(-halfSize, 0, z);
+      positions.push(halfSize, 0, z);
     }
 
     // Create lines along Z axis (vertical from top view)
     for (let i = 0; i <= divisions; i++) {
-      const x = -halfSize + i * step
-      positions.push(x, 0, -halfSize)
-      positions.push(x, 0, halfSize)
+      const x = -halfSize + i * step;
+      positions.push(x, 0, -halfSize);
+      positions.push(x, 0, halfSize);
     }
 
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
 
-    return geo
-  }, [size, divisions])
+    return geo;
+  }, [size, divisions]);
 
   // Animate subtle opacity pulsing
   useFrame((state) => {
     if (linesRef.current) {
-      const material = linesRef.current.material as THREE.LineBasicMaterial
-      material.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1
+      const material = linesRef.current.material as THREE.LineBasicMaterial;
+      material.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
     }
-  })
+  });
 
   return (
     <lineSegments ref={linesRef} geometry={geometry} position={[0, -15, 0]}>
-      <lineBasicMaterial
-        color={GRID_COLOR}
-        transparent
-        opacity={0.4}
-      />
+      <lineBasicMaterial color={GRID_COLOR} transparent opacity={0.4} />
     </lineSegments>
-  )
+  );
 }
 
 // Create glow texture for particles (soft radial gradient)
 function createGlowTexture(): THREE.CanvasTexture {
-  const size = 64
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')!
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
 
   // Radial gradient: bright center fading to transparent
   const gradient = ctx.createRadialGradient(
-    size / 2, size / 2, 0,      // Inner circle (center)
-    size / 2, size / 2, size / 2 // Outer circle (edge)
-  )
+    size / 2,
+    size / 2,
+    0, // Inner circle (center)
+    size / 2,
+    size / 2,
+    size / 2 // Outer circle (edge)
+  );
 
   // Gold color with alpha falloff - very bright core, soft glow
-  gradient.addColorStop(0, 'rgba(255, 220, 150, 1)')      // Bright warm white core
-  gradient.addColorStop(0.1, 'rgba(255, 200, 100, 0.8)')  // Gold
-  gradient.addColorStop(0.3, 'rgba(201, 148, 61, 0.4)')   // SOIL gold
-  gradient.addColorStop(0.6, 'rgba(201, 148, 61, 0.1)')   // Fading
-  gradient.addColorStop(1, 'rgba(201, 148, 61, 0)')       // Transparent edge
+  gradient.addColorStop(0, "rgba(255, 220, 150, 1)"); // Bright warm white core
+  gradient.addColorStop(0.1, "rgba(255, 200, 100, 0.8)"); // Gold
+  gradient.addColorStop(0.3, "rgba(201, 148, 61, 0.4)"); // SOIL gold
+  gradient.addColorStop(0.6, "rgba(201, 148, 61, 0.1)"); // Fading
+  gradient.addColorStop(1, "rgba(201, 148, 61, 0)"); // Transparent edge
 
-  ctx.fillStyle = gradient
-  ctx.fillRect(0, 0, size, size)
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
 
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.needsUpdate = true
-  return texture
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
 }
 
 // Shared glow texture (created once)
-let glowTexture: THREE.CanvasTexture | null = null
+let glowTexture: THREE.CanvasTexture | null = null;
 function getGlowTexture(): THREE.CanvasTexture {
   if (!glowTexture) {
-    glowTexture = createGlowTexture()
+    glowTexture = createGlowTexture();
   }
-  return glowTexture
+  return glowTexture;
 }
 
 // Simple 3D noise function (based on sin combinations for organic movement)
@@ -132,35 +132,35 @@ function noise3D(x: number, y: number, z: number): number {
     Math.sin(x * 1.2 + y * 0.9) * 0.5 +
     Math.sin(y * 1.1 + z * 0.8) * 0.3 +
     Math.sin(z * 0.9 + x * 1.3) * 0.2
-  )
+  );
 }
 
 // Glowing gold sphere particle (SOIL interpunct style)
 interface GlowingSphereProps {
-  position: THREE.Vector3
-  size: number
-  seed: number // Unique seed for each particle
+  position: THREE.Vector3;
+  size: number;
+  seed: number; // Unique seed for each particle
 }
 
 // Dodecahedron surface radius (where portals are)
-const DODECA_SURFACE = RADIUS * 0.8 // Approximate distance to face centers
+const DODECA_SURFACE = RADIUS * 0.8; // Approximate distance to face centers
 
 // Dodecahedron center position (with Y offset)
-const DODECA_CENTER = new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0)
+const DODECA_CENTER = new THREE.Vector3(0, DODECAHEDRON_Y_OFFSET, 0);
 
 // Helper to get distance from dodecahedron center
 function getDistFromDodecaCenter(pos: THREE.Vector3): number {
-  return pos.distanceTo(DODECA_CENTER)
+  return pos.distanceTo(DODECA_CENTER);
 }
 
 function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
-  const spriteRef = useRef<THREE.Sprite>(null)
+  const spriteRef = useRef<THREE.Sprite>(null);
 
   // Get shared glow texture
-  const texture = useMemo(() => getGlowTexture(), [])
+  const texture = useMemo(() => getGlowTexture(), []);
 
   // Pick a random portal for this particle to use
-  const assignedPortal = useRef(getRandomPortal())
+  const assignedPortal = useRef(getRandomPortal());
 
   // Store current velocity and position for physics-based movement
   const state = useRef({
@@ -173,165 +173,170 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
     targetVel: new THREE.Vector3(),
     nextActionTime: Math.random() * 5 + 2,
     // Navigation state: 'wandering' | 'approaching' | 'entering' | 'inside' | 'exiting' | 'leaving'
-    navState: getDistFromDodecaCenter(position) < DODECA_SURFACE ? 'inside' : 'wandering',
+    navState: getDistFromDodecaCenter(position) < DODECA_SURFACE ? "inside" : "wandering",
     targetPortal: assignedPortal.current,
-  })
+  });
 
   useFrame((frameState, delta) => {
     if (spriteRef.current) {
       // Clamp delta to prevent huge jumps when tab loses focus
       // Browser throttles RAF when tab is inactive, causing large delta on return
-      const clampedDelta = Math.min(delta, 0.1) // Max 100ms per frame
+      const clampedDelta = Math.min(delta, 0.1); // Max 100ms per frame
 
-      const time = frameState.clock.elapsedTime
-      const s = state.current
-      const distFromCenter = getDistFromDodecaCenter(s.pos)
+      const time = frameState.clock.elapsedTime;
+      const s = state.current;
+      const distFromCenter = getDistFromDodecaCenter(s.pos);
       // Vector from dodecahedron center to particle (for push calculations)
-      const fromCenter = s.pos.clone().sub(DODECA_CENTER)
+      const fromCenter = s.pos.clone().sub(DODECA_CENTER);
 
       // State machine for visitor navigation through portals
-      if (s.navState === 'wandering') {
+      if (s.navState === "wandering") {
         // Wandering outside - use noise for organic movement
-        const noiseScale = 0.15
-        const noiseX = noise3D(time * 0.12 + seed, seed * 10, 0) * noiseScale
-        const noiseY = noise3D(seed * 10, time * 0.1 + seed, 0) * noiseScale
-        const noiseZ = noise3D(0, seed * 10, time * 0.11 + seed) * noiseScale
-        s.targetVel.set(noiseX, noiseY, noiseZ)
+        const noiseScale = 0.15;
+        const noiseX = noise3D(time * 0.12 + seed, seed * 10, 0) * noiseScale;
+        const noiseY = noise3D(seed * 10, time * 0.1 + seed, 0) * noiseScale;
+        const noiseZ = noise3D(0, seed * 10, time * 0.11 + seed) * noiseScale;
+        s.targetVel.set(noiseX, noiseY, noiseZ);
 
         // Randomly decide to enter the dodecahedron
         if (time > s.nextActionTime) {
           if (Math.random() < 0.4) {
-            s.navState = 'approaching'
+            s.navState = "approaching";
             // Pick a random portal to enter through
-            s.targetPortal = getRandomPortal()
+            s.targetPortal = getRandomPortal();
           }
-          s.nextActionTime = time + Math.random() * 8 + 4
+          s.nextActionTime = time + Math.random() * 8 + 4;
         }
 
         // Keep away from dodecahedron surface
         if (distFromCenter < DODECA_SURFACE + 5) {
-          const pushOut = fromCenter.clone().normalize().multiplyScalar(0.02)
-          s.vel.add(pushOut)
+          const pushOut = fromCenter.clone().normalize().multiplyScalar(0.02);
+          s.vel.add(pushOut);
         }
-
-      } else if (s.navState === 'approaching') {
+      } else if (s.navState === "approaching") {
         // Flying toward the portal from outside
         // Target point is just outside the portal
-        const portalOutside = s.targetPortal.center.clone()
-          .add(s.targetPortal.normal.clone().multiplyScalar(2))
+        const portalOutside = s.targetPortal.center
+          .clone()
+          .add(s.targetPortal.normal.clone().multiplyScalar(2));
 
-        const toPortal = portalOutside.clone().sub(s.pos)
-        const distToPortal = toPortal.length()
+        const toPortal = portalOutside.clone().sub(s.pos);
+        const distToPortal = toPortal.length();
 
-        s.targetVel.copy(toPortal.normalize().multiplyScalar(0.2))
+        s.targetVel.copy(toPortal.normalize().multiplyScalar(0.2));
 
         // Close enough to portal? Start entering
         if (distToPortal < 1.5) {
-          s.navState = 'entering'
+          s.navState = "entering";
         }
-
-      } else if (s.navState === 'entering') {
+      } else if (s.navState === "entering") {
         // Flying through the portal hole into the dodecahedron
         // Target is inside, along the portal normal (inverted)
-        const insideTarget = s.targetPortal.center.clone()
-          .sub(s.targetPortal.normal.clone().multiplyScalar(3))
+        const insideTarget = s.targetPortal.center
+          .clone()
+          .sub(s.targetPortal.normal.clone().multiplyScalar(3));
 
-        const toInside = insideTarget.clone().sub(s.pos)
-        s.targetVel.copy(toInside.normalize().multiplyScalar(0.25))
+        const toInside = insideTarget.clone().sub(s.pos);
+        s.targetVel.copy(toInside.normalize().multiplyScalar(0.25));
 
         // Fully inside?
         if (distFromCenter < DODECA_SURFACE - 1) {
-          s.navState = 'inside'
-          s.nextActionTime = time + Math.random() * 10 + 5 // Stay 5-15 seconds
+          s.navState = "inside";
+          s.nextActionTime = time + Math.random() * 10 + 5; // Stay 5-15 seconds
         }
-
-      } else if (s.navState === 'inside') {
+      } else if (s.navState === "inside") {
         // Browsing inside - gentle floating
-        const noiseScale = 0.06
-        const noiseX = noise3D(time * 0.25 + seed, seed * 5, 0) * noiseScale
-        const noiseY = noise3D(seed * 5, time * 0.2 + seed, 0) * noiseScale
-        const noiseZ = noise3D(0, seed * 5, time * 0.22 + seed) * noiseScale
-        s.targetVel.set(noiseX, noiseY, noiseZ)
+        const noiseScale = 0.06;
+        const noiseX = noise3D(time * 0.25 + seed, seed * 5, 0) * noiseScale;
+        const noiseY = noise3D(seed * 5, time * 0.2 + seed, 0) * noiseScale;
+        const noiseZ = noise3D(0, seed * 5, time * 0.22 + seed) * noiseScale;
+        s.targetVel.set(noiseX, noiseY, noiseZ);
 
         // Keep inside dodecahedron - soft boundary
         if (distFromCenter > DODECA_SURFACE - 1.5) {
-          const pushIn = fromCenter.clone().normalize().multiplyScalar(-0.03)
-          s.vel.add(pushIn)
+          const pushIn = fromCenter.clone().normalize().multiplyScalar(-0.03);
+          s.vel.add(pushIn);
         }
 
         // Time to leave?
         if (time > s.nextActionTime) {
-          s.navState = 'exiting'
+          s.navState = "exiting";
           // Pick a random portal to exit through
-          s.targetPortal = getRandomPortal()
+          s.targetPortal = getRandomPortal();
         }
-
-      } else if (s.navState === 'exiting') {
+      } else if (s.navState === "exiting") {
         // Flying toward portal from inside
-        const portalInside = s.targetPortal.center.clone()
-          .sub(s.targetPortal.normal.clone().multiplyScalar(1))
+        const portalInside = s.targetPortal.center
+          .clone()
+          .sub(s.targetPortal.normal.clone().multiplyScalar(1));
 
-        const toPortal = portalInside.clone().sub(s.pos)
-        const distToPortal = toPortal.length()
+        const toPortal = portalInside.clone().sub(s.pos);
+        const distToPortal = toPortal.length();
 
-        s.targetVel.copy(toPortal.normalize().multiplyScalar(0.2))
+        s.targetVel.copy(toPortal.normalize().multiplyScalar(0.2));
 
         // Close to portal? Start leaving
         if (distToPortal < 1) {
-          s.navState = 'leaving'
+          s.navState = "leaving";
         }
-
-      } else if (s.navState === 'leaving') {
+      } else if (s.navState === "leaving") {
         // Flying out through the portal
-        const outsideTarget = s.targetPortal.center.clone()
-          .add(s.targetPortal.normal.clone().multiplyScalar(15))
+        const outsideTarget = s.targetPortal.center
+          .clone()
+          .add(s.targetPortal.normal.clone().multiplyScalar(15));
 
-        const toOutside = outsideTarget.clone().sub(s.pos)
-        s.targetVel.copy(toOutside.normalize().multiplyScalar(0.2))
+        const toOutside = outsideTarget.clone().sub(s.pos);
+        s.targetVel.copy(toOutside.normalize().multiplyScalar(0.2));
 
         // Fully outside?
         if (distFromCenter > DODECA_SURFACE + 8) {
-          s.navState = 'wandering'
-          s.nextActionTime = time + Math.random() * 12 + 6
+          s.navState = "wandering";
+          s.nextActionTime = time + Math.random() * 12 + 6;
         }
       }
 
       // Smoothly interpolate velocity toward target (easing)
-      const lerpFactor = 1 - Math.pow(0.93, clampedDelta * 60)
-      s.vel.lerp(s.targetVel, lerpFactor)
+      const lerpFactor = 1 - Math.pow(0.93, clampedDelta * 60);
+      s.vel.lerp(s.targetVel, lerpFactor);
 
       // Apply velocity with non-linear damping
-      const speed = s.vel.length()
-      const isTransiting = s.navState === 'entering' || s.navState === 'exiting' ||
-                          s.navState === 'approaching' || s.navState === 'leaving'
-      const maxSpeed = isTransiting ? 0.22 : 0.1
+      const speed = s.vel.length();
+      const isTransiting =
+        s.navState === "entering" ||
+        s.navState === "exiting" ||
+        s.navState === "approaching" ||
+        s.navState === "leaving";
+      const maxSpeed = isTransiting ? 0.22 : 0.1;
       if (speed > maxSpeed) {
-        s.vel.multiplyScalar(maxSpeed / speed)
+        s.vel.multiplyScalar(maxSpeed / speed);
       }
 
       // Update position
-      s.pos.add(s.vel.clone().multiplyScalar(clampedDelta * 60))
+      s.pos.add(s.vel.clone().multiplyScalar(clampedDelta * 60));
 
       // Soft boundary - keep in general area around dodecahedron
       if (distFromCenter > 60) {
-        const pushBack = fromCenter.clone().normalize().multiplyScalar(-0.015 * (distFromCenter - 60))
-        s.vel.add(pushBack)
+        const pushBack = fromCenter
+          .clone()
+          .normalize()
+          .multiplyScalar(-0.015 * (distFromCenter - 60));
+        s.vel.add(pushBack);
       }
 
       // Apply position
-      spriteRef.current.position.copy(s.pos)
+      spriteRef.current.position.copy(s.pos);
 
       // Pulsing opacity - brighter when inside
-      const material = spriteRef.current.material as THREE.SpriteMaterial
-      const basePulse = Math.sin(time * 2 + seed) * 0.15
-      const insideBoost = s.navState === 'inside' ? 0.3 : 0
-      const randomFlicker = Math.random() < 0.02 ? Math.random() * 0.3 : 0
-      material.opacity = 0.6 + basePulse + insideBoost + randomFlicker
+      const material = spriteRef.current.material as THREE.SpriteMaterial;
+      const basePulse = Math.sin(time * 2 + seed) * 0.15;
+      const insideBoost = s.navState === "inside" ? 0.3 : 0;
+      const randomFlicker = Math.random() < 0.02 ? Math.random() * 0.3 : 0;
+      material.opacity = 0.6 + basePulse + insideBoost + randomFlicker;
     }
-  })
+  });
 
   // Glow sprite size (larger than original mesh for soft glow effect)
-  const glowSize = size * 12
+  const glowSize = size * 12;
 
   return (
     <sprite ref={spriteRef} position={position} scale={[glowSize, glowSize, 1]}>
@@ -343,12 +348,12 @@ function GlowingSphere({ position, size, seed }: GlowingSphereProps) {
         blending={THREE.AdditiveBlending}
       />
     </sprite>
-  )
+  );
 }
 
 interface VoidParticlesProps {
-  count?: number
-  spread?: number
+  count?: number;
+  spread?: number;
 }
 
 // Floating golden glowing spheres (SOIL interpuncts representing visitors)
@@ -356,49 +361,49 @@ interface VoidParticlesProps {
 export function VoidParticles({ count = 50, spread = 60 }: VoidParticlesProps) {
   // Generate particle data
   const particles = useMemo(() => {
-    const result: { position: THREE.Vector3; size: number; seed: number }[] = []
+    const result: { position: THREE.Vector3; size: number; seed: number }[] = [];
 
     for (let i = 0; i < count; i++) {
       // Some particles start inside dodecahedron (viewing pages)
       // Some start outside (approaching/leaving)
-      const isInside = Math.random() < 0.3 // 30% inside
+      const isInside = Math.random() < 0.3; // 30% inside
 
-      let position: THREE.Vector3
+      let position: THREE.Vector3;
 
       if (isInside) {
         // Inside dodecahedron (radius ~4-5 from center)
         // Position is relative to dodecahedron center (which has Y offset)
-        const r = Math.random() * 3 + 1
-        const theta = Math.random() * Math.PI * 2
-        const phi = Math.acos(2 * Math.random() - 1)
+        const r = Math.random() * 3 + 1;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
         position = new THREE.Vector3(
           r * Math.sin(phi) * Math.cos(theta),
           r * Math.sin(phi) * Math.sin(theta) + DODECAHEDRON_Y_OFFSET,
           r * Math.cos(phi)
-        )
+        );
       } else {
         // Outside - distributed in space around dodecahedron
-        const r = Math.random() * spread + 15 // Start outside dodecahedron
-        const theta = Math.random() * Math.PI * 2
-        const phi = Math.acos(2 * Math.random() - 1)
+        const r = Math.random() * spread + 15; // Start outside dodecahedron
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
         position = new THREE.Vector3(
           r * Math.sin(phi) * Math.cos(theta),
           r * Math.sin(phi) * Math.sin(theta) + DODECAHEDRON_Y_OFFSET - 5,
           r * Math.cos(phi)
-        )
+        );
       }
 
       // Very small size for glowing spheres (0.03 - 0.08)
-      const size = Math.random() * 0.05 + 0.03
+      const size = Math.random() * 0.05 + 0.03;
 
       // Unique seed for each particle
-      const seed = i * 0.7 + Math.random() * 100
+      const seed = i * 0.7 + Math.random() * 100;
 
-      result.push({ position, size, seed })
+      result.push({ position, size, seed });
     }
 
-    return result
-  }, [count, spread])
+    return result;
+  }, [count, spread]);
 
   return (
     <group>
@@ -411,14 +416,14 @@ export function VoidParticles({ count = 50, spread = 60 }: VoidParticlesProps) {
         />
       ))}
     </group>
-  )
+  );
 }
 
 interface VoidEnvironmentProps {
-  landscapeSize?: number
-  particleCount?: number
-  showLandscape?: boolean
-  showParticles?: boolean
+  landscapeSize?: number;
+  particleCount?: number;
+  showLandscape?: boolean;
+  showParticles?: boolean;
 }
 
 // Complete void environment component
@@ -430,12 +435,8 @@ export function VoidEnvironment({
 }: VoidEnvironmentProps) {
   return (
     <group>
-      {showLandscape && (
-        <TuscanLandscape size={landscapeSize} />
-      )}
-      {showParticles && (
-        <VoidParticles count={particleCount} spread={50} />
-      )}
+      {showLandscape && <TuscanLandscape size={landscapeSize} />}
+      {showParticles && <VoidParticles count={particleCount} spread={50} />}
     </group>
-  )
+  );
 }

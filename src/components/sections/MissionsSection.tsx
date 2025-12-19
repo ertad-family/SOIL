@@ -1,25 +1,25 @@
-import { SectionLabel } from '@/components/ui/section-label'
+import { SectionLabel } from "@/components/ui/section-label";
 
 const missions = [
   {
-    numeral: 'I',
-    title: 'Scientific Rigor',
+    numeral: "I",
+    title: "Scientific Rigor",
     description:
-      'We apply systematic, evidence-based methodology to data collection and analysis. From structured interviews to emerging patterns, we let the data speak — no preconceptions, no shortcuts.',
+      "We apply systematic, evidence-based methodology to data collection and analysis. From structured interviews to emerging patterns, we let the data speak — no preconceptions, no shortcuts.",
   },
   {
-    numeral: 'II',
-    title: 'Founder Healing',
+    numeral: "II",
+    title: "Founder Healing",
     description:
-      'Providing founders with closure and dignity after the end of their ventures. Through structured storytelling, we transform painful experiences into meaningful contributions.',
+      "Providing founders with closure and dignity after the end of their ventures. Through structured storytelling, we transform painful experiences into meaningful contributions.",
   },
   {
-    numeral: 'III',
-    title: 'Respect',
+    numeral: "III",
+    title: "Respect",
     description:
-      'Entrepreneurs are undervalued by society despite their sacrifices and contributions. We work to restore the recognition they deserve — from communities, institutions, and governments.',
+      "Entrepreneurs are undervalued by society despite their sacrifices and contributions. We work to restore the recognition they deserve — from communities, institutions, and governments.",
   },
-]
+];
 
 export function MissionsSection() {
   return (
@@ -41,8 +41,8 @@ export function MissionsSection() {
                 <span
                   className="font-serif text-[180px] md:text-[260px] font-bold leading-none"
                   style={{
-                    WebkitTextStroke: '3px rgba(201, 148, 61, 0.2)',
-                    WebkitTextFillColor: 'transparent',
+                    WebkitTextStroke: "3px rgba(201, 148, 61, 0.2)",
+                    WebkitTextFillColor: "transparent",
                   }}
                 >
                   {mission.numeral}
@@ -63,5 +63,5 @@ export function MissionsSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -53,4 +53,9 @@ docs
 # Previous iteration of the SOIL project - Orgsoleum
 orgsoleum
 supabase/.temp/
+
+# Google Service Account keys
 n8n-project-447600-f780548a77b3.json
+*-service-account*.json
+*-credentials*.json
+*.credentials.json

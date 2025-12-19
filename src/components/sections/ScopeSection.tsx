@@ -1,34 +1,34 @@
-import Link from 'next/link'
-import { SectionLabel } from '@/components/ui/section-label'
-import { Card } from '@/components/ui/card'
+import Link from "next/link";
+import { SectionLabel } from "@/components/ui/section-label";
+import { Card } from "@/components/ui/card";
 
 const ecosystem = [
   {
-    title: 'Research Center',
-    description: 'Academic research, data analysis, and publication of findings.',
-    status: 'active' as const,
+    title: "Research Center",
+    description: "Academic research, data analysis, and publication of findings.",
+    status: "active" as const,
   },
   {
-    title: 'Cenotaphery',
-    description: 'Digital memorials honoring organizations and preserving their stories.',
-    status: 'active' as const,
+    title: "Cenotaphery",
+    description: "Digital memorials honoring organizations and preserving their stories.",
+    status: "active" as const,
   },
   {
-    title: 'Diagnostics Center',
-    description: 'Tools for organizational health assessment and early warning systems.',
-    status: 'construction' as const,
+    title: "Diagnostics Center",
+    description: "Tools for organizational health assessment and early warning systems.",
+    status: "construction" as const,
   },
   {
-    title: 'Learning Hub',
-    description: 'Courses and resources teaching organizational resilience and recovery.',
-    status: 'construction' as const,
+    title: "Learning Hub",
+    description: "Courses and resources teaching organizational resilience and recovery.",
+    status: "construction" as const,
   },
   {
-    title: 'Clinic',
-    description: 'Personalized consulting and intervention for struggling organizations.',
-    status: 'construction' as const,
+    title: "Clinic",
+    description: "Personalized consulting and intervention for struggling organizations.",
+    status: "construction" as const,
   },
-]
+];
 
 // Label component for "under construction" status
 function ConstructionLabel() {
@@ -36,7 +36,7 @@ function ConstructionLabel() {
     <span className="inline-block font-sans text-xs font-medium tracking-[0.05em] text-slate-500 lowercase before:content-['[_'] after:content-['_]']">
       under construction
     </span>
-  )
+  );
 }
 
 export function ScopeSection() {
@@ -86,9 +86,7 @@ export function ScopeSection() {
               <h3 className="font-display text-2xl md:text-3xl font-medium text-marble-100 mb-3">
                 {ecosystem[0].title}
               </h3>
-              <p className="text-slate-400 text-lg leading-relaxed">
-                {ecosystem[0].description}
-              </p>
+              <p className="text-slate-400 text-lg leading-relaxed">{ecosystem[0].description}</p>
             </div>
           </Card>
 
@@ -106,7 +104,12 @@ export function ScopeSection() {
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                   {[...Array(3)].map((_, i) => (
                     <g key={i} transform={`translate(${20 + i * 25}, ${20 + i * 25})`}>
-                      <path d="M0 0 L20 20 M20 0 L0 20" stroke="rgba(196,161,90,0.5)" strokeWidth="3" fill="none" />
+                      <path
+                        d="M0 0 L20 20 M20 0 L0 20"
+                        stroke="rgba(196,161,90,0.5)"
+                        strokeWidth="3"
+                        fill="none"
+                      />
                     </g>
                   ))}
                 </svg>
@@ -116,9 +119,7 @@ export function ScopeSection() {
                 <h3 className="font-display text-xl md:text-2xl font-medium text-marble-100 mb-2">
                   {ecosystem[1].title}
                 </h3>
-                <p className="text-slate-400 text-lg leading-relaxed">
-                  {ecosystem[1].description}
-                </p>
+                <p className="text-slate-400 text-lg leading-relaxed">{ecosystem[1].description}</p>
               </div>
             </Card>
 
@@ -241,5 +242,5 @@ export function ScopeSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

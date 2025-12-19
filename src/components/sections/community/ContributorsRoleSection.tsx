@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { SectionLabel } from '@/components/ui/section-label'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { ArrowRight, Code, Palette, Languages, PenTool, Users, Github } from 'lucide-react'
+import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ArrowRight, Code, Palette, Languages, PenTool, Users, Github } from "lucide-react";
 
 // Custom SVG illustration for Contributors
 function ContributorsIllustrationSVG() {
@@ -13,29 +13,29 @@ function ContributorsIllustrationSVG() {
 
       {/* Background hex grid pattern */}
       <g stroke="rgba(230,126,90,0.1)" strokeWidth="0.5" fill="none">
-        {[...Array(6)].map((_, row) => (
+        {[...Array(6)].map((_, row) =>
           [...Array(6)].map((_, col) => {
-            const x = 40 + col * 45 + (row % 2) * 22
-            const y = 30 + row * 40
+            const x = 40 + col * 45 + (row % 2) * 22;
+            const y = 30 + row * 40;
             return (
               <polygon
                 key={`hex-${row}-${col}`}
                 points={`${x},${y - 15} ${x + 13},${y - 7} ${x + 13},${y + 7} ${x},${y + 15} ${x - 13},${y + 7} ${x - 13},${y - 7}`}
               />
-            )
+            );
           })
-        ))}
+        )}
       </g>
 
       {/* Central gear/cog - representing development */}
       <g transform="translate(150, 150)">
         {/* Outer teeth */}
         {[...Array(8)].map((_, i) => {
-          const angle = (i * 45 * Math.PI) / 180
-          const x1 = Math.cos(angle) * 40
-          const y1 = Math.sin(angle) * 40
-          const x2 = Math.cos(angle) * 55
-          const y2 = Math.sin(angle) * 55
+          const angle = (i * 45 * Math.PI) / 180;
+          const x1 = Math.cos(angle) * 40;
+          const y1 = Math.sin(angle) * 40;
+          const x2 = Math.cos(angle) * 55;
+          const y2 = Math.sin(angle) * 55;
           return (
             <rect
               key={i}
@@ -49,26 +49,67 @@ function ContributorsIllustrationSVG() {
               strokeWidth="1"
               transform={`rotate(${i * 45} ${x1} ${y1})`}
             />
-          )
+          );
         })}
-        <circle cx="0" cy="0" r="35" fill="rgba(230,126,90,0.15)" stroke="rgba(230,126,90,0.5)" strokeWidth="2" />
-        <circle cx="0" cy="0" r="15" fill="rgba(74,53,40,0.8)" stroke="rgba(230,126,90,0.6)" strokeWidth="1.5" />
+        <circle
+          cx="0"
+          cy="0"
+          r="35"
+          fill="rgba(230,126,90,0.15)"
+          stroke="rgba(230,126,90,0.5)"
+          strokeWidth="2"
+        />
+        <circle
+          cx="0"
+          cy="0"
+          r="15"
+          fill="rgba(74,53,40,0.8)"
+          stroke="rgba(230,126,90,0.6)"
+          strokeWidth="1.5"
+        />
       </g>
 
       {/* Code brackets around gear */}
-      <text x="80" y="160" fill="rgba(230,126,90,0.6)" fontSize="40" fontFamily="monospace">{'{'}</text>
-      <text x="200" y="160" fill="rgba(230,126,90,0.6)" fontSize="40" fontFamily="monospace">{'}'}</text>
+      <text x="80" y="160" fill="rgba(230,126,90,0.6)" fontSize="40" fontFamily="monospace">
+        {"{"}
+      </text>
+      <text x="200" y="160" fill="rgba(230,126,90,0.6)" fontSize="40" fontFamily="monospace">
+        {"}"}
+      </text>
 
       {/* Role icons positioned around */}
       {/* Developer - code */}
       <g transform="translate(70, 70)">
-        <circle cx="0" cy="0" r="20" fill="rgba(230,126,90,0.15)" stroke="rgba(230,126,90,0.4)" strokeWidth="1" />
-        <text x="0" y="5" textAnchor="middle" fill="rgba(230,126,90,0.8)" fontSize="14" fontFamily="monospace">{'</>'}</text>
+        <circle
+          cx="0"
+          cy="0"
+          r="20"
+          fill="rgba(230,126,90,0.15)"
+          stroke="rgba(230,126,90,0.4)"
+          strokeWidth="1"
+        />
+        <text
+          x="0"
+          y="5"
+          textAnchor="middle"
+          fill="rgba(230,126,90,0.8)"
+          fontSize="14"
+          fontFamily="monospace"
+        >
+          {"</>"}
+        </text>
       </g>
 
       {/* Designer - palette */}
       <g transform="translate(230, 70)">
-        <circle cx="0" cy="0" r="20" fill="rgba(230,126,90,0.15)" stroke="rgba(230,126,90,0.4)" strokeWidth="1" />
+        <circle
+          cx="0"
+          cy="0"
+          r="20"
+          fill="rgba(230,126,90,0.15)"
+          stroke="rgba(230,126,90,0.4)"
+          strokeWidth="1"
+        />
         <circle cx="-5" cy="-3" r="4" fill="rgba(147,112,219,0.6)" />
         <circle cx="5" cy="-5" r="3" fill="rgba(100,180,130,0.6)" />
         <circle cx="3" cy="5" r="3.5" fill="rgba(196,161,90,0.6)" />
@@ -76,22 +117,59 @@ function ContributorsIllustrationSVG() {
 
       {/* Translator - globe */}
       <g transform="translate(70, 230)">
-        <circle cx="0" cy="0" r="20" fill="rgba(230,126,90,0.15)" stroke="rgba(230,126,90,0.4)" strokeWidth="1" />
+        <circle
+          cx="0"
+          cy="0"
+          r="20"
+          fill="rgba(230,126,90,0.15)"
+          stroke="rgba(230,126,90,0.4)"
+          strokeWidth="1"
+        />
         <circle cx="0" cy="0" r="10" fill="none" stroke="rgba(230,126,90,0.5)" strokeWidth="1" />
-        <ellipse cx="0" cy="0" rx="10" ry="5" fill="none" stroke="rgba(230,126,90,0.4)" strokeWidth="0.5" />
+        <ellipse
+          cx="0"
+          cy="0"
+          rx="10"
+          ry="5"
+          fill="none"
+          stroke="rgba(230,126,90,0.4)"
+          strokeWidth="0.5"
+        />
         <line x1="-10" y1="0" x2="10" y2="0" stroke="rgba(230,126,90,0.4)" strokeWidth="0.5" />
       </g>
 
       {/* Writer - pen */}
       <g transform="translate(230, 230)">
-        <circle cx="0" cy="0" r="20" fill="rgba(230,126,90,0.15)" stroke="rgba(230,126,90,0.4)" strokeWidth="1" />
-        <line x1="-6" y1="6" x2="6" y2="-6" stroke="rgba(230,126,90,0.6)" strokeWidth="2" strokeLinecap="round" />
+        <circle
+          cx="0"
+          cy="0"
+          r="20"
+          fill="rgba(230,126,90,0.15)"
+          stroke="rgba(230,126,90,0.4)"
+          strokeWidth="1"
+        />
+        <line
+          x1="-6"
+          y1="6"
+          x2="6"
+          y2="-6"
+          stroke="rgba(230,126,90,0.6)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
         <circle cx="7" cy="-7" r="2" fill="rgba(230,126,90,0.6)" />
       </g>
 
       {/* Community - users */}
       <g transform="translate(150, 260)">
-        <circle cx="0" cy="0" r="20" fill="rgba(230,126,90,0.15)" stroke="rgba(230,126,90,0.4)" strokeWidth="1" />
+        <circle
+          cx="0"
+          cy="0"
+          r="20"
+          fill="rgba(230,126,90,0.15)"
+          stroke="rgba(230,126,90,0.4)"
+          strokeWidth="1"
+        />
         <circle cx="-5" cy="-3" r="4" fill="rgba(230,126,90,0.4)" />
         <circle cx="5" cy="-3" r="4" fill="rgba(230,126,90,0.4)" />
         <circle cx="0" cy="5" r="4" fill="rgba(230,126,90,0.5)" />
@@ -117,44 +195,44 @@ function ContributorsIllustrationSVG() {
         <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="rgba(230,126,90,0.5)" />
       ))}
     </svg>
-  )
+  );
 }
 
 const contributorTypes = [
   {
     icon: <Code className="w-5 h-5" />,
-    title: 'Developers',
-    description: 'React, Three.js, TypeScript — build the platform.',
+    title: "Developers",
+    description: "React, Three.js, TypeScript — build the platform.",
   },
   {
     icon: <Palette className="w-5 h-5" />,
-    title: 'Designers',
-    description: 'UI/UX, 3D models, illustrations — shape the experience.',
+    title: "Designers",
+    description: "UI/UX, 3D models, illustrations — shape the experience.",
   },
   {
     icon: <Languages className="w-5 h-5" />,
-    title: 'Translators',
-    description: 'Localize SOIL for communities worldwide.',
+    title: "Translators",
+    description: "Localize SOIL for communities worldwide.",
   },
   {
     icon: <PenTool className="w-5 h-5" />,
-    title: 'Writers',
-    description: 'Documentation, content, founder stories.',
+    title: "Writers",
+    description: "Documentation, content, founder stories.",
   },
   {
     icon: <Users className="w-5 h-5" />,
-    title: 'Community',
-    description: 'Moderation, support, event organization.',
+    title: "Community",
+    description: "Moderation, support, event organization.",
   },
-]
+];
 
 const techStack = [
-  'Next.js 15 + React 19',
-  'React Three Fiber',
-  'TypeScript',
-  'Tailwind CSS',
-  'Supabase',
-]
+  "Next.js 15 + React 19",
+  "React Three Fiber",
+  "TypeScript",
+  "Tailwind CSS",
+  "Supabase",
+];
 
 export function ContributorsRoleSection() {
   return (
@@ -163,7 +241,11 @@ export function ContributorsRoleSection() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Illustration (reversed layout) */}
           <div className="animate-fade-in-up order-2 lg:order-1">
-            <Card variant="dark-elevated" padding="none" className="aspect-square relative overflow-hidden">
+            <Card
+              variant="dark-elevated"
+              padding="none"
+              className="aspect-square relative overflow-hidden"
+            >
               <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent" />
               <ContributorsIllustrationSVG />
 
@@ -181,9 +263,9 @@ export function ContributorsRoleSection() {
               Build Something Meaningful
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-              SOIL is open source and community-driven. Whether you code, design,
-              write, translate, or organize — there&apos;s meaningful work waiting for you.
-              Every contribution, no matter how small, helps preserve organizational wisdom.
+              SOIL is open source and community-driven. Whether you code, design, write, translate,
+              or organize — there&apos;s meaningful work waiting for you. Every contribution, no
+              matter how small, helps preserve organizational wisdom.
             </p>
 
             {/* Contributor types */}
@@ -196,7 +278,9 @@ export function ContributorsRoleSection() {
                   <span className="text-orange-400">{type.icon}</span>
                   <div>
                     <span className="text-marble-100 text-sm font-medium">{type.title}</span>
-                    <span className="text-slate-500 text-xs ml-2 hidden sm:inline">{type.description}</span>
+                    <span className="text-slate-500 text-xs ml-2 hidden sm:inline">
+                      {type.description}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -228,7 +312,11 @@ export function ContributorsRoleSection() {
                   View Open Tasks
                 </Button>
               </a>
-              <a href="https://github.com/ertad-family/soil" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://github.com/ertad-family/soil"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Button
                   variant="dark-secondary"
                   size="lg"
@@ -242,5 +330,5 @@ export function ContributorsRoleSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

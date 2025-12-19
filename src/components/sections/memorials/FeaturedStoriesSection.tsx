@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
-import { Heart } from 'lucide-react'
-import { SectionLabel } from '@/components/ui/section-label'
+import { Heart } from "lucide-react";
+import { SectionLabel } from "@/components/ui/section-label";
 
 interface FeaturedStory {
-  id: string
-  quote: string
-  companyName: string
-  years: string
-  location: string
-  industry: string
-  industryColor: string
-  respects: number
+  id: string;
+  quote: string;
+  companyName: string;
+  years: string;
+  location: string;
+  industry: string;
+  industryColor: string;
+  respects: number;
 }
 
 interface FeaturedStoriesSectionProps {
-  stories: FeaturedStory[]
+  stories: FeaturedStory[];
 }
 
 /**
@@ -65,7 +65,7 @@ function StoryCard({ story }: { story: FeaturedStory }) {
         {story.industry}
       </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -82,8 +82,8 @@ export function FeaturedStoriesSection({ stories }: FeaturedStoriesSectionProps)
             Stories that teach
           </h2>
           <p className="text-lg text-slate-400 max-w-2xl">
-            Each ending carries lessons. These organizations shared their stories
-            so others might learn from their journey.
+            Each ending carries lessons. These organizations shared their stories so others might
+            learn from their journey.
           </p>
         </div>
 
@@ -105,5 +105,5 @@ export function FeaturedStoriesSection({ stories }: FeaturedStoriesSectionProps)
         </div>
       </div>
     </section>
-  )
+  );
 }
