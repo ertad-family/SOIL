@@ -328,7 +328,7 @@ export function OrganizationClient({
   return (
     <DashboardLayout
       variant="dark"
-      pageTitle={organization.name}
+      pageTitle={orgData.name}
       pageDescription="Organization profile"
       pageActions={
         <a href="/account">
