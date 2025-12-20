@@ -300,24 +300,33 @@ export default function PrivacyPolicyPage() {
                   5.1 Public Display (Cenotaph)
                 </h3>
                 <p>
-                  Based on your privacy settings, certain information may be publicly visible on
-                  your cenotaph:
+                  Stories and cenotaphs are always anonymized by default. Based on your privacy
+                  settings, you can choose to reveal limited identifying information:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>
                     <strong className="text-marble-100">Full Anonymity (default):</strong> No
-                    identifying information displayed
+                    identifying information displayed — organization and founder names are hidden
                   </li>
                   <li>
-                    <strong className="text-marble-100">Pseudonym + Story:</strong> Your narrative
-                    without real names
+                    <strong className="text-marble-100">Organization Name Visible (opt-in):</strong>{" "}
+                    You may choose to reveal your organization&apos;s name while keeping your
+                    personal identity private
                   </li>
                   <li>
-                    <strong className="text-marble-100">Full Publicity (opt-in):</strong> Real
-                    names, full story, your identity
+                    <strong className="text-marble-100">Founder Name Visible (opt-in):</strong> You
+                    may choose to reveal your name for networking and consultation purposes, in
+                    addition to or separately from your organization name
                   </li>
                 </ul>
                 <p className="mt-4">
+                  <strong className="text-marble-100">Important:</strong> Even with visibility
+                  settings enabled, the narrative content and organizational details in your
+                  cenotaph remain anonymized. Only the organization name and/or founder name can be
+                  revealed — never other individuals mentioned in your story (employees,
+                  co-founders, investors, etc.).
+                </p>
+                <p className="mt-2">
                   You control your visibility settings and can change them at any time.
                 </p>
               </Card>

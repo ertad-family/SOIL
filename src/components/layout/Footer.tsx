@@ -28,8 +28,8 @@ const SECONDARY_LINKS = [
 const SERVICE_LINKS = [
   { href: "#", label: "Account", disabled: true },
   { href: "#", label: "Search", disabled: true },
-  { href: "#", label: "Privacy Policy", disabled: true },
-  { href: "#", label: "Terms & Conditions", disabled: true },
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms of Service" },
   { href: "#", label: "Sitemap", disabled: true },
 ];
 

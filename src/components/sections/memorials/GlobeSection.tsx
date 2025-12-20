@@ -269,10 +269,13 @@ function ListView({
           const isFull = marker.status === "full";
 
           return (
-            <button
+            <div
               key={marker.id}
               onClick={() => onSelect(marker)}
-              className={`text-left p-4 rounded-lg border transition-all ${
+              onKeyDown={(e) => e.key === "Enter" && onSelect(marker)}
+              role="button"
+              tabIndex={0}
+              className={`text-left p-4 rounded-lg border transition-all cursor-pointer ${
                 isSelected
                   ? "bg-gold-500/10 border-gold-500/50"
                   : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600"
@@ -299,7 +302,20 @@ function ListView({
               <p className="mt-1 text-xs text-slate-500">
                 {marker.statistics.cenotaphCount} / {marker.statistics.capacity}
               </p>
-            </button>
+
+              {/* Enter Memorial button - appears when card is selected */}
+              {isSelected && (
+                <Link
+                  href={`/cenotaphery/${marker.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="block mt-4"
+                >
+                  <Button variant="dark-primary" size="md" fullWidth>
+                    Enter Memorial
+                  </Button>
+                </Link>
+              )}
+            </div>
           );
         })}
       </div>
