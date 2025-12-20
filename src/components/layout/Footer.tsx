@@ -26,7 +26,7 @@ const SECONDARY_LINKS = [
 
 // Service navigation - utility pages
 const SERVICE_LINKS = [
-  { href: "#", label: "Account", disabled: true },
+  { href: "/account", label: "Account" },
   { href: "#", label: "Search", disabled: true },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms of Service" },

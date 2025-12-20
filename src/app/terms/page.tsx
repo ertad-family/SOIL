@@ -154,7 +154,6 @@ export default function TermsOfServicePage() {
                       </li>
                       <li>AI-assisted interview option</li>
                       <li>AI-generated cenotaph design (initial design)</li>
-                      <li>Full 3D cenotaph visualization with all structural elements</li>
                     </ul>
                   </div>
                   <div>
@@ -193,14 +192,9 @@ export default function TermsOfServicePage() {
                     elements, lighting, audio)
                   </li>
                   <li>Can be gifted to other cenotaphs (not your own) to show appreciation</li>
-                  <li>Has a fixed value (1 Respect = 1 Respect, no exchange rates)</li>
                   <li>Is non-expiring and account-bound</li>
                   <li>Cannot be traded for money or withdrawn</li>
                 </ul>
-                <p className="mt-4 text-slate-500 text-sm">
-                  New users receive a welcome bonus of 10 Respects upon registration, which can only
-                  be gifted to other cenotaphs.
-                </p>
               </Card>
 
               <Card variant="dark" padding="lg" className="space-y-4">
@@ -227,11 +221,6 @@ export default function TermsOfServicePage() {
                     monument design after initial creation
                   </li>
                 </ul>
-                <p className="mt-4 text-slate-500 text-sm">
-                  These paid services are clearly distinguished from the free cenotaph creation
-                  process and are never positioned as &quot;upgrades&quot; or &quot;premium
-                  versions.&quot;
-                </p>
               </Card>
             </div>
           </section>
@@ -717,8 +706,7 @@ export default function TermsOfServicePage() {
                 </h3>
                 <p>
                   SOIL hosts the annual &quot;Day of the Dead Venture&quot; on October 19th — a
-                  global day of remembrance for failed organizations. Participation is voluntary and
-                  not gamified (no Respects are awarded for attendance).
+                  global day of remembrance for failed organizations. Participation is voluntary.
                 </p>
               </Card>
 
@@ -835,7 +823,7 @@ export default function TermsOfServicePage() {
 
           {/* Decorative divider */}
           <div className="divider-roman pt-12">
-            <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">SPQR</span>
+            <span className="text-gold-400 font-serif text-lg px-6">✦</span>
           </div>
 
           {/* Summary Card */}
@@ -867,15 +855,10 @@ export default function TermsOfServicePage() {
             </div>
           </Card>
 
-          {/* Related Links */}
-          <div className="flex flex-wrap gap-4 pt-8">
-            <Link href="/privacy" className="text-gold-400 hover:text-gold-300 underline text-sm">
-              Privacy Policy
-            </Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/about" className="text-gold-400 hover:text-gold-300 underline text-sm">
-              About SOIL
-            </Link>
+          {/* Document Info */}
+          <div className="text-slate-500 text-sm pt-8 space-y-1">
+            <p>Document Version: 1.0</p>
+            <p>Last Updated: December 20, 2025</p>
           </div>
         </div>
       </div>
