@@ -90,7 +90,18 @@ function extractStoryData(story: Story): {
   if (story.completedModules.includes("financial")) {
     const fin = story.financialPicture;
     if (fin.events && fin.events.length > 0) {
-      parts.push(`Financial events: ${fin.events.length} significant financial events occurred.`);
+      parts.push(`FINANCIAL EVENTS (${fin.events.length} total):`);
+      fin.events.forEach((event, idx) => {
+        const eventParts = [`  Event ${idx + 1}:`];
+        if (event.date) eventParts.push(`Date: ${event.date}`);
+        if (event.category) eventParts.push(`Category: ${event.category.replace(/_/g, " ")}`);
+        if (event.subType) eventParts.push(`Type: ${event.subType}`);
+        if (event.severity) eventParts.push(`Severity: ${event.severity}`);
+        if (event.lookingBack)
+          eventParts.push(`Reflection: ${event.lookingBack.replace(/_/g, " ")}`);
+        if (event.details) eventParts.push(`Details: ${event.details}`);
+        parts.push(eventParts.join(" | "));
+      });
     }
     if (fin.metrics) {
       parts.push("Financial metrics were tracked during operations.");
@@ -101,10 +112,21 @@ function extractStoryData(story: Story): {
   if (story.completedModules.includes("dynamic")) {
     const dyn = story.dynamicPicture;
     if (dyn.events && dyn.events.length > 0) {
-      const eventCategories = [...new Set(dyn.events.map((e) => e.category))];
-      parts.push(
-        `Internal events: Experienced ${dyn.events.length} notable events across ${eventCategories.join(", ")}.`
-      );
+      parts.push(`INTERNAL EVENTS (${dyn.events.length} total):`);
+      dyn.events.forEach((event, idx) => {
+        const eventParts = [`  Event ${idx + 1}:`];
+        if (event.date) eventParts.push(`Date: ${event.date}`);
+        if (event.category) eventParts.push(`Category: ${event.category.replace(/_/g, " ")}`);
+        if (event.subType) eventParts.push(`Type: ${event.subType}`);
+        if (event.emotionThen) eventParts.push(`Emotion at the time: ${event.emotionThen}`);
+        if (event.emotionTags && event.emotionTags.length > 0) {
+          eventParts.push(`Feelings: ${event.emotionTags.join(", ")}`);
+        }
+        if (event.lookingBack)
+          eventParts.push(`Reflection: ${event.lookingBack.replace(/_/g, " ")}`);
+        if (event.details) eventParts.push(`Details: ${event.details}`);
+        parts.push(eventParts.join(" | "));
+      });
     }
     if (dyn.detectedPatterns && dyn.detectedPatterns.length > 0) {
       parts.push(`Patterns detected: ${dyn.detectedPatterns.join(", ")}.`);
@@ -115,9 +137,24 @@ function extractStoryData(story: Story): {
   if (story.completedModules.includes("environment")) {
     const env = story.environment;
     if (env.events && env.events.length > 0) {
-      parts.push(
-        `External factors: ${env.events.length} external events impacted the organization.`
-      );
+      parts.push(`EXTERNAL EVENTS (${env.events.length} total):`);
+      env.events.forEach((event, idx) => {
+        const eventParts = [`  Event ${idx + 1}:`];
+        if (event.date) eventParts.push(`Date: ${event.date}`);
+        if (event.category) eventParts.push(`Category: ${event.category.replace(/_/g, " ")}`);
+        if (event.subType) eventParts.push(`Type: ${event.subType}`);
+        if (event.emotionThen) eventParts.push(`Emotion at the time: ${event.emotionThen}`);
+        if (event.emotionTags && event.emotionTags.length > 0) {
+          eventParts.push(`Feelings: ${event.emotionTags.join(", ")}`);
+        }
+        if (event.lookingBack)
+          eventParts.push(`Reflection: ${event.lookingBack.replace(/_/g, " ")}`);
+        if (event.responses && event.responses.length > 0) {
+          eventParts.push(`Responses: ${event.responses.join(", ")}`);
+        }
+        if (event.details) eventParts.push(`Details: ${event.details}`);
+        parts.push(eventParts.join(" | "));
+      });
     }
     if (env.resourceAssessments && env.resourceAssessments.length > 0) {
       const challengingResources = env.resourceAssessments.filter(
@@ -134,26 +171,158 @@ function extractStoryData(story: Story): {
     const founder = story.founderContext;
     const bg = founder.background;
 
+    parts.push("FOUNDER CONTEXT:");
+
+    // Part A: Before It Began
     if (bg.priorExperience) {
       const expLabel =
         bg.priorExperience === "first_time"
           ? "first-time founder"
           : bg.priorExperience === "tried_before"
-            ? "experienced entrepreneur"
+            ? "had tried entrepreneurship before"
             : "serial entrepreneur";
-      parts.push(`Founder profile: ${expLabel}.`);
+      parts.push(`  Prior experience: ${expLabel}`);
+    }
+    if (bg.domainKnowledge) {
+      const domainLabel =
+        bg.domainKnowledge === "learning"
+          ? "was learning the domain"
+          : bg.domainKnowledge === "knew_basics"
+            ? "knew the basics"
+            : "had deep expertise";
+      parts.push(`  Domain knowledge: ${domainLabel}`);
+    }
+    if (bg.lifeSituation) {
+      const lifeLabel =
+        bg.lifeSituation === "stable"
+          ? "in a stable life situation"
+          : bg.lifeSituation === "in_transition"
+            ? "in life transition"
+            : "ready for a leap";
+      parts.push(`  Life situation: ${lifeLabel}`);
     }
 
-    if (
-      bg.healthImpact === "significantly" ||
-      bg.relationshipImpact === "significantly" ||
-      bg.financeImpact === "significantly"
-    ) {
-      parts.push("The founder experienced significant personal impact.");
+    // Part B: The Beginning
+    if (bg.commitment) {
+      const commitLabel =
+        bg.commitment === "full_time"
+          ? "went full-time from the start"
+          : bg.commitment === "eased_in"
+            ? "eased in gradually"
+            : "never went full-time";
+      parts.push(`  Commitment: ${commitLabel}`);
+    }
+    if (bg.startedWith) {
+      const teamLabel =
+        bg.startedWith === "solo"
+          ? "started solo"
+          : bg.startedWith === "one_other"
+            ? "started with one other person"
+            : "started with a team";
+      parts.push(`  Team formation: ${teamLabel}`);
+    }
+    if (bg.howFoundCoFounders) {
+      parts.push(`  How found co-founders: ${bg.howFoundCoFounders}`);
+    }
+    if (bg.roleClarity) {
+      const roleLabel =
+        bg.roleClarity === "crystal_clear"
+          ? "crystal clear roles"
+          : bg.roleClarity === "figured_out"
+            ? "figured out roles over time"
+            : "roles were always fuzzy";
+      parts.push(`  Role clarity: ${roleLabel}`);
     }
 
+    // Part C: Along the Way
+    if (bg.motivationEvolution) {
+      const motivLabel =
+        bg.motivationEvolution === "grew_stronger"
+          ? "motivation grew stronger"
+          : bg.motivationEvolution === "stayed_steady"
+            ? "motivation stayed steady"
+            : "motivation started fading";
+      parts.push(`  Motivation evolution: ${motivLabel}`);
+      if (bg.motivationEvolution === "started_fading" && bg.fadingNoticedAt) {
+        parts.push(`  Noticed fading at: ${bg.fadingNoticedAt.replace(/_/g, " ")}`);
+      }
+    }
+    if (bg.cofounderRelationship) {
+      const cofounderLabel =
+        bg.cofounderRelationship === "got_closer"
+          ? "co-founder relationship got closer"
+          : bg.cofounderRelationship === "stayed_solid"
+            ? "relationship stayed solid"
+            : bg.cofounderRelationship === "got_hard"
+              ? "relationship became difficult"
+              : "co-founders split";
+      parts.push(`  Co-founder dynamics: ${cofounderLabel}`);
+    }
+    if (bg.investmentLevel) {
+      const investLabel =
+        bg.investmentLevel === "yes_everything"
+          ? "invested everything (time, money, relationships)"
+          : bg.investmentLevel === "kept_boundaries"
+            ? "maintained some boundaries"
+            : "pulled back investment over time";
+      parts.push(`  Personal investment: ${investLabel}`);
+    }
+
+    // Part D: The Cost
+    if (bg.healthImpact) {
+      parts.push(`  Health impact: ${bg.healthImpact.replace(/_/g, " ")}`);
+    }
+    if (bg.relationshipImpact) {
+      parts.push(`  Relationship impact: ${bg.relationshipImpact.replace(/_/g, " ")}`);
+    }
+    if (bg.financeImpact) {
+      parts.push(`  Financial impact: ${bg.financeImpact.replace(/_/g, " ")}`);
+    }
+    if (bg.recoveryTime) {
+      const recoveryLabel =
+        bg.recoveryTime === "still_working" ? "still working on recovery" : bg.recoveryTime;
+      parts.push(`  Recovery time: ${recoveryLabel}`);
+    }
+
+    // Part E: Now
+    if (bg.currentFeeling) {
+      parts.push(`  Current feeling: ${bg.currentFeeling}`);
+    }
+    if (bg.whatHelpedProcess) {
+      parts.push(`  What helped process: ${bg.whatHelpedProcess}`);
+    }
+    if (bg.wouldDoAgain) {
+      const againLabel =
+        bg.wouldDoAgain === "yes_no_hesitation"
+          ? "would do it again without hesitation"
+          : bg.wouldDoAgain === "yes_differently"
+            ? "would do it again but differently"
+            : bg.wouldDoAgain === "probably_not"
+              ? "probably wouldn't do it again"
+              : "definitely wouldn't do it again";
+      parts.push(`  Would do again: ${againLabel}`);
+    }
+
+    // Personal events
     if (founder.events && founder.events.length > 0) {
-      parts.push(`Personal challenges: ${founder.events.length} life events affected the journey.`);
+      parts.push(`PERSONAL LIFE EVENTS (${founder.events.length} total):`);
+      founder.events.forEach((event, idx) => {
+        const eventParts = [`  Event ${idx + 1}:`];
+        if (event.date) eventParts.push(`Date: ${event.date}`);
+        if (event.category) eventParts.push(`Category: ${event.category.replace(/_/g, " ")}`);
+        if (event.subType) eventParts.push(`Type: ${event.subType}`);
+        if (event.capacityImpact) {
+          eventParts.push(`Capacity impact: ${event.capacityImpact.replace(/_/g, " ")}`);
+        }
+        if (event.organizationAdapted) {
+          eventParts.push(`Organization adapted: ${event.organizationAdapted.replace(/_/g, " ")}`);
+        }
+        if (event.lookingBack) {
+          eventParts.push(`Looking back: ${event.lookingBack.replace(/_/g, " ")}`);
+        }
+        if (event.details) eventParts.push(`Details: ${event.details}`);
+        parts.push(eventParts.join(" | "));
+      });
     }
   }
 
