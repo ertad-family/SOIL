@@ -10,6 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { SwitchWithLabel } from "@/components/ui/switch";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -799,7 +807,14 @@ function OwnerView({
 
         {/* Cenotaph Avatar (Right Column) */}
         <div className="lg:col-span-1 order-1 lg:order-2">
-          <CenotaphAvatar memorial={memorial} organizationId={organization.id} isOwner={isOwner} />
+          <CenotaphAvatar
+            memorial={memorial}
+            organizationId={organization.id}
+            isOwner={isOwner}
+            stories={stories}
+            organization={orgData}
+            myStory={myStory}
+          />
         </div>
       </div>
 
@@ -954,14 +969,26 @@ function CenotaphAvatar({
   memorial,
   organizationId,
   isOwner,
+  stories,
+  organization,
+  myStory,
 }: {
   memorial: MemorialData | null;
   organizationId: string;
   isOwner: boolean;
+  stories: StoryData[];
+  organization: OrganizationData;
+  myStory: StoryData | undefined;
 }) {
   const router = useRouter();
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [showRequirementModal, setShowRequirementModal] = useState(false);
+
+  // Cenotaph design requirements check
+  const hasCoinedStory = stories.some((s) => s.status === "coined");
+  const isVerified = organization.verification_status === "verified";
+  const canDesignCenotaph = hasCoinedStory && isVerified;
 
   // Handle "Create Cenotaph" button click - creates memorial and redirects to wizard
   const handleCreateCenotaph = async () => {
@@ -1114,17 +1141,138 @@ function CenotaphAvatar({
         {/* Design Cenotaph button (shown when no AI design yet) */}
         {needsDesign && (
           <div className="mt-3 text-center">
-            <a href={`/cenotaph/create/${memorial.id}`}>
+            {canDesignCenotaph ? (
+              <a href={`/cenotaph/create/${memorial.id}`}>
+                <Button
+                  variant="dark-secondary"
+                  size="sm"
+                  leftIcon={<Sparkles className="w-4 h-4" />}
+                >
+                  Design Cenotaph
+                </Button>
+              </a>
+            ) : (
               <Button
                 variant="dark-secondary"
                 size="sm"
                 leftIcon={<Sparkles className="w-4 h-4" />}
+                onClick={() => setShowRequirementModal(true)}
               >
                 Design Cenotaph
               </Button>
-            </a>
+            )}
           </div>
         )}
+
+        {/* Cenotaph Requirements Modal */}
+        <Dialog open={showRequirementModal} onOpenChange={setShowRequirementModal}>
+          <DialogContent variant="dark" size="md">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
+                  <AlertCircle className="w-5 h-5 text-gold-400" />
+                </div>
+                <DialogTitle variant="dark">Complete These Steps First</DialogTitle>
+              </div>
+              <DialogDescription variant="dark">
+                Before designing your cenotaph, please complete the following requirements:
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 mt-4">
+              {/* Story Requirement */}
+              <div
+                className={`p-4 rounded-lg border ${
+                  hasCoinedStory
+                    ? "border-green-500/30 bg-green-500/5"
+                    : "border-gold-500/30 bg-gold-500/5"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  {hasCoinedStory ? (
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-medium text-marble-100 mb-1">
+                      {hasCoinedStory ? "Story Completed" : "Complete Your Story"}
+                    </h4>
+                    <p className="text-sm text-slate-400">
+                      {hasCoinedStory
+                        ? "You have at least one completed perspective about this organization."
+                        : "Complete at least one perspective about this organization. Your story captures the lessons and memories that will be preserved in the cenotaph."}
+                    </p>
+                    {!hasCoinedStory && (
+                      <div className="mt-3">
+                        {myStory ? (
+                          <a href={`/interview/${myStory.id}`}>
+                            <Button
+                              variant="dark-primary"
+                              size="sm"
+                              rightIcon={<ArrowRight className="w-4 h-4" />}
+                            >
+                              Continue Story
+                            </Button>
+                          </a>
+                        ) : (
+                          <a href={`/interview?org=${organizationId}`}>
+                            <Button
+                              variant="dark-primary"
+                              size="sm"
+                              rightIcon={<Plus className="w-4 h-4" />}
+                            >
+                              Start Story
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Verification Requirement */}
+              <div
+                className={`p-4 rounded-lg border ${
+                  isVerified
+                    ? "border-green-500/30 bg-green-500/5"
+                    : "border-gold-500/30 bg-gold-500/5"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  {isVerified ? (
+                    <ShieldCheck className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <Shield className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-medium text-marble-100 mb-1">
+                      {isVerified ? "Organization Verified" : "Verify Your Organization"}
+                    </h4>
+                    <p className="text-sm text-slate-400">
+                      {isVerified
+                        ? "Your organization has been verified."
+                        : "Verify your organization to unlock cenotaph design. Verification ensures the authenticity of the memorial and allows it to be displayed publicly."}
+                    </p>
+                    {!isVerified && (
+                      <p className="text-sm text-slate-500 mt-2">
+                        Use the Verification section on this page to request verification from
+                        colleagues or upload verification documents.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="dark-ghost" onClick={() => setShowRequirementModal(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Change Design / Continue Designing button (shown when design exists and user is owner) */}
         {hasDesign && isOwner && (
@@ -1148,34 +1296,156 @@ function CenotaphAvatar({
 
   // No cenotaph - show invitation with Roman frame style
   return (
-    <div className={marbleFrameEmptyStyles}>
-      <div className="relative w-full h-full rounded-sm bg-slate-800/50 flex flex-col items-center justify-center p-6 text-center">
-        {/* Decorative corner ornaments */}
-        <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-slate-500/50" />
-        <div className="absolute top-2 right-2 w-4 h-4 border-t border-r border-slate-500/50" />
-        <div className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-slate-500/50" />
-        <div className="absolute bottom-2 right-2 w-4 h-4 border-b border-r border-slate-500/50" />
+    <>
+      <div className={marbleFrameEmptyStyles}>
+        <div className="relative w-full h-full rounded-sm bg-slate-800/50 flex flex-col items-center justify-center p-6 text-center">
+          {/* Decorative corner ornaments */}
+          <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-slate-500/50" />
+          <div className="absolute top-2 right-2 w-4 h-4 border-t border-r border-slate-500/50" />
+          <div className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-slate-500/50" />
+          <div className="absolute bottom-2 right-2 w-4 h-4 border-b border-r border-slate-500/50" />
 
-        <div className="w-14 h-14 rounded-full bg-slate-700/50 flex items-center justify-center mb-3 border border-slate-600">
-          <Landmark className="w-7 h-7 text-slate-500" />
+          <div className="w-14 h-14 rounded-full bg-slate-700/50 flex items-center justify-center mb-3 border border-slate-600">
+            <Landmark className="w-7 h-7 text-slate-500" />
+          </div>
+          <h3 className="font-display text-base text-marble-300 mb-2">No Cenotaph Yet</h3>
+          <p className="text-slate-500 text-sm mb-4 px-2">
+            Create a memorial to preserve this legacy
+          </p>
+          {isOwner &&
+            (canDesignCenotaph ? (
+              <Button
+                variant="dark-primary"
+                size="sm"
+                rightIcon={<Plus className="w-4 h-4" />}
+                onClick={handleCreateCenotaph}
+                disabled={isCreating}
+              >
+                {isCreating ? "Creating..." : "Create Cenotaph"}
+              </Button>
+            ) : (
+              <Button
+                variant="dark-primary"
+                size="sm"
+                rightIcon={<Plus className="w-4 h-4" />}
+                onClick={() => setShowRequirementModal(true)}
+              >
+                Create Cenotaph
+              </Button>
+            ))}
         </div>
-        <h3 className="font-display text-base text-marble-300 mb-2">No Cenotaph Yet</h3>
-        <p className="text-slate-500 text-sm mb-4 px-2">
-          Create a memorial to preserve this legacy
-        </p>
-        {isOwner && (
-          <Button
-            variant="dark-primary"
-            size="sm"
-            rightIcon={<Plus className="w-4 h-4" />}
-            onClick={handleCreateCenotaph}
-            disabled={isCreating}
-          >
-            {isCreating ? "Creating..." : "Create Cenotaph"}
-          </Button>
-        )}
       </div>
-    </div>
+
+      {/* Cenotaph Requirements Modal (for empty state) */}
+      <Dialog open={showRequirementModal} onOpenChange={setShowRequirementModal}>
+        <DialogContent variant="dark" size="md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-gold-400" />
+              </div>
+              <DialogTitle variant="dark">Complete These Steps First</DialogTitle>
+            </div>
+            <DialogDescription variant="dark">
+              Before creating your cenotaph, please complete the following requirements:
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {/* Story Requirement */}
+            <div
+              className={`p-4 rounded-lg border ${
+                hasCoinedStory
+                  ? "border-green-500/30 bg-green-500/5"
+                  : "border-gold-500/30 bg-gold-500/5"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {hasCoinedStory ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                )}
+                <div className="flex-1">
+                  <h4 className="font-medium text-marble-100 mb-1">
+                    {hasCoinedStory ? "Story Completed" : "Complete Your Story"}
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    {hasCoinedStory
+                      ? "You have at least one completed perspective about this organization."
+                      : "Complete at least one perspective about this organization. Your story captures the lessons and memories that will be preserved in the cenotaph."}
+                  </p>
+                  {!hasCoinedStory && (
+                    <div className="mt-3">
+                      {myStory ? (
+                        <a href={`/interview/${myStory.id}`}>
+                          <Button
+                            variant="dark-primary"
+                            size="sm"
+                            rightIcon={<ArrowRight className="w-4 h-4" />}
+                          >
+                            Continue Story
+                          </Button>
+                        </a>
+                      ) : (
+                        <a href={`/interview?org=${organizationId}`}>
+                          <Button
+                            variant="dark-primary"
+                            size="sm"
+                            rightIcon={<Plus className="w-4 h-4" />}
+                          >
+                            Start Story
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Verification Requirement */}
+            <div
+              className={`p-4 rounded-lg border ${
+                isVerified
+                  ? "border-green-500/30 bg-green-500/5"
+                  : "border-gold-500/30 bg-gold-500/5"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {isVerified ? (
+                  <ShieldCheck className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <Shield className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                )}
+                <div className="flex-1">
+                  <h4 className="font-medium text-marble-100 mb-1">
+                    {isVerified ? "Organization Verified" : "Verify Your Organization"}
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    {isVerified
+                      ? "Your organization has been verified."
+                      : "Verify your organization to unlock cenotaph design. Verification ensures the authenticity of the memorial and allows it to be displayed publicly."}
+                  </p>
+                  {!isVerified && (
+                    <p className="text-sm text-slate-500 mt-2">
+                      Use the Verification section on this page to request verification from
+                      colleagues or upload verification documents.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="dark-ghost" onClick={() => setShowRequirementModal(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
