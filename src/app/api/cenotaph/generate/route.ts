@@ -127,17 +127,27 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
     if (memorial.story_id) {
       const { data: storyData } = await supabase
         .from("stories")
-        .select("narrative")
+        .select("narrative, ai_summary")
         .eq("id", memorial.story_id)
         .single();
 
-      if (storyData?.narrative) {
+      if (storyData) {
         const narrative = storyData.narrative;
+        const aiSummary = storyData.ai_summary;
+
         story = {
-          epitaph: narrative.epitaph || memorial.epitaph,
-          mainLesson: narrative.mainLesson || memorial.main_lesson,
-          closureType: narrative.closureType || memorial.closure_type,
-          keyEvents: narrative.keyEvents || [],
+          epitaph: narrative?.epitaph || memorial.epitaph,
+          mainLesson: narrative?.mainLesson || memorial.main_lesson,
+          closureType: narrative?.closureType || memorial.closure_type,
+          keyEvents: narrative?.keyEvents || [],
+          // Include AI-generated summary for richer context
+          aiSummary: aiSummary
+            ? {
+                text: aiSummary.text || null,
+                keyFacts: aiSummary.keyFacts || [],
+                closurePattern: aiSummary.closurePattern || null,
+              }
+            : null,
         };
       }
     }

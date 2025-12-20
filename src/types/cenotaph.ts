@@ -68,6 +68,12 @@ export interface StoryContext {
   mainLesson: string | null;
   closureType: string | null;
   keyEvents: string[];
+  // AI-generated summary data (from interview process)
+  aiSummary?: {
+    text: string | null; // Full narrative summary
+    keyFacts: string[]; // Extracted key facts
+    closurePattern: string | null; // Categorized closure pattern
+  } | null;
 }
 
 export interface GenerateDesignRequest {
