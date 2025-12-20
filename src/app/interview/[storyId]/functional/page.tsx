@@ -12,6 +12,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Check,
   ChevronDown,
   ChevronRight,
@@ -231,6 +239,7 @@ export default function FunctionalPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set());
   const [expandedFunctions, setExpandedFunctions] = React.useState<Set<string>>(new Set());
+  const [showIncompleteModal, setShowIncompleteModal] = React.useState(false);
 
   // Get org type and stage from basic info
   const orgType = story?.basicInfo.organizationType;
@@ -280,6 +289,51 @@ export default function FunctionalPage() {
     });
 
     return Math.round((handledCategories.length / categories.length) * 100);
+  }, [categories, excludedCategories, functions]);
+
+  // Get incomplete categories for the confirmation modal
+  type IncompleteCategory = {
+    id: string;
+    name: string;
+    reason: "no_action" | "missing_details";
+    selectedCount: number;
+    incompleteCount: number;
+  };
+
+  const incompleteCategories = React.useMemo((): IncompleteCategory[] => {
+    return categories
+      .map((cat) => {
+        // Skip excluded categories
+        if (excludedCategories.has(cat.id)) return null;
+
+        const categoryFunctions = functions.filter((f) => f.categoryId === cat.id && f.isActive);
+
+        // No functions selected - no action taken
+        if (categoryFunctions.length === 0) {
+          return {
+            id: cat.id,
+            name: cat.name,
+            reason: "no_action" as const,
+            selectedCount: 0,
+            incompleteCount: 0,
+          };
+        }
+
+        // Some functions selected but incomplete
+        const incompleteFunctions = categoryFunctions.filter((f) => !isFunctionComplete(f));
+        if (incompleteFunctions.length > 0) {
+          return {
+            id: cat.id,
+            name: cat.name,
+            reason: "missing_details" as const,
+            selectedCount: categoryFunctions.length,
+            incompleteCount: incompleteFunctions.length,
+          };
+        }
+
+        return null;
+      })
+      .filter((cat): cat is IncompleteCategory => cat !== null);
   }, [categories, excludedCategories, functions]);
 
   // ==========================================================================
@@ -468,7 +522,17 @@ export default function FunctionalPage() {
     router.push(`/interview/${story?.id}`);
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
+    // If data is incomplete, show confirmation modal
+    if (incompleteCategories.length > 0) {
+      setShowIncompleteModal(true);
+      return;
+    }
+    // Data is complete, proceed directly
+    performComplete();
+  };
+
+  const performComplete = async () => {
     setIsSubmitting(true);
     try {
       await completeModule("functional");
@@ -478,6 +542,16 @@ export default function FunctionalPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCompleteAnyway = () => {
+    setShowIncompleteModal(false);
+    performComplete();
+  };
+
+  const handleSaveAndContinueLater = () => {
+    setShowIncompleteModal(false);
+    router.push(`/interview/${story?.id}`);
   };
 
   // ==========================================================================
@@ -1026,31 +1100,61 @@ export default function FunctionalPage() {
   // RENDER
   // ==========================================================================
 
-  // Can complete if all categories are either excluded or have completed functions
-  const canComplete =
-    categories.length > 0 &&
-    categories.every((cat) => {
-      if (excludedCategories.has(cat.id)) return true;
-      const categoryFunctions = functions.filter((f) => f.categoryId === cat.id && f.isActive);
-      return categoryFunctions.length > 0 && categoryFunctions.every((f) => isFunctionComplete(f));
-    });
-
   return (
-    <WizardLayout
-      variant="dark"
-      steps={STEPS}
-      currentStep={0}
-      onBack={handleBack}
-      onNext={handleComplete}
-      cancelHref={`/interview/${story.id}`}
-      isLoading={isSubmitting}
-      canGoNext={canComplete || activeFunctionsCount > 0}
-      nextLabel="Complete"
-      title="Functional Mapping"
-      subtitle="Map your organization's structure at its peak"
-      progress={progressPercent}
-    >
-      {renderContent()}
-    </WizardLayout>
+    <>
+      <WizardLayout
+        variant="dark"
+        steps={STEPS}
+        currentStep={0}
+        onBack={handleBack}
+        onNext={handleComplete}
+        cancelHref={`/interview/${story.id}`}
+        isLoading={isSubmitting}
+        canGoNext={true}
+        nextLabel="Complete"
+        title="Functional Mapping"
+        subtitle="Map your organization's structure at its peak"
+        progress={progressPercent}
+      >
+        {renderContent()}
+      </WizardLayout>
+
+      {/* Incomplete data confirmation modal */}
+      <Dialog open={showIncompleteModal} onOpenChange={setShowIncompleteModal}>
+        <DialogContent variant="dark" size="md">
+          <DialogHeader>
+            <DialogTitle variant="dark">Some categories are incomplete</DialogTitle>
+            <DialogDescription variant="dark">
+              The following categories need attention before completing this module:
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-4 space-y-2 max-h-60 overflow-y-auto">
+            {incompleteCategories.map((cat) => (
+              <div key={cat.id} className="flex items-start gap-3 p-3 rounded-md bg-slate-700/50">
+                <AlertCircle className="h-5 w-5 text-gold-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-marble-100">{cat.name}</p>
+                  <p className="text-xs text-slate-400">
+                    {cat.reason === "no_action"
+                      ? "No functions selected or excluded"
+                      : `${cat.incompleteCount} of ${cat.selectedCount} functions missing details`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="dark-secondary" onClick={handleSaveAndContinueLater}>
+              Save & Continue Later
+            </Button>
+            <Button variant="dark-primary" onClick={handleCompleteAnyway} isLoading={isSubmitting}>
+              Complete Anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
