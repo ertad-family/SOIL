@@ -13,6 +13,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import type { Story, ModuleId, AISummary, OrganizationType } from "@/types/interview";
+import { MODULES } from "@/types/interview";
 
 // Initialize Google GenAI client with Vertex AI
 const ai = new GoogleGenAI({
@@ -373,6 +374,11 @@ export async function generateStorySummary(
 ): Promise<AISummary> {
   const extracted = extractStoryData(story);
 
+  // Determine next chapter for anticipation message
+  const currentModuleIndex = MODULES.findIndex((m) => m.id === lastCompletedModule);
+  const nextModule = MODULES[currentModuleIndex + 1];
+  const isLastModule = !nextModule || lastCompletedModule === "narrative";
+
   if (!extracted.hasData) {
     return {
       text: "Complete your first chapter to see what we're learning from your story.",
@@ -383,8 +389,15 @@ export async function generateStorySummary(
       lifespanMonths: null,
       peakTeamSize: null,
       closurePattern: null,
+      appraisal: null,
     };
   }
+
+  // Determine chapter context for appraisal
+  const completedModuleName =
+    MODULES.find((m) => m.id === lastCompletedModule)?.name || "this chapter";
+  const nextModuleName = nextModule?.name || null;
+  const chaptersCompleted = story.completedModules.filter((m) => m !== "basic_info").length;
 
   const prompt = `You are an organizational researcher writing a privacy-stripped summary of an organization's story.
 
@@ -398,21 +411,33 @@ IMPORTANT PRIVACY RULES:
 DATA FROM COMPLETED INTERVIEW MODULES:
 ${extracted.context}
 
+CONTEXT FOR APPRAISAL:
+- The founder just completed: "${completedModuleName}"
+- Chapters completed so far: ${chaptersCompleted}
+- ${isLastModule ? "This was the FINAL chapter! The story is now complete." : `Next chapter: "${nextModuleName}"`}
+
 YOUR TASK:
-Write a 2-3 paragraph summary (150-250 words) that:
-1. Describes the organization's type and scale WITHOUT naming it
-2. Highlights key organizational patterns and challenges
-3. Notes any significant lessons or insights
+1. Write a 2-3 paragraph summary (150-250 words) that:
+   - Describes the organization's type and scale WITHOUT naming it
+   - Highlights key organizational patterns and challenges
+   - Notes any significant lessons or insights
+   The summary should feel like reading a research case study, not a personal story.
 
-The summary should feel like reading a research case study, not a personal story.
+2. Extract 3-5 key facts as bullet points.
 
-Additionally, extract 3-5 key facts as bullet points.
+3. Generate TWO motivational messages for the founder:
+   - "affirmation": A warm, encouraging message (1-2 sentences) that acknowledges what they've shared in this chapter and validates their effort. Be specific to what they documented. Use second person ("You've...").
+   - "anticipation": ${isLastModule ? "A celebratory message congratulating them on completing their story and thanking them for preserving this legacy." : `A brief message (1 sentence) building excitement for the next chapter ("${nextModuleName}"). Hint at what insights await.`}
 
 Format your response as JSON:
 {
   "summary": "Your 2-3 paragraph summary here...",
   "keyFacts": ["Fact 1", "Fact 2", "Fact 3"],
-  "closurePattern": "one of: cash_crisis, market_shift, team_breakdown, external_shock, strategic_pivot, founder_burnout, or null if unclear"
+  "closurePattern": "one of: cash_crisis, market_shift, team_breakdown, external_shock, strategic_pivot, founder_burnout, or null if unclear",
+  "appraisal": {
+    "affirmation": "Your affirmation message here...",
+    "anticipation": "Your anticipation message here..."
+  }
 }`;
 
   try {
@@ -472,6 +497,7 @@ Format your response as JSON:
       lifespanMonths: extracted.lifespanMonths,
       peakTeamSize: extracted.peakTeamSize,
       closurePattern: parsed.closurePattern || null,
+      appraisal: parsed.appraisal || null,
     };
   } catch (error) {
     console.error("Error generating summary:", error);
@@ -486,6 +512,13 @@ Format your response as JSON:
       lifespanMonths: extracted.lifespanMonths,
       peakTeamSize: extracted.peakTeamSize,
       closurePattern: null,
+      appraisal: {
+        affirmation:
+          "Thank you for sharing this part of your journey. Every detail you provide helps build a complete picture.",
+        anticipation: isLastModule
+          ? "Your story is now complete. Thank you for preserving this legacy."
+          : `Next up: ${nextModuleName || "the next chapter"} awaits.`,
+      },
     };
   }
 }

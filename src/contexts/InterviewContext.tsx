@@ -20,6 +20,7 @@ import type {
 import {
   createEmptyStory,
   createEmptyOrganization,
+  createEmptyNarrative,
   MODULES,
   getNextModule,
   calculateProgress,
@@ -144,7 +145,11 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           dynamicPicture: data.dynamic_picture,
           environment: data.environment,
           founderContext: data.founder_context,
-          narrative: data.narrative,
+          // Use createEmptyNarrative as fallback to ensure questions are always populated
+          narrative:
+            data.narrative?.sections?.understanding?.length > 0
+              ? data.narrative
+              : createEmptyNarrative(),
           createdAt: data.created_at,
           updatedAt: data.updated_at,
           coinedAt: data.coined_at,
@@ -485,9 +490,12 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     async (moduleId: ModuleId) => {
       if (!story) return;
 
-      const newCompletedModules = story.completedModules.includes(moduleId)
-        ? story.completedModules
-        : [...story.completedModules, moduleId];
+      // Check if this is a NEW completion (not re-completing an already completed module)
+      const isNewCompletion = !story.completedModules.includes(moduleId);
+
+      const newCompletedModules = isNewCompletion
+        ? [...story.completedModules, moduleId]
+        : story.completedModules;
 
       // Determine new status
       let newStatus: StoryStatus = story.status;
@@ -535,36 +543,40 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
         setLastSavedAt(new Date());
         setHasUnsavedChanges(false);
 
-        // Trigger AI summary generation in background (fire-and-forget)
-        // Don't block the user experience - summary will update asynchronously
-        setStory((prev) => (prev ? { ...prev, aiSummaryStatus: "generating" } : prev));
-        fetch(`/api/story/${story.id}/summary`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lastCompletedModule: moduleId }),
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            throw new Error("Failed to generate summary");
+        // Only trigger AI summary generation for NEW completions
+        // Skip if user is just re-completing an already completed module without changes
+        if (isNewCompletion) {
+          // Trigger AI summary generation in background (fire-and-forget)
+          // Don't block the user experience - summary will update asynchronously
+          setStory((prev) => (prev ? { ...prev, aiSummaryStatus: "generating" } : prev));
+          fetch(`/api/story/${story.id}/summary`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lastCompletedModule: moduleId }),
           })
-          .then((data) => {
-            setStory((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    aiSummary: data.summary,
-                    aiSummaryStatus: "ready",
-                    aiSummaryUpdatedAt: new Date().toISOString(),
-                  }
-                : prev
-            );
-          })
-          .catch((error) => {
-            console.error("Failed to generate summary:", error);
-            setStory((prev) => (prev ? { ...prev, aiSummaryStatus: "failed" } : prev));
-          });
+            .then((response) => {
+              if (response.ok) {
+                return response.json();
+              }
+              throw new Error("Failed to generate summary");
+            })
+            .then((data) => {
+              setStory((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      aiSummary: data.summary,
+                      aiSummaryStatus: "ready",
+                      aiSummaryUpdatedAt: new Date().toISOString(),
+                    }
+                  : prev
+              );
+            })
+            .catch((error) => {
+              console.error("Failed to generate summary:", error);
+              setStory((prev) => (prev ? { ...prev, aiSummaryStatus: "failed" } : prev));
+            });
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to complete module");
       } finally {

@@ -579,6 +579,11 @@ export interface AISummary {
   lifespanMonths: number | null;
   peakTeamSize: number | null;
   closurePattern: string | null;
+  // Appraisal: motivational messages for founder after completing a chapter
+  appraisal: {
+    affirmation: string; // Affirms founder's achievements so far
+    anticipation: string; // Builds expectation for next chapter
+  } | null;
 }
 
 // =============================================================================
