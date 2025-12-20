@@ -1014,13 +1014,23 @@ function CenotaphAvatar({
             >
               {/* AI-generated cenotaph image */}
               {hasDesign && memorial.cenotaph_image_url && (
-                <Image
-                  src={memorial.cenotaph_image_url}
-                  alt="Cenotaph design"
-                  fill
-                  sizes="(max-width: 640px) 100vw, 300px"
-                  className="object-cover"
-                />
+                <>
+                  <Image
+                    src={memorial.cenotaph_image_url}
+                    alt="Cenotaph design"
+                    fill
+                    sizes="(max-width: 640px) 100vw, 300px"
+                    className="object-cover"
+                  />
+                  {/* Epitaph overlay at bottom */}
+                  {memorial.epitaph && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent pt-12 pb-4 px-4">
+                      <p className="text-marble-200 font-serif text-sm italic text-center line-clamp-3">
+                        &ldquo;{memorial.epitaph}&rdquo;
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Decorative corner ornaments (only when no image) */}
@@ -1052,8 +1062,14 @@ function CenotaphAvatar({
                 </div>
               )}
 
-              {/* Stats */}
-              <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-4 text-sm text-slate-400">
+              {/* Stats - positioned above epitaph when present */}
+              <div
+                className={`absolute left-3 right-3 flex justify-center gap-4 text-sm ${
+                  hasDesign && memorial.epitaph
+                    ? "bottom-16 text-marble-300/80"
+                    : "bottom-3 text-slate-400"
+                }`}
+              >
                 <span className="flex items-center gap-1">
                   <Eye className="w-4 h-4" />
                   {memorial.views_count}
