@@ -1121,7 +1121,7 @@ export default function FunctionalPage() {
 
       {/* Incomplete data confirmation modal */}
       <Dialog open={showIncompleteModal} onOpenChange={setShowIncompleteModal}>
-        <DialogContent variant="dark" size="md">
+        <DialogContent variant="dark" size="lg">
           <DialogHeader>
             <DialogTitle variant="dark">Some categories are incomplete</DialogTitle>
             <DialogDescription variant="dark">
@@ -1129,7 +1129,7 @@ export default function FunctionalPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="my-4 space-y-2 max-h-60 overflow-y-auto">
+          <div className="my-4 grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
             {incompleteCategories.map((cat) => (
               <div key={cat.id} className="flex items-start gap-3 p-3 rounded-md bg-slate-700/50">
                 <AlertCircle className="h-5 w-5 text-gold-400 flex-shrink-0 mt-0.5" />
