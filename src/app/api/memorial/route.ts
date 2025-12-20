@@ -65,6 +65,28 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
+    // Determine cenotaphery assignment
+    // First 100 memorials go to "the-first" cenotaphery
+    // TODO: Implement location-based assignment algorithm (see tech debt issue #107)
+    let cenotapheryId: string | null = null;
+
+    const { data: firstCenotaphery } = await supabase
+      .from("cenotapheries")
+      .select("id")
+      .eq("slug", "the-first")
+      .single();
+
+    if (firstCenotaphery) {
+      const { count } = await supabase
+        .from("memorials")
+        .select("*", { count: "exact", head: true })
+        .eq("cenotaphery_id", firstCenotaphery.id);
+
+      if (count !== null && count < 100) {
+        cenotapheryId = firstCenotaphery.id;
+      }
+    }
+
     // Create the memorial
     const { data: newMemorial, error: createError } = await supabase
       .from("memorials")
@@ -79,6 +101,7 @@ export async function POST(request: NextRequest) {
         views_count: 0,
         respects_count: 0,
         design_status: "not_started",
+        cenotaphery_id: cenotapheryId,
       })
       .select("id")
       .single();
