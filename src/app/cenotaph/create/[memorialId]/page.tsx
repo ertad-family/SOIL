@@ -321,7 +321,12 @@ export default function CenotaphWizardPage() {
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    if (currentStep === 3) {
+      // From Select step, skip Generate step and go back to Customize
+      setCurrentStep(1);
+    } else {
+      setCurrentStep((prev) => Math.max(prev - 1, 0));
+    }
   };
 
   if (isLoading && !memorial) {
