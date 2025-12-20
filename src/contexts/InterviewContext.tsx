@@ -14,6 +14,8 @@ import type {
   EnvironmentData,
   FounderContextData,
   NarrativeData,
+  AISummary,
+  AISummaryStatus,
 } from "@/types/interview";
 import {
   createEmptyStory,
@@ -52,6 +54,7 @@ interface InterviewContextValue {
   navigateToModule: (moduleId: ModuleId) => void;
   saveStory: () => Promise<void>;
   coinStory: () => Promise<void>;
+  refreshSummary: () => Promise<void>;
 
   // Save state
   isSaving: boolean;
@@ -145,6 +148,10 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           createdAt: data.created_at,
           updatedAt: data.updated_at,
           coinedAt: data.coined_at,
+          // AI summary fields
+          aiSummary: data.ai_summary,
+          aiSummaryStatus: data.ai_summary_status || "idle",
+          aiSummaryUpdatedAt: data.ai_summary_updated_at,
         };
 
         setStory(transformedStory);
@@ -527,6 +534,37 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
 
         setLastSavedAt(new Date());
         setHasUnsavedChanges(false);
+
+        // Trigger AI summary generation in background (fire-and-forget)
+        // Don't block the user experience - summary will update asynchronously
+        setStory((prev) => (prev ? { ...prev, aiSummaryStatus: "generating" } : prev));
+        fetch(`/api/story/${story.id}/summary`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lastCompletedModule: moduleId }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error("Failed to generate summary");
+          })
+          .then((data) => {
+            setStory((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    aiSummary: data.summary,
+                    aiSummaryStatus: "ready",
+                    aiSummaryUpdatedAt: new Date().toISOString(),
+                  }
+                : prev
+            );
+          })
+          .catch((error) => {
+            console.error("Failed to generate summary:", error);
+            setStory((prev) => (prev ? { ...prev, aiSummaryStatus: "failed" } : prev));
+          });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to complete module");
       } finally {
@@ -535,6 +573,52 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     },
     [story, supabase]
   );
+
+  // Manual refresh of AI summary
+  const refreshSummary = React.useCallback(async () => {
+    if (!story) return;
+
+    const lastModule = story.completedModules[story.completedModules.length - 1];
+    if (!lastModule) return;
+
+    try {
+      // Update local state to show generating
+      setStory((prev) => {
+        if (!prev) return prev;
+        return { ...prev, aiSummaryStatus: "generating" };
+      });
+
+      const response = await fetch(`/api/story/${story.id}/summary`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastCompletedModule: lastModule }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStory((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            aiSummary: data.summary,
+            aiSummaryStatus: "ready",
+            aiSummaryUpdatedAt: new Date().toISOString(),
+          };
+        });
+      } else {
+        setStory((prev) => {
+          if (!prev) return prev;
+          return { ...prev, aiSummaryStatus: "failed" };
+        });
+      }
+    } catch (error) {
+      console.error("Failed to generate summary:", error);
+      setStory((prev) => {
+        if (!prev) return prev;
+        return { ...prev, aiSummaryStatus: "failed" };
+      });
+    }
+  }, [story]);
 
   const navigateToModule = React.useCallback(
     (moduleId: ModuleId) => {
@@ -606,6 +690,7 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     navigateToModule,
     saveStory,
     coinStory,
+    refreshSummary,
 
     // Save state
     isSaving,

@@ -565,6 +565,23 @@ export interface Organization {
 }
 
 // =============================================================================
+// AI SUMMARY TYPES
+// =============================================================================
+
+export type AISummaryStatus = "idle" | "generating" | "ready" | "failed";
+
+export interface AISummary {
+  text: string;
+  lastModuleProcessed: ModuleId;
+  keyFacts: string[];
+  organizationType: OrganizationType | null;
+  industry: string | null;
+  lifespanMonths: number | null;
+  peakTeamSize: number | null;
+  closurePattern: string | null;
+}
+
+// =============================================================================
 // STORY (FOUNDER PERSPECTIVE)
 // =============================================================================
 
@@ -594,6 +611,11 @@ export interface Story {
   createdAt: string;
   updatedAt: string;
   coinedAt: string | null;
+
+  // AI-generated summary (privacy-stripped, research-ready)
+  aiSummary: AISummary | null;
+  aiSummaryStatus: AISummaryStatus;
+  aiSummaryUpdatedAt: string | null;
 
   // Joined data (optional, for convenience)
   organization?: Organization;
@@ -871,6 +893,10 @@ export const createEmptyStory = (
   founderContext: createEmptyFounderContext(),
   narrative: createEmptyNarrative(),
   coinedAt: null,
+  // AI summary fields
+  aiSummary: null,
+  aiSummaryStatus: "idle",
+  aiSummaryUpdatedAt: null,
 });
 
 // =============================================================================

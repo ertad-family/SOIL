@@ -8,10 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
-import { Check, ArrowRight, ChevronLeft, Clock, Building2 } from "lucide-react";
+import {
+  Check,
+  ArrowRight,
+  ChevronLeft,
+  Clock,
+  Building2,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MODULES } from "@/types/interview";
 import { ORG_TYPE_LABELS } from "@/data/function-matrix";
+import { SummaryCard } from "@/components/interview/SummaryCard";
 
 /**
  * Story Overview Dashboard (Dark Theme, Two-Column Layout)
@@ -27,6 +36,7 @@ export default function StoryOverviewPage() {
     isModuleComplete,
     canNavigateToModule,
     navigateToModule,
+    refreshSummary,
   } = useInterview();
 
   if (isLoading) {
@@ -113,10 +123,92 @@ export default function StoryOverviewPage() {
           </div>
         </div>
 
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left column - Progress and action */}
-          <div className="space-y-6">
+        {/* Two-column layout: Chapters (left) | Summary + Progress (right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Left column - Chapters (60%) */}
+          <div className="lg:col-span-3">
+            <h2 className="font-medium text-marble-100 mb-4">Chapters</h2>
+            <div className="space-y-3">
+              {displayedModules.map((module, index) => {
+                const isComplete = isModuleComplete(module.id);
+                const canNavigate = canNavigateToModule(module.id);
+                const isCurrent = story.currentModule === module.id;
+
+                return (
+                  <button
+                    key={module.id}
+                    onClick={() => canNavigate && navigateToModule(module.id)}
+                    disabled={!canNavigate}
+                    className={cn(
+                      "w-full text-left p-4 rounded-lg border transition-all",
+                      canNavigate
+                        ? "hover:border-gold-500/50 hover:bg-slate-800/80 cursor-pointer"
+                        : "cursor-not-allowed opacity-60",
+                      isComplete
+                        ? "bg-emerald-900/20 border-emerald-700/50"
+                        : isCurrent
+                          ? "bg-gold-900/20 border-gold-700/50"
+                          : "bg-slate-800/50 border-slate-700"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Step number / check */}
+                      <div
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                          isComplete
+                            ? "bg-emerald-600 text-white"
+                            : isCurrent
+                              ? "bg-gold-600 text-white"
+                              : "bg-slate-700 text-slate-400"
+                        )}
+                      >
+                        {isComplete ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <span className="text-sm font-medium">{index + 1}</span>
+                        )}
+                      </div>
+
+                      {/* Chapter info */}
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={cn(
+                            "font-medium",
+                            isComplete ? "text-emerald-400" : "text-marble-100"
+                          )}
+                        >
+                          {module.name}
+                        </h3>
+                        <p className="text-sm text-slate-400 truncate">{module.description}</p>
+                      </div>
+
+                      {/* Time estimate */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm text-slate-500">~{module.estimatedMinutes} min</p>
+                      </div>
+
+                      {/* Arrow */}
+                      {canNavigate && (
+                        <ArrowRight
+                          className={cn(
+                            "h-5 w-5 flex-shrink-0",
+                            isComplete ? "text-emerald-500" : "text-slate-500"
+                          )}
+                        />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right column - Summary + Progress (40%) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* AI Summary Card */}
+            <SummaryCard story={story} onRefresh={refreshSummary} />
+
             {/* Progress summary */}
             {story.status !== "coined" && (
               <Card variant="dark" className="p-6">
@@ -125,7 +217,7 @@ export default function StoryOverviewPage() {
                     <h2 className="font-medium text-marble-100">Your Progress</h2>
                     <p className="text-sm text-slate-400">
                       {story.completedModules.filter((m) => m !== "basic_info").length} of{" "}
-                      {displayedModules.length} modules complete
+                      {displayedModules.length} chapters complete
                     </p>
                   </div>
                   <div className="text-right">
@@ -192,85 +284,6 @@ export default function StoryOverviewPage() {
             <p className="text-center text-sm text-slate-500">
               Your progress is saved automatically. You can return anytime to continue.
             </p>
-          </div>
-
-          {/* Right column - Modules */}
-          <div>
-            <h2 className="font-medium text-marble-100 mb-4">Modules</h2>
-            <div className="space-y-3">
-              {displayedModules.map((module, index) => {
-                const isComplete = isModuleComplete(module.id);
-                const canNavigate = canNavigateToModule(module.id);
-                const isCurrent = story.currentModule === module.id;
-
-                return (
-                  <button
-                    key={module.id}
-                    onClick={() => canNavigate && navigateToModule(module.id)}
-                    disabled={!canNavigate}
-                    className={cn(
-                      "w-full text-left p-4 rounded-lg border transition-all",
-                      canNavigate
-                        ? "hover:border-gold-500/50 hover:bg-slate-800/80 cursor-pointer"
-                        : "cursor-not-allowed opacity-60",
-                      isComplete
-                        ? "bg-emerald-900/20 border-emerald-700/50"
-                        : isCurrent
-                          ? "bg-gold-900/20 border-gold-700/50"
-                          : "bg-slate-800/50 border-slate-700"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Step number / check */}
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                          isComplete
-                            ? "bg-emerald-600 text-white"
-                            : isCurrent
-                              ? "bg-gold-600 text-white"
-                              : "bg-slate-700 text-slate-400"
-                        )}
-                      >
-                        {isComplete ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <span className="text-sm font-medium">{index + 1}</span>
-                        )}
-                      </div>
-
-                      {/* Module info */}
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={cn(
-                            "font-medium",
-                            isComplete ? "text-emerald-400" : "text-marble-100"
-                          )}
-                        >
-                          {module.name}
-                        </h3>
-                        <p className="text-sm text-slate-400 truncate">{module.description}</p>
-                      </div>
-
-                      {/* Time estimate */}
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-sm text-slate-500">~{module.estimatedMinutes} min</p>
-                      </div>
-
-                      {/* Arrow */}
-                      {canNavigate && (
-                        <ArrowRight
-                          className={cn(
-                            "h-5 w-5 flex-shrink-0",
-                            isComplete ? "text-emerald-500" : "text-slate-500"
-                          )}
-                        />
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </div>
 
