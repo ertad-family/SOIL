@@ -259,14 +259,40 @@ Format your response as JSON:
     });
 
     const text = response.text || "";
+    console.log("Raw AI response:", text.substring(0, 500));
 
-    // Parse the JSON response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Parse the JSON response - handle markdown code blocks
+    let jsonStr = text;
+
+    // Remove markdown code blocks if present
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1];
+    }
+
+    // Extract JSON object
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error("No JSON found in response:", text);
       throw new Error("Failed to parse AI response as JSON");
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    // Try to parse directly first
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      // If direct parsing fails, try fixing common issues
+      // Remove control characters but preserve JSON structure
+      const fixedJson = jsonMatch[0]
+        // Replace unescaped newlines inside strings (between quotes)
+        .replace(/"([^"]*?)"/g, (match) => {
+          return match.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t");
+        });
+
+      console.log("Attempting to parse fixed JSON:", fixedJson.substring(0, 200));
+      parsed = JSON.parse(fixedJson);
+    }
 
     return {
       text: parsed.summary || "Summary generation in progress...",
