@@ -237,9 +237,17 @@ export default function FinancialPage() {
           return (
             <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
-              <button
+              <div
                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setExpandedEventId(isExpanded ? null : event.id);
+                  }
+                }}
               >
                 <div className="flex items-center gap-3">
                   <DollarSign className="h-4 w-4 text-slate-500" />
@@ -258,7 +266,7 @@ export default function FinancialPage() {
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
-              </button>
+              </div>
 
               {/* Event details */}
               {isExpanded && (
