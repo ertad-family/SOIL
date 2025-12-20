@@ -556,7 +556,7 @@ function WaitlistSection() {
                   Join the Research
                 </Button>
               </Link>
-              <Link href="/memorials/cenotaphery">
+              <Link href="/organization/create">
                 <Button variant="dark-ghost" size="lg">
                   Contribute Data
                 </Button>

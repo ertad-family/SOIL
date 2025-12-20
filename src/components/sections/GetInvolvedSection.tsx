@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BookOpen, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -10,6 +11,7 @@ const audiences = [
     description:
       "Coin your story and transform your experience into knowledge that helps others. Become a volunteer, mentor, or community keeper.",
     cta: "Coin Your Story",
+    href: "/organization/create",
     buttonVariant: "dark-primary" as const,
   },
   {
@@ -18,6 +20,7 @@ const audiences = [
     description:
       "Support groundbreaking research, join our advisory board, or sponsor initiatives that advance organizational science and help future founders.",
     cta: "Support Research",
+    href: "/community#givers",
     buttonVariant: "marble" as const,
   },
   {
@@ -26,6 +29,7 @@ const audiences = [
     description:
       "Access anonymized datasets, collaborate on publications, and join our research network. We welcome partnerships with academic institutions worldwide.",
     cta: "Partner With Us",
+    href: "/research",
     buttonVariant: "dark-primary" as const,
   },
 ];
@@ -51,9 +55,11 @@ export function GetInvolvedSection() {
               <CardContent className="flex-1 flex flex-col">
                 <p className="text-slate-400 leading-relaxed flex-1">{audience.description}</p>
                 <div className="mt-6">
-                  <Button variant={audience.buttonVariant} size="lg" className="w-full">
-                    {audience.cta}
-                  </Button>
+                  <Link href={audience.href}>
+                    <Button variant={audience.buttonVariant} size="lg" className="w-full">
+                      {audience.cta}
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
