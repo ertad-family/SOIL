@@ -3,6 +3,7 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, useFont } from "@react-three/drei";
 import { Suspense, useCallback, useRef, useEffect, useState } from "react";
+import { useIsMobile } from "@/lib/utils";
 
 // Preload the font used by Text3D in portal labels
 // This prevents black screen flash when first hovering over a portal
@@ -503,6 +504,9 @@ export function DodecahedronScene({
   triggerFlyOutRef,
   triggerFlyInRef,
 }: DodecahedronSceneProps) {
+  // Mobile detection for performance optimization
+  const isMobile = useIsMobile();
+
   // Ref for OrbitControls (to disable during animation)
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
@@ -714,8 +718,8 @@ export function DodecahedronScene({
     <div className={className} style={{ width: "100%", height: "100%", position: "relative" }}>
       <Canvas
         camera={{ position: initialCameraPosition, fov: 50 }}
-        gl={{ antialias: true, alpha: false }}
-        shadows="soft"
+        gl={{ antialias: !isMobile, alpha: false }}
+        shadows={isMobile ? false : "soft"}
       >
         <OrbitControls
           ref={controlsRef}
@@ -766,7 +770,8 @@ export function DodecahedronScene({
 
         <Suspense fallback={null}>
           {/* Void environment: Tuscan landscape + golden particles */}
-          <VoidEnvironment landscapeSize={500} particleCount={25} />
+          {/* Reduce particle count on mobile for better performance */}
+          <VoidEnvironment landscapeSize={500} particleCount={isMobile ? 10 : 25} />
 
           {/* Main dodecahedron - raised to sit above the landscape */}
           <group position={[0, DODECAHEDRON_Y_OFFSET, 0]}>
@@ -774,10 +779,12 @@ export function DodecahedronScene({
           </group>
         </Suspense>
 
-        {/* Post-processing effects */}
-        <EffectComposer>
-          <Bloom intensity={0.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} mipmapBlur />
-        </EffectComposer>
+        {/* Post-processing effects - disabled on mobile for performance */}
+        {!isMobile && (
+          <EffectComposer>
+            <Bloom intensity={0.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} mipmapBlur />
+          </EffectComposer>
+        )}
       </Canvas>
 
       {/* Fog transition overlay: purple → white-gold (subtle inner glow) */}

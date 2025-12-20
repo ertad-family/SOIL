@@ -4,6 +4,7 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useRef, useMemo } from "react";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { useIsMobile } from "@/lib/utils";
 import * as THREE from "three";
 import { TestPentagonalStructure } from "./PentagonalStructure";
 import { LEVEL_HEIGHT, WALL_HEIGHT, OUTER_RADIUS } from "./config";
@@ -196,6 +197,9 @@ interface CenotapherySceneProps {
 }
 
 export function CenotapheryScene({ className }: CenotapherySceneProps) {
+  // Mobile detection for performance optimization
+  const isMobile = useIsMobile();
+
   return (
     <div className={className} style={{ width: "100%", height: "100%", position: "relative" }}>
       <Canvas
@@ -207,8 +211,8 @@ export function CenotapheryScene({ className }: CenotapherySceneProps) {
           far: 500,
           up: [0, 1, 0], // Y вверх (стандарт Three.js)
         }}
-        gl={{ antialias: true, alpha: false }}
-        shadows="soft"
+        gl={{ antialias: !isMobile, alpha: false }}
+        shadows={isMobile ? false : "soft"}
       >
         {/* Combined mouse + keyboard controls */}
         <CameraControls speed={0.8} />
@@ -230,10 +234,12 @@ export function CenotapheryScene({ className }: CenotapherySceneProps) {
           </group>
         </Suspense>
 
-        {/* Post-processing */}
-        <EffectComposer>
-          <Bloom intensity={0.4} luminanceThreshold={0.3} luminanceSmoothing={0.9} mipmapBlur />
-        </EffectComposer>
+        {/* Post-processing - disabled on mobile for performance */}
+        {!isMobile && (
+          <EffectComposer>
+            <Bloom intensity={0.4} luminanceThreshold={0.3} luminanceSmoothing={0.9} mipmapBlur />
+          </EffectComposer>
+        )}
       </Canvas>
     </div>
   );

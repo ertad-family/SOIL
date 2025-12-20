@@ -4,6 +4,7 @@ import { useMemo, useRef, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { useIsMobile } from "@/lib/utils";
 
 // Wireframe colors (dimmer for footer)
 const LINE_COLOR = "#555555";
@@ -532,7 +533,7 @@ function SceneFog() {
 }
 
 // Static landscape scene (no animation)
-function LandscapeScene() {
+function LandscapeScene({ isMobile }: { isMobile: boolean }) {
   const roadCurve = useMemo(() => createRoadCurve(), []);
 
   const terrainGeometry = useMemo(() => createTerrainGeometry(400, 80), []);
@@ -569,8 +570,8 @@ function LandscapeScene() {
         </lineSegments>
       ))}
 
-      {/* Floating golden particles */}
-      <FooterParticles count={25} />
+      {/* Floating golden particles - reduced on mobile for performance */}
+      <FooterParticles count={isMobile ? 8 : 25} />
     </group>
   );
 }
@@ -616,6 +617,9 @@ interface FooterLandscapeProps {
 }
 
 export function FooterLandscape({ className, scrollProgress = 0 }: FooterLandscapeProps) {
+  // Mobile detection for performance optimization
+  const isMobile = useIsMobile();
+
   return (
     <div className={className} style={{ width: "100%", height: "100%" }}>
       <Canvas
@@ -625,7 +629,7 @@ export function FooterLandscape({ className, scrollProgress = 0 }: FooterLandsca
           near: 0.1,
           far: 500,
         }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias: !isMobile, alpha: true }}
         style={{ background: "transparent" }}
       >
         {/* Camera zoom based on scroll */}
@@ -638,7 +642,7 @@ export function FooterLandscape({ className, scrollProgress = 0 }: FooterLandsca
         {/* Background color matching marble-950 */}
         <color attach="background" args={["#252220"]} />
 
-        <LandscapeScene />
+        <LandscapeScene isMobile={isMobile} />
       </Canvas>
     </div>
   );

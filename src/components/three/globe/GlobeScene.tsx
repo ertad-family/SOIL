@@ -4,6 +4,7 @@ import { Suspense, useRef, useEffect, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { useIsMobile } from "@/lib/utils";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { Globe, GLOBE_RADIUS } from "./Globe";
@@ -306,7 +307,8 @@ function SceneContent({
   onMarkerSelect,
   onMarkerHover,
   controlsRef,
-}: Omit<GlobeSceneProps, "onZoomIn" | "onZoomOut" | "onReset">) {
+  isMobile,
+}: Omit<GlobeSceneProps, "onZoomIn" | "onZoomOut" | "onReset"> & { isMobile: boolean }) {
   const selectedMarker = markers.find((m) => m.id === selectedMarkerId) || null;
   const globeRef = useRef<THREE.Group>(null);
   const [autoRotate, setAutoRotate] = useState(true);
@@ -358,10 +360,12 @@ function SceneContent({
         </RotatableGlobe>
       </Suspense>
 
-      {/* Post-processing effects */}
-      <EffectComposer>
-        <Bloom intensity={0.5} luminanceThreshold={0.6} luminanceSmoothing={0.9} />
-      </EffectComposer>
+      {/* Post-processing effects - disabled on mobile for performance */}
+      {!isMobile && (
+        <EffectComposer>
+          <Bloom intensity={0.5} luminanceThreshold={0.6} luminanceSmoothing={0.9} />
+        </EffectComposer>
+      )}
     </>
   );
 }
@@ -377,13 +381,16 @@ export function GlobeScene({
   onMarkerHover,
   controlsRef,
 }: GlobeSceneProps) {
+  // Mobile detection for performance optimization
+  const isMobile = useIsMobile();
+
   return (
     <div className="w-full h-full">
       <Canvas
         gl={{
-          antialias: true,
+          antialias: !isMobile,
           alpha: true,
-          powerPreference: "high-performance",
+          powerPreference: isMobile ? "low-power" : "high-performance",
         }}
         style={{ background: "transparent" }}
       >
@@ -394,6 +401,7 @@ export function GlobeScene({
           onMarkerSelect={onMarkerSelect}
           onMarkerHover={onMarkerHover}
           controlsRef={controlsRef}
+          isMobile={isMobile}
         />
       </Canvas>
     </div>
