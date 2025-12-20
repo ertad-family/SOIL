@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Building2, Briefcase, MapPin } from "lucide-react";
+import { Calendar, Briefcase, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CenotaphCardProps {
@@ -21,16 +20,6 @@ interface CenotaphCardProps {
   className?: string;
   style?: React.CSSProperties;
 }
-
-// Map org types to display labels
-const ORG_TYPE_LABELS: Record<string, string> = {
-  tech_product: "Tech Product",
-  services: "Services",
-  ecommerce: "E-commerce",
-  manufacturing: "Manufacturing",
-  ngo: "NGO",
-  media: "Media",
-};
 
 /**
  * CenotaphCard - A memorial card for the cenotaphery gallery
@@ -68,7 +57,6 @@ export function CenotaphCard({
   };
 
   const dateRange = formatDateRange();
-  const orgTypeLabel = organizationType ? ORG_TYPE_LABELS[organizationType] : null;
 
   // Determine link destination
   const href = organizationId ? `/organization/${organizationId}` : "#";
@@ -113,15 +101,6 @@ export function CenotaphCard({
 
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-60" />
-
-          {/* Organization type badge */}
-          {orgTypeLabel && (
-            <div className="absolute top-3 right-3">
-              <Badge variant="dark-marble" size="sm" className="backdrop-blur-sm bg-slate-900/70">
-                {orgTypeLabel}
-              </Badge>
-            </div>
-          )}
 
           {/* Decorative corner ornaments */}
           <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-gold-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
