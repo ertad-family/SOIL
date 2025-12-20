@@ -45,7 +45,7 @@ export default function LoginPage() {
     <AuthLayout
       variant="dark"
       title="Welcome Back"
-      subtitle="Sign in to manage your cenotaphs"
+      subtitle="Sign in to manage your organizations, stories and cenotaphs"
       backLink={{ href: "/", label: "Back to Home" }}
       footer={
         <p className="text-sm text-slate-400">

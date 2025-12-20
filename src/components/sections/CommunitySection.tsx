@@ -10,7 +10,7 @@ const communityFeatures = [
     title: "Founders",
     description: "Share your story, connect with peers, offer consultations.",
     steps: ["Create your cenotaph", "Join the consultation network", "Connect with peers"],
-    cta: { label: "Create Your Cenotaph", href: "/memorials" },
+    cta: { label: "Create Your Cenotaph", href: "/organization/create" },
   },
   {
     icon: <GraduationCap className="w-6 h-6" />,

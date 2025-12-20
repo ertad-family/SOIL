@@ -23,13 +23,17 @@ const supabase = createClient(
 export async function POST(request: NextRequest): Promise<NextResponse<SelectDesignResponse>> {
   try {
     const body: SelectDesignRequest = await request.json();
-    const { memorialId, selectedDesignId } = body;
+    const { memorialId, selectedDesignId, epitaph } = body;
 
     if (!memorialId || !selectedDesignId) {
       return NextResponse.json(
         { success: false, error: "Memorial ID and selected design ID are required" },
         { status: 400 }
       );
+    }
+
+    if (!epitaph || epitaph.trim().length === 0) {
+      return NextResponse.json({ success: false, error: "Epitaph is required" }, { status: 400 });
     }
 
     // Fetch memorial with design options and organization data
@@ -117,12 +121,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
         });
     }
 
-    // Update memorial with selection (keep only selected option, clear pending concepts)
+    // Update memorial with selection and epitaph (keep only selected option, clear pending concepts)
     const { error: updateError } = await supabase
       .from("memorials")
       .update({
         design_status: "completed",
         cenotaph_image_url: selectedDesign.url,
+        epitaph: epitaph.trim(),
         cenotaph_design: {
           options: [selectedDesign],
           selectedId: selectedDesignId,

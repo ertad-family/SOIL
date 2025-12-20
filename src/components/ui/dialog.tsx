@@ -25,7 +25,7 @@ const DialogOverlay = React.forwardRef<
       "fixed inset-0 z-50",
       "backdrop-blur-sm",
       "data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out",
-      variant === "dark" ? "bg-slate-950/80" : "bg-marble-950/60",
+      variant === "dark" ? "bg-slate-950/90" : "bg-marble-950/60",
       className
     )}
     {...props}

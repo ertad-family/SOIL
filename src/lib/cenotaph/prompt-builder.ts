@@ -67,6 +67,21 @@ export function buildOrganizationContext(
     parts.push(`KEY MOMENTS: ${story.keyEvents.slice(0, 3).join("; ")}`);
   }
 
+  // AI-generated summary (rich context from interview)
+  if (story.aiSummary) {
+    if (story.aiSummary.text) {
+      parts.push(`\nORGANIZATION STORY SUMMARY:\n"${story.aiSummary.text}"`);
+    }
+
+    if (story.aiSummary.keyFacts && story.aiSummary.keyFacts.length > 0) {
+      parts.push(`\nKEY FACTS:\n${story.aiSummary.keyFacts.map((f) => `- ${f}`).join("\n")}`);
+    }
+
+    if (story.aiSummary.closurePattern) {
+      parts.push(`CLOSURE PATTERN: ${story.aiSummary.closurePattern.replace(/_/g, " ")}`);
+    }
+  }
+
   // User creative direction
   if (userWishes && userWishes.trim()) {
     parts.push(`\nFOUNDER'S CREATIVE DIRECTION: "${userWishes}"`);

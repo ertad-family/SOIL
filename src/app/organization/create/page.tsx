@@ -423,12 +423,14 @@ function OrganizationCreateContent() {
       {STEPS[currentStep]?.id === "basics" && (
         <div className="space-y-6">
           <FormField
+            variant="dark"
             label="Organization Name"
             htmlFor="name"
             required
             error={validationErrors.name}
           >
             <Input
+              variant="dark"
               id="name"
               value={formData.name}
               onChange={handleTextChange("name")}
@@ -438,6 +440,7 @@ function OrganizationCreateContent() {
           </FormField>
 
           <FormField
+            variant="dark"
             label="What did it do?"
             htmlFor="description"
             required
@@ -445,6 +448,7 @@ function OrganizationCreateContent() {
             hint="In one sentence, describe what the organization did"
           >
             <Textarea
+              variant="dark"
               id="description"
               value={formData.description}
               onChange={handleTextChange("description")}
@@ -454,7 +458,12 @@ function OrganizationCreateContent() {
             />
           </FormField>
 
-          <FormField label="Organization Type" required error={validationErrors.organizationType}>
+          <FormField
+            variant="dark"
+            label="Organization Type"
+            required
+            error={validationErrors.organizationType}
+          >
             <RadioGroup
               value={formData.organizationType || ""}
               onValueChange={handleOrgTypeChange}
@@ -476,7 +485,7 @@ function OrganizationCreateContent() {
           </FormField>
 
           {formData.organizationType && businessModels.length > 0 && (
-            <FormField label="Business Model" htmlFor="businessModel">
+            <FormField variant="dark" label="Business Model" htmlFor="businessModel">
               <Select
                 value={formData.businessModel || ""}
                 onValueChange={handleSelectChange("businessModel")}
@@ -495,8 +504,9 @@ function OrganizationCreateContent() {
             </FormField>
           )}
 
-          <FormField label="Industry" htmlFor="industry">
+          <FormField variant="dark" label="Industry" htmlFor="industry">
             <Input
+              variant="dark"
               id="industry"
               value={formData.industry || ""}
               onChange={handleTextChange("industry")}
@@ -504,18 +514,20 @@ function OrganizationCreateContent() {
             />
           </FormField>
 
-          <FormSection title="Location">
+          <FormSection variant="dark" title="Location">
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Country" htmlFor="country">
+              <FormField variant="dark" label="Country" htmlFor="country">
                 <Input
+                  variant="dark"
                   id="country"
                   value={formData.location.country || ""}
                   onChange={handleLocationChange("country")}
                   placeholder="Country"
                 />
               </FormField>
-              <FormField label="City" htmlFor="city">
+              <FormField variant="dark" label="City" htmlFor="city">
                 <Input
+                  variant="dark"
                   id="city"
                   value={formData.location.city || ""}
                   onChange={handleLocationChange("city")}
@@ -532,12 +544,14 @@ function OrganizationCreateContent() {
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
+              variant="dark"
               label="When was it founded?"
               htmlFor="foundedDate"
               required
               error={validationErrors.foundedDate}
             >
               <Input
+                variant="dark"
                 id="foundedDate"
                 type="month"
                 value={formData.foundedDate || ""}
@@ -546,8 +560,9 @@ function OrganizationCreateContent() {
               />
             </FormField>
 
-            <FormField label="When did it close?" htmlFor="closedDate">
+            <FormField variant="dark" label="When did it close?" htmlFor="closedDate">
               <Input
+                variant="dark"
                 id="closedDate"
                 type="month"
                 value={formData.closedDate || ""}
@@ -556,7 +571,7 @@ function OrganizationCreateContent() {
             </FormField>
           </div>
 
-          <FormField label="What stage was it at when it closed?">
+          <FormField variant="dark" label="What stage was it at when it closed?">
             <RadioGroup
               value={formData.stageAtClosure || ""}
               onValueChange={(value) =>
@@ -584,11 +599,13 @@ function OrganizationCreateContent() {
           </FormField>
 
           <FormField
+            variant="dark"
             label="Peak team size"
             htmlFor="peakTeamSize"
             hint="How many people at its largest?"
           >
             <Input
+              variant="dark"
               id="peakTeamSize"
               type="number"
               min={1}
@@ -608,7 +625,12 @@ function OrganizationCreateContent() {
       {/* Step: About You */}
       {STEPS[currentStep]?.id === "about-you" && (
         <div className="space-y-6">
-          <FormField label="What was your role?" required error={validationErrors.founderRole}>
+          <FormField
+            variant="dark"
+            label="What was your role?"
+            required
+            error={validationErrors.founderRole}
+          >
             <RadioGroup
               value={formData.founderRole || ""}
               onValueChange={(value) => {
@@ -643,6 +665,7 @@ function OrganizationCreateContent() {
           </FormField>
 
           <FormField
+            variant="dark"
             label="Are you comfortable being named publicly?"
             hint="Your story can be shared anonymously if you prefer"
           >

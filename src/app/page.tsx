@@ -4,7 +4,7 @@ import {
   HeroSection,
   MissionsSection,
   MethodologySection,
-  PartnersSection,
+  // PartnersSection, // Hidden for later reveal
   CommunitySection,
   TestimonialsSliderSection,
   ScopeSection,
@@ -21,7 +21,9 @@ export default function LandingPage() {
       <HeroSection />
       <MissionsSection />
       <MethodologySection />
-      <PartnersSection />
+      {/* <PartnersSection /> */}
+      {/* Gradient transition to Community section */}
+      <div className="h-24 bg-gradient-to-b from-slate-900 to-marble-900" />
       <CommunitySection />
       <TestimonialsSliderSection />
 

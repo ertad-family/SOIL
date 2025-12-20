@@ -7,9 +7,9 @@ import type {
   OrganizationType,
   LifecycleStage,
   VerificationStatus,
-  NarrativeData,
   PublicNamingPreference,
   FounderRole,
+  AISummary,
 } from "@/types/interview";
 
 interface OrganizationData {
@@ -62,14 +62,21 @@ interface MemorialData {
   design_status: string | null;
 }
 
-/** Narrative data from a coined story for public display */
+/** Summary data extracted from story for public display */
+export interface PublicSummaryData {
+  text: string;
+  keyFacts: string[];
+  closurePattern: string | null;
+}
+
+/** Public story data from coined stories - AI refined only */
 export interface PublicNarrativeData {
   storyId: string;
   authorName: string | null;
   founderRole: FounderRole | null;
   publicNaming: PublicNamingPreference | null;
-  narrative: NarrativeData;
   coinedAt: string;
+  summary: PublicSummaryData | null;
 }
 
 interface PageProps {
@@ -160,12 +167,11 @@ export default async function OrganizationPage({ params }: PageProps) {
   // For public view: fetch narrative data from coined stories
   let publicNarratives: PublicNarrativeData[] = [];
   if (!isOwner) {
+    // Use public_coined_stories view - exposes only AI-refined data, no raw interview data
     const { data: coinedStories } = await supabase
-      .from("stories")
-      .select("id, user_id, narrative, founder_role, public_naming, coined_at")
-      .eq("organization_id", id)
-      .eq("status", "coined")
-      .not("narrative", "is", null);
+      .from("public_coined_stories")
+      .select("id, user_id, founder_role, public_naming, coined_at, ai_summary")
+      .eq("organization_id", id);
 
     if (coinedStories && coinedStories.length > 0) {
       // Get author names for coined stories
@@ -177,14 +183,26 @@ export default async function OrganizationPage({ params }: PageProps) {
 
       const authorMap = new Map(authorProfiles?.map((p) => [p.id, p.display_name]) || []);
 
-      publicNarratives = coinedStories.map((story) => ({
-        storyId: story.id,
-        authorName: authorMap.get(story.user_id) || null,
-        founderRole: story.founder_role,
-        publicNaming: story.public_naming,
-        narrative: story.narrative as NarrativeData,
-        coinedAt: story.coined_at,
-      }));
+      publicNarratives = coinedStories.map((story) => {
+        // Extract summary data from ai_summary if available
+        const aiSummary = story.ai_summary as AISummary | null;
+        const summary: PublicSummaryData | null = aiSummary
+          ? {
+              text: aiSummary.text,
+              keyFacts: aiSummary.keyFacts || [],
+              closurePattern: aiSummary.closurePattern || null,
+            }
+          : null;
+
+        return {
+          storyId: story.id,
+          authorName: authorMap.get(story.user_id) || null,
+          founderRole: story.founder_role,
+          publicNaming: story.public_naming,
+          coinedAt: story.coined_at,
+          summary,
+        };
+      });
     }
   }
 

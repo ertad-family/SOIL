@@ -3,6 +3,7 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { useIsMobile } from "@/lib/utils";
 
 // Create glow texture
 function createGlowTexture(): THREE.CanvasTexture {
@@ -188,44 +189,40 @@ function VisitorParticle({
   );
 }
 
-function ParticlesScene({ scrollY, documentHeight }: { scrollY: number; documentHeight: number }) {
+function ParticlesScene({
+  scrollY,
+  documentHeight,
+  isMobile,
+}: {
+  scrollY: number;
+  documentHeight: number;
+  isMobile: boolean;
+}) {
   const { size } = useThree();
+
+  // Reduce particle count on mobile: 4 -> 2
+  const particleSeeds = isMobile ? [0, 1] : [0, 1, 2, 3];
 
   return (
     <>
-      <VisitorParticle
-        seed={0}
-        scrollY={scrollY}
-        documentHeight={documentHeight}
-        viewportHeight={size.height}
-        viewportWidth={size.width}
-      />
-      <VisitorParticle
-        seed={1}
-        scrollY={scrollY}
-        documentHeight={documentHeight}
-        viewportHeight={size.height}
-        viewportWidth={size.width}
-      />
-      <VisitorParticle
-        seed={2}
-        scrollY={scrollY}
-        documentHeight={documentHeight}
-        viewportHeight={size.height}
-        viewportWidth={size.width}
-      />
-      <VisitorParticle
-        seed={3}
-        scrollY={scrollY}
-        documentHeight={documentHeight}
-        viewportHeight={size.height}
-        viewportWidth={size.width}
-      />
+      {particleSeeds.map((seed) => (
+        <VisitorParticle
+          key={seed}
+          seed={seed}
+          scrollY={scrollY}
+          documentHeight={documentHeight}
+          viewportHeight={size.height}
+          viewportWidth={size.width}
+        />
+      ))}
     </>
   );
 }
 
 export function GlobalParticles() {
+  // Mobile detection for performance optimization
+  const isMobile = useIsMobile();
+
   const [scrollY, setScrollY] = useState(0);
   const [documentHeight, setDocumentHeight] = useState(5000);
 
@@ -270,10 +267,10 @@ export function GlobalParticles() {
           near: 0.1,
           far: 1000,
         }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias: !isMobile, alpha: true }}
         style={{ background: "transparent", pointerEvents: "none" }}
       >
-        <ParticlesScene scrollY={scrollY} documentHeight={documentHeight} />
+        <ParticlesScene scrollY={scrollY} documentHeight={documentHeight} isMobile={isMobile} />
       </Canvas>
     </div>
   );
