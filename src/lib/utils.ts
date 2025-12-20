@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useState, useEffect } from "react";
 
 /**
  * Combines class names with Tailwind merge support.
@@ -48,3 +49,30 @@ export const isClient = typeof window !== "undefined";
  * Check if we're running on the server side
  */
 export const isServer = typeof window === "undefined";
+
+/**
+ * Mobile breakpoint in pixels (matches Tailwind md breakpoint)
+ */
+const MOBILE_BREAKPOINT = 768;
+
+/**
+ * Hook to detect if the current device is mobile based on viewport width.
+ * Used for performance optimizations (disabling heavy 3D effects on mobile).
+ *
+ * @param breakpoint - Width threshold in pixels (default: 768)
+ * @returns true if viewport width is less than breakpoint
+ */
+export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check viewport width on mount
+    const checkMobile = () => window.innerWidth < breakpoint;
+    setIsMobile(checkMobile());
+
+    // No resize listener - we check once on mount for performance
+    // If user rotates device, page will likely re-render anyway
+  }, [breakpoint]);
+
+  return isMobile;
+}
