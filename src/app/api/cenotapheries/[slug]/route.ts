@@ -3,20 +3,21 @@ import { createClient } from "@/lib/supabase/server";
 import { getPrivacyDisplayName, type PrivacyDisplayStyle } from "@/lib/privacy";
 
 interface OrganizationData {
+  name: string;
+  organization_type: string | null;
+  industry: string | null;
+  founded_date: string | null;
+  closed_date: string | null;
+  location_city: string | null;
+  location_country: string | null;
+  peak_team_size: number | null;
   is_public: boolean;
   privacy_display_style: PrivacyDisplayStyle | null;
 }
 
 interface MemorialRow {
   id: string;
-  organization_name: string;
-  organization_type: string | null;
-  industry: string | null;
   epitaph: string | null;
-  founded_date: string | null;
-  closed_date: string | null;
-  location: string | null;
-  team_size: number | null;
   cenotaph_image_url: string | null;
   design_status: string | null;
   created_at: string;
@@ -65,25 +66,30 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   // Build query for memorials belonging to this cenotaphery
-  // Note: We don't select 'slug' as it's derived from org name and would leak private names
-  let query = supabase
+  // Organization data (name, industry, dates, location) comes from organizations table via JOIN
+  // Only epitaph is memorial-specific
+  const { data: cenotaphs, error } = await supabase
     .from("memorials")
     .select(
       `
       id,
-      organization_name,
-      organization_type,
-      industry,
       epitaph,
-      founded_date,
-      closed_date,
-      location,
-      team_size,
       cenotaph_image_url,
       design_status,
       created_at,
       organization_id,
-      organizations!organization_id (is_public, privacy_display_style)
+      organizations!organization_id (
+        name,
+        organization_type,
+        industry,
+        founded_date,
+        closed_date,
+        location_city,
+        location_country,
+        peak_team_size,
+        is_public,
+        privacy_display_style
+      )
     `
     )
     .eq("cenotaphery_id", cenotaphery.id)
@@ -92,64 +98,103 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     .not("cenotaph_image_url", "is", null)
     .order("created_at", { ascending: false });
 
-  // Apply org_type filter
-  if (orgType) {
-    query = query.eq("organization_type", orgType);
-  }
-
-  // Apply industry filter (partial match, case insensitive)
-  if (industry) {
-    query = query.ilike("industry", `%${industry}%`);
-  }
-
-  // Apply age filters (years since closure)
-  const currentYear = new Date().getFullYear();
-
-  if (minAge) {
-    const minClosedYear = currentYear - parseInt(minAge, 10);
-    query = query.lte("closed_date", `${minClosedYear}-12-31`);
-  }
-
-  if (maxAge) {
-    const maxClosedYear = currentYear - parseInt(maxAge, 10);
-    query = query.gte("closed_date", `${maxClosedYear}-01-01`);
-  }
-
-  // Apply founded year range filters
-  if (foundedFrom) {
-    query = query.gte("founded_date", `${foundedFrom}-01-01`);
-  }
-
-  if (foundedTo) {
-    query = query.lte("founded_date", `${foundedTo}-12-31`);
-  }
-
-  const { data: cenotaphs, error } = await query;
-
   if (error) {
     console.error("Error fetching cenotaphs:", error);
     return NextResponse.json({ error: "Failed to fetch cenotaphs" }, { status: 500 });
   }
 
-  // Transform cenotaphs to include privacy-aware display names
-  const transformedCenotaphs = (cenotaphs || []).map((c: MemorialRow) => {
-    // Handle both array and object cases from Supabase join
-    const org = Array.isArray(c.organizations) ? c.organizations[0] : c.organizations;
+  // Helper to get org data from the JOIN result
+  const getOrg = (c: MemorialRow): OrganizationData | null => {
+    return Array.isArray(c.organizations) ? c.organizations[0] : c.organizations;
+  };
+
+  // Apply filters in JavaScript since data comes from organizations JOIN
+  let filteredCenotaphs = cenotaphs || [];
+  const currentYear = new Date().getFullYear();
+
+  // Apply org_type filter
+  if (orgType) {
+    filteredCenotaphs = filteredCenotaphs.filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      return org?.organization_type === orgType;
+    });
+  }
+
+  // Apply industry filter (partial match, case insensitive)
+  if (industry) {
+    const lowerIndustry = industry.toLowerCase();
+    filteredCenotaphs = filteredCenotaphs.filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      return org?.industry?.toLowerCase().includes(lowerIndustry);
+    });
+  }
+
+  // Apply age filters (years since closure)
+  if (minAge) {
+    const minClosedYear = currentYear - parseInt(minAge, 10);
+    filteredCenotaphs = filteredCenotaphs.filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      if (!org?.closed_date) return false;
+      const closedYear = parseInt(org.closed_date.substring(0, 4), 10);
+      return closedYear <= minClosedYear;
+    });
+  }
+
+  if (maxAge) {
+    const maxClosedYear = currentYear - parseInt(maxAge, 10);
+    filteredCenotaphs = filteredCenotaphs.filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      if (!org?.closed_date) return false;
+      const closedYear = parseInt(org.closed_date.substring(0, 4), 10);
+      return closedYear >= maxClosedYear;
+    });
+  }
+
+  // Apply founded year range filters
+  if (foundedFrom) {
+    const fromYear = parseInt(foundedFrom, 10);
+    filteredCenotaphs = filteredCenotaphs.filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      if (!org?.founded_date) return false;
+      const foundedYear = parseInt(org.founded_date.substring(0, 4), 10);
+      return foundedYear >= fromYear;
+    });
+  }
+
+  if (foundedTo) {
+    const toYear = parseInt(foundedTo, 10);
+    filteredCenotaphs = filteredCenotaphs.filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      if (!org?.founded_date) return false;
+      const foundedYear = parseInt(org.founded_date.substring(0, 4), 10);
+      return foundedYear <= toYear;
+    });
+  }
+
+  // Transform cenotaphs to API response format
+  // Organization data comes from the JOIN, epitaph from memorial
+  const transformedCenotaphs = filteredCenotaphs.map((c: MemorialRow) => {
+    const org = getOrg(c);
     const isPublic = org?.is_public ?? false;
     const privacyStyle = org?.privacy_display_style ?? null;
-    const displayName = getPrivacyDisplayName(isPublic, c.organization_name, privacyStyle);
+    const orgName = org?.name ?? "Unknown Organization";
+    const displayName = getPrivacyDisplayName(isPublic, orgName, privacyStyle);
+
+    // Combine location from city and country
+    const locationParts = [org?.location_city, org?.location_country].filter(Boolean);
+    const location = locationParts.length > 0 ? locationParts.join(", ") : null;
 
     return {
       id: c.id,
       organizationName: displayName,
       isPrivate: !isPublic,
-      organizationType: c.organization_type,
-      industry: c.industry,
+      organizationType: org?.organization_type ?? null,
+      industry: org?.industry ?? null,
       epitaph: c.epitaph,
-      foundedDate: c.founded_date,
-      closedDate: c.closed_date,
-      location: c.location,
-      teamSize: c.team_size,
+      foundedDate: org?.founded_date ?? null,
+      closedDate: org?.closed_date ?? null,
+      location,
+      teamSize: org?.peak_team_size ?? null,
       cenotaphImageUrl: c.cenotaph_image_url,
       designStatus: c.design_status,
       createdAt: c.created_at,

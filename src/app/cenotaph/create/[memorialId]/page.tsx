@@ -55,6 +55,7 @@ export default function CenotaphWizardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
+  const [epitaph, setEpitaph] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
 
@@ -189,6 +190,11 @@ export default function CenotaphWizardPage() {
         if (error) throw error;
         setMemorial(data as unknown as MemorialData);
 
+        // Initialize epitaph from memorial data if exists
+        if (data?.epitaph) {
+          setEpitaph(data.epitaph);
+        }
+
         // Set initial step based on current design status
         const status = data?.design_status;
         if (status === "completed") {
@@ -272,6 +278,7 @@ export default function CenotaphWizardPage() {
         body: JSON.stringify({
           memorialId,
           selectedDesignId,
+          epitaph,
         }),
       });
 
@@ -305,7 +312,7 @@ export default function CenotaphWizardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [memorialId, selectedDesignId]);
+  }, [memorialId, selectedDesignId, epitaph]);
 
   const handleNext = () => {
     if (currentStep === 1) {
@@ -376,7 +383,10 @@ export default function CenotaphWizardPage() {
       canGoNext={
         currentStep === 0 ||
         (currentStep === 1 && !isGenerating) ||
-        (currentStep === 3 && !!selectedDesignId && memorial.design_status !== "completed")
+        (currentStep === 3 &&
+          !!selectedDesignId &&
+          epitaph.trim().length > 0 &&
+          memorial.design_status !== "completed")
       }
       nextLabel={
         currentStep === 1
@@ -632,6 +642,27 @@ export default function CenotaphWizardPage() {
                 memorial.cenotaph_design.options.length === 0) && (
                 <div className="text-center py-8 text-slate-400">
                   No designs available. Please go back and generate designs.
+                </div>
+              )}
+
+              {/* Epitaph input - required before confirming selection */}
+              {memorial.cenotaph_design?.options && memorial.cenotaph_design.options.length > 0 && (
+                <div className="mt-8 max-w-2xl mx-auto">
+                  <label className="block text-sm font-medium text-marble-200 mb-2">
+                    Epitaph <span className="text-red-400">*</span>
+                  </label>
+                  <p className="text-slate-400 text-sm mb-3">
+                    A brief inscription for your cenotaph. This will be displayed on the memorial
+                    card.
+                  </p>
+                  <Textarea
+                    value={epitaph}
+                    onChange={(e) => setEpitaph(e.target.value)}
+                    placeholder='Example: "Those who do not shepherd their sheep will not find any one day"'
+                    className="min-h-[100px] bg-slate-700 border-slate-600 text-marble-100 placeholder:text-slate-500"
+                    maxLength={200}
+                  />
+                  <p className="mt-2 text-sm text-slate-400">{epitaph.length}/200 characters</p>
                 </div>
               )}
             </>

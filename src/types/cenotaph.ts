@@ -91,6 +91,7 @@ export interface GenerateDesignResponse {
 export interface SelectDesignRequest {
   memorialId: string;
   selectedDesignId: string;
+  epitaph: string;
 }
 
 export interface SelectDesignResponse {
