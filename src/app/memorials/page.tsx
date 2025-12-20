@@ -45,6 +45,7 @@ interface ApiCenotapheriesResponse {
     totalCenotapheries: number;
     totalCenotaphs: number;
     totalCapacity: number;
+    totalCountries: number;
     totalCities: number;
     totalFounders: number;
   };
@@ -152,7 +153,7 @@ export default function MemorialsPage() {
 
   // Calculate hero stats from real data
   const heroStats = {
-    countries: apiStats?.totalCenotapheries || 0, // Each cenotaphery represents a location
+    countries: apiStats?.totalCountries || 0,
     cities: apiStats?.totalCities || 0,
     founders: apiStats?.totalFounders || 0,
     organizations: apiStats?.totalCenotaphs || 0,
