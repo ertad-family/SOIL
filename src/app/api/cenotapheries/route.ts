@@ -51,6 +51,8 @@ export async function GET() {
         totalCenotapheries: 0,
         totalCenotaphs: 0,
         totalCapacity: 0,
+        totalCities: 0,
+        totalFounders: 0,
       },
     });
   }
@@ -134,12 +136,51 @@ export async function GET() {
   );
   const totalCapacity = transformedCenotapheries.reduce((sum, c) => sum + c.statistics.capacity, 0);
 
+  // Fetch organization_ids from published memorials for cities/founders counts
+  const { data: publishedMemorials } = await supabase
+    .from("memorials")
+    .select("organization_id")
+    .eq("status", "published")
+    .eq("design_status", "completed")
+    .not("cenotaph_image_url", "is", null)
+    .not("organization_id", "is", null);
+
+  const publishedOrgIds = publishedMemorials?.map((m) => m.organization_id).filter(Boolean) || [];
+
+  // Count distinct cities from organizations with published memorials
+  let totalCities = 0;
+  if (publishedOrgIds.length > 0) {
+    const { data: orgsWithCities } = await supabase
+      .from("organizations")
+      .select("location_city")
+      .in("id", publishedOrgIds)
+      .not("location_city", "is", null);
+
+    const uniqueCities = new Set(orgsWithCities?.map((o) => o.location_city));
+    totalCities = uniqueCities.size;
+  }
+
+  // Count distinct founders from stories linked to organizations with published memorials
+  let totalFounders = 0;
+  if (publishedOrgIds.length > 0) {
+    const { data: foundersData } = await supabase
+      .from("stories")
+      .select("user_id")
+      .in("organization_id", publishedOrgIds)
+      .in("founder_role", ["founder", "cofounder"]);
+
+    const uniqueFounders = new Set(foundersData?.map((s) => s.user_id));
+    totalFounders = uniqueFounders.size;
+  }
+
   return NextResponse.json({
     cenotapheries: transformedCenotapheries,
     globalStats: {
       totalCenotapheries: transformedCenotapheries.length,
       totalCenotaphs,
       totalCapacity,
+      totalCities,
+      totalFounders,
     },
   });
 }
