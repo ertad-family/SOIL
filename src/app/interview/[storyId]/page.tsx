@@ -241,6 +241,15 @@ export default function StoryOverviewPage() {
             <p className="mt-6 text-center text-sm text-slate-500">
               Your progress is saved automatically. You can return anytime to continue.
             </p>
+            <p className="mt-2 text-center text-sm text-slate-500">
+              Need help? Contact us at{" "}
+              <a
+                href="mailto:support@soil.rip"
+                className="text-gold-400 hover:text-gold-300 transition-colors"
+              >
+                support@soil.rip
+              </a>
+            </p>
           </div>
 
           {/* Right column - Appraisal + Progress / Coined (40%) */}
@@ -350,25 +359,13 @@ export default function StoryOverviewPage() {
           </div>
         </div>
 
-        {/* AI Summary - Full width below the two columns */}
-        <div className="mt-8">
-          <SummaryCard story={story} onRefresh={refreshSummary} />
+        {/* Roman divider before AI Summary */}
+        <div className="divider-roman my-32">
+          <span className="text-gold-400 text-lg px-6">✦</span>
         </div>
 
-        {/* Bottom separator section */}
-        <div className="mt-12 pt-8 border-t border-slate-700">
-          <div className="text-center">
-            <p className="text-slate-500 text-sm">
-              Need help? Contact us at{" "}
-              <a
-                href="mailto:support@soil.rip"
-                className="text-gold-400 hover:text-gold-300 transition-colors"
-              >
-                support@soil.rip
-              </a>
-            </p>
-          </div>
-        </div>
+        {/* AI Summary - Full width below the two columns */}
+        <SummaryCard story={story} onRefresh={refreshSummary} />
       </div>
     </div>
   );
