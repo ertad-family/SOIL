@@ -194,14 +194,21 @@ interface CurrentUserData {
   role: string | null;
 }
 
-/** Narrative data from a coined story for public display */
+/** Summary data extracted from story for public display */
+interface PublicSummaryData {
+  text: string;
+  keyFacts: string[];
+  closurePattern: string | null;
+}
+
+/** Public story data from coined stories - AI refined only */
 interface PublicNarrativeData {
   storyId: string;
   authorName: string | null;
   founderRole: FounderRole | null;
   publicNaming: PublicNamingPreference | null;
-  narrative: NarrativeData;
   coinedAt: string;
+  summary: PublicSummaryData | null;
 }
 
 interface OrganizationClientProps {
