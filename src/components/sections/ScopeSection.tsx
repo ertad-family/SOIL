@@ -53,75 +53,81 @@ export function ScopeSection() {
 
         {/* Bento Grid: 3 columns */}
         <div className="grid lg:grid-cols-3 gap-6 min-h-[600px]">
-          {/* Column 1: Full height card */}
-          <Card
-            variant="dark-elevated"
-            padding="lg"
-            interactive
-            className="relative flex flex-col justify-end min-h-[400px] lg:min-h-full overflow-hidden"
-          >
-            {/* Decorative ellipses background */}
-            <div className="absolute inset-0 opacity-30 pointer-events-none">
-              <div className="absolute bottom-0 right-0 w-3/4 h-3/4">
-                <svg viewBox="0 0 200 200" className="w-full h-full">
-                  {[...Array(8)].map((_, i) => (
-                    <ellipse
-                      key={i}
-                      cx="150"
-                      cy="150"
-                      rx={30 + i * 20}
-                      ry={15 + i * 10}
-                      fill="none"
-                      stroke="rgba(196,161,90,0.3)"
-                      strokeWidth="1"
-                      transform={`rotate(${i * 5} 150 150)`}
-                    />
-                  ))}
-                </svg>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10 mt-auto">
-              <h3 className="font-display text-2xl md:text-3xl font-medium text-marble-100 mb-3">
-                {ecosystem[0].title}
-              </h3>
-              <p className="text-slate-400 text-lg leading-relaxed">{ecosystem[0].description}</p>
-            </div>
-          </Card>
-
-          {/* Column 2: 2 cards (top larger) */}
-          <div className="flex flex-col gap-6">
-            {/* Top card - larger, featured */}
+          {/* Column 1: Full height card - RESEARCH CENTER */}
+          <Link href="/research" className="min-h-[400px] lg:min-h-full">
             <Card
               variant="dark-elevated"
               padding="lg"
               interactive
-              className="relative flex flex-col justify-between flex-[2] min-h-[280px] overflow-hidden"
+              className="relative flex flex-col justify-end h-full overflow-hidden"
             >
-              {/* Decorative X pattern */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-2/3 opacity-20 pointer-events-none">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  {[...Array(3)].map((_, i) => (
-                    <g key={i} transform={`translate(${20 + i * 25}, ${20 + i * 25})`}>
-                      <path
-                        d="M0 0 L20 20 M20 0 L0 20"
-                        stroke="rgba(196,161,90,0.5)"
-                        strokeWidth="3"
+              {/* Decorative ellipses background */}
+              <div className="absolute inset-0 opacity-30 pointer-events-none">
+                <div className="absolute bottom-0 right-0 w-3/4 h-3/4">
+                  <svg viewBox="0 0 200 200" className="w-full h-full">
+                    {[...Array(8)].map((_, i) => (
+                      <ellipse
+                        key={i}
+                        cx="150"
+                        cy="150"
+                        rx={30 + i * 20}
+                        ry={15 + i * 10}
                         fill="none"
+                        stroke="rgba(196,161,90,0.3)"
+                        strokeWidth="1"
+                        transform={`rotate(${i * 5} 150 150)`}
                       />
-                    </g>
-                  ))}
-                </svg>
+                    ))}
+                  </svg>
+                </div>
               </div>
 
+              {/* Content */}
               <div className="relative z-10 mt-auto">
-                <h3 className="font-display text-xl md:text-2xl font-medium text-marble-100 mb-2">
-                  {ecosystem[1].title}
+                <h3 className="font-display text-2xl md:text-3xl font-medium text-marble-100 mb-3">
+                  {ecosystem[0].title}
                 </h3>
-                <p className="text-slate-400 text-lg leading-relaxed">{ecosystem[1].description}</p>
+                <p className="text-slate-400 text-lg leading-relaxed">{ecosystem[0].description}</p>
               </div>
             </Card>
+          </Link>
+
+          {/* Column 2: 2 cards (top larger) */}
+          <div className="flex flex-col gap-6">
+            {/* Top card - larger, featured - CENOTAPHERY */}
+            <Link href="/memorials" className="flex-[2] min-h-[280px]">
+              <Card
+                variant="dark-elevated"
+                padding="lg"
+                interactive
+                className="relative flex flex-col justify-between h-full overflow-hidden"
+              >
+                {/* Decorative X pattern */}
+                <div className="absolute bottom-0 right-0 w-2/3 h-2/3 opacity-20 pointer-events-none">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    {[...Array(3)].map((_, i) => (
+                      <g key={i} transform={`translate(${20 + i * 25}, ${20 + i * 25})`}>
+                        <path
+                          d="M0 0 L20 20 M20 0 L0 20"
+                          stroke="rgba(196,161,90,0.5)"
+                          strokeWidth="3"
+                          fill="none"
+                        />
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+
+                <div className="relative z-10 mt-auto">
+                  <h3 className="font-display text-xl md:text-2xl font-medium text-marble-100 mb-2">
+                    {ecosystem[1].title}
+                  </h3>
+                  <p className="text-slate-400 text-lg leading-relaxed">
+                    {ecosystem[1].description}
+                  </p>
+                </div>
+              </Card>
+            </Link>
 
             {/* Bottom card - smaller - DIAGNOSTICS (linked) */}
             <Link href="/diagnostics" className="flex-1 min-h-[180px]">
