@@ -73,13 +73,19 @@ interface MemorialData {
   design_status: string | null;
 }
 
+interface PublicSummaryData {
+  text: string;
+  keyFacts: string[];
+  closurePattern: string | null;
+}
+
 interface PublicNarrativeData {
   storyId: string;
   authorName: string | null;
   founderRole: FounderRole | null;
   publicNaming: PublicNamingPreference | null;
-  narrative: NarrativeData;
   coinedAt: string;
+  summary: PublicSummaryData | null;
 }
 
 interface PublicViewProps {
@@ -435,12 +441,116 @@ function HeroSection({
   );
 }
 
-/** Section divider with Roman styling */
+/** Section divider with Roman styling - 128px margins */
 function SectionDivider() {
   return (
-    <div className="divider-roman">
+    <div className="divider-roman py-32">
       <span className="text-gold-500 text-2xl">&#10022;</span>
     </div>
+  );
+}
+
+// =============================================================================
+// STORY INSIGHTS SECTION - AI refined data only
+// =============================================================================
+
+/** Closure pattern labels for display */
+const CLOSURE_PATTERN_LABELS: Record<string, string> = {
+  cash_crisis: "Cash Flow Crisis",
+  market_failure: "Market Failure",
+  team_collapse: "Team Collapse",
+  founder_burnout: "Founder Burnout",
+  competition: "Competitive Pressure",
+  pivot_failure: "Failed Pivot",
+  regulatory: "Regulatory Issues",
+  funding_gap: "Funding Gap",
+  product_market_fit: "Product-Market Fit Issues",
+  scaling_failure: "Scaling Challenges",
+};
+
+/** Combined story insights section with newspaper layout */
+function StoryInsightsSection({ summary }: { summary: PublicSummaryData }) {
+  const { text, keyFacts, closurePattern } = summary;
+
+  // Split text into paragraphs for two-column layout
+  const paragraphs = text.split("\n\n").filter((p) => p.trim());
+  const midPoint = Math.ceil(paragraphs.length / 2);
+  const leftColumn = paragraphs.slice(0, midPoint);
+  const rightColumn = paragraphs.slice(midPoint);
+
+  // Get human-readable closure pattern label
+  const patternLabel = closurePattern
+    ? CLOSURE_PATTERN_LABELS[closurePattern] || closurePattern
+    : null;
+
+  return (
+    <section className="py-12 md:py-16">
+      <div className="container-content">
+        {/* Key Insights + Closure Pattern - Full width section (first for quick overview) */}
+        {(keyFacts.length > 0 || patternLabel) && (
+          <div className="mb-16">
+            <div className="grid md:grid-cols-4 gap-8">
+              {/* Key Insights - 3 columns */}
+              {keyFacts.length > 0 && (
+                <div className="md:col-span-3">
+                  <SectionLabel>key insights</SectionLabel>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                    {keyFacts.map((fact, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-4 bg-slate-800/40 rounded-lg border border-slate-700/30"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-gold-400 mt-2 flex-shrink-0" />
+                        <p className="text-marble-300 text-base leading-relaxed">{fact}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Closure Pattern - 1 column */}
+              {patternLabel && (
+                <div className={keyFacts.length === 0 ? "md:col-span-4" : ""}>
+                  <SectionLabel>the pattern</SectionLabel>
+                  <div className="mt-6">
+                    <Card variant="dark-elevated" padding="lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-gold-500/20 flex items-center justify-center">
+                          <AlertTriangle className="w-6 h-6 text-gold-400" />
+                        </div>
+                        <span className="font-display text-lg text-marble-100">{patternLabel}</span>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* The Story - Newspaper two-column layout (detailed reading for interested visitors) */}
+        <div className="max-w-6xl mx-auto">
+          <SectionLabel>the story</SectionLabel>
+
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 mt-8">
+            <div className="space-y-5">
+              {leftColumn.map((paragraph, index) => (
+                <p key={index} className="text-marble-300 leading-relaxed text-lg">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+            <div className="space-y-5">
+              {rightColumn.map((paragraph, index) => (
+                <p key={index} className="text-marble-300 leading-relaxed text-lg">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -689,72 +799,17 @@ export function PublicView({
         location={location}
       />
 
-      {/* Consultation CTA - only for public orgs */}
-      <ConsultationCTA organization={organization} />
+      {/* Story Insights - AI refined data only */}
+      {primaryNarrative?.summary && (
+        <>
+          <StoryInsightsSection summary={primaryNarrative.summary} />
 
-      {/* Narrative Content */}
-      {primaryNarrative && (
-        <section className="py-16 md:py-24">
-          <div className="container-content max-w-4xl">
-            {/* Understanding Section */}
-            <NarrativeSection
-              title="Understanding What Happened"
-              icon={AlertTriangle}
-              sections={primaryNarrative.narrative.sections.understanding}
-              organization={organization}
-              authorName={primaryNarrative.authorName}
-              publicNaming={primaryNarrative.publicNaming}
-            />
+          {/* TODO: Move ConsultationCTA to founder profile page */}
+          {/* <ConsultationCTA organization={organization} /> */}
 
-            <SectionDivider />
-
-            {/* Hindsight Section */}
-            <NarrativeSection
-              title="In Hindsight"
-              icon={Eye}
-              sections={primaryNarrative.narrative.sections.hindsight}
-              organization={organization}
-              authorName={primaryNarrative.authorName}
-              publicNaming={primaryNarrative.publicNaming}
-            />
-
-            <SectionDivider />
-
-            {/* Lessons Section */}
-            <NarrativeSection
-              title="Lessons Learned"
-              icon={Lightbulb}
-              sections={primaryNarrative.narrative.sections.lessons}
-              organization={organization}
-              authorName={primaryNarrative.authorName}
-              publicNaming={primaryNarrative.publicNaming}
-            />
-
-            <SectionDivider />
-
-            {/* Advice Section */}
-            <NarrativeSection
-              title="Advice for Others"
-              icon={MessageCircle}
-              sections={primaryNarrative.narrative.sections.advice}
-              organization={organization}
-              authorName={primaryNarrative.authorName}
-              publicNaming={primaryNarrative.publicNaming}
-            />
-
-            <SectionDivider />
-
-            {/* Legacy Section */}
-            <NarrativeSection
-              title="Legacy"
-              icon={BookOpen}
-              sections={primaryNarrative.narrative.sections.legacy}
-              organization={organization}
-              authorName={primaryNarrative.authorName}
-              publicNaming={primaryNarrative.publicNaming}
-            />
-          </div>
-        </section>
+          {/* Roman divider after story block */}
+          <SectionDivider />
+        </>
       )}
 
       {/* Empty state if no narratives */}
