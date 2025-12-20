@@ -959,7 +959,33 @@ function CenotaphAvatar({
   organizationId: string;
   isOwner: boolean;
 }) {
+  const router = useRouter();
   const [showImagePopup, setShowImagePopup] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Handle "Create Cenotaph" button click - creates memorial and redirects to wizard
+  const handleCreateCenotaph = async () => {
+    setIsCreating(true);
+    try {
+      const response = await fetch("/api/memorial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.memorialId) {
+        router.push(`/cenotaph/create/${result.memorialId}`);
+      } else {
+        console.error("Failed to create memorial:", result.error);
+        setIsCreating(false);
+      }
+    } catch (err) {
+      console.error("Error creating memorial:", err);
+      setIsCreating(false);
+    }
+  };
 
   if (memorial) {
     // Check if memorial has AI-generated cenotaph image
@@ -1122,11 +1148,15 @@ function CenotaphAvatar({
           Create a memorial to preserve this legacy
         </p>
         {isOwner && (
-          <a href={`/create?org=${organizationId}`}>
-            <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
-              Create Cenotaph
-            </Button>
-          </a>
+          <Button
+            variant="dark-primary"
+            size="sm"
+            rightIcon={<Plus className="w-4 h-4" />}
+            onClick={handleCreateCenotaph}
+            disabled={isCreating}
+          >
+            {isCreating ? "Creating..." : "Create Cenotaph"}
+          </Button>
         )}
       </div>
     </div>
