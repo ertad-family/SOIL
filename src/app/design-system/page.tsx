@@ -42,7 +42,8 @@ import { Combobox } from "@/components/ui/combobox";
 import { SectionLabel } from "@/components/ui/section-label";
 import { RomanNumeral, PositionedRomanNumeral } from "@/components/ui/roman-numeral";
 import { FeatureCard, FeatureCardGrid } from "@/components/ui/feature-card";
-import { Search, Mail, ArrowRight, Layers, Zap, Shield, Globe } from "lucide-react";
+import { Search, Mail, ArrowRight, Layers, Zap, Shield, Globe, Share2 } from "lucide-react";
+import { ShareButton } from "@/components/ui/share-button";
 
 // Sample data for combobox
 const countries = [
@@ -299,10 +300,16 @@ export default function DesignSystemDemo() {
                   <Button variant="marble" rightIcon={<ArrowRight className="h-4 w-4" />}>
                     With Icon
                   </Button>
+                  <ShareButton
+                    url="https://soil.rip"
+                    title="SOIL - Where founders share their stories for science"
+                    description="Help build the future of organizational research"
+                  />
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
                   Dark polished stone button with shine effect. Used for accent contrast in cards or
-                  sections.
+                  sections. ShareButton uses buttonVariants({`{variant: "marble", size: "sm"}`}) for
+                  consistent styling with hover animation revealing social icons.
                 </p>
               </div>
 

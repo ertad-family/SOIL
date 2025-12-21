@@ -76,6 +76,7 @@ import {
   LIFECYCLE_STAGE_DESCRIPTIONS,
 } from "@/data/function-matrix";
 import { PublicView } from "./public-view";
+import { ShareButton } from "@/components/ui/share-button";
 
 interface OrganizationData {
   id: string;
@@ -1119,6 +1120,17 @@ function CenotaphAvatar({
             </div>
           </div>
         </button>
+
+        {/* Share Button - only when verified and has design */}
+        {isVerified && hasDesign && (
+          <div className="mt-3 flex justify-center">
+            <ShareButton
+              url={`${typeof window !== "undefined" ? window.location.origin : ""}/organization/${organizationId}`}
+              title={`${organization.name} - preserved at SOIL`}
+              description="A story of organizational experience, preserved for future founders to learn from."
+            />
+          </div>
+        )}
 
         {/* Image Popup Modal */}
         {showImagePopup && memorial.cenotaph_image_url && (

@@ -128,13 +128,13 @@ const buttonVariants = cva(
         // === Marble Button - Dark stone with polished shine ===
         // Marble - Dark polished stone, used for accent contrast on dark backgrounds
         marble: [
-          "bg-[linear-gradient(135deg,#3d3a36_0%,#2d2a26_25%,#3d3a36_50%,#4a4640_75%,#2d2a26_100%)]",
+          "bg-[linear-gradient(180deg,#3d3a36_0%,#2d2a26_50%,#3d3a36_100%)]",
           "text-[#f2efe9] font-semibold",
           "border border-transparent",
-          "shadow-[0_2px_4px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]",
-          "hover:bg-[linear-gradient(135deg,#4a4640_0%,#3d3a36_25%,#4a4640_50%,#5a5650_75%,#3d3a36_100%)]",
-          "hover:shadow-[0_4px_8px_rgba(0,0,0,0.35),0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]",
-          "active:shadow-[0_1px_2px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]",
+          "shadow-[0_0_4px_rgba(0,0,0,0.3),0_0_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]",
+          "hover:bg-[linear-gradient(180deg,#4a4640_0%,#3d3a36_50%,#4a4640_100%)]",
+          "hover:shadow-[0_0_8px_rgba(0,0,0,0.35),0_0_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]",
+          "active:shadow-[0_0_2px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]",
           "focus-visible:ring-[#4a4640] focus-visible:ring-offset-[#f2efe9]",
           // Shine effect
           "btn-marble-dark-shine",

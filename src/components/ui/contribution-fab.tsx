@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { tabsData, colorClasses, ContributionOption } from "@/lib/contribution-data";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ui/share-button";
 
 const menuItems = Object.entries(tabsData).map(([key, data]) => ({
   key,
@@ -44,7 +45,16 @@ function ContributionCard({
         <p className="text-slate-400 text-xs leading-relaxed flex-1 mb-3 line-clamp-4">
           {option.description}
         </p>
-        {option.external ? (
+        {/* Render ShareButton for Spread the Word card */}
+        {option.title.includes("Spread") ? (
+          <div className="flex justify-center">
+            <ShareButton
+              url={option.href}
+              title="SOIL - Where founders share their stories for science"
+              description="Help build the future of organizational research. Join the movement at soil.rip"
+            />
+          </div>
+        ) : option.external ? (
           <a href={option.href} target="_blank" rel="noopener noreferrer">
             <Button
               variant="dark-secondary"

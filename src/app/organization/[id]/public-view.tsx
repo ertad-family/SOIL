@@ -34,6 +34,7 @@ import type {
   PublicNamingPreference,
 } from "@/types/interview";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ui/share-button";
 
 // =============================================================================
 // TYPES
@@ -394,6 +395,17 @@ function HeroSection({
                   </div>
                 )}
               </div>
+
+              {/* Share Button - only for verified orgs with cenotaph */}
+              {organization.verification_status === "verified" && memorial?.cenotaph_image_url && (
+                <div className="mt-8">
+                  <ShareButton
+                    url={typeof window !== "undefined" ? window.location.href : ""}
+                    title={`${orgName} - preserved at SOIL`}
+                    description="A story of organizational experience, preserved for future founders to learn from."
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
