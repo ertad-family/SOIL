@@ -137,6 +137,58 @@ function extractStoryData(story: Story): {
   // Environment
   if (story.completedModules.includes("environment")) {
     const env = story.environment;
+
+    // Market resources
+    if (env.marketResources && env.marketResources.length > 0) {
+      parts.push(`MARKET RESOURCES (${env.marketResources.length} assessed):`);
+      env.marketResources.forEach((resource) => {
+        const resourceParts = [
+          `  ${resource.resourceType.charAt(0).toUpperCase() + resource.resourceType.slice(1)}:`,
+        ];
+        if (resource.context) resourceParts.push(`Context: ${resource.context}`);
+        if (resource.peakAccessibility)
+          resourceParts.push(`Accessibility: ${resource.peakAccessibility}`);
+        if (resource.accessibilityTrend)
+          resourceParts.push(`Trend: ${resource.accessibilityTrend}`);
+        if (resource.peakCost) resourceParts.push(`Cost: ${resource.peakCost}`);
+        if (resource.peakCompetition)
+          resourceParts.push(`Competition: ${resource.peakCompetition}`);
+        parts.push(resourceParts.join(" | "));
+      });
+
+      const challengingResources = env.marketResources.filter(
+        (r) =>
+          r.peakAccessibility === "difficult" ||
+          r.peakCost === "high" ||
+          r.peakCompetition === "intense"
+      );
+      if (challengingResources.length > 0) {
+        parts.push(`Resource challenges were present in ${challengingResources.length} areas.`);
+      }
+    }
+
+    // Operating conditions
+    if (env.operatingConditions && env.operatingConditions.length > 0) {
+      parts.push(`OPERATING CONDITIONS (${env.operatingConditions.length} assessed):`);
+      env.operatingConditions.forEach((condition) => {
+        const condParts = [
+          `  ${condition.conditionType.charAt(0).toUpperCase() + condition.conditionType.slice(1)}:`,
+        ];
+        if (condition.context) condParts.push(`Context: ${condition.context}`);
+        if (condition.peakState) condParts.push(`State: ${condition.peakState}`);
+        if (condition.trend) condParts.push(`Trend: ${condition.trend}`);
+        parts.push(condParts.join(" | "));
+      });
+
+      const challengingConditions = env.operatingConditions.filter(
+        (c) => c.peakState === "challenging"
+      );
+      if (challengingConditions.length > 0) {
+        parts.push(`Challenging conditions were present in ${challengingConditions.length} areas.`);
+      }
+    }
+
+    // External events
     if (env.events && env.events.length > 0) {
       parts.push(`EXTERNAL EVENTS (${env.events.length} total):`);
       env.events.forEach((event, idx) => {
@@ -156,14 +208,6 @@ function extractStoryData(story: Story): {
         if (event.details) eventParts.push(`Details: ${event.details}`);
         parts.push(eventParts.join(" | "));
       });
-    }
-    if (env.resourceAssessments && env.resourceAssessments.length > 0) {
-      const challengingResources = env.resourceAssessments.filter(
-        (r) => r.peakAvailability === "low" || r.peakCost === "high"
-      );
-      if (challengingResources.length > 0) {
-        parts.push(`Resource challenges were present in ${challengingResources.length} areas.`);
-      }
     }
   }
 

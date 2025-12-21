@@ -59,9 +59,11 @@ export function isModuleDataComplete(story: Story, moduleId: ModuleId): boolean 
       );
 
     case "environment":
-      // At least one resource assessment OR event
+      // At least one market resource OR operating condition OR event
       return (
-        story.environment.resourceAssessments.length > 0 || story.environment.events.length > 0
+        story.environment.marketResources.length > 0 ||
+        story.environment.operatingConditions.length > 0 ||
+        story.environment.events.length > 0
       );
 
     case "founder":

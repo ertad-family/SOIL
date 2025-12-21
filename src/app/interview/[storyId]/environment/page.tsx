@@ -10,16 +10,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, Calendar, Globe, Check } from "lucide-react";
+import { Plus, Trash2, Calendar, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import type {
+  MarketResourceType,
+  MarketResourceAssessment,
+  OperatingConditionType,
+  OperatingConditionAssessment,
+  AccessibilityLevel,
+  CostLevel,
+  CompetitionIntensity,
+  ChangeDirection,
+  CostChangeDirection,
+  CompetitionChangeDirection,
+  ConditionState,
   ExternalEvent,
   ExternalEventCategory,
-  ResourceAssessment,
-  ResourceType,
-  AvailabilityLevel,
-  CostLevel,
-  CompetitionLevel,
-  TrendChange,
   Emotion,
 } from "@/types/interview";
 
@@ -28,88 +33,166 @@ import type {
 // =============================================================================
 
 const STEPS = [
-  { id: "resources", label: "Resources", description: "How was access to key resources?" },
+  {
+    id: "resources",
+    label: "Market Resources",
+    description: "Access to key competitive resources",
+  },
+  { id: "conditions", label: "Operating Conditions", description: "Business environment factors" },
   { id: "events", label: "External Events", description: "What happened in the world around you?" },
 ];
 
 // =============================================================================
-// CONSTANTS
+// MARKET RESOURCES CONFIGURATION
 // =============================================================================
 
-const RESOURCE_TYPES: Array<{
-  value: ResourceType;
-  label: string;
-  description: string;
-  hasCompetition: boolean;
-}> = [
+interface ResourceConfig {
+  type: MarketResourceType;
+  title: string;
+  contextQuestion: string;
+  contextPlaceholder: string;
+  accessibilityQuestion: string;
+  costQuestion: string;
+  competitionQuestion: string;
+}
+
+const MARKET_RESOURCES: ResourceConfig[] = [
   {
-    value: "customers",
-    label: "Customers",
-    description: "Access to target market",
-    hasCompetition: true,
-  },
-  { value: "talent", label: "Talent", description: "Hiring and retention", hasCompetition: true },
-  {
-    value: "suppliers",
-    label: "Suppliers",
-    description: "Vendors and service providers",
-    hasCompetition: true,
-  },
-  {
-    value: "capital",
-    label: "Capital",
-    description: "Funding and financing",
-    hasCompetition: true,
+    type: "customers",
+    title: "Customers",
+    contextQuestion: "Who was your target audience?",
+    contextPlaceholder: "e.g., Small business owners, enterprise companies, young professionals...",
+    accessibilityQuestion: "How easy was it to reach your target customers?",
+    costQuestion: "How much did customer acquisition cost?",
+    competitionQuestion: "How intense was competition for customers?",
   },
   {
-    value: "infrastructure",
-    label: "Infrastructure",
-    description: "Physical and digital infrastructure",
-    hasCompetition: false,
+    type: "talent",
+    title: "Talent",
+    contextQuestion: "What roles were you hiring for?",
+    contextPlaceholder: "e.g., Software engineers, sales reps, designers...",
+    accessibilityQuestion: "How difficult was it to find qualified people?",
+    costQuestion: "How expensive was hiring and compensation?",
+    competitionQuestion: "How fierce was competition for talent?",
   },
   {
-    value: "legal_justice",
-    label: "Legal & Justice",
-    description: "Legal system accessibility",
-    hasCompetition: false,
+    type: "suppliers",
+    title: "Suppliers & Vendors",
+    contextQuestion: "What services or goods did you need from vendors?",
+    contextPlaceholder: "e.g., Cloud hosting, raw materials, logistics, legal services...",
+    accessibilityQuestion: "How available were suitable suppliers?",
+    costQuestion: "How expensive were supplier services?",
+    competitionQuestion: "How much competition was there for supplier capacity?",
   },
   {
-    value: "regulatory",
-    label: "Regulatory",
-    description: "Regulatory environment",
-    hasCompetition: false,
-  },
-  {
-    value: "tax_burden",
-    label: "Tax Burden",
-    description: "Tax obligations and incentives",
-    hasCompetition: false,
+    type: "capital",
+    title: "Capital & Funding",
+    contextQuestion: "What did you need funding for?",
+    contextPlaceholder: "e.g., Product development, marketing, hiring, equipment...",
+    accessibilityQuestion: "How accessible was funding?",
+    costQuestion: "How expensive was capital (interest, dilution)?",
+    competitionQuestion: "How competitive was the funding environment?",
   },
 ];
 
-const AVAILABILITY_LEVELS: Array<{ value: AvailabilityLevel; label: string }> = [
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
+// =============================================================================
+// OPERATING CONDITIONS CONFIGURATION
+// =============================================================================
+
+interface ConditionConfig {
+  type: OperatingConditionType;
+  title: string;
+  contextQuestion: string;
+  contextPlaceholder: string;
+  stateQuestion: string;
+}
+
+const OPERATING_CONDITIONS: ConditionConfig[] = [
+  {
+    type: "infrastructure",
+    title: "Infrastructure",
+    contextQuestion: "What infrastructure did you depend on?",
+    contextPlaceholder: "e.g., Internet connectivity, cloud platforms, payment systems, APIs...",
+    stateQuestion: "How reliable and adequate was the infrastructure you depended on?",
+  },
+  {
+    type: "legal",
+    title: "Legal Environment",
+    contextQuestion: "What legal matters were most important to you?",
+    contextPlaceholder: "e.g., Contract enforcement, IP protection, dispute resolution...",
+    stateQuestion: "How supportive was the legal environment for your business?",
+  },
+  {
+    type: "regulatory",
+    title: "Regulatory Climate",
+    contextQuestion: "What regulations affected you most?",
+    contextPlaceholder: "e.g., Industry licenses, data protection, financial regulations...",
+    stateQuestion: "How burdensome was regulatory compliance?",
+  },
+  {
+    type: "tax",
+    title: "Tax Environment",
+    contextQuestion: "What was your tax situation?",
+    contextPlaceholder: "e.g., Corporate taxes, payroll taxes, VAT, available incentives...",
+    stateQuestion: "How favorable was the tax environment for your business?",
+  },
 ];
 
-const COST_LEVELS: Array<{ value: CostLevel; label: string }> = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
+// =============================================================================
+// OPTIONS
+// =============================================================================
+
+const ACCESSIBILITY_OPTIONS: Array<{ value: AccessibilityLevel; label: string }> = [
+  { value: "easy", label: "Easy" },
+  { value: "moderate", label: "Moderate" },
+  { value: "difficult", label: "Difficult" },
 ];
 
-const COMPETITION_LEVELS: Array<{ value: CompetitionLevel; label: string }> = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-];
-
-const TREND_OPTIONS: Array<{ value: TrendChange; label: string }> = [
-  { value: "improved", label: "Improved" },
+const ACCESSIBILITY_TREND_OPTIONS: Array<{ value: ChangeDirection; label: string }> = [
+  { value: "improved", label: "Got easier" },
   { value: "stable", label: "Stable" },
-  { value: "declined", label: "Declined" },
+  { value: "worsened", label: "Got harder" },
 ];
+
+const COST_OPTIONS: Array<{ value: CostLevel; label: string }> = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Moderate" },
+  { value: "high", label: "High" },
+];
+
+const COST_TREND_OPTIONS: Array<{ value: CostChangeDirection; label: string }> = [
+  { value: "decreased", label: "Decreased" },
+  { value: "stable", label: "Stable" },
+  { value: "increased", label: "Increased" },
+];
+
+const COMPETITION_OPTIONS: Array<{ value: CompetitionIntensity; label: string }> = [
+  { value: "low", label: "Low" },
+  { value: "moderate", label: "Moderate" },
+  { value: "intense", label: "Intense" },
+];
+
+const COMPETITION_TREND_OPTIONS: Array<{ value: CompetitionChangeDirection; label: string }> = [
+  { value: "less", label: "Less intense" },
+  { value: "stable", label: "Stable" },
+  { value: "more", label: "More intense" },
+];
+
+const CONDITION_STATE_OPTIONS: Array<{ value: ConditionState; label: string }> = [
+  { value: "favorable", label: "Favorable" },
+  { value: "neutral", label: "Neutral" },
+  { value: "challenging", label: "Challenging" },
+];
+
+const CONDITION_TREND_OPTIONS: Array<{ value: ChangeDirection; label: string }> = [
+  { value: "improved", label: "Improving" },
+  { value: "stable", label: "Stable" },
+  { value: "worsened", label: "Worsening" },
+];
+
+// =============================================================================
+// EXTERNAL EVENTS (kept from original, with fixed subtypes)
+// =============================================================================
 
 const EVENT_CATEGORIES: Array<{
   value: ExternalEventCategory;
@@ -120,78 +203,95 @@ const EVENT_CATEGORIES: Array<{
   {
     value: "competition",
     label: "Competition",
-    description: "New competitors, market consolidation",
+    description: "Competitor moves, market consolidation",
   },
   { value: "regulation", label: "Regulation", description: "New laws, policy changes" },
   { value: "capital", label: "Capital", description: "Funding environment changes" },
   { value: "talent", label: "Talent", description: "Labor market shifts" },
-  { value: "macro", label: "Macro", description: "Economic conditions, pandemics" },
-  { value: "technology", label: "Technology", description: "Tech disruption, new platforms" },
+  { value: "macro", label: "Macro", description: "Economic conditions, global events" },
+  { value: "technology", label: "Technology", description: "Tech disruption, platform changes" },
   { value: "supplier", label: "Supplier", description: "Supply chain issues" },
-  { value: "reputation", label: "Reputation", description: "PR crises, public perception" },
-  { value: "hostile_actions", label: "Hostile Actions", description: "External attacks, lawsuits" },
+  { value: "reputation", label: "Reputation", description: "PR issues, public perception" },
+  {
+    value: "hostile_actions",
+    label: "Hostile Actions",
+    description: "External attacks, legal threats",
+  },
 ];
 
 const EVENT_SUBTYPES: Record<ExternalEventCategory, string[]> = {
   market: [
-    "Market contraction",
     "Demand shift",
-    "New market opportunity",
+    "Market contraction",
     "Market saturation",
+    "New market opportunity",
     "Other",
   ],
   competition: [
     "New competitor entered",
     "Competitor raised funding",
     "Price war",
+    "Competitor exit",
     "Market consolidation",
-    "Competitor failure",
     "Other",
   ],
   regulation: [
-    "New regulation",
-    "Regulation change",
-    "Enforcement action",
+    "New law/regulation",
     "Compliance requirement",
+    "License issue",
+    "Enforcement action",
     "Other",
   ],
   capital: [
-    "Funding drought",
+    "Funding winter",
     "Interest rate change",
-    "Investor pullback",
+    "Investor sentiment shift",
     "Funding opportunity",
     "Other",
   ],
   talent: [
     "Talent shortage",
     "Wage inflation",
+    "Competitor poaching",
     "Remote work shift",
-    "Layoffs in industry",
     "Other",
   ],
   macro: [
     "Economic recession",
     "Pandemic/health crisis",
     "Political instability",
-    "Currency fluctuation",
+    "War/armed conflict",
+    "Currency crisis",
     "Natural disaster",
     "Other",
   ],
   technology: [
     "Platform change",
-    "New technology emerged",
-    "Technology obsolescence",
+    "Tech disruption",
+    "Infrastructure failure",
+    "Cyberattack/data breach",
+    "Platform banned account",
     "API/integration change",
     "Other",
   ],
   supplier: ["Supplier failure", "Supply shortage", "Price increase", "Quality issues", "Other"],
-  reputation: ["PR crisis", "Social media backlash", "Industry scandal", "Positive press", "Other"],
+  reputation: [
+    "Public scandal",
+    "Viral negative PR",
+    "Product safety incident",
+    "Toxic culture exposure",
+    "Positive press",
+    "Other",
+  ],
   hostile_actions: [
-    "Lawsuit",
-    "Cyberattack",
-    "Smear campaign",
+    "Hostile takeover attempt",
+    "Legal attack by competitor",
+    "Government pressure",
     "Patent troll",
-    "Government action",
+    "Class action lawsuit",
+    "IP theft",
+    "Fraud by partner/client",
+    "Extortion/blackmail",
     "Other",
   ],
 };
@@ -212,7 +312,7 @@ const LOOKING_BACK_OPTIONS = [
 ];
 
 // =============================================================================
-// HELPER: Create empty event
+// HELPERS
 // =============================================================================
 
 function createEmptyEvent(): ExternalEvent {
@@ -229,17 +329,65 @@ function createEmptyEvent(): ExternalEvent {
   };
 }
 
-function createEmptyResourceAssessment(resourceType: ResourceType): ResourceAssessment {
+function createEmptyMarketResource(type: MarketResourceType): MarketResourceAssessment {
   return {
-    resourceType,
-    peakAvailability: null,
+    resourceType: type,
+    context: null,
+    peakAccessibility: null,
+    accessibilityTrend: null,
     peakCost: null,
+    costTrend: null,
     peakCompetition: null,
-    availabilityChange: null,
-    costChange: null,
-    competitionChange: null,
-    whatChanged: null,
+    competitionTrend: null,
   };
+}
+
+function createEmptyOperatingCondition(type: OperatingConditionType): OperatingConditionAssessment {
+  return {
+    conditionType: type,
+    context: null,
+    peakState: null,
+    trend: null,
+  };
+}
+
+// =============================================================================
+// OPTION BUTTON COMPONENT
+// =============================================================================
+
+interface OptionButtonProps<T extends string> {
+  options: Array<{ value: T; label: string }>;
+  value: T | null;
+  onChange: (value: T) => void;
+  size?: "sm" | "md";
+}
+
+function OptionButtons<T extends string>({
+  options,
+  value,
+  onChange,
+  size = "md",
+}: OptionButtonProps<T>) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => onChange(option.value)}
+          className={cn(
+            "rounded-md border transition-colors",
+            size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-base",
+            value === option.value
+              ? "bg-gold-500 border-gold-500 text-slate-900 font-medium"
+              : "bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-500 hover:bg-slate-700"
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 // =============================================================================
@@ -250,39 +398,70 @@ export default function EnvironmentPage() {
   const router = useRouter();
   const { story, isLoading, updateEnvironment, completeModule } = useInterview();
 
+  // Main wizard step (0 = Resources, 1 = Conditions, 2 = Events)
   const [currentStep, setCurrentStep] = React.useState(0);
+  // Sub-step within Resources (0-3) or Conditions (0-3)
+  const [subStep, setSubStep] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [expandedEventId, setExpandedEventId] = React.useState<string | null>(null);
 
   // Get data from story
+  const marketResources = story?.environment.marketResources ?? [];
+  const operatingConditions = story?.environment.operatingConditions ?? [];
   const events = story?.environment.events ?? [];
-  const resourceAssessments = story?.environment.resourceAssessments ?? [];
 
   // ==========================================================================
-  // RESOURCE HANDLERS
+  // MARKET RESOURCE HANDLERS
   // ==========================================================================
 
-  const getResourceAssessment = (resourceType: ResourceType): ResourceAssessment => {
-    const existing = resourceAssessments.find((r) => r.resourceType === resourceType);
-    return existing ?? createEmptyResourceAssessment(resourceType);
+  const getMarketResource = (type: MarketResourceType): MarketResourceAssessment => {
+    const existing = marketResources.find((r) => r.resourceType === type);
+    return existing ?? createEmptyMarketResource(type);
   };
 
-  const updateResourceAssessment = (
-    resourceType: ResourceType,
-    updates: Partial<ResourceAssessment>
+  const updateMarketResource = (
+    type: MarketResourceType,
+    updates: Partial<MarketResourceAssessment>
   ) => {
     if (!story) return;
 
-    const existingIndex = resourceAssessments.findIndex((r) => r.resourceType === resourceType);
-    const updatedAssessments = [...resourceAssessments];
+    const existingIndex = marketResources.findIndex((r) => r.resourceType === type);
+    const updatedResources = [...marketResources];
 
     if (existingIndex >= 0) {
-      updatedAssessments[existingIndex] = { ...updatedAssessments[existingIndex], ...updates };
+      updatedResources[existingIndex] = { ...updatedResources[existingIndex], ...updates };
     } else {
-      updatedAssessments.push({ ...createEmptyResourceAssessment(resourceType), ...updates });
+      updatedResources.push({ ...createEmptyMarketResource(type), ...updates });
     }
 
-    updateEnvironment({ resourceAssessments: updatedAssessments });
+    updateEnvironment({ marketResources: updatedResources });
+  };
+
+  // ==========================================================================
+  // OPERATING CONDITION HANDLERS
+  // ==========================================================================
+
+  const getOperatingCondition = (type: OperatingConditionType): OperatingConditionAssessment => {
+    const existing = operatingConditions.find((c) => c.conditionType === type);
+    return existing ?? createEmptyOperatingCondition(type);
+  };
+
+  const updateOperatingCondition = (
+    type: OperatingConditionType,
+    updates: Partial<OperatingConditionAssessment>
+  ) => {
+    if (!story) return;
+
+    const existingIndex = operatingConditions.findIndex((c) => c.conditionType === type);
+    const updatedConditions = [...operatingConditions];
+
+    if (existingIndex >= 0) {
+      updatedConditions[existingIndex] = { ...updatedConditions[existingIndex], ...updates };
+    } else {
+      updatedConditions.push({ ...createEmptyOperatingCondition(type), ...updates });
+    }
+
+    updateEnvironment({ operatingConditions: updatedConditions });
   };
 
   // ==========================================================================
@@ -315,17 +494,30 @@ export default function EnvironmentPage() {
   // ==========================================================================
 
   const handleBack = () => {
-    if (currentStep > 0) {
+    if (currentStep === 0 && subStep > 0) {
+      setSubStep(subStep - 1);
+    } else if (currentStep === 1 && subStep > 0) {
+      setSubStep(subStep - 1);
+    } else if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      // Reset to last sub-step of previous step
+      if (currentStep === 1) setSubStep(MARKET_RESOURCES.length - 1);
+      if (currentStep === 2) setSubStep(OPERATING_CONDITIONS.length - 1);
     } else {
       router.push(`/interview/${story?.id}`);
     }
   };
 
   const handleNext = async () => {
-    if (currentStep < STEPS.length - 1) {
+    if (currentStep === 0 && subStep < MARKET_RESOURCES.length - 1) {
+      setSubStep(subStep + 1);
+    } else if (currentStep === 1 && subStep < OPERATING_CONDITIONS.length - 1) {
+      setSubStep(subStep + 1);
+    } else if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
+      setSubStep(0);
     } else {
+      // Complete the module
       setIsSubmitting(true);
       try {
         await completeModule("environment");
@@ -351,189 +543,209 @@ export default function EnvironmentPage() {
   }
 
   // ==========================================================================
-  // STEP 1: RESOURCES
+  // RENDER: MARKET RESOURCE SCREEN
   // ==========================================================================
 
-  const renderResources = () => (
-    <div className="space-y-6">
-      <p className="text-slate-400">
-        Rate your access to key resources at your organization&apos;s peak, and how they changed
-        over time.
-      </p>
+  const renderMarketResource = (resourceConfig: ResourceConfig) => {
+    const resource = getMarketResource(resourceConfig.type);
 
-      {RESOURCE_TYPES.map((resource) => {
-        const assessment = getResourceAssessment(resource.value);
-
-        return (
-          <div key={resource.value} className="border border-slate-600 rounded-lg p-4">
-            <div className="flex items-start gap-3 mb-4">
-              <Globe className="h-5 w-5 text-slate-500 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-marble-100">{resource.label}</h3>
-                <p className="text-sm text-slate-400">{resource.description}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ml-8">
-              {/* Availability */}
-              <div>
-                <label className="text-sm font-medium text-slate-300 mb-2 block">
-                  Availability at Peak
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABILITY_LEVELS.map((level) => (
-                    <button
-                      key={level.value}
-                      onClick={() =>
-                        updateResourceAssessment(resource.value, { peakAvailability: level.value })
-                      }
-                      className={cn(
-                        "px-3 py-1.5 rounded text-xs transition-colors",
-                        assessment.peakAvailability === level.value
-                          ? "bg-gold-500 text-slate-900"
-                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                      )}
-                    >
-                      {level.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-2">
-                  <label className="text-xs text-slate-500 mb-1 block">Change over time</label>
-                  <div className="flex flex-wrap gap-1">
-                    {TREND_OPTIONS.map((trend) => (
-                      <button
-                        key={trend.value}
-                        onClick={() =>
-                          updateResourceAssessment(resource.value, {
-                            availabilityChange: trend.value,
-                          })
-                        }
-                        className={cn(
-                          "px-2 py-1 rounded text-xs transition-colors",
-                          assessment.availabilityChange === trend.value
-                            ? "bg-slate-500 text-white"
-                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                        )}
-                      >
-                        {trend.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Cost */}
-              <div>
-                <label className="text-sm font-medium text-slate-300 mb-2 block">
-                  Cost at Peak
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {COST_LEVELS.map((level) => (
-                    <button
-                      key={level.value}
-                      onClick={() =>
-                        updateResourceAssessment(resource.value, { peakCost: level.value })
-                      }
-                      className={cn(
-                        "px-3 py-1.5 rounded text-xs transition-colors",
-                        assessment.peakCost === level.value
-                          ? "bg-gold-500 text-slate-900"
-                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                      )}
-                    >
-                      {level.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-2">
-                  <label className="text-xs text-slate-500 mb-1 block">Change over time</label>
-                  <div className="flex flex-wrap gap-1">
-                    {TREND_OPTIONS.map((trend) => (
-                      <button
-                        key={trend.value}
-                        onClick={() =>
-                          updateResourceAssessment(resource.value, { costChange: trend.value })
-                        }
-                        className={cn(
-                          "px-2 py-1 rounded text-xs transition-colors",
-                          assessment.costChange === trend.value
-                            ? "bg-slate-500 text-white"
-                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                        )}
-                      >
-                        {trend.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Competition (only for applicable resources) */}
-              {resource.hasCompetition && (
-                <div>
-                  <label className="text-sm font-medium text-slate-300 mb-2 block">
-                    Competition at Peak
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {COMPETITION_LEVELS.map((level) => (
-                      <button
-                        key={level.value}
-                        onClick={() =>
-                          updateResourceAssessment(resource.value, { peakCompetition: level.value })
-                        }
-                        className={cn(
-                          "px-3 py-1.5 rounded text-xs transition-colors",
-                          assessment.peakCompetition === level.value
-                            ? "bg-gold-500 text-slate-900"
-                            : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                        )}
-                      >
-                        {level.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="mt-2">
-                    <label className="text-xs text-slate-500 mb-1 block">Change over time</label>
-                    <div className="flex flex-wrap gap-1">
-                      {TREND_OPTIONS.map((trend) => (
-                        <button
-                          key={trend.value}
-                          onClick={() =>
-                            updateResourceAssessment(resource.value, {
-                              competitionChange: trend.value,
-                            })
-                          }
-                          className={cn(
-                            "px-2 py-1 rounded text-xs transition-colors",
-                            assessment.competitionChange === trend.value
-                              ? "bg-slate-500 text-white"
-                              : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                          )}
-                        >
-                          {trend.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+    return (
+      <div className="space-y-8">
+        {/* Progress indicator */}
+        <div className="flex items-center justify-center gap-2">
+          {MARKET_RESOURCES.map((_, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                idx === subStep ? "bg-gold-500" : idx < subStep ? "bg-gold-500/50" : "bg-slate-600"
               )}
-            </div>
+            />
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="text-center">
+          <h2 className="text-2xl font-display font-medium text-marble-100">
+            {resourceConfig.title}
+          </h2>
+          <p className="text-slate-400 mt-2">
+            {subStep + 1} of {MARKET_RESOURCES.length} resources
+          </p>
+        </div>
+
+        {/* Context question */}
+        <div className="space-y-3">
+          <label className="block text-lg font-medium text-marble-100">
+            {resourceConfig.contextQuestion}
+          </label>
+          <Textarea
+            variant="dark"
+            value={resource.context || ""}
+            onChange={(e) => updateMarketResource(resourceConfig.type, { context: e.target.value })}
+            placeholder={resourceConfig.contextPlaceholder}
+            rows={2}
+          />
+        </div>
+
+        {/* Accessibility */}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <label className="block text-base font-medium text-marble-100">
+              {resourceConfig.accessibilityQuestion}
+            </label>
+            <OptionButtons
+              options={ACCESSIBILITY_OPTIONS}
+              value={resource.peakAccessibility}
+              onChange={(v) => updateMarketResource(resourceConfig.type, { peakAccessibility: v })}
+            />
           </div>
-        );
-      })}
-    </div>
-  );
+          <div className="space-y-2">
+            <label className="block text-sm text-slate-400">How did this change over time?</label>
+            <OptionButtons
+              options={ACCESSIBILITY_TREND_OPTIONS}
+              value={resource.accessibilityTrend}
+              onChange={(v) => updateMarketResource(resourceConfig.type, { accessibilityTrend: v })}
+              size="sm"
+            />
+          </div>
+        </div>
+
+        {/* Cost */}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <label className="block text-base font-medium text-marble-100">
+              {resourceConfig.costQuestion}
+            </label>
+            <OptionButtons
+              options={COST_OPTIONS}
+              value={resource.peakCost}
+              onChange={(v) => updateMarketResource(resourceConfig.type, { peakCost: v })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm text-slate-400">How did this change over time?</label>
+            <OptionButtons
+              options={COST_TREND_OPTIONS}
+              value={resource.costTrend}
+              onChange={(v) => updateMarketResource(resourceConfig.type, { costTrend: v })}
+              size="sm"
+            />
+          </div>
+        </div>
+
+        {/* Competition */}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <label className="block text-base font-medium text-marble-100">
+              {resourceConfig.competitionQuestion}
+            </label>
+            <OptionButtons
+              options={COMPETITION_OPTIONS}
+              value={resource.peakCompetition}
+              onChange={(v) => updateMarketResource(resourceConfig.type, { peakCompetition: v })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm text-slate-400">How did this change over time?</label>
+            <OptionButtons
+              options={COMPETITION_TREND_OPTIONS}
+              value={resource.competitionTrend}
+              onChange={(v) => updateMarketResource(resourceConfig.type, { competitionTrend: v })}
+              size="sm"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // ==========================================================================
-  // STEP 2: EVENTS
+  // RENDER: OPERATING CONDITION SCREEN
+  // ==========================================================================
+
+  const renderOperatingCondition = (conditionConfig: ConditionConfig) => {
+    const condition = getOperatingCondition(conditionConfig.type);
+
+    return (
+      <div className="space-y-8">
+        {/* Progress indicator */}
+        <div className="flex items-center justify-center gap-2">
+          {OPERATING_CONDITIONS.map((_, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                idx === subStep ? "bg-gold-500" : idx < subStep ? "bg-gold-500/50" : "bg-slate-600"
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="text-center">
+          <h2 className="text-2xl font-display font-medium text-marble-100">
+            {conditionConfig.title}
+          </h2>
+          <p className="text-slate-400 mt-2">
+            {subStep + 1} of {OPERATING_CONDITIONS.length} conditions
+          </p>
+        </div>
+
+        {/* Context question */}
+        <div className="space-y-3">
+          <label className="block text-lg font-medium text-marble-100">
+            {conditionConfig.contextQuestion}
+          </label>
+          <Textarea
+            variant="dark"
+            value={condition.context || ""}
+            onChange={(e) =>
+              updateOperatingCondition(conditionConfig.type, { context: e.target.value })
+            }
+            placeholder={conditionConfig.contextPlaceholder}
+            rows={2}
+          />
+        </div>
+
+        {/* State assessment */}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <label className="block text-base font-medium text-marble-100">
+              {conditionConfig.stateQuestion}
+            </label>
+            <OptionButtons
+              options={CONDITION_STATE_OPTIONS}
+              value={condition.peakState}
+              onChange={(v) => updateOperatingCondition(conditionConfig.type, { peakState: v })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm text-slate-400">How did this change over time?</label>
+            <OptionButtons
+              options={CONDITION_TREND_OPTIONS}
+              value={condition.trend}
+              onChange={(v) => updateOperatingCondition(conditionConfig.type, { trend: v })}
+              size="sm"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ==========================================================================
+  // RENDER: EVENTS
   // ==========================================================================
 
   const renderEvents = () => (
     <div className="space-y-6">
-      <p className="text-slate-400">
-        Add significant external events that affected your organization.
-      </p>
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-display font-medium text-marble-100">External Events</h2>
+        <p className="text-slate-400 mt-2">
+          Add significant external events that affected your organization
+        </p>
+      </div>
 
       {/* Events list */}
       <div className="space-y-4">
@@ -551,7 +763,7 @@ export default function EnvironmentPage() {
                 <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-slate-500" />
                   <span className="font-medium text-marble-100">
-                    {event.date || "No date"} -{" "}
+                    {event.date || "No date"} —{" "}
                     {event.subType || categoryInfo?.label || "New Event"}
                   </span>
                 </div>
@@ -719,6 +931,14 @@ export default function EnvironmentPage() {
   // RENDER
   // ==========================================================================
 
+  // Calculate display step and label
+  const getNextLabel = () => {
+    if (currentStep === 0 && subStep < MARKET_RESOURCES.length - 1) return "Next Resource";
+    if (currentStep === 1 && subStep < OPERATING_CONDITIONS.length - 1) return "Next Condition";
+    if (currentStep < STEPS.length - 1) return "Continue";
+    return "Complete";
+  };
+
   return (
     <WizardLayout
       variant="dark"
@@ -728,12 +948,13 @@ export default function EnvironmentPage() {
       onNext={handleNext}
       cancelHref={`/interview/${story.id}`}
       isLoading={isSubmitting}
-      nextLabel={currentStep === STEPS.length - 1 ? "Complete" : "Continue"}
+      nextLabel={getNextLabel()}
       title="Environment Analysis"
       subtitle="External conditions and events"
     >
-      {currentStep === 0 && renderResources()}
-      {currentStep === 1 && renderEvents()}
+      {currentStep === 0 && renderMarketResource(MARKET_RESOURCES[subStep])}
+      {currentStep === 1 && renderOperatingCondition(OPERATING_CONDITIONS[subStep])}
+      {currentStep === 2 && renderEvents()}
     </WizardLayout>
   );
 }
