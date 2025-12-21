@@ -95,7 +95,7 @@ export function ScopeSection() {
           {/* Column 2: 2 cards (top larger) */}
           <div className="flex flex-col gap-6">
             {/* Top card - larger, featured - CENOTAPHERY */}
-            <Link href="/memorials" className="flex-[2] min-h-[280px]">
+            <Link href="/cenotaphery" className="flex-[2] min-h-[280px]">
               <Card
                 variant="dark-elevated"
                 padding="lg"

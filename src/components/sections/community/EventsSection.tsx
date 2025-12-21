@@ -274,7 +274,7 @@ const foundersNetwork = {
     "Exchange lessons learned",
   ],
   cta: "Explore Cenotaphs",
-  href: "/memorials",
+  href: "/cenotaphery",
 };
 
 export function EventsSection() {

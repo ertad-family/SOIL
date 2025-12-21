@@ -11,7 +11,7 @@ const roleCTAs = [
     title: "I'm a Founder",
     description: "Share your story and create a digital memorial",
     icon: <Landmark className="w-6 h-6" />,
-    href: "/memorials",
+    href: "/cenotaphery",
     color: "gold",
   },
   {
