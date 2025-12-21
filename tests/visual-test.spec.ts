@@ -4,8 +4,8 @@ test("capture design system screenshots", async ({ page }) => {
   // Set viewport to a larger size
   await page.setViewportSize({ width: 1440, height: 900 });
 
-  // Navigate to the homepage
-  await page.goto("http://localhost:3000");
+  // Navigate to the homepage (uses baseURL from playwright.config.ts)
+  await page.goto("/");
 
   // Wait for the page to fully load
   await page.waitForLoadState("networkidle");

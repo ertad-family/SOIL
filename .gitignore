@@ -6,6 +6,13 @@ node_modules/
 # Testing
 /coverage
 
+# Playwright
+/playwright-report/
+/blob-report/
+/test-results/
+tests/screenshots/**/*.png
+!tests/screenshots/**/.gitkeep
+
 # Production
 /.next
 /out
