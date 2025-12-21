@@ -1,8 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Calendar, Globe, MapPin, Users, ArrowRight, Search } from "lucide-react";
 
 // Day of the Dead Venture illustration SVG
@@ -278,6 +287,56 @@ const foundersNetwork = {
 };
 
 export function EventsSection() {
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">(
+    "idle"
+  );
+  const [waitlistError, setWaitlistError] = useState<string | null>(null);
+  const [isAlreadyOnWaitlist, setIsAlreadyOnWaitlist] = useState(false);
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waitlistEmail) return;
+
+    setWaitlistStatus("loading");
+    setWaitlistError(null);
+
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: waitlistEmail,
+          type: "waitlist",
+          source: "day_of_dead_venture",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setWaitlistError(data.error || "Something went wrong");
+        setWaitlistStatus("error");
+        return;
+      }
+
+      setWaitlistStatus("success");
+      if (data.alreadySubscribed) {
+        setIsAlreadyOnWaitlist(true);
+      }
+    } catch {
+      setWaitlistError("Failed to join waitlist. Please try again.");
+      setWaitlistStatus("error");
+    }
+  };
+
+  const handleWaitlistClick = (eventId: string) => {
+    if (eventId === "day-of-dead") {
+      setWaitlistOpen(true);
+    }
+  };
+
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
@@ -329,16 +388,28 @@ export function EventsSection() {
                   ))}
                 </div>
 
-                <a href={event.href}>
+                {event.href.startsWith("#") ? (
                   <Button
                     variant="dark-secondary"
                     size="md"
                     className="w-full"
                     rightIcon={<ArrowRight className="w-4 h-4" />}
+                    onClick={() => handleWaitlistClick(event.id)}
                   >
                     {event.cta}
                   </Button>
-                </a>
+                ) : (
+                  <a href={event.href}>
+                    <Button
+                      variant="dark-secondary"
+                      size="md"
+                      className="w-full"
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                    >
+                      {event.cta}
+                    </Button>
+                  </a>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -396,6 +467,62 @@ export function EventsSection() {
           </Card>
         </div>
       </div>
+
+      {/* Waitlist Modal */}
+      <Dialog open={waitlistOpen} onOpenChange={setWaitlistOpen}>
+        <DialogContent variant="dark" size="sm">
+          <DialogHeader>
+            <DialogTitle variant="dark">Join the Waitlist</DialogTitle>
+            <DialogDescription variant="dark">
+              Be the first to know when Day of the Dead Venture is announced. We&apos;ll send you
+              one email with event details and registration link.
+            </DialogDescription>
+          </DialogHeader>
+
+          {waitlistStatus === "success" ? (
+            <div className="mt-4 text-center">
+              <p className="text-emerald-400">
+                {isAlreadyOnWaitlist
+                  ? "You're already on the waitlist! We'll be in touch."
+                  : "You're on the list! We'll notify you when the event is announced."}
+              </p>
+              <Button
+                variant="dark-secondary"
+                size="md"
+                className="mt-4"
+                onClick={() => {
+                  setWaitlistOpen(false);
+                  setWaitlistStatus("idle");
+                  setWaitlistEmail("");
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleWaitlistSubmit} className="mt-4 space-y-4">
+              <Input
+                type="email"
+                placeholder="Your email address"
+                value={waitlistEmail}
+                onChange={(e) => setWaitlistEmail(e.target.value)}
+                className="bg-slate-800/50 border-slate-700 text-marble-100 placeholder:text-slate-500"
+                required
+              />
+              {waitlistError && <p className="text-sm text-red-400">{waitlistError}</p>}
+              <Button
+                type="submit"
+                variant="marble"
+                size="md"
+                className="w-full"
+                disabled={waitlistStatus === "loading"}
+              >
+                {waitlistStatus === "loading" ? "Joining..." : "Join Waitlist"}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

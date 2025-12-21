@@ -225,7 +225,7 @@ export function FoundersRoleSection() {
             </Card>
 
             {/* CTA */}
-            <Link href="/cenotaphery">
+            <Link href="/organization/create">
               <Button
                 variant="dark-primary"
                 size="lg"
