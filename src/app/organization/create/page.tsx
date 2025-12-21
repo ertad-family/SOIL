@@ -23,7 +23,10 @@ import type {
   LifecycleStage,
   FounderRole,
   PublicNamingPreference,
+  GeoLocation,
 } from "@/types/interview";
+import { createEmptyGeoLocation } from "@/types/interview";
+import { LocationPicker } from "@/components/ui/location-picker";
 import {
   ORG_TYPE_LABELS,
   ORG_TYPE_DESCRIPTIONS,
@@ -52,10 +55,7 @@ interface OrganizationFormData {
   organizationType: OrganizationType | null;
   businessModel: string | null;
   industry: string | null;
-  location: {
-    country: string | null;
-    city: string | null;
-  };
+  location: GeoLocation;
 
   // Step 2: Timeline
   foundedDate: string | null;
@@ -74,7 +74,7 @@ const createEmptyFormData = (): OrganizationFormData => ({
   organizationType: null,
   businessModel: null,
   industry: null,
-  location: { country: null, city: null },
+  location: createEmptyGeoLocation(),
   foundedDate: null,
   closedDate: null,
   stageAtClosure: null,
@@ -248,6 +248,9 @@ function OrganizationCreateContent() {
             industry: formData.industry,
             location_country: formData.location.country,
             location_city: formData.location.city,
+            location_lat: formData.location.latitude,
+            location_lng: formData.location.longitude,
+            location_geo_id: formData.location.geoId,
             founded_date: formData.foundedDate,
             closed_date: formData.closedDate,
             stage_at_closure: formData.stageAtClosure,
@@ -359,16 +362,12 @@ function OrganizationCreateContent() {
     }
   };
 
-  const handleLocationChange =
-    (field: "country" | "city") => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({
-        ...prev,
-        location: {
-          ...prev.location,
-          [field]: e.target.value || null,
-        },
-      }));
-    };
+  const handleLocationChange = (location: GeoLocation) => {
+    setFormData((prev) => ({
+      ...prev,
+      location,
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -514,28 +513,19 @@ function OrganizationCreateContent() {
             />
           </FormField>
 
-          <FormSection variant="dark" title="Location">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField variant="dark" label="Country" htmlFor="country">
-                <Input
-                  variant="dark"
-                  id="country"
-                  value={formData.location.country || ""}
-                  onChange={handleLocationChange("country")}
-                  placeholder="Country"
-                />
-              </FormField>
-              <FormField variant="dark" label="City" htmlFor="city">
-                <Input
-                  variant="dark"
-                  id="city"
-                  value={formData.location.city || ""}
-                  onChange={handleLocationChange("city")}
-                  placeholder="City"
-                />
-              </FormField>
-            </div>
-          </FormSection>
+          <FormField
+            variant="dark"
+            label="Location"
+            htmlFor="location"
+            hint="Start typing a city name to search"
+          >
+            <LocationPicker
+              value={formData.location}
+              onValueChange={handleLocationChange}
+              variant="dark"
+              placeholder="Search for a city..."
+            />
+          </FormField>
         </div>
       )}
 

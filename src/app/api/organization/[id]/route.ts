@@ -48,6 +48,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       industry,
       location_country,
       location_city,
+      location_lat,
+      location_lng,
+      location_geo_id,
       founded_date,
       closed_date,
       stage_at_closure,
@@ -69,6 +72,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.location_country = location_country;
     if (typeof location_city === "string" || location_city === null)
       updates.location_city = location_city;
+    if (typeof location_lat === "number" || location_lat === null)
+      updates.location_lat = location_lat;
+    if (typeof location_lng === "number" || location_lng === null)
+      updates.location_lng = location_lng;
+    if (typeof location_geo_id === "number" || location_geo_id === null)
+      updates.location_geo_id = location_geo_id;
     if (typeof founded_date === "string" || founded_date === null)
       updates.founded_date = founded_date;
     if (typeof closed_date === "string" || closed_date === null) updates.closed_date = closed_date;

@@ -23,6 +23,9 @@ interface OrganizationData {
   description: string | null;
   location_country: string | null;
   location_city: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_geo_id: number | null;
   founded_date: string | null;
   closed_date: string | null;
   stage_at_closure: LifecycleStage | null;
