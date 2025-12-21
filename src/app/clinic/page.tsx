@@ -531,13 +531,43 @@ function CurrentStatusSection() {
 // ============================================================================
 function WaitlistSection() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [isAlreadySubscribed, setIsAlreadySubscribed] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual waitlist submission
-    if (email) {
-      setSubmitted(true);
+    if (!email) return;
+
+    setStatus("loading");
+    setError(null);
+
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          type: "waitlist",
+          source: "clinic",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Something went wrong");
+        setStatus("error");
+        return;
+      }
+
+      setStatus("success");
+      if (data.alreadySubscribed) {
+        setIsAlreadySubscribed(true);
+      }
+    } catch {
+      setError("Failed to join waitlist. Please try again.");
+      setStatus("error");
     }
   };
 
@@ -554,14 +584,14 @@ function WaitlistSection() {
             updates on our progress — no spam, ever.
           </p>
 
-          {submitted ? (
+          {status === "success" ? (
             <Card variant="dark-elevated" padding="lg">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-success-500/20 flex items-center justify-center">
                   <CheckCircle className="w-8 h-8 text-success-500" />
                 </div>
                 <h3 className="font-display text-xl font-medium text-marble-100">
-                  You&apos;re on the list
+                  {isAlreadySubscribed ? "You're already on the list" : "You're on the list"}
                 </h3>
                 <p className="text-slate-400">We&apos;ll keep you updated on our progress.</p>
               </div>
@@ -584,10 +614,12 @@ function WaitlistSection() {
                     variant="dark-primary"
                     size="lg"
                     rightIcon={<ArrowRight className="w-5 h-5" />}
+                    disabled={status === "loading"}
                   >
-                    Join Waitlist
+                    {status === "loading" ? "Joining..." : "Join Waitlist"}
                   </Button>
                 </div>
+                {error && <p className="text-sm text-red-400">{error}</p>}
                 <p className="text-xs text-slate-500">
                   Your email will only be used for Clinic updates. You can unsubscribe at any time.
                 </p>

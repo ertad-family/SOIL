@@ -35,10 +35,10 @@ CREATE INDEX idx_subscribers_email ON subscribers(email);
 -- Fast lookup by subscription type
 CREATE INDEX idx_subscribers_type ON subscribers(subscription_type);
 
--- Unique constraint: one subscription per email per type
--- Allows same email to subscribe to both newsletter AND waitlist
-CREATE UNIQUE INDEX idx_subscribers_unique_email_type
-  ON subscribers(email, subscription_type);
+-- Unique constraint: one subscription per email per type per source
+-- Allows same email to subscribe to multiple different waitlists
+CREATE UNIQUE INDEX idx_subscribers_unique_email_type_source
+  ON subscribers(email, subscription_type, COALESCE(source, ''));
 
 -- =============================================================================
 -- ROW LEVEL SECURITY

@@ -114,7 +114,12 @@ export function CommunityJoinSection() {
         </div>
 
         {/* Newsletter Signup */}
-        <NewsletterWidget variant="full" title="Stay Connected" className="mx-auto" />
+        <NewsletterWidget
+          variant="full"
+          title="Stay Connected"
+          source="community_join"
+          className="mx-auto"
+        />
       </div>
     </section>
   );
