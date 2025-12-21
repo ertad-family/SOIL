@@ -287,6 +287,69 @@ export type FinancialMetrics =
   | NgoMetrics
   | MediaMetrics;
 
+// =============================================================================
+// ESSENTIAL FINANCIAL METRICS (Universal across all org types)
+// =============================================================================
+
+/** Essential metric types - universal metrics all organizations track */
+export type EssentialMetricType =
+  | "revenue"
+  | "margins"
+  | "profitability"
+  | "cashPosition"
+  | "funding"
+  | "customerBase";
+
+/** Profitability status */
+export type ProfitabilityStatus = "profitable" | "almost" | "never";
+
+/** Revenue assessment */
+export interface RevenueMetric {
+  peakAnnual: string | null; // Free text for flexibility (e.g., "$1.2M", "~500K")
+  trend: MetricTrend | null;
+}
+
+/** Margins assessment */
+export interface MarginsMetric {
+  grossPercent: number | null;
+  netPercent: number | null;
+}
+
+/** Profitability assessment */
+export interface ProfitabilityMetric {
+  status: ProfitabilityStatus | null;
+  whenAchieved: string | null; // Date or lifecycle stage
+  whenLost: string | null; // Date or lifecycle stage
+}
+
+/** Cash position assessment */
+export interface CashPositionMetric {
+  burnRate: string | null; // Free text (e.g., "$50K/month")
+  runwayMonths: number | null;
+}
+
+/** Funding assessment */
+export interface FundingMetric {
+  totalRaised: string | null; // Free text (e.g., "$2.5M")
+  stage: "bootstrapped" | "pre_seed" | "seed" | "series_a" | "series_b_plus" | null;
+}
+
+/** Customer base assessment */
+export interface CustomerBaseMetric {
+  peakCount: number | null;
+  concentrationPercent: number | null; // Top customer as % of revenue
+}
+
+/** Essential metrics container */
+export interface EssentialMetrics {
+  revenue: RevenueMetric | null;
+  margins: MarginsMetric | null;
+  profitability: ProfitabilityMetric | null;
+  cashPosition: CashPositionMetric | null;
+  funding: FundingMetric | null;
+  customerBase: CustomerBaseMetric | null;
+}
+
 export interface MetricDynamic {
   metricName: string;
   peakValue: string | number | null;
@@ -307,9 +370,50 @@ export interface FinancialEvent {
   details: string | null;
 }
 
+/** Common currency codes */
+export type CurrencyCode =
+  | "USD"
+  | "EUR"
+  | "GBP"
+  | "CAD"
+  | "AUD"
+  | "CHF"
+  | "JPY"
+  | "CNY"
+  | "INR"
+  | "BRL"
+  | "MXN"
+  | "RUB"
+  | "KRW"
+  | "SGD"
+  | "HKD"
+  | "SEK"
+  | "NOK"
+  | "DKK"
+  | "PLN"
+  | "ILS"
+  | "ZAR"
+  | "AED"
+  | "THB"
+  | "IDR"
+  | "MYR"
+  | "PHP"
+  | "VND"
+  | "NZD"
+  | "CZK"
+  | "HUF"
+  | "TRY"
+  | "UAH"
+  | "CLP"
+  | "COP"
+  | "PEN"
+  | "ARS";
+
 export interface FinancialPictureData {
   uploadedFiles: UploadedFile[];
-  metrics: FinancialMetrics | null;
+  currency: CurrencyCode | null;
+  essentialMetrics: EssentialMetrics | null;
+  metrics: FinancialMetrics | null; // Org-type specific metrics (future use)
   dynamics: MetricDynamic[];
   events: FinancialEvent[];
 }
@@ -793,9 +897,20 @@ export const createEmptyFunctionalMapping = (): FunctionalMappingData => ({
 
 export const createEmptyFinancialPicture = (): FinancialPictureData => ({
   uploadedFiles: [],
+  currency: null,
+  essentialMetrics: null,
   metrics: null,
   dynamics: [],
   events: [],
+});
+
+export const createEmptyEssentialMetrics = (): EssentialMetrics => ({
+  revenue: null,
+  margins: null,
+  profitability: null,
+  cashPosition: null,
+  funding: null,
+  customerBase: null,
 });
 
 export const createEmptyDynamicPicture = (): DynamicPictureData => ({
