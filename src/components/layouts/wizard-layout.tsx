@@ -175,7 +175,7 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
             <div className="flex items-center justify-between">
               {/* Back button */}
               <div>
-                {currentStep > 0 && canGoBack && (
+                {canGoBack && (
                   <Button
                     variant={isDark ? "dark-secondary" : "secondary"}
                     onClick={onBack}

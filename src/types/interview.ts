@@ -371,6 +371,71 @@ export interface DynamicPictureData {
 // MODULE 4: ENVIRONMENT ANALYSIS
 // =============================================================================
 
+/** Market resource types - resources you compete for */
+export type MarketResourceType = "customers" | "talent" | "suppliers" | "capital";
+
+/** Operating condition types - environmental factors you operate within */
+export type OperatingConditionType = "infrastructure" | "legal" | "regulatory" | "tax";
+
+/** Accessibility level for market resources */
+export type AccessibilityLevel = "easy" | "moderate" | "difficult";
+
+/** Direction of change over time */
+export type ChangeDirection = "improved" | "stable" | "worsened";
+
+/** Cost change direction */
+export type CostChangeDirection = "decreased" | "stable" | "increased";
+
+/** Competition intensity */
+export type CompetitionIntensity = "low" | "moderate" | "intense";
+
+/** Competition change direction */
+export type CompetitionChangeDirection = "less" | "stable" | "more";
+
+/** Operating condition state */
+export type ConditionState = "favorable" | "neutral" | "challenging";
+
+/** Market resource assessment - detailed info about competitive resources */
+export interface MarketResourceAssessment {
+  resourceType: MarketResourceType;
+
+  /** If true, organization didn't work with this resource type */
+  notApplicable?: boolean;
+
+  // Context question (who/what)
+  context: string | null;
+
+  // Accessibility (how easy to reach/find/get)
+  peakAccessibility: AccessibilityLevel | null;
+  accessibilityTrend: ChangeDirection | null;
+
+  // Cost
+  peakCost: CostLevel | null;
+  costTrend: CostChangeDirection | null;
+
+  // Competition
+  peakCompetition: CompetitionIntensity | null;
+  competitionTrend: CompetitionChangeDirection | null;
+}
+
+/** Operating condition assessment - environmental factors */
+export interface OperatingConditionAssessment {
+  conditionType: OperatingConditionType;
+
+  /** If true, this condition wasn't relevant to the organization */
+  notApplicable?: boolean;
+
+  // Context question (what specifically)
+  context: string | null;
+
+  // State assessment
+  peakState: ConditionState | null;
+  trend: ChangeDirection | null;
+}
+
+/**
+ * @deprecated Use MarketResourceType instead
+ */
 export type ResourceType =
   | "customers"
   | "talent"
@@ -381,19 +446,17 @@ export type ResourceType =
   | "regulatory"
   | "tax_burden";
 
+/**
+ * @deprecated Use MarketResourceAssessment or OperatingConditionAssessment instead
+ */
 export interface ResourceAssessment {
   resourceType: ResourceType;
-
-  // At peak
   peakAvailability: AvailabilityLevel | null;
   peakCost: CostLevel | null;
-  peakCompetition: CompetitionLevel | null; // Only for applicable resources
-
-  // Peak to death change
+  peakCompetition: CompetitionLevel | null;
   availabilityChange: TrendChange | null;
   costChange: TrendChange | null;
   competitionChange: TrendChange | null;
-
   whatChanged: string | null;
 }
 
@@ -429,8 +492,19 @@ export interface ExternalEvent {
 }
 
 export interface EnvironmentData {
-  resourceAssessments: ResourceAssessment[];
+  /** New structure: Market resources (customers, talent, suppliers, capital) */
+  marketResources: MarketResourceAssessment[];
+
+  /** New structure: Operating conditions (infrastructure, legal, regulatory, tax) */
+  operatingConditions: OperatingConditionAssessment[];
+
+  /** External events */
   events: ExternalEvent[];
+
+  /**
+   * @deprecated Use marketResources and operatingConditions instead
+   */
+  resourceAssessments?: ResourceAssessment[];
 }
 
 // =============================================================================
@@ -731,7 +805,8 @@ export const createEmptyDynamicPicture = (): DynamicPictureData => ({
 });
 
 export const createEmptyEnvironment = (): EnvironmentData => ({
-  resourceAssessments: [],
+  marketResources: [],
+  operatingConditions: [],
   events: [],
 });
 
