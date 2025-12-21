@@ -111,6 +111,28 @@ export type SatisfactionRating = 1 | 2 | 3 | 4 | 5;
 export type Emotion = "distressed" | "worried" | "neutral" | "hopeful";
 
 // =============================================================================
+// LOCATION TYPES
+// =============================================================================
+
+/** Geographic location with coordinates for cenotaphery placement */
+export interface GeoLocation {
+  country: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  /** GeoNames ID for deduplication and standardization */
+  geoId?: number;
+}
+
+/** Creates an empty GeoLocation object */
+export const createEmptyGeoLocation = (): GeoLocation => ({
+  country: null,
+  city: null,
+  latitude: null,
+  longitude: null,
+});
+
+// =============================================================================
 // MODULE 0: BASIC INFO
 // =============================================================================
 
@@ -126,10 +148,7 @@ export interface BasicInfoData {
   organizationType: OrganizationType | null;
   businessModel: string | null;
   industry: string | null;
-  location: {
-    country: string | null;
-    city: string | null;
-  };
+  location: GeoLocation;
 
   // Screen 2: Timeline (now in organizations table)
   foundedDate: string | null; // ISO date string (YYYY-MM)
@@ -718,10 +737,7 @@ export interface Organization {
   description: string | null;
 
   // Location
-  location: {
-    country: string | null;
-    city: string | null;
-  };
+  location: GeoLocation;
 
   // Timeline
   foundedDate: string | null;
@@ -881,7 +897,7 @@ export const createEmptyBasicInfo = (): BasicInfoData => ({
   organizationType: null,
   businessModel: null,
   industry: null,
-  location: { country: null, city: null },
+  location: createEmptyGeoLocation(),
   foundedDate: null,
   closedDate: null,
   stageAtClosure: null,
@@ -1058,7 +1074,7 @@ export const createEmptyOrganization = (
   businessModel: null,
   industry: null,
   description: null,
-  location: { country: null, city: null },
+  location: createEmptyGeoLocation(),
   foundedDate: null,
   closedDate: null,
   stageAtClosure: null,
