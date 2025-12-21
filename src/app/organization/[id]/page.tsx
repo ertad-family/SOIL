@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { OrganizationClient } from "./organization-client";
 import type {
@@ -81,6 +82,74 @@ export interface PublicNarrativeData {
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+/**
+ * Generate dynamic metadata for organization pages
+ * Includes cenotaph image as OG image for rich social sharing
+ */
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  // Fetch organization
+  const { data: organization } = await supabase
+    .from("organizations")
+    .select("name, is_public, verification_status")
+    .eq("id", id)
+    .single();
+
+  if (!organization) {
+    return {
+      title: "Organization Not Found | SOIL",
+    };
+  }
+
+  // Fetch memorial for cenotaph image and epitaph
+  const { data: memorial } = await supabase
+    .from("memorials")
+    .select("epitaph, cenotaph_image_url")
+    .eq("organization_id", id)
+    .single();
+
+  // Determine display name (respect privacy)
+  const displayName = organization.is_public ? organization.name : "An Organization";
+  const title = `${displayName} | SOIL`;
+
+  // Use epitaph as description, or fallback
+  const description =
+    memorial?.epitaph ||
+    (organization.is_public
+      ? `The story of ${organization.name}, preserved at SOIL for future founders to learn from.`
+      : "A story of organizational experience, preserved at SOIL.");
+
+  // Use cenotaph image if available, otherwise default
+  const ogImage = memorial?.cenotaph_image_url || "/og-default.png";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: displayName,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${displayName} - preserved at SOIL`,
+        },
+      ],
+      type: "article",
+      siteName: "SOIL - Social Organizational Intelligence Lab",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: displayName,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function OrganizationPage({ params }: PageProps) {

@@ -29,6 +29,7 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://soil.rip"),
   title: "SOIL - Social Organizational Intelligence Lab",
   description:
     "Building the foundation for organizational medicine — a new scientific field that will fundamentally improve how humanity creates, maintains, and heals organizations.",
@@ -38,6 +39,15 @@ export const metadata: Metadata = {
     "organizational biology",
     "business research",
   ],
+  openGraph: {
+    type: "website",
+    siteName: "SOIL - Social Organizational Intelligence Lab",
+    images: ["/og-default.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-default.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { MODULES, FounderRole } from "@/types/interview";
 import { SummaryCard } from "@/components/interview/SummaryCard";
 import { AppraisalCard } from "@/components/interview/AppraisalCard";
+import { ShareButton } from "@/components/ui/share-button";
 
 /** Human-readable labels for founder roles */
 const FOUNDER_ROLE_LABELS: Record<FounderRole, string> = {
@@ -310,6 +311,20 @@ export default function StoryOverviewPage() {
                     View Organization
                   </Button>
                 </Link>
+
+                {/* Share contribution prompt */}
+                <div className="mt-6 pt-6 border-t border-slate-700">
+                  <p className="text-sm text-slate-400 text-center mb-3">
+                    Share your contribution to organizational research
+                  </p>
+                  <div className="flex justify-center">
+                    <ShareButton
+                      url="https://soil.rip"
+                      title="I just contributed my startup's story to science at SOIL"
+                      description="Helping founders learn from real organizational experiences. Join the movement at soil.rip"
+                    />
+                  </div>
+                </div>
               </Card>
             )}
 
