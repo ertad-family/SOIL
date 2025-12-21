@@ -49,7 +49,7 @@ export function HeroSection() {
                   Coin Your Story
                 </Button>
               </Link>
-              <Link href="/memorials">
+              <Link href="/cenotaphery">
                 <Button variant="dark-secondary" size="lg" className="w-full sm:w-auto">
                   Learn from Others
                 </Button>

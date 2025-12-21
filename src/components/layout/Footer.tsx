@@ -7,7 +7,7 @@ import { FooterLandscape } from "@/components/three/FooterLandscape";
 // Primary navigation - main site sections
 const PRIMARY_LINKS = [
   { href: "/research", label: "Research" },
-  { href: "/memorials", label: "Memorials" },
+  { href: "/cenotaphery", label: "Cenotaphery" },
   { href: "/community", label: "Community" },
   { href: "/education", label: "Learning Hub" },
   { href: "/diagnostics", label: "Diagnostics" },

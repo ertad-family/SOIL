@@ -3,6 +3,7 @@
 import {
   HeroSection,
   MissionsSection,
+  CenotaphExplainerSection,
   MethodologySection,
   // PartnersSection, // Hidden for later reveal
   CommunitySection,
@@ -20,6 +21,7 @@ export default function LandingPage() {
     <>
       <HeroSection />
       <MissionsSection />
+      <CenotaphExplainerSection />
       <MethodologySection />
       {/* <PartnersSection /> */}
       {/* Gradient transition to Community section */}

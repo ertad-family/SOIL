@@ -1,5 +1,6 @@
 export { HeroSection } from "./HeroSection";
 export { MissionsSection } from "./MissionsSection";
+export { CenotaphExplainerSection } from "./CenotaphExplainerSection";
 export { MethodologySection } from "./MethodologySection";
 export { PartnersSection } from "./PartnersSection";
 export { CommunitySection } from "./CommunitySection";

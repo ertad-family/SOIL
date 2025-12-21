@@ -154,8 +154,8 @@ function EcosystemSection() {
       description:
         "Digital memorials honoring organizations. Founders share their stories through structured interviews, contributing data while finding closure.",
       icon: <Database className="w-7 h-7" />,
-      href: "/memorials",
-      linkText: "Visit Memorials",
+      href: "/cenotaphery",
+      linkText: "Visit Cenotaphery",
       status: "active",
     },
     {

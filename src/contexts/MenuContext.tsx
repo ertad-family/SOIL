@@ -8,7 +8,7 @@ const SECTION_TO_ROUTE: Record<string, string> = {
   home: "/",
   research: "/research",
   community: "/community",
-  memorials: "/memorials",
+  memorials: "/cenotaphery",
   account: "/account",
   diagnostics: "/diagnostics",
   education: "/education",
@@ -21,8 +21,7 @@ const ROUTE_TO_SECTION: Record<string, string> = {
   "/": "home",
   "/research": "research",
   "/community": "community",
-  "/memorials": "memorials",
-  "/cenotaphery": "memorials", // Cenotaphery pages belong to memorials section
+  "/cenotaphery": "memorials",
   "/account": "account",
   "/login": "account",
   "/signup": "account",
