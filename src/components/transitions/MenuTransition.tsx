@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
 import { useMenu } from "@/contexts/MenuContext";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/lib/utils";
 
 // Dynamically import DodecahedronScene to avoid SSR issues with Three.js
 const DodecahedronScene = dynamic(
@@ -40,6 +41,7 @@ type Phase =
  */
 export function MenuTransition() {
   const { isOpen, currentSection, closeMenu, navigateViaPortal } = useMenu();
+  const isMobile = useIsMobile();
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [fadeOpacity, setFadeOpacity] = useState(0);
@@ -374,8 +376,9 @@ export function MenuTransition() {
 
       {/* DodecahedronScene - ALWAYS mounted for pre-loading, visibility controlled */}
       {/* Show scene only when overlay is opaque or fading out (after fadingIn complete) */}
+      {/* overflow-hidden and touch-action prevent page scroll during 3D interaction (#115) */}
       <div
-        className="fixed inset-0 z-[90]"
+        className="fixed inset-0 z-[90] overflow-hidden"
         style={{
           pointerEvents:
             phase === "menu" || phase === "flyingOut" || phase === "flyingIn" ? "auto" : "none",
@@ -384,6 +387,8 @@ export function MenuTransition() {
           visibility: ["fadingOut", "flyingOut", "menu", "flyingIn"].includes(phase)
             ? "visible"
             : "hidden",
+          // Prevent scroll gestures on mobile during menu phase (#115)
+          touchAction: phase === "menu" ? "none" : "auto",
         }}
       >
         <Suspense fallback={null}>
@@ -404,6 +409,7 @@ export function MenuTransition() {
         </Suspense>
 
         {/* Return button - visible in menu phase */}
+        {/* Hide (ESC) hint on mobile where keyboard shortcuts don't apply (#117) */}
         {phase === "menu" && (
           <div className="absolute top-8 right-8 z-[95]">
             <Button
@@ -411,9 +417,9 @@ export function MenuTransition() {
               size="sm"
               onClick={handleReturn}
               leftIcon={<ArrowLeft className="w-4 h-4" />}
-              aria-label="Return to page (ESC)"
+              aria-label={isMobile ? "Return to page" : "Return to page (ESC)"}
             >
-              Return (ESC)
+              {isMobile ? "Return" : "Return (ESC)"}
             </Button>
           </div>
         )}

@@ -58,6 +58,7 @@ const MOBILE_BREAKPOINT = 768;
 /**
  * Hook to detect if the current device is mobile based on viewport width.
  * Used for performance optimizations (disabling heavy 3D effects on mobile).
+ * Responds to orientation changes via debounced resize listener.
  *
  * @param breakpoint - Width threshold in pixels (default: 768)
  * @returns true if viewport width is less than breakpoint
@@ -66,12 +67,14 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): boolean {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check viewport width on mount
+    // Check viewport width
     const checkMobile = () => window.innerWidth < breakpoint;
     setIsMobile(checkMobile());
 
-    // No resize listener - we check once on mount for performance
-    // If user rotates device, page will likely re-render anyway
+    // Debounced resize listener for orientation changes
+    const handleResize = debounce(() => setIsMobile(checkMobile()), 150);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [breakpoint]);
 
   return isMobile;
