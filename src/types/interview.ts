@@ -399,6 +399,9 @@ export type ConditionState = "favorable" | "neutral" | "challenging";
 export interface MarketResourceAssessment {
   resourceType: MarketResourceType;
 
+  /** If true, organization didn't work with this resource type */
+  notApplicable?: boolean;
+
   // Context question (who/what)
   context: string | null;
 
@@ -418,6 +421,9 @@ export interface MarketResourceAssessment {
 /** Operating condition assessment - environmental factors */
 export interface OperatingConditionAssessment {
   conditionType: OperatingConditionType;
+
+  /** If true, this condition wasn't relevant to the organization */
+  notApplicable?: boolean;
 
   // Context question (what specifically)
   context: string | null;

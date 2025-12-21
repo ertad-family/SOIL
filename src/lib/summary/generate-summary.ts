@@ -140,51 +140,75 @@ function extractStoryData(story: Story): {
 
     // Market resources
     if (env.marketResources && env.marketResources.length > 0) {
-      parts.push(`MARKET RESOURCES (${env.marketResources.length} assessed):`);
-      env.marketResources.forEach((resource) => {
-        const resourceParts = [
-          `  ${resource.resourceType.charAt(0).toUpperCase() + resource.resourceType.slice(1)}:`,
-        ];
-        if (resource.context) resourceParts.push(`Context: ${resource.context}`);
-        if (resource.peakAccessibility)
-          resourceParts.push(`Accessibility: ${resource.peakAccessibility}`);
-        if (resource.accessibilityTrend)
-          resourceParts.push(`Trend: ${resource.accessibilityTrend}`);
-        if (resource.peakCost) resourceParts.push(`Cost: ${resource.peakCost}`);
-        if (resource.peakCompetition)
-          resourceParts.push(`Competition: ${resource.peakCompetition}`);
-        parts.push(resourceParts.join(" | "));
-      });
+      const applicableResources = env.marketResources.filter((r) => !r.notApplicable);
+      const notApplicableResources = env.marketResources.filter((r) => r.notApplicable);
 
-      const challengingResources = env.marketResources.filter(
-        (r) =>
-          r.peakAccessibility === "difficult" ||
-          r.peakCost === "high" ||
-          r.peakCompetition === "intense"
-      );
-      if (challengingResources.length > 0) {
-        parts.push(`Resource challenges were present in ${challengingResources.length} areas.`);
+      if (applicableResources.length > 0) {
+        parts.push(`MARKET RESOURCES (${applicableResources.length} assessed):`);
+        applicableResources.forEach((resource) => {
+          const resourceParts = [
+            `  ${resource.resourceType.charAt(0).toUpperCase() + resource.resourceType.slice(1)}:`,
+          ];
+          if (resource.context) resourceParts.push(`Context: ${resource.context}`);
+          if (resource.peakAccessibility)
+            resourceParts.push(`Accessibility: ${resource.peakAccessibility}`);
+          if (resource.accessibilityTrend)
+            resourceParts.push(`Trend: ${resource.accessibilityTrend}`);
+          if (resource.peakCost) resourceParts.push(`Cost: ${resource.peakCost}`);
+          if (resource.peakCompetition)
+            resourceParts.push(`Competition: ${resource.peakCompetition}`);
+          parts.push(resourceParts.join(" | "));
+        });
+
+        const challengingResources = applicableResources.filter(
+          (r) =>
+            r.peakAccessibility === "difficult" ||
+            r.peakCost === "high" ||
+            r.peakCompetition === "intense"
+        );
+        if (challengingResources.length > 0) {
+          parts.push(`Resource challenges were present in ${challengingResources.length} areas.`);
+        }
+      }
+
+      if (notApplicableResources.length > 0) {
+        parts.push(
+          `Not applicable resources: ${notApplicableResources.map((r) => r.resourceType).join(", ")}`
+        );
       }
     }
 
     // Operating conditions
     if (env.operatingConditions && env.operatingConditions.length > 0) {
-      parts.push(`OPERATING CONDITIONS (${env.operatingConditions.length} assessed):`);
-      env.operatingConditions.forEach((condition) => {
-        const condParts = [
-          `  ${condition.conditionType.charAt(0).toUpperCase() + condition.conditionType.slice(1)}:`,
-        ];
-        if (condition.context) condParts.push(`Context: ${condition.context}`);
-        if (condition.peakState) condParts.push(`State: ${condition.peakState}`);
-        if (condition.trend) condParts.push(`Trend: ${condition.trend}`);
-        parts.push(condParts.join(" | "));
-      });
+      const applicableConditions = env.operatingConditions.filter((c) => !c.notApplicable);
+      const notApplicableConditions = env.operatingConditions.filter((c) => c.notApplicable);
 
-      const challengingConditions = env.operatingConditions.filter(
-        (c) => c.peakState === "challenging"
-      );
-      if (challengingConditions.length > 0) {
-        parts.push(`Challenging conditions were present in ${challengingConditions.length} areas.`);
+      if (applicableConditions.length > 0) {
+        parts.push(`OPERATING CONDITIONS (${applicableConditions.length} assessed):`);
+        applicableConditions.forEach((condition) => {
+          const condParts = [
+            `  ${condition.conditionType.charAt(0).toUpperCase() + condition.conditionType.slice(1)}:`,
+          ];
+          if (condition.context) condParts.push(`Context: ${condition.context}`);
+          if (condition.peakState) condParts.push(`State: ${condition.peakState}`);
+          if (condition.trend) condParts.push(`Trend: ${condition.trend}`);
+          parts.push(condParts.join(" | "));
+        });
+
+        const challengingConditions = applicableConditions.filter(
+          (c) => c.peakState === "challenging"
+        );
+        if (challengingConditions.length > 0) {
+          parts.push(
+            `Challenging conditions were present in ${challengingConditions.length} areas.`
+          );
+        }
+      }
+
+      if (notApplicableConditions.length > 0) {
+        parts.push(
+          `Not applicable conditions: ${notApplicableConditions.map((c) => c.conditionType).join(", ")}`
+        );
       }
     }
 
