@@ -21,6 +21,8 @@ const EVENT_LABELS: Record<string, string> = {
   share_click: "Share Click",
   wizard_started: "Wizard Started",
   chapter_started: "Chapter Started",
+  chapter_resumed: "Chapter Resumed",
+  chapter_paused: "Chapter Paused",
   chapter_completed: "Chapter Completed",
   wizard_completed: "Wizard Completed",
   signup: "Sign Up",

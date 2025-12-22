@@ -527,9 +527,15 @@ export default function EnvironmentPage() {
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
   const [expandedEventId, setExpandedEventId] = React.useState<string | null>(null);
 
-  // Get data from story
-  const marketResources = story?.environment.marketResources ?? [];
-  const operatingConditions = story?.environment.operatingConditions ?? [];
+  // Get data from story (memoized to prevent useMemo dependency issues)
+  const marketResources = React.useMemo(
+    () => story?.environment.marketResources ?? [],
+    [story?.environment.marketResources]
+  );
+  const operatingConditions = React.useMemo(
+    () => story?.environment.operatingConditions ?? [],
+    [story?.environment.operatingConditions]
+  );
   const events = story?.environment.events ?? [];
 
   // Get organization type for conditional resources (Issue #123)
