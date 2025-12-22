@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, User, Check } from "lucide-react";
+import { Plus, Trash2, User, Check, Info } from "lucide-react";
 import type {
   PersonalEvent,
   PersonalEventCategory,
@@ -87,6 +87,45 @@ const ROLE_CLARITY_OPTIONS: Array<{
   { value: "crystal_clear", label: "Crystal clear from the start" },
   { value: "figured_out", label: "We figured it out along the way" },
   { value: "always_fuzzy", label: "It was always a bit fuzzy" },
+];
+
+const COFOUNDER_SKILLS_OPTIONS: Array<{
+  value: NonNullable<FounderBackground["cofounderSkillsComplementary"]>;
+  label: string;
+}> = [
+  { value: "very_complementary", label: "Very complementary - we covered different areas" },
+  { value: "some_overlap", label: "Some overlap but mostly different strengths" },
+  { value: "too_similar", label: "Too similar - we competed on the same things" },
+];
+
+const DECISION_MAKING_OPTIONS: Array<{
+  value: NonNullable<FounderBackground["decisionMakingStyle"]>;
+  label: string;
+}> = [
+  { value: "consensus", label: "We always sought consensus" },
+  { value: "domain_based", label: "Whoever owned the domain decided" },
+  { value: "one_leader", label: "One person usually made the call" },
+  { value: "situational", label: "It varied by situation" },
+];
+
+const CONFLICT_RESOLUTION_OPTIONS: Array<{
+  value: NonNullable<FounderBackground["conflictResolution"]>;
+  label: string;
+}> = [
+  { value: "open_discussion", label: "Open discussion until resolved" },
+  { value: "avoided_conflict", label: "We tended to avoid conflict" },
+  { value: "escalated_often", label: "Conflicts often escalated" },
+  { value: "third_party", label: "We involved a third party (advisor, board)" },
+];
+
+const VISION_ALIGNMENT_OPTIONS: Array<{
+  value: NonNullable<FounderBackground["visionAlignment"]>;
+  label: string;
+}> = [
+  { value: "fully_aligned", label: "Fully aligned from the start" },
+  { value: "mostly_aligned", label: "Mostly aligned with some differences" },
+  { value: "different_visions", label: "We had different visions" },
+  { value: "never_discussed", label: "We never really discussed it deeply" },
 ];
 
 const MOTIVATION_OPTIONS: Array<{
@@ -258,6 +297,22 @@ const LOOKING_BACK_OPTIONS: Array<{
 ];
 
 // =============================================================================
+// EVENT CONTEXT GUIDANCE (Issue #134)
+// =============================================================================
+
+const PERSONAL_EVENTS_GUIDANCE = {
+  why: "Personal events during your organization's life often affected your ability to lead. Understanding how founders' personal circumstances interact with organizational demands helps identify patterns and provide support for future founders.",
+  what: [
+    "Health events (burnout, illness, mental health)",
+    "Family events (births, deaths, caregiving)",
+    "Life changes (relocations, relationships)",
+    "Other commitments (other jobs, education)",
+    "Positive shifts (breakthroughs, support)",
+  ],
+  tip: "This section is optional but helps us understand the full picture. Even events that seem unrelated to business can significantly affect leadership capacity.",
+};
+
+// =============================================================================
 // HELPER: Create empty event
 // =============================================================================
 
@@ -318,7 +373,13 @@ export default function FounderPage() {
   const updateEvent = (eventId: string, updates: Partial<PersonalEvent>) => {
     if (!story) return;
     const updatedEvents = events.map((e) => (e.id === eventId ? { ...e, ...updates } : e));
-    updateFounderContext({ events: updatedEvents });
+    // Sort events by date (empty dates go to the end)
+    const sortedEvents = [...updatedEvents].sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+    updateFounderContext({ events: sortedEvents });
   };
 
   const removeEvent = (eventId: string) => {
@@ -520,6 +581,106 @@ export default function FounderPage() {
                 className={cn(
                   "w-full p-3 rounded-md border text-sm text-left transition-colors",
                   background.roleClarity === option.value
+                    ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                    : "border-slate-600 text-slate-300 hover:border-slate-500"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </FormField>
+      )}
+
+      {background.startedWith && background.startedWith !== "solo" && (
+        <FormField
+          variant="dark"
+          label="Were your skills complementary?"
+          htmlFor="skills-complementary"
+        >
+          <div className="space-y-2">
+            {COFOUNDER_SKILLS_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => updateBackground("cofounderSkillsComplementary", option.value)}
+                className={cn(
+                  "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                  background.cofounderSkillsComplementary === option.value
+                    ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                    : "border-slate-600 text-slate-300 hover:border-slate-500"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </FormField>
+      )}
+
+      {background.startedWith && background.startedWith !== "solo" && (
+        <FormField
+          variant="dark"
+          label="How did you make decisions together?"
+          htmlFor="decision-making"
+        >
+          <div className="space-y-2">
+            {DECISION_MAKING_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => updateBackground("decisionMakingStyle", option.value)}
+                className={cn(
+                  "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                  background.decisionMakingStyle === option.value
+                    ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                    : "border-slate-600 text-slate-300 hover:border-slate-500"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </FormField>
+      )}
+
+      {background.startedWith && background.startedWith !== "solo" && (
+        <FormField
+          variant="dark"
+          label="How did you handle disagreements?"
+          htmlFor="conflict-resolution"
+        >
+          <div className="space-y-2">
+            {CONFLICT_RESOLUTION_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => updateBackground("conflictResolution", option.value)}
+                className={cn(
+                  "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                  background.conflictResolution === option.value
+                    ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                    : "border-slate-600 text-slate-300 hover:border-slate-500"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </FormField>
+      )}
+
+      {background.startedWith && background.startedWith !== "solo" && (
+        <FormField
+          variant="dark"
+          label="Were you aligned on the vision?"
+          htmlFor="vision-alignment"
+        >
+          <div className="space-y-2">
+            {VISION_ALIGNMENT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => updateBackground("visionAlignment", option.value)}
+                className={cn(
+                  "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                  background.visionAlignment === option.value
                     ? "bg-gold-900/30 border-gold-500 text-marble-100"
                     : "border-slate-600 text-slate-300 hover:border-slate-500"
                 )}
@@ -815,6 +976,24 @@ export default function FounderPage() {
 
   const renderEvents = () => (
     <div className="space-y-6">
+      {/* Event Context Guidance */}
+      <div className="bg-slate-800/30 border border-slate-600 rounded-lg p-4">
+        <div className="flex gap-3">
+          <Info className="h-5 w-5 text-gold-500 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">Why we ask: </span>
+              {PERSONAL_EVENTS_GUIDANCE.why}
+            </p>
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">What to include: </span>
+              {PERSONAL_EVENTS_GUIDANCE.what.join(", ")}.
+            </p>
+            <p className="text-sm text-slate-400 italic">{PERSONAL_EVENTS_GUIDANCE.tip}</p>
+          </div>
+        </div>
+      </div>
+
       <p className="text-slate-400">
         Add significant personal events during your organization&apos;s life that affected your
         ability to lead.
@@ -829,27 +1008,24 @@ export default function FounderPage() {
           return (
             <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
-              <button
-                onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between p-4 bg-slate-800">
+                <button
+                  onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
+                  className="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity"
+                >
                   <User className="h-4 w-4 text-slate-500" />
                   <span className="font-medium text-marble-100">
                     {event.date || "No date"} -{" "}
                     {event.subType || categoryInfo?.label || "New Event"}
                   </span>
-                </div>
+                </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeEvent(event.id);
-                  }}
+                  onClick={() => removeEvent(event.id)}
                   className="text-slate-500 hover:text-error-500 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
-              </button>
+              </div>
 
               {/* Event details */}
               {isExpanded && (
