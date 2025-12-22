@@ -13,6 +13,7 @@ interface OrganizationData {
   peak_team_size: number | null;
   is_public: boolean;
   privacy_display_style: PrivacyDisplayStyle | null;
+  verification_status: string | null;
 }
 
 interface MemorialRow {
@@ -90,7 +91,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         location_country,
         peak_team_size,
         is_public,
-        privacy_display_style
+        privacy_display_style,
+        verification_status
       )
     `
     )
@@ -226,21 +228,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     totalRespects += c.respects_count || 0;
   });
 
-  // Get top 3 most honored residents (by respects_count)
+  // Get top 3 most honored residents (by respects_count) - only from PUBLIC and VERIFIED organizations
   const topHonored = [...allCenotaphsData]
+    .filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      return org?.is_public === true && org?.verification_status === "verified";
+    })
     .sort((a, b) => (b.respects_count || 0) - (a.respects_count || 0))
     .slice(0, 3)
     .map((c: MemorialRow) => {
       const org = getOrg(c);
-      const isPublic = org?.is_public ?? false;
-      const privacyStyle = org?.privacy_display_style ?? null;
       const orgName = org?.name ?? "Unknown Organization";
-      const displayName = getPrivacyDisplayName(isPublic, orgName, privacyStyle);
 
       return {
         id: c.id,
-        organizationName: displayName,
-        isPrivate: !isPublic,
+        organizationId: c.organization_id,
+        organizationName: orgName,
+        isPrivate: false,
         respectsCount: c.respects_count || 0,
       };
     });

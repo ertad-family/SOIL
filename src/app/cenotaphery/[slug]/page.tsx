@@ -46,6 +46,7 @@ interface CenotapheryStats {
 
 interface TopHonoredResident {
   id: string;
+  organizationId: string | null;
   organizationName: string;
   isPrivate: boolean;
   respectsCount: number;
@@ -266,27 +267,29 @@ function CenotapheryContent({ slug }: { slug: string }) {
                 </Card>
               )}
 
-              {/* Stats Grid */}
+              {/* Stats - Bracket Counter Design */}
               {stats && (
-                <div className="grid grid-cols-3 gap-4">
-                  <Card variant="dark" className="text-center p-4">
-                    <div className="text-2xl font-serif text-marble-100">
-                      {stats.totalCenotaphs}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Cenotaphs</div>
-                  </Card>
-                  <Card variant="dark" className="text-center p-4">
-                    <div className="text-2xl font-serif text-marble-100">
-                      {stats.industriesCount}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Industries</div>
-                  </Card>
-                  <Card variant="dark" className="text-center p-4">
-                    <div className="text-2xl font-serif text-marble-100">
-                      {stats.totalYearsOfHistory}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Years of History</div>
-                  </Card>
+                <div className="flex flex-wrap items-center justify-start gap-6 text-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-2xl font-bold text-gold-400">
+                      [{stats.totalCenotaphs}]
+                    </span>
+                    <span className="text-slate-400">cenotaphs</span>
+                  </div>
+                  <span className="text-slate-600 hidden sm:inline">·</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-2xl font-bold text-gold-400">
+                      [{stats.industriesCount}]
+                    </span>
+                    <span className="text-slate-400">industries</span>
+                  </div>
+                  <span className="text-slate-600 hidden sm:inline">·</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-2xl font-bold text-gold-400">
+                      [{stats.totalYearsOfHistory}]
+                    </span>
+                    <span className="text-slate-400">years of history</span>
+                  </div>
                 </div>
               )}
 
@@ -299,18 +302,27 @@ function CenotapheryContent({ slug }: { slug: string }) {
                     </h3>
                     <ul className="space-y-3">
                       {topHonored.map((resident, index) => (
-                        <li key={resident.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-medium">
-                              {index + 1}
+                        <li key={resident.id}>
+                          <Link
+                            href={
+                              resident.organizationId
+                                ? `/organization/${resident.organizationId}`
+                                : "#"
+                            }
+                            className="flex items-center justify-between hover:bg-slate-800/50 -mx-2 px-2 py-1 rounded transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-medium">
+                                {index + 1}
+                              </span>
+                              <span className="text-marble-200 truncate max-w-[180px] hover:text-gold-400 transition-colors">
+                                {resident.organizationName}
+                              </span>
+                            </div>
+                            <span className="text-gold-400 text-sm flex items-center gap-1">
+                              {resident.respectsCount} <span className="text-gold-500">✦</span>
                             </span>
-                            <span className="text-marble-200 truncate max-w-[180px]">
-                              {resident.organizationName}
-                            </span>
-                          </div>
-                          <span className="text-gold-400 text-sm flex items-center gap-1">
-                            {resident.respectsCount} <span className="text-gold-500">✦</span>
-                          </span>
+                          </Link>
                         </li>
                       ))}
                     </ul>
