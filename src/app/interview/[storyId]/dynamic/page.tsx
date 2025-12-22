@@ -11,13 +11,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Plus, Trash2, Calendar, Check } from "lucide-react";
+import {
+  AlertTriangle,
+  Plus,
+  Trash2,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Info,
+} from "lucide-react";
 import { detectPatterns, getPatternQuestions } from "@/lib/interview-utils";
 import type {
   DetectedPattern,
   InternalEvent,
   InternalEventCategory,
   Emotion,
+  DynamicsOverview,
 } from "@/types/interview";
 
 // =============================================================================
@@ -152,6 +162,74 @@ const LOOKING_BACK_OPTIONS = [
 ];
 
 // =============================================================================
+// DYNAMICS OVERVIEW OPTIONS (Issue #134)
+// =============================================================================
+
+const DECLINE_SPEED_OPTIONS: Array<{
+  value: NonNullable<DynamicsOverview["declineSpeed"]>;
+  label: string;
+}> = [
+  { value: "sudden", label: "Sudden & unexpected" },
+  { value: "gradual", label: "Gradual & visible" },
+  { value: "slow_with_hope", label: "Slow decline with periods of hope" },
+];
+
+const EARLY_WARNINGS_OPTIONS: Array<{
+  value: NonNullable<DynamicsOverview["earlyWarnings"]>;
+  label: string;
+}> = [
+  { value: "clearly_visible", label: "Yes, clearly visible" },
+  { value: "missed_them", label: "Yes, but I missed them" },
+  { value: "blindsided", label: "No, it blindsided us" },
+];
+
+const POINT_OF_NO_RETURN_OPTIONS: Array<{
+  value: NonNullable<DynamicsOverview["pointOfNoReturn"]>;
+  label: string;
+}> = [
+  { value: "yes", label: "Yes, there was a clear point" },
+  { value: "no_gradual", label: "No, it was gradual" },
+  { value: "hard_to_say", label: "Hard to say" },
+];
+
+const TIME_TO_CLOSURE_OPTIONS: Array<{
+  value: NonNullable<DynamicsOverview["timeToClosureFrom"]>;
+  label: string;
+}> = [
+  { value: "days", label: "Days" },
+  { value: "weeks", label: "Weeks" },
+  { value: "months", label: "Months" },
+  { value: "over_year", label: "Over a year" },
+];
+
+const CLOSURE_DECISION_OPTIONS: Array<{
+  value: NonNullable<DynamicsOverview["closureDecision"]>;
+  label: string;
+}> = [
+  { value: "alone", label: "I decided alone" },
+  { value: "founders_together", label: "Founders together" },
+  { value: "board", label: "Board made the decision" },
+  { value: "circumstances", label: "Forced by circumstances" },
+];
+
+// =============================================================================
+// EVENT CONTEXT GUIDANCE (Issue #134)
+// =============================================================================
+
+const INTERNAL_EVENTS_GUIDANCE = {
+  why: "Internal events reveal patterns in how organizations unravel. Understanding the sequence and interconnection of these events helps identify early warning signs for future organizations.",
+  what: [
+    "Key departures (co-founders, critical employees)",
+    "Team conflicts or morale shifts",
+    "Product/service pivots or failures",
+    "Operational breakdowns",
+    "Growth challenges (scaling too fast/slow)",
+    "The events leading to closure decision",
+  ],
+  tip: "Focus on events that changed your trajectory or were symptoms of deeper issues. Even small events can be significant in hindsight.",
+};
+
+// =============================================================================
 // HELPER: Create empty event
 // =============================================================================
 
@@ -179,6 +257,7 @@ export default function DynamicPage() {
   const [currentStep, setCurrentStep] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [expandedEventId, setExpandedEventId] = React.useState<string | null>(null);
+  const [expandedAccordion, setExpandedAccordion] = React.useState<string | null>("overview");
 
   // Detect patterns from functional mapping data
   const detectedPatterns = React.useMemo(() => {
@@ -208,6 +287,16 @@ export default function DynamicPage() {
 
   // Get stored pattern answers
   const patternAnswers = story?.dynamicPicture.patternQuestions ?? [];
+
+  // Get dynamics overview data
+  const dynamicsOverview = story?.dynamicPicture.dynamicsOverview ?? {
+    declineSpeed: null,
+    earlyWarnings: null,
+    pointOfNoReturn: null,
+    pointOfNoReturnWhen: null,
+    timeToClosureFrom: null,
+    closureDecision: null,
+  };
 
   // ==========================================================================
   // PATTERN HANDLERS
@@ -246,6 +335,20 @@ export default function DynamicPage() {
   };
 
   // ==========================================================================
+  // DYNAMICS OVERVIEW HANDLERS
+  // ==========================================================================
+
+  const updateDynamicsOverview = <K extends keyof DynamicsOverview>(
+    field: K,
+    value: DynamicsOverview[K]
+  ) => {
+    if (!story) return;
+    updateDynamicPicture({
+      dynamicsOverview: { ...dynamicsOverview, [field]: value },
+    });
+  };
+
+  // ==========================================================================
   // EVENT HANDLERS
   // ==========================================================================
 
@@ -259,7 +362,13 @@ export default function DynamicPage() {
   const updateEvent = (eventId: string, updates: Partial<InternalEvent>) => {
     if (!story) return;
     const updatedEvents = events.map((e) => (e.id === eventId ? { ...e, ...updates } : e));
-    updateDynamicPicture({ events: updatedEvents });
+    // Sort events by date (empty dates go to the end)
+    const sortedEvents = [...updatedEvents].sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+    updateDynamicPicture({ events: sortedEvents });
   };
 
   const removeEvent = (eventId: string) => {
@@ -378,11 +487,205 @@ export default function DynamicPage() {
   };
 
   // ==========================================================================
+  // DYNAMICS OVERVIEW ACCORDION (Issue #134)
+  // ==========================================================================
+
+  const renderDynamicsOverview = () => {
+    const isExpanded = expandedAccordion === "overview";
+    const answeredCount = [
+      dynamicsOverview.declineSpeed,
+      dynamicsOverview.earlyWarnings,
+      dynamicsOverview.pointOfNoReturn,
+      dynamicsOverview.timeToClosureFrom,
+      dynamicsOverview.closureDecision,
+    ].filter(Boolean).length;
+
+    return (
+      <div className="border border-slate-600 rounded-lg overflow-hidden mb-6">
+        <button
+          onClick={() => setExpandedAccordion(isExpanded ? null : "overview")}
+          className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            {isExpanded ? (
+              <ChevronDown className="h-5 w-5 text-slate-400" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-slate-400" />
+            )}
+            <span className="font-medium text-marble-100">Dynamics Overview</span>
+          </div>
+          <span className="text-sm text-slate-400">{answeredCount}/5 answered</span>
+        </button>
+
+        {isExpanded && (
+          <div className="p-4 space-y-6 bg-slate-800/50 border-t border-slate-700">
+            <FormField
+              variant="dark"
+              label="How would you describe the speed of decline?"
+              htmlFor="decline-speed"
+            >
+              <div className="space-y-2">
+                {DECLINE_SPEED_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => updateDynamicsOverview("declineSpeed", option.value)}
+                    className={cn(
+                      "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                      dynamicsOverview.declineSpeed === option.value
+                        ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                        : "border-slate-600 text-slate-300 hover:border-slate-500"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+
+            <FormField
+              variant="dark"
+              label="Were there early warning signs?"
+              htmlFor="early-warnings"
+            >
+              <div className="space-y-2">
+                {EARLY_WARNINGS_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => updateDynamicsOverview("earlyWarnings", option.value)}
+                    className={cn(
+                      "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                      dynamicsOverview.earlyWarnings === option.value
+                        ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                        : "border-slate-600 text-slate-300 hover:border-slate-500"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+
+            <FormField
+              variant="dark"
+              label="Was there a point of no return?"
+              htmlFor="point-no-return"
+            >
+              <div className="space-y-2">
+                {POINT_OF_NO_RETURN_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => updateDynamicsOverview("pointOfNoReturn", option.value)}
+                    className={cn(
+                      "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                      dynamicsOverview.pointOfNoReturn === option.value
+                        ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                        : "border-slate-600 text-slate-300 hover:border-slate-500"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+
+            {dynamicsOverview.pointOfNoReturn === "yes" && (
+              <FormField
+                variant="dark"
+                label="When was that point?"
+                htmlFor="point-no-return-when"
+                hint="Optional"
+              >
+                <Input
+                  variant="dark"
+                  id="point-no-return-when"
+                  type="text"
+                  value={dynamicsOverview.pointOfNoReturnWhen || ""}
+                  onChange={(e) =>
+                    updateDynamicsOverview("pointOfNoReturnWhen", e.target.value || null)
+                  }
+                  placeholder="e.g., When we lost our biggest client..."
+                />
+              </FormField>
+            )}
+
+            <FormField
+              variant="dark"
+              label='How long from "we might be in trouble" to closure?'
+              htmlFor="time-to-closure"
+            >
+              <div className="flex flex-wrap gap-2">
+                {TIME_TO_CLOSURE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => updateDynamicsOverview("timeToClosureFrom", option.value)}
+                    className={cn(
+                      "px-4 py-2 rounded text-sm transition-colors",
+                      dynamicsOverview.timeToClosureFrom === option.value
+                        ? "bg-gold-500 text-slate-900"
+                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+
+            <FormField
+              variant="dark"
+              label="Who made the final decision to close?"
+              htmlFor="closure-decision"
+            >
+              <div className="space-y-2">
+                {CLOSURE_DECISION_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => updateDynamicsOverview("closureDecision", option.value)}
+                    className={cn(
+                      "w-full p-3 rounded-md border text-sm text-left transition-colors",
+                      dynamicsOverview.closureDecision === option.value
+                        ? "bg-gold-900/30 border-gold-500 text-marble-100"
+                        : "border-slate-600 text-slate-300 hover:border-slate-500"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ==========================================================================
   // STEP 2: EVENTS
   // ==========================================================================
 
   const renderEvents = () => (
     <div className="space-y-6">
+      {/* Dynamics Overview Accordion */}
+      {renderDynamicsOverview()}
+
+      {/* Event Context Guidance */}
+      <div className="bg-slate-800/30 border border-slate-600 rounded-lg p-4">
+        <div className="flex gap-3">
+          <Info className="h-5 w-5 text-gold-500 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">Why we ask: </span>
+              {INTERNAL_EVENTS_GUIDANCE.why}
+            </p>
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">What to include: </span>
+              {INTERNAL_EVENTS_GUIDANCE.what.join(", ")}.
+            </p>
+            <p className="text-sm text-slate-400 italic">{INTERNAL_EVENTS_GUIDANCE.tip}</p>
+          </div>
+        </div>
+      </div>
+
       <p className="text-slate-400">
         Add significant internal events that happened from your organization&apos;s peak to its
         closure.
@@ -397,27 +700,24 @@ export default function DynamicPage() {
           return (
             <div key={event.id} className="border border-slate-600 rounded-lg overflow-hidden">
               {/* Event header */}
-              <button
-                onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between p-4 bg-slate-800">
+                <button
+                  onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
+                  className="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity"
+                >
                   <Calendar className="h-4 w-4 text-slate-500" />
                   <span className="font-medium text-marble-100">
                     {event.date || "No date"} -{" "}
                     {event.subType || categoryInfo?.label || "New Event"}
                   </span>
-                </div>
+                </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeEvent(event.id);
-                  }}
+                  onClick={() => removeEvent(event.id)}
                   className="text-slate-500 hover:text-error-500 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
-              </button>
+              </div>
 
               {/* Event details */}
               {isExpanded && (

@@ -18,6 +18,7 @@ import {
   Plus,
   Trash2,
   Calendar,
+  Info,
 } from "lucide-react";
 import type {
   MarketResourceType,
@@ -34,7 +35,9 @@ import type {
   ExternalEvent,
   ExternalEventCategory,
   Emotion,
+  OrganizationType,
 } from "@/types/interview";
+import { getResourcesForOrgType, getResourceStatus } from "@/data/resource-matrix";
 
 // =============================================================================
 // WIZARD STEPS (single step)
@@ -58,7 +61,7 @@ interface ResourceConfig {
   competitionQuestion: string;
 }
 
-const MARKET_RESOURCES: ResourceConfig[] = [
+const ALL_MARKET_RESOURCES: ResourceConfig[] = [
   {
     type: "customers",
     name: "Customers",
@@ -94,6 +97,62 @@ const MARKET_RESOURCES: ResourceConfig[] = [
     accessibilityQuestion: "How accessible was funding?",
     costQuestion: "How expensive was capital (interest, dilution)?",
     competitionQuestion: "How competitive was the funding environment?",
+  },
+  // NGO-specific resources
+  {
+    type: "donors",
+    name: "Donors",
+    contextQuestion: "Who were your primary donor segments?",
+    contextPlaceholder: "e.g., Individual donors, corporations, foundations...",
+    accessibilityQuestion: "How easy was it to reach potential donors?",
+    costQuestion: "How expensive was donor acquisition?",
+    competitionQuestion: "How intense was competition for donor attention?",
+  },
+  {
+    type: "volunteers",
+    name: "Volunteers",
+    contextQuestion: "What roles did volunteers fill?",
+    contextPlaceholder: "e.g., Event support, program delivery, administration...",
+    accessibilityQuestion: "How easy was it to recruit volunteers?",
+    costQuestion: "What was the cost of volunteer management?",
+    competitionQuestion: "How much competition was there for volunteers?",
+  },
+  {
+    type: "grants",
+    name: "Grants",
+    contextQuestion: "What types of grants did you pursue?",
+    contextPlaceholder: "e.g., Government grants, foundation grants, research funding...",
+    accessibilityQuestion: "How accessible were grant opportunities?",
+    costQuestion: "How expensive was grant writing and compliance?",
+    competitionQuestion: "How competitive was the grant landscape?",
+  },
+  // Resources for various org types
+  {
+    type: "partners",
+    name: "Partners",
+    contextQuestion: "Who were your key partners?",
+    contextPlaceholder: "e.g., Distribution partners, technology partners, strategic alliances...",
+    accessibilityQuestion: "How easy was it to find and secure partners?",
+    costQuestion: "How expensive were partnership arrangements?",
+    competitionQuestion: "How much competition was there for partner relationships?",
+  },
+  {
+    type: "technology",
+    name: "Technology",
+    contextQuestion: "What technology was critical to your operations?",
+    contextPlaceholder: "e.g., Cloud infrastructure, APIs, development tools...",
+    accessibilityQuestion: "How accessible was the technology you needed?",
+    costQuestion: "How expensive was the technology stack?",
+    competitionQuestion: "How much competition was there for technology resources?",
+  },
+  {
+    type: "community",
+    name: "Community",
+    contextQuestion: "What community did you build or serve?",
+    contextPlaceholder: "e.g., User community, developer community, industry network...",
+    accessibilityQuestion: "How easy was it to build and engage your community?",
+    costQuestion: "How expensive was community building?",
+    competitionQuestion: "How much competition was there for community attention?",
   },
 ];
 
@@ -211,6 +270,23 @@ const EVENT_CATEGORIES: Array<{
   { value: "reputation", label: "Reputation" },
   { value: "hostile_actions", label: "Hostile Actions" },
 ];
+
+// =============================================================================
+// EVENT CONTEXT GUIDANCE (Issue #134)
+// =============================================================================
+
+const EXTERNAL_EVENTS_GUIDANCE = {
+  why: "External events—market changes, regulatory shifts, competitive moves—often interact with internal dynamics to shape organizational outcomes. Understanding the external context helps identify which environmental factors correlate with different failure modes.",
+  what: [
+    "Market changes (demand shifts, new segments)",
+    "Competitive moves (new entrants, pricing wars)",
+    "Regulatory changes (new laws, compliance requirements)",
+    "Macro events (economic downturns, pandemics)",
+    "Technology shifts (disruptions, platform changes)",
+    "Reputation events (press, reviews, viral moments)",
+  ],
+  tip: "Include events that affected your industry broadly, not just your organization specifically. The full environmental context helps us understand how external forces interact with internal decisions.",
+};
 
 const EVENT_SUBTYPES: Record<ExternalEventCategory, string[]> = {
   market: [
@@ -456,6 +532,23 @@ export default function EnvironmentPage() {
   const operatingConditions = story?.environment.operatingConditions ?? [];
   const events = story?.environment.events ?? [];
 
+  // Get organization type for conditional resources (Issue #123)
+  const organizationType: OrganizationType | null =
+    story?.organization?.organizationType ?? story?.basicInfo?.organizationType ?? null;
+
+  // Filter resources based on organization type
+  const MARKET_RESOURCES = React.useMemo(() => {
+    if (!organizationType) {
+      // If no org type, show the basic 4 resources
+      return ALL_MARKET_RESOURCES.filter((r) =>
+        ["customers", "talent", "suppliers", "capital"].includes(r.type)
+      );
+    }
+    // Filter by org type using the resource matrix
+    const relevantResourceIds = getResourcesForOrgType(organizationType).map((r) => r.id);
+    return ALL_MARKET_RESOURCES.filter((r) => relevantResourceIds.includes(r.type));
+  }, [organizationType]);
+
   // ==========================================================================
   // MARKET RESOURCE HANDLERS
   // ==========================================================================
@@ -595,7 +688,13 @@ export default function EnvironmentPage() {
   const updateEvent = (eventId: string, updates: Partial<ExternalEvent>) => {
     if (!story) return;
     const updatedEvents = events.map((e) => (e.id === eventId ? { ...e, ...updates } : e));
-    updateEnvironment({ events: updatedEvents });
+    // Sort events by date (empty dates go to the end)
+    const sortedEvents = [...updatedEvents].sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+    updateEnvironment({ events: sortedEvents });
   };
 
   const removeEvent = (eventId: string) => {
@@ -720,7 +819,7 @@ export default function EnvironmentPage() {
       (c) => c.notApplicable || isConditionComplete(c)
     ).length;
     return Math.round(((handledResources + handledConditions) / totalItems) * 100);
-  }, [marketResources, operatingConditions]);
+  }, [marketResources, operatingConditions, MARKET_RESOURCES.length]);
 
   // ==========================================================================
   // NAVIGATION HANDLERS
@@ -898,6 +997,24 @@ export default function EnvironmentPage() {
 
   const renderEventsSection = () => (
     <div className="space-y-4">
+      {/* Event Context Guidance */}
+      <div className="bg-slate-800/30 border border-slate-600 rounded-lg p-4 mb-4">
+        <div className="flex gap-3">
+          <Info className="h-5 w-5 text-gold-500 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">Why we ask: </span>
+              {EXTERNAL_EVENTS_GUIDANCE.why}
+            </p>
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">What to include: </span>
+              {EXTERNAL_EVENTS_GUIDANCE.what.join(", ")}.
+            </p>
+            <p className="text-sm text-slate-400 italic">{EXTERNAL_EVENTS_GUIDANCE.tip}</p>
+          </div>
+        </div>
+      </div>
+
       {events.map((event) => {
         const isExpanded = expandedEventId === event.id;
         const categoryInfo = EVENT_CATEGORIES.find((c) => c.value === event.category);
