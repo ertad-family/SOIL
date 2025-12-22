@@ -13,19 +13,36 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
+  const nextParam = requestUrl.searchParams.get("next");
+
+  // Diagnostic logging for issue #156
+  console.log("[OAuth Callback] === START ===");
+  console.log("[OAuth Callback] Full request.url:", request.url);
+  console.log("[OAuth Callback] Parsed origin:", requestUrl.origin);
+  console.log("[OAuth Callback] Code present:", !!code);
+  console.log("[OAuth Callback] Error param:", error);
+  console.log("[OAuth Callback] Next param:", nextParam);
 
   // Handle OAuth errors (e.g., user denied access)
   if (error) {
+    console.log("[OAuth Callback] OAuth error received:", error, errorDescription);
     const errorMessage = encodeURIComponent(errorDescription || error);
+    console.log("[OAuth Callback] === END (error) ===");
     return NextResponse.redirect(new URL(`/login?error=${errorMessage}`, request.url));
   }
 
   if (code) {
     const supabase = await createClient();
+    console.log("[OAuth Callback] Exchanging code for session...");
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+    console.log("[OAuth Callback] Exchange complete");
+    console.log("[OAuth Callback] Exchange error:", exchangeError?.message || "none");
+    console.log("[OAuth Callback] User ID:", data?.user?.id || "no user");
 
     if (exchangeError) {
       const errorMessage = encodeURIComponent(exchangeError.message);
+      console.log("[OAuth Callback] Redirecting to login with error");
       return NextResponse.redirect(new URL(`/login?error=${errorMessage}`, request.url));
     }
 
@@ -64,9 +81,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Successfully authenticated - redirect to account
-    return NextResponse.redirect(new URL("/account", request.url));
+    const accountRedirectUrl = new URL("/account", request.url);
+    console.log("[OAuth Callback] SUCCESS - Redirecting to:", accountRedirectUrl.toString());
+    console.log("[OAuth Callback] === END ===");
+    return NextResponse.redirect(accountRedirectUrl);
   }
 
   // No code provided - redirect to login
+  console.log("[OAuth Callback] No code - redirecting to login");
+  console.log("[OAuth Callback] === END ===");
   return NextResponse.redirect(new URL("/login", request.url));
 }
