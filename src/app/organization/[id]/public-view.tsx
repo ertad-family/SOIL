@@ -422,9 +422,15 @@ function HeroSection({
                   {/* Share Button */}
                   {memorial.cenotaph_image_url && (
                     <ShareButton
-                      url={typeof window !== "undefined" ? window.location.href : ""}
+                      url={
+                        typeof window !== "undefined"
+                          ? `${window.location.origin}/organization/${organization.id}`
+                          : ""
+                      }
                       title={`${orgName} - preserved at SOIL`}
                       description="A story of organizational experience, preserved for future founders to learn from."
+                      memorialId={memorial.id}
+                      organizationId={organization.id}
                     />
                   )}
                 </div>
