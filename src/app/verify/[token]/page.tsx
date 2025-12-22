@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -15,6 +16,9 @@ import {
   AlertCircle,
   User,
   BadgeCheck,
+  Landmark,
+  MessageSquarePlus,
+  ArrowRight,
 } from "lucide-react";
 
 // Claimed role labels
@@ -205,32 +209,94 @@ export default function VerifyPage() {
 
   // Success state
   if (pageState === "success") {
+    const orgName = request?.organization?.name;
+
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <Card variant="dark" className="max-w-md w-full">
-          <CardContent className="py-12 text-center">
-            {resultAction === "confirm" ? (
-              <>
-                <ShieldCheck className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                <h1 className="text-xl font-display text-marble-100 mb-2">
-                  Thank You for Verifying!
-                </h1>
-                <p className="text-slate-400">
-                  Your confirmation helps preserve the legacy of {request?.organization?.name}. The
-                  organization owner will be notified.
+        <div className="max-w-md w-full space-y-6">
+          {/* Thank you message */}
+          <Card variant="dark">
+            <CardContent className="py-8 text-center">
+              {resultAction === "confirm" ? (
+                <>
+                  <ShieldCheck className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                  <h1 className="text-xl font-display text-marble-100 mb-2">
+                    Thank You for Verifying!
+                  </h1>
+                  <p className="text-slate-400">
+                    Your confirmation helps preserve the legacy of {orgName}. The organization owner
+                    will be notified.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <h1 className="text-xl font-display text-marble-100 mb-2">Response Recorded</h1>
+                  <p className="text-slate-400">
+                    Thank you for your response. The organization owner will be notified.
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* CTAs Section */}
+          <Card variant="dark">
+            <CardContent className="py-6 space-y-5">
+              {/* CTA a: Share Your Story */}
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center mx-auto mb-3">
+                  <Landmark className="w-5 h-5 text-gold-400" />
+                </div>
+                <h2 className="text-lg font-display text-marble-100 mb-1">
+                  Have you experienced organizational closure?
+                </h2>
+                <p className="text-sm text-slate-400 mb-4">
+                  Transform your experience into valuable insights for others.
                 </p>
-              </>
-            ) : (
-              <>
-                <XCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h1 className="text-xl font-display text-marble-100 mb-2">Response Recorded</h1>
-                <p className="text-slate-400">
-                  Thank you for your response. The organization owner will be notified.
+                <Button variant="dark-primary" size="md" asChild>
+                  <Link href="/signup">
+                    Share Your Story
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-slate-700" />
+
+              {/* CTA b: Add Perspective (Coming Soon) */}
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center mx-auto mb-3">
+                  <MessageSquarePlus className="w-5 h-5 text-slate-400" />
+                </div>
+                <h2 className="text-base font-display text-marble-100 mb-1">
+                  Share your perspective about {orgName}
+                </h2>
+                <p className="text-sm text-slate-400 mb-3">
+                  Add your unique viewpoint as a former colleague, partner, or stakeholder.
                 </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                <Button variant="dark-ghost" size="sm" disabled className="opacity-60">
+                  Add Your Perspective
+                  <span className="ml-2 text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded">
+                    Coming Soon
+                  </span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CTA c: Learn More */}
+          <div className="text-center">
+            <Link
+              href="/community"
+              className="text-sm text-slate-400 hover:text-gold-400 transition-colors inline-flex items-center gap-1"
+            >
+              Learn about our research & community
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
