@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type RomanNumeralValue = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 50 | 100;
+export type RomanNumeralValue = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 50 | 100;
 
 interface RomanNumeralProps {
   value: RomanNumeralValue;
@@ -9,7 +9,7 @@ interface RomanNumeralProps {
   variant?: "default" | "dark";
 }
 
-const ROMAN_NUMERALS: Record<RomanNumeralValue, string> = {
+export const ROMAN_NUMERALS: Record<RomanNumeralValue, string> = {
   1: "I",
   2: "II",
   3: "III",

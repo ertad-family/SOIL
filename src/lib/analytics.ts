@@ -23,6 +23,8 @@ export type EventName =
   // Wizard events
   | "wizard_started"
   | "chapter_started"
+  | "chapter_resumed"
+  | "chapter_paused"
   | "chapter_completed"
   | "wizard_completed"
   // Engagement events
@@ -124,11 +126,18 @@ export async function trackPageView(pagePath: string, pageTitle?: string): Promi
  * Convenience wrapper for wizard events
  */
 export async function trackWizardEvent(
-  event: "wizard_started" | "chapter_started" | "chapter_completed" | "wizard_completed",
+  event:
+    | "wizard_started"
+    | "chapter_started"
+    | "chapter_resumed"
+    | "chapter_paused"
+    | "chapter_completed"
+    | "wizard_completed",
   properties: {
     storyId?: string;
     chapterId?: string;
     chapterName?: string;
+    organizationType?: string;
     progress?: number;
   } = {}
 ): Promise<void> {

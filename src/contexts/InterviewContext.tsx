@@ -555,10 +555,12 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
         // Track chapter completion event
         if (isNewCompletion) {
           const moduleInfo = MODULES.find((m) => m.id === moduleId);
+          const organizationType = story.basicInfo?.organizationType ?? undefined;
           trackWizardEvent("chapter_completed", {
             storyId: story.id,
             chapterId: moduleId,
             chapterName: moduleInfo?.name,
+            organizationType,
             progress: calculateProgress(newCompletedModules),
           });
 
@@ -566,6 +568,7 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           if (allModulesComplete) {
             trackWizardEvent("wizard_completed", {
               storyId: story.id,
+              organizationType,
               progress: 100,
             });
           }
@@ -663,6 +666,29 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
   const navigateToModule = React.useCallback(
     (moduleId: ModuleId) => {
       if (!story || !canNavigateToModule(moduleId)) return;
+
+      const organizationType = story.basicInfo?.organizationType ?? null;
+      const moduleInfo = MODULES.find((m) => m.id === moduleId);
+
+      // Track chapter_paused for the module we're leaving (if any)
+      if (story.currentModule && story.currentModule !== moduleId) {
+        const currentModuleInfo = MODULES.find((m) => m.id === story.currentModule);
+        trackWizardEvent("chapter_paused", {
+          storyId: story.id,
+          chapterId: story.currentModule,
+          chapterName: currentModuleInfo?.name,
+          organizationType: organizationType ?? undefined,
+        });
+      }
+
+      // Track chapter_started or chapter_resumed for the module we're entering
+      const isFirstVisit = !story.completedModules.includes(moduleId);
+      trackWizardEvent(isFirstVisit ? "chapter_started" : "chapter_resumed", {
+        storyId: story.id,
+        chapterId: moduleId,
+        chapterName: moduleInfo?.name,
+        organizationType: organizationType ?? undefined,
+      });
 
       updateStory({ currentModule: moduleId });
       router.push(`/interview/${story.id}/${moduleId.replace("_", "-")}`);

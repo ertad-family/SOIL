@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Check, ArrowRight, Clock, Calendar, Users, Layers, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MODULES, FounderRole } from "@/types/interview";
+import { RomanNumeral, type RomanNumeralValue } from "@/components/ui/roman-numeral";
 import { SummaryCard } from "@/components/interview/SummaryCard";
 import { AppraisalCard } from "@/components/interview/AppraisalCard";
 import { ShareButton } from "@/components/ui/share-button";
@@ -22,6 +23,13 @@ const FOUNDER_ROLE_LABELS: Record<FounderRole, string> = {
   ceo_non_founder: "CEO",
   other: "Team Member",
 };
+
+/** Chapter time estimate from API */
+interface ChapterEstimate {
+  chapterId: string;
+  estimatedMinutes: number | null;
+  hasEnoughData: boolean;
+}
 
 /**
  * Story Overview Dashboard (Dark Theme, Two-Column Layout)
@@ -40,6 +48,42 @@ export default function StoryOverviewPage() {
     navigateToModule,
     refreshSummary,
   } = useInterview();
+
+  // Fetch chapter time estimates
+  const [chapterEstimates, setChapterEstimates] = React.useState<ChapterEstimate[]>([]);
+  const [showEstimates, setShowEstimates] = React.useState(false);
+
+  React.useEffect(() => {
+    async function fetchEstimates() {
+      if (!story) return;
+      try {
+        const orgType = story.basicInfo?.organizationType;
+        const url = orgType
+          ? `/api/estimates?orgType=${encodeURIComponent(orgType)}`
+          : "/api/estimates";
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          setChapterEstimates(data.estimates || []);
+          // Only show estimates if we have enough data for at least one chapter
+          setShowEstimates(data.source === "calculated");
+        }
+      } catch (err) {
+        console.error("Failed to fetch estimates:", err);
+      }
+    }
+    fetchEstimates();
+  }, [story]);
+
+  // Helper to get estimate for a chapter
+  const getChapterEstimate = React.useCallback(
+    (chapterId: string): number | null => {
+      if (!showEstimates) return null;
+      const estimate = chapterEstimates.find((e) => e.chapterId === chapterId);
+      return estimate?.hasEnoughData ? estimate.estimatedMinutes : null;
+    },
+    [showEstimates, chapterEstimates]
+  );
 
   // Fetch user name for page title
   const [userName, setUserName] = React.useState<string | null>(null);
@@ -62,6 +106,28 @@ export default function StoryOverviewPage() {
     }
     fetchUserName();
   }, [story?.userId]);
+
+  // Filter out basic_info from displayed modules (moved here for hook ordering)
+  const displayedModules = React.useMemo(() => MODULES.filter((m) => m.id !== "basic_info"), []);
+
+  // Calculate total estimated time remaining (only if we have estimates)
+  // Must be before early returns to maintain hook ordering
+  const remainingMinutes = React.useMemo(() => {
+    if (!showEstimates || !story) return null;
+    const incompleteModules = displayedModules.filter(
+      (m) => !story.completedModules.includes(m.id)
+    );
+    let total = 0;
+    let hasAnyEstimate = false;
+    for (const m of incompleteModules) {
+      const estimate = getChapterEstimate(m.id);
+      if (estimate !== null) {
+        total += estimate;
+        hasAnyEstimate = true;
+      }
+    }
+    return hasAnyEstimate ? total : null;
+  }, [showEstimates, story, displayedModules, getChapterEstimate]);
 
   if (isLoading) {
     return (
@@ -100,16 +166,8 @@ export default function StoryOverviewPage() {
     return `The Story of ${orgName}`;
   })();
 
-  // Filter out basic_info from displayed modules
-  const displayedModules = MODULES.filter((m) => m.id !== "basic_info");
-
   // Find the next incomplete module
   const nextIncompleteModule = displayedModules.find((m) => !isModuleComplete(m.id));
-
-  // Calculate total estimated time remaining
-  const remainingMinutes = displayedModules
-    .filter((m) => !isModuleComplete(m.id))
-    .reduce((sum, m) => sum + m.estimatedMinutes, 0);
 
   // Calculate stats for coined stories
   const lifespanMonths = (() => {
@@ -175,7 +233,7 @@ export default function StoryOverviewPage() {
                     onClick={() => canNavigate && navigateToModule(chapter.id)}
                     disabled={!canNavigate}
                     className={cn(
-                      "w-full text-left p-4 rounded-lg border transition-all",
+                      "w-full text-left p-4 rounded-lg border transition-all relative overflow-hidden",
                       canNavigate
                         ? "hover:border-gold-500/50 hover:bg-slate-800/80 cursor-pointer"
                         : "cursor-not-allowed opacity-60",
@@ -186,42 +244,38 @@ export default function StoryOverviewPage() {
                           : "bg-slate-800/50 border-slate-700"
                     )}
                   >
-                    <div className="flex items-center gap-4">
-                      {/* Step number / check */}
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                          isComplete
-                            ? "bg-emerald-600 text-white"
-                            : isCurrent
-                              ? "bg-gold-600 text-white"
-                              : "bg-slate-700 text-slate-400"
-                        )}
-                      >
-                        {isComplete ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <span className="text-sm font-medium">{index + 1}</span>
-                        )}
-                      </div>
+                    {/* Decorative Roman numeral background */}
+                    <RomanNumeral
+                      value={(index + 1) as RomanNumeralValue}
+                      size="md"
+                      variant="dark"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50"
+                    />
 
+                    <div className="flex items-center gap-4 relative z-10 pr-24">
                       {/* Chapter info */}
                       <div className="flex-1 min-w-0">
                         <h3
                           className={cn(
-                            "font-medium",
+                            "font-medium flex items-center gap-2",
                             isComplete ? "text-emerald-400" : "text-marble-100"
                           )}
                         >
+                          {isComplete && <Check className="h-4 w-4 flex-shrink-0" />}
                           {chapter.name}
                         </h3>
                         <p className="text-sm text-slate-400 truncate">{chapter.description}</p>
                       </div>
 
-                      {/* Time estimate */}
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-sm text-slate-500">~{chapter.estimatedMinutes} min</p>
-                      </div>
+                      {/* Time estimate - only show if we have enough data */}
+                      {(() => {
+                        const estimate = getChapterEstimate(chapter.id);
+                        return estimate !== null ? (
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-sm text-slate-500">~{estimate} min</p>
+                          </div>
+                        ) : null;
+                      })()}
 
                       {/* Arrow */}
                       {canNavigate && (
@@ -341,7 +395,7 @@ export default function StoryOverviewPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-semibold text-gold-400">{progress}%</p>
-                    {remainingMinutes > 0 && (
+                    {remainingMinutes !== null && remainingMinutes > 0 && (
                       <p className="text-sm text-slate-500 flex items-center justify-end gap-1">
                         <Clock className="h-3.5 w-3.5" />~{remainingMinutes} min
                       </p>
