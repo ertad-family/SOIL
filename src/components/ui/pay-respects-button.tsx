@@ -6,6 +6,7 @@ import { buttonVariants } from "./button";
 import { cn } from "@/lib/utils";
 import { Heart, Check, Loader2 } from "lucide-react";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 
 interface PayRespectsButtonProps {
   memorialId: string;
@@ -67,6 +68,11 @@ export function PayRespectsButton({
 
       if (data.success) {
         setState("paid");
+        // Track respects paid event
+        trackEvent("respects_paid", {
+          category: "engagement",
+          properties: { memorialId },
+        });
       } else if (data.isOwnCenotaph) {
         setState("own");
       } else {
