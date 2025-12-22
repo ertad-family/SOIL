@@ -130,6 +130,7 @@ interface MemorialData {
   respects_count: number;
   cenotaph_image_url: string | null;
   design_status: string | null;
+  cenotaphery_slug: string | null;
 }
 
 type VerificationRelationship =
@@ -227,6 +228,8 @@ interface OrganizationClientProps {
   viewMode: "owner" | "visitor";
   publicNarratives: PublicNarrativeData[];
   currentUserStoryId: string | null;
+  peakRevenue: string | null;
+  revenueCurrency: string | null;
 }
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
@@ -255,6 +258,8 @@ export function OrganizationClient({
   viewMode,
   publicNarratives,
   currentUserStoryId,
+  peakRevenue,
+  revenueCurrency,
 }: OrganizationClientProps) {
   const { setPagePublic } = usePagePrivacy();
 
@@ -274,6 +279,8 @@ export function OrganizationClient({
         publicNarratives={publicNarratives}
         currentUserId={currentUserId}
         currentUserStoryId={currentUserStoryId}
+        peakRevenue={peakRevenue}
+        revenueCurrency={revenueCurrency}
       />
     );
   }

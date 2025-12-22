@@ -64,6 +64,7 @@ interface MemorialData {
   respects_count: number;
   cenotaph_image_url: string | null;
   design_status: string | null;
+  cenotaphery_slug: string | null;
 }
 
 /** Summary data extracted from story for public display */
@@ -87,18 +88,44 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+/** Human-readable labels for closure patterns (SEO-friendly) */
+const CLOSURE_PATTERN_SEO_LABELS: Record<string, string> = {
+  cash_crisis: "cash flow crisis",
+  market_failure: "market fit failure",
+  team_collapse: "team breakdown",
+  founder_burnout: "founder burnout",
+  competition: "competitive pressure",
+  pivot_failure: "failed pivot",
+  regulatory: "regulatory issues",
+  funding_gap: "funding gap",
+  product_market_fit: "product-market fit issues",
+  scaling_failure: "scaling challenges",
+};
+
+/** Human-readable labels for organization types */
+const ORG_TYPE_SEO_LABELS: Record<string, string> = {
+  tech_product: "Tech Startup",
+  services: "Service Company",
+  ecommerce: "E-commerce Business",
+  manufacturing: "Manufacturing Company",
+  ngo: "Non-Profit Organization",
+  media: "Media Company",
+};
+
 /**
  * Generate dynamic metadata for organization pages
- * Includes cenotaph image as OG image for rich social sharing
+ * Enhanced SEO with industry, closure patterns, and structured data
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createClient();
 
-  // Fetch organization
+  // Fetch organization with extended fields for SEO
   const { data: organization } = await supabase
     .from("organizations")
-    .select("name, is_public, verification_status")
+    .select(
+      "name, is_public, verification_status, organization_type, industry, location_city, location_country, founded_date, closed_date"
+    )
     .eq("id", id)
     .single();
 
@@ -115,32 +142,111 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .eq("organization_id", id)
     .single();
 
-  // Determine display name (respect privacy)
-  const displayName = organization.is_public ? organization.name : "An Organization";
-  const title = `${displayName} | SOIL`;
+  // Fetch AI summary from first coined story (for public orgs only)
+  let closurePattern: string | null = null;
+  let keyFacts: string[] = [];
 
-  // Use epitaph as description, or fallback
-  const description =
-    memorial?.epitaph ||
-    (organization.is_public
-      ? `The story of ${organization.name}, preserved at SOIL for future founders to learn from.`
-      : "A story of organizational experience, preserved at SOIL.");
+  if (organization.is_public) {
+    const { data: storyData } = await supabase
+      .from("public_coined_stories")
+      .select("ai_summary")
+      .eq("organization_id", id)
+      .limit(1)
+      .single();
+
+    if (storyData?.ai_summary) {
+      const aiSummary = storyData.ai_summary as AISummary;
+      closurePattern = aiSummary.closurePattern || null;
+      keyFacts = aiSummary.keyFacts || [];
+    }
+  }
+
+  // For private orgs, use generic metadata
+  if (!organization.is_public) {
+    const ogImage = memorial?.cenotaph_image_url || "/og-default.svg";
+    return {
+      title: "An Organization | SOIL",
+      description: "A story of organizational experience, preserved at SOIL.",
+      openGraph: {
+        title: "An Organization",
+        description: "A story of organizational experience, preserved at SOIL.",
+        images: [{ url: ogImage, width: 1200, height: 630, alt: "SOIL Memorial" }],
+        type: "article",
+        siteName: "SOIL - Social Organizational Intelligence Lab",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "An Organization",
+        description: "A story of organizational experience, preserved at SOIL.",
+        images: [ogImage],
+      },
+    };
+  }
+
+  // Build enhanced metadata for public organizations
+  const orgType = organization.organization_type
+    ? ORG_TYPE_SEO_LABELS[organization.organization_type] || organization.organization_type
+    : null;
+  const industry = organization.industry;
+  const patternLabel = closurePattern
+    ? CLOSURE_PATTERN_SEO_LABELS[closurePattern] || closurePattern.replace(/_/g, " ")
+    : null;
+
+  // Enhanced title: "Company Name - Industry Type Case Study | SOIL"
+  const titleParts = [organization.name];
+  if (industry && orgType) {
+    titleParts.push(`${industry} ${orgType} Case Study`);
+  } else if (industry) {
+    titleParts.push(`${industry} Case Study`);
+  } else if (orgType) {
+    titleParts.push(`${orgType} Case Study`);
+  }
+  const title = `${titleParts.join(" - ")} | SOIL`;
+
+  // Enhanced description with pattern and key facts
+  let description = "";
+  if (patternLabel) {
+    description = `Learn from this ${industry || orgType || "organization"}'s ${patternLabel}.`;
+  } else {
+    description = `The story of ${organization.name}`;
+    if (industry) description += `, a ${industry} company`;
+    description += ", preserved at SOIL for future founders to learn from.";
+  }
+
+  // Add first key fact to description if available
+  if (keyFacts.length > 0) {
+    description += ` ${keyFacts[0]}`;
+  }
+
+  // Limit description length for SEO
+  if (description.length > 160) {
+    description = description.substring(0, 157) + "...";
+  }
 
   // Use cenotaph image if available, otherwise default
-  const ogImage = memorial?.cenotaph_image_url || "/og-default.png";
+  const ogImage = memorial?.cenotaph_image_url || "/og-default.svg";
+
+  // Build keywords from available data
+  const keywords: string[] = [];
+  if (industry) keywords.push(industry.toLowerCase());
+  if (orgType) keywords.push(orgType.toLowerCase());
+  if (patternLabel) keywords.push(patternLabel);
+  keywords.push("startup failure", "case study", "organizational lessons", "founder lessons");
+  if (organization.location_country) keywords.push(organization.location_country.toLowerCase());
 
   return {
     title,
     description,
+    keywords: keywords.join(", "),
     openGraph: {
-      title: displayName,
+      title: organization.name,
       description,
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: `${displayName} - preserved at SOIL`,
+          alt: `${organization.name} - preserved at SOIL`,
         },
       ],
       type: "article",
@@ -148,7 +254,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     twitter: {
       card: "summary_large_image",
-      title: displayName,
+      title: organization.name,
       description,
       images: [ogImage],
     },
@@ -227,14 +333,50 @@ export default async function OrganizationPage({ params }: PageProps) {
       profile: profileMap.get(story.user_id) || null,
     })) || [];
 
-  // Fetch memorial/cenotaph if exists
-  const { data: memorial } = await supabase
+  // Fetch memorial/cenotaph if exists, with cenotaphery slug for back navigation
+  const { data: memorialRaw } = await supabase
     .from("memorials")
     .select(
-      "id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, design_status"
+      `id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, design_status, cenotaphery_id,
+      cenotapheries!memorials_cenotaphery_id_fkey(slug)`
     )
     .eq("organization_id", id)
     .single();
+
+  // Transform to include cenotaphery_slug at top level
+  const memorial = memorialRaw
+    ? {
+        id: memorialRaw.id,
+        slug: memorialRaw.slug,
+        epitaph: memorialRaw.epitaph,
+        tombstone_style: memorialRaw.tombstone_style,
+        tombstone_color: memorialRaw.tombstone_color,
+        views_count: memorialRaw.views_count,
+        respects_count: memorialRaw.respects_count,
+        cenotaph_image_url: memorialRaw.cenotaph_image_url,
+        design_status: memorialRaw.design_status,
+        cenotaphery_slug: (() => {
+          const cenotapheries = memorialRaw.cenotapheries;
+          if (!cenotapheries) return null;
+          // Handle both array and single object from Supabase join
+          const cenotaphery = Array.isArray(cenotapheries) ? cenotapheries[0] : cenotapheries;
+          return (cenotaphery as { slug: string } | null)?.slug || null;
+        })(),
+      }
+    : null;
+
+  // Fetch peak revenue using SECURITY DEFINER function (bypasses RLS)
+  let peakRevenue: string | null = null;
+  let revenueCurrency: string | null = null;
+
+  const { data: financialData } = await supabase.rpc("get_public_financial_metrics", {
+    org_id: id,
+  });
+
+  if (financialData && financialData.length > 0) {
+    peakRevenue = financialData[0].peak_annual_revenue || null;
+    revenueCurrency = financialData[0].revenue_currency || null;
+  }
 
   // For public view: fetch narrative data from coined stories
   let publicNarratives: PublicNarrativeData[] = [];
@@ -318,6 +460,8 @@ export default async function OrganizationPage({ params }: PageProps) {
       viewMode={viewMode}
       publicNarratives={publicNarratives}
       currentUserStoryId={currentUserStoryId}
+      peakRevenue={peakRevenue}
+      revenueCurrency={revenueCurrency}
     />
   );
 }

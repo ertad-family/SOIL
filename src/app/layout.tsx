@@ -44,11 +44,11 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "SOIL - Social Organizational Intelligence Lab",
-    images: ["/og-default.png"],
+    images: ["/og-default.svg"],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/og-default.png"],
+    images: ["/og-default.svg"],
   },
 };
 
