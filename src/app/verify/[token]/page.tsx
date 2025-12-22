@@ -218,14 +218,15 @@ export default function VerifyPage() {
                   Have you experienced organizational closure?
                 </h2>
                 <p className="text-sm text-slate-400 mb-4">
-                  Transform your experience into valuable insights for others.
+                  Honor your venture and transform your experience into valuable insights for
+                  others.
                 </p>
-                <Button variant="dark-primary" size="md" asChild>
-                  <Link href="/signup">
+                <Link href="/signup">
+                  <Button variant="dark-primary" size="md">
                     Share Your Story
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -290,14 +291,15 @@ export default function VerifyPage() {
                   Have you experienced organizational closure?
                 </h2>
                 <p className="text-sm text-slate-400 mb-4">
-                  Transform your experience into valuable insights for others.
+                  Honor your venture and transform your experience into valuable insights for
+                  others.
                 </p>
-                <Button variant="dark-primary" size="md" asChild>
-                  <Link href="/signup">
+                <Link href="/signup">
+                  <Button variant="dark-primary" size="md">
                     Share Your Story
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
 
               {/* Divider */}
