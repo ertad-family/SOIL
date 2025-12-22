@@ -1246,7 +1246,14 @@ export default function EnvironmentPage() {
                       {isActive && !isNeverUsed && <Check className="h-3.5 w-3.5" />}
                     </button>
                     <button
-                      onClick={() => !isNeverUsed && toggleResource(config.type)}
+                      onClick={() => {
+                        if (isNeverUsed) return;
+                        if (isActive) {
+                          toggleItemExpand(config.type);
+                        } else {
+                          toggleResource(config.type);
+                        }
+                      }}
                       className={cn(
                         "text-sm flex-1 text-left",
                         isNeverUsed
@@ -1362,7 +1369,14 @@ export default function EnvironmentPage() {
                       {isActive && !isNeverUsed && <Check className="h-3.5 w-3.5" />}
                     </button>
                     <button
-                      onClick={() => !isNeverUsed && toggleCondition(config.type)}
+                      onClick={() => {
+                        if (isNeverUsed) return;
+                        if (isActive) {
+                          toggleItemExpand(config.type);
+                        } else {
+                          toggleCondition(config.type);
+                        }
+                      }}
                       className={cn(
                         "text-sm flex-1 text-left",
                         isNeverUsed

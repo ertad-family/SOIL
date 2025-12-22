@@ -1287,7 +1287,13 @@ export default function FinancialPage() {
                       {isActive && <Check className="h-3.5 w-3.5" />}
                     </button>
                     <button
-                      onClick={() => toggleMetric(config.type)}
+                      onClick={() => {
+                        if (isActive) {
+                          toggleMetricExpand(config.type);
+                        } else {
+                          toggleMetric(config.type);
+                        }
+                      }}
                       className={cn(
                         "text-sm flex-1 text-left",
                         isActive
