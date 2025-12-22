@@ -194,15 +194,53 @@ export default function VerifyPage() {
   if (pageState === "already_responded") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <Card variant="dark" className="max-w-md w-full">
-          <CardContent className="py-12 text-center">
-            <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
-            <h1 className="text-xl font-display text-marble-100 mb-2">Already Responded</h1>
-            <p className="text-slate-400">
-              You have already responded to this verification request. Thank you!
-            </p>
-          </CardContent>
-        </Card>
+        <div className="max-w-md w-full space-y-6">
+          {/* Already responded message */}
+          <Card variant="dark">
+            <CardContent className="py-8 text-center">
+              <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
+              <h1 className="text-xl font-display text-marble-100 mb-2">Already Responded</h1>
+              <p className="text-slate-400">
+                You have already responded to this verification request. Thank you!
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* CTAs Section */}
+          <Card variant="dark">
+            <CardContent className="py-6">
+              {/* CTA: Share Your Story */}
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center mx-auto mb-3">
+                  <Landmark className="w-5 h-5 text-gold-400" />
+                </div>
+                <h2 className="text-lg font-display text-marble-100 mb-1">
+                  Have you experienced organizational closure?
+                </h2>
+                <p className="text-sm text-slate-400 mb-4">
+                  Transform your experience into valuable insights for others.
+                </p>
+                <Button variant="dark-primary" size="md" asChild>
+                  <Link href="/signup">
+                    Share Your Story
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CTA: Learn More */}
+          <div className="text-center">
+            <Link
+              href="/community"
+              className="text-sm text-slate-400 hover:text-gold-400 transition-colors inline-flex items-center gap-1"
+            >
+              Learn about our research & community
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
