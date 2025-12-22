@@ -306,6 +306,46 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
         throw new Error(updateError.message);
       }
 
+      // Update USD revenue if story is already coined and has financial data
+      if (story.status === "coined") {
+        const peakAnnual = story.financialPicture?.essentialMetrics?.revenue?.peakAnnual;
+        const currency = story.financialPicture?.currency;
+
+        if (peakAnnual && currency) {
+          try {
+            const revenueNumber = parseFloat(peakAnnual);
+            if (!isNaN(revenueNumber) && revenueNumber > 0) {
+              let revenueUSD = revenueNumber;
+              let exchangeRate = 1;
+              let rateDate = new Date().toISOString();
+
+              // Fetch exchange rate if not USD
+              if (currency !== "USD") {
+                const res = await fetch(`/api/exchange/rate?from=${currency}&to=USD`);
+                if (res.ok) {
+                  const data = await res.json();
+                  exchangeRate = data.rate;
+                  rateDate = data.date;
+                  revenueUSD = revenueNumber * exchangeRate;
+                }
+              }
+
+              // Update organization with USD revenue
+              await supabase
+                .from("organizations")
+                .update({
+                  peak_revenue_usd: revenueUSD,
+                  peak_revenue_exchange_rate: exchangeRate,
+                  peak_revenue_rate_date: rateDate,
+                })
+                .eq("id", story.organizationId);
+            }
+          } catch (e) {
+            console.error("Failed to update USD revenue:", e);
+          }
+        }
+      }
+
       setLastSavedAt(new Date());
       setHasUnsavedChanges(false);
     } catch (err) {
