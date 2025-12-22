@@ -35,6 +35,9 @@ export function InfrastructureGauge({
   percentageUsed,
   unit,
 }: InfrastructureGaugeProps) {
+  // Vercel metrics are not available on Hobby plan
+  const isVercelPlaceholder = provider === "vercel" && currentValue === 0 && percentageUsed === 0;
+
   // Determine color based on usage percentage
   const getStatusColor = (pct: number) => {
     if (pct >= 90) return "bg-red-500";
@@ -56,8 +59,13 @@ export function InfrastructureGauge({
           <div className="text-sm text-marble-100">{METRIC_LABELS[metricName] || metricName}</div>
           <div className="text-xs text-slate-500">{PROVIDER_LABELS[provider] || provider}</div>
         </div>
-        <div className={cn("text-sm font-medium", getTextColor(percentageUsed))}>
-          {percentageUsed.toFixed(1)}%
+        <div
+          className={cn(
+            "text-sm font-medium",
+            isVercelPlaceholder ? "text-slate-500" : getTextColor(percentageUsed)
+          )}
+        >
+          {isVercelPlaceholder ? "N/A" : `${percentageUsed.toFixed(1)}%`}
         </div>
       </div>
 
@@ -66,19 +74,25 @@ export function InfrastructureGauge({
         <div
           className={cn(
             "h-full rounded-full transition-all duration-500",
-            getStatusColor(percentageUsed)
+            isVercelPlaceholder ? "bg-slate-700" : getStatusColor(percentageUsed)
           )}
-          style={{ width: `${Math.min(percentageUsed, 100)}%` }}
+          style={{ width: isVercelPlaceholder ? "0%" : `${Math.min(percentageUsed, 100)}%` }}
         />
       </div>
 
       <div className="flex justify-between text-xs text-slate-500">
-        <span>
-          {currentValue.toLocaleString()} {unit}
-        </span>
-        <span>
-          of {limitValue.toLocaleString()} {unit}
-        </span>
+        {isVercelPlaceholder ? (
+          <span className="italic">Check Vercel dashboard</span>
+        ) : (
+          <>
+            <span>
+              {currentValue.toLocaleString()} {unit}
+            </span>
+            <span>
+              of {limitValue.toLocaleString()} {unit}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

@@ -105,81 +105,26 @@ export async function GET(request: NextRequest): Promise<NextResponse<Infrastruc
       unit: "users",
     });
 
-    // Get Vercel usage if API key is available
-    const vercelToken = process.env.VERCEL_ACCESS_TOKEN;
-    const vercelTeamId = process.env.VERCEL_TEAM_ID;
+    // Note: Vercel usage API (/v1/usage) is not available for Hobby plans
+    // We add placeholder metrics and users can check usage in Vercel dashboard
+    // TODO: Implement when we upgrade to Pro plan or find alternative API
+    metrics.push({
+      provider: "vercel",
+      metricName: "bandwidth",
+      currentValue: 0,
+      limitValue: VERCEL_LIMITS.bandwidth_gb,
+      percentageUsed: 0,
+      unit: "GB",
+    });
 
-    if (vercelToken) {
-      try {
-        // Fetch bandwidth usage from Vercel API
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        const params = new URLSearchParams({
-          from: startOfMonth.getTime().toString(),
-          to: now.getTime().toString(),
-        });
-
-        if (vercelTeamId) {
-          params.append("teamId", vercelTeamId);
-        }
-
-        const response = await fetch(`https://api.vercel.com/v1/usage?${params.toString()}`, {
-          headers: {
-            Authorization: `Bearer ${vercelToken}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.bandwidth) {
-            const bandwidthGb = data.bandwidth / (1024 * 1024 * 1024);
-            metrics.push({
-              provider: "vercel",
-              metricName: "bandwidth",
-              currentValue: Math.round(bandwidthGb * 100) / 100,
-              limitValue: VERCEL_LIMITS.bandwidth_gb,
-              percentageUsed: Math.round((bandwidthGb / VERCEL_LIMITS.bandwidth_gb) * 100),
-              unit: "GB",
-            });
-          }
-
-          if (data.serverlessFunctionExecution) {
-            const hours = data.serverlessFunctionExecution / (1000 * 60 * 60);
-            metrics.push({
-              provider: "vercel",
-              metricName: "serverless_hours",
-              currentValue: Math.round(hours * 100) / 100,
-              limitValue: VERCEL_LIMITS.serverless_hours,
-              percentageUsed: Math.round((hours / VERCEL_LIMITS.serverless_hours) * 100),
-              unit: "GB-hours",
-            });
-          }
-        }
-      } catch (err) {
-        console.error("[Infrastructure] Failed to fetch Vercel usage:", err);
-        // Add placeholder metrics for Vercel
-        metrics.push({
-          provider: "vercel",
-          metricName: "bandwidth",
-          currentValue: 0,
-          limitValue: VERCEL_LIMITS.bandwidth_gb,
-          percentageUsed: 0,
-          unit: "GB",
-        });
-      }
-    } else {
-      // No Vercel token - add placeholder metrics
-      metrics.push({
-        provider: "vercel",
-        metricName: "bandwidth",
-        currentValue: 0,
-        limitValue: VERCEL_LIMITS.bandwidth_gb,
-        percentageUsed: 0,
-        unit: "GB",
-      });
-    }
+    metrics.push({
+      provider: "vercel",
+      metricName: "serverless_hours",
+      currentValue: 0,
+      limitValue: VERCEL_LIMITS.serverless_hours,
+      percentageUsed: 0,
+      unit: "GB-hours",
+    });
 
     return NextResponse.json({
       success: true,
