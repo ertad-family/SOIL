@@ -30,7 +30,7 @@ const SERVICE_LINKS = [
   { href: "#", label: "Search", disabled: true },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms of Service" },
-  { href: "#", label: "Sitemap", disabled: true },
+  { href: "/sitemap.xml", label: "Sitemap" },
 ];
 
 // Connect section - contacts & social media (horizontal layout)
