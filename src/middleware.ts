@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Cookie name for storing referral token
+const REF_COOKIE_NAME = "soil_ref";
+const REF_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -32,7 +36,43 @@ export async function middleware(request: NextRequest) {
   // very slow and vulnerable to timing attacks.
 
   // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Capture referral token from URL and store in cookie
+  const refParam = request.nextUrl.searchParams.get("ref");
+  if (refParam && !request.cookies.get(REF_COOKIE_NAME)) {
+    supabaseResponse.cookies.set(REF_COOKIE_NAME, refParam, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: REF_COOKIE_MAX_AGE,
+      path: "/",
+    });
+  }
+
+  // Protect /admin/* routes - require admin role
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    // Not logged in - redirect to login
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Check if user has admin role
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (error || profile?.role !== "admin") {
+      // Not an admin or error - redirect to home
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
 
   return supabaseResponse;
 }

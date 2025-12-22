@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { trackEvent } from "@/lib/analytics";
+import { useRefTracking } from "@/hooks/useRefTracking";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -420,9 +422,15 @@ function HeroSection({
                   {/* Share Button */}
                   {memorial.cenotaph_image_url && (
                     <ShareButton
-                      url={typeof window !== "undefined" ? window.location.href : ""}
+                      url={
+                        typeof window !== "undefined"
+                          ? `${window.location.origin}/organization/${organization.id}`
+                          : ""
+                      }
                       title={`${orgName} - preserved at SOIL`}
                       description="A story of organizational experience, preserved for future founders to learn from."
+                      memorialId={memorial.id}
+                      organizationId={organization.id}
                     />
                   )}
                 </div>
@@ -824,6 +832,23 @@ export function PublicView({
 
   // Check if current user is the owner (cannot pay respects to own cenotaph)
   const isOwnCenotaph = currentUserId === organization.created_by;
+
+  // Track referral clicks from shared links
+  useRefTracking();
+
+  // Track cenotaph view on mount
+  useEffect(() => {
+    if (memorial?.id) {
+      trackEvent("cenotaph_view", {
+        category: "discovery",
+        properties: {
+          memorialId: memorial.id,
+          organizationId: organization.id,
+          organizationName: organization.name,
+        },
+      });
+    }
+  }, [memorial?.id, organization.id, organization.name]);
 
   return (
     <div className="min-h-screen bg-slate-900 overflow-x-hidden">

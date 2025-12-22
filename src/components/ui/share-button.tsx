@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Linkedin, Link2, Check, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { trackShareEvent } from "@/lib/analytics";
 
 interface ShareButtonProps {
   /** The URL to share */
@@ -14,6 +15,10 @@ interface ShareButtonProps {
   description?: string;
   /** Optional className for the container */
   className?: string;
+  /** Optional memorial ID for tracking */
+  memorialId?: string;
+  /** Optional organization ID for tracking */
+  organizationId?: string;
 }
 
 /** Custom X (formerly Twitter) icon - Lucide doesn't include brand icons */
@@ -52,32 +57,93 @@ const SHARE_PLATFORMS: SharePlatform[] = [
 ];
 
 /**
+ * Generate a share token and return URL with ref parameter
+ */
+async function generateShareUrl(
+  baseUrl: string,
+  platform: string,
+  memorialId?: string
+): Promise<string> {
+  try {
+    const response = await fetch("/api/share/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memorialId, platform }),
+    });
+    const data = await response.json();
+
+    if (data.success && data.token) {
+      // Append ref parameter to URL
+      const urlObj = new URL(baseUrl);
+      urlObj.searchParams.set("ref", data.token);
+      return urlObj.toString();
+    }
+  } catch (err) {
+    console.error("[Share] Failed to generate token:", err);
+  }
+
+  // Fallback to original URL if token generation fails
+  return baseUrl;
+}
+
+/**
  * Animated Share Button with CSS reveal effect
  *
  * On hover, the "Share" text slides left and social icons cascade in from the right.
  * Uses dark-outline design system styling.
  */
-export function ShareButton({ url, title, description, className }: ShareButtonProps) {
+export function ShareButton({
+  url,
+  title,
+  description,
+  className,
+  memorialId,
+  organizationId,
+}: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopyLink = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      console.log("[SOIL] Share: Copy Link", url);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
+  const handleCopyLink = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      try {
+        const shareUrl = await generateShareUrl(url, "copy", memorialId);
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
 
-  const handlePlatformShare = (e: React.MouseEvent, platform: SharePlatform) => {
-    e.stopPropagation();
-    const shareUrl = platform.getShareUrl(url, title, description);
-    console.log(`[SOIL] Share: ${platform.name}`, url);
-    window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=400");
-  };
+        // Track the share event
+        trackShareEvent("share_link_created", {
+          platform: "copy",
+          memorialId,
+          organizationId,
+        });
+
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+    },
+    [url, memorialId, organizationId]
+  );
+
+  const handlePlatformShare = useCallback(
+    async (e: React.MouseEvent, platform: SharePlatform) => {
+      e.stopPropagation();
+
+      // Generate token-based URL
+      const shareUrl = await generateShareUrl(url, platform.name.toLowerCase(), memorialId);
+      const platformShareUrl = platform.getShareUrl(shareUrl, title, description);
+
+      // Track the share event
+      trackShareEvent("share_link_created", {
+        platform: platform.name.toLowerCase(),
+        memorialId,
+        organizationId,
+      });
+
+      window.open(platformShareUrl, "_blank", "noopener,noreferrer,width=600,height=400");
+    },
+    [url, title, description, memorialId, organizationId]
+  );
 
   return (
     <div
@@ -158,26 +224,53 @@ export function ShareButton({ url, title, description, className }: ShareButtonP
  * Compact share button variant for smaller spaces
  * Shows just an icon that expands to show platforms
  */
-export function ShareButtonCompact({ url, title, description, className }: ShareButtonProps) {
+export function ShareButtonCompact({
+  url,
+  title,
+  description,
+  className,
+  memorialId,
+  organizationId,
+}: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleCopyLink = async () => {
+  const handleCopyLink = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      const shareUrl = await generateShareUrl(url, "copy", memorialId);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      console.log("[SOIL] Share: Copy Link", url);
+
+      // Track the share event
+      trackShareEvent("share_link_created", {
+        platform: "copy",
+        memorialId,
+        organizationId,
+      });
+
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
-  };
+  }, [url, memorialId, organizationId]);
 
-  const handlePlatformShare = (platform: SharePlatform) => {
-    const shareUrl = platform.getShareUrl(url, title, description);
-    console.log(`[SOIL] Share: ${platform.name}`, url);
-    window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=400");
-  };
+  const handlePlatformShare = useCallback(
+    async (platform: SharePlatform) => {
+      // Generate token-based URL
+      const shareUrl = await generateShareUrl(url, platform.name.toLowerCase(), memorialId);
+      const platformShareUrl = platform.getShareUrl(shareUrl, title, description);
+
+      // Track the share event
+      trackShareEvent("share_link_created", {
+        platform: platform.name.toLowerCase(),
+        memorialId,
+        organizationId,
+      });
+
+      window.open(platformShareUrl, "_blank", "noopener,noreferrer,width=600,height=400");
+    },
+    [url, title, description, memorialId, organizationId]
+  );
 
   return (
     <div

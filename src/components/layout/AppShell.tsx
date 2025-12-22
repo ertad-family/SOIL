@@ -28,6 +28,7 @@ function VisitorParticles() {
   const staticPrivate =
     pathname.startsWith("/interview") ||
     pathname.startsWith("/account") ||
+    pathname.startsWith("/admin") ||
     pathname.startsWith("/organization/create") ||
     pathname.startsWith("/cenotaph/create");
 

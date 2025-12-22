@@ -8,6 +8,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Spinner } from "@/components/ui/spinner";
 import { Landmark, Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics";
 
 interface Cenotaph {
   id: string;
@@ -113,6 +114,20 @@ function CenotapheryContent({ slug }: { slug: string }) {
 
     fetchCenotaphery();
   }, [slug, searchParams]);
+
+  // Track cenotaphery view when info is loaded
+  useEffect(() => {
+    if (cenotapheryInfo) {
+      trackEvent("cenotaphery_view", {
+        category: "discovery",
+        properties: {
+          cenotapherySlug: slug,
+          cenotapheryName: cenotapheryInfo.name,
+          cenotaphCount: cenotaphs.length,
+        },
+      });
+    }
+  }, [cenotapheryInfo, slug, cenotaphs.length]);
 
   return (
     <div className="min-h-screen bg-slate-900">

@@ -18,6 +18,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Landmark,
+  BarChart3,
+  Shield,
 } from "lucide-react";
 import type {
   StoryStatus,
@@ -32,6 +34,7 @@ interface AccountUser {
   email: string;
   name: string;
   avatarUrl?: string;
+  role: string;
 }
 
 interface OrganizationData {
@@ -221,6 +224,43 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
           </div>
         </CardContent>
       </Card>
+
+      {/* Admin Section - only visible for admins */}
+      {user.role === "admin" && (
+        <Card variant="dark" className="mt-8">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <CardTitle variant="dark">Administration</CardTitle>
+                <CardDescription variant="dark">Admin tools and analytics</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href="/admin/analytics">
+              <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-gold-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-marble-100">Analytics Dashboard</h4>
+                      <p className="text-xs text-slate-400">
+                        View virality metrics, K-factor, and infrastructure usage
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-500" />
+                </div>
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
     </DashboardLayout>
   );
 }
