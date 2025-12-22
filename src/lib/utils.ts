@@ -79,3 +79,31 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): boolean {
 
   return isMobile;
 }
+
+/**
+ * Format a number with K, M, B shorthand notation
+ * @param value - The number to format
+ * @param decimals - Number of decimal places (default: 1)
+ */
+export function formatShorthand(value: number, decimals: number = 1): string {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(decimals)}B`;
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(decimals)}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(decimals)}K`;
+  }
+  return value.toFixed(0);
+}
+
+/**
+ * Format revenue with USD prefix and shorthand notation
+ * @param value - The revenue amount in USD
+ * @returns Formatted string like "$1.2M" or "$500K", or null if no value
+ */
+export function formatRevenueUSD(value: number | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  return `$${formatShorthand(value)}`;
+}

@@ -365,18 +365,9 @@ export default async function OrganizationPage({ params }: PageProps) {
       }
     : null;
 
-  // Fetch peak revenue using SECURITY DEFINER function (bypasses RLS)
-  let peakRevenue: string | null = null;
-  let revenueCurrency: string | null = null;
-
-  const { data: financialData } = await supabase.rpc("get_public_financial_metrics", {
-    org_id: id,
-  });
-
-  if (financialData && financialData.length > 0) {
-    peakRevenue = financialData[0].peak_annual_revenue || null;
-    revenueCurrency = financialData[0].revenue_currency || null;
-  }
+  // Peak revenue in USD is stored directly on the organization
+  // (converted from original currency at story coining time)
+  const peakRevenueUSD: number | null = organization.peak_revenue_usd ?? null;
 
   // For public view: fetch narrative data from coined stories
   let publicNarratives: PublicNarrativeData[] = [];
@@ -460,8 +451,7 @@ export default async function OrganizationPage({ params }: PageProps) {
       viewMode={viewMode}
       publicNarratives={publicNarratives}
       currentUserStoryId={currentUserStoryId}
-      peakRevenue={peakRevenue}
-      revenueCurrency={revenueCurrency}
+      peakRevenueUSD={peakRevenueUSD}
     />
   );
 }

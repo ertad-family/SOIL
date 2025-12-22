@@ -38,7 +38,7 @@ import type {
   FounderRole,
   PublicNamingPreference,
 } from "@/types/interview";
-import { cn } from "@/lib/utils";
+import { cn, formatRevenueUSD } from "@/lib/utils";
 import { ShareButton } from "@/components/ui/share-button";
 import { PayRespectsButton, RespectsCounter } from "@/components/ui/pay-respects-button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -106,8 +106,7 @@ interface PublicViewProps {
   publicNarratives: PublicNarrativeData[];
   currentUserId: string | null;
   currentUserStoryId: string | null;
-  peakRevenue: string | null;
-  revenueCurrency: string | null;
+  peakRevenueUSD: number | null;
 }
 
 // =============================================================================
@@ -239,16 +238,14 @@ function HeroSection({
   dateRange,
   location,
   isOwnCenotaph,
-  peakRevenue,
-  revenueCurrency,
+  peakRevenueUSD,
 }: {
   organization: OrganizationData;
   memorial: MemorialData | null;
   dateRange: string | null;
   location: string | null;
   isOwnCenotaph: boolean;
-  peakRevenue: string | null;
-  revenueCurrency: string | null;
+  peakRevenueUSD: number | null;
 }) {
   const [showFullImage, setShowFullImage] = useState(false);
   const { orgName } = getDisplayName(organization, null, null);
@@ -257,12 +254,8 @@ function HeroSection({
   // Calculate organization age
   const organizationAge = calculateAge(organization.founded_date, organization.closed_date);
 
-  // Format peak revenue with currency if available
-  const formattedRevenue = peakRevenue
-    ? revenueCurrency
-      ? `${peakRevenue} ${revenueCurrency}`
-      : peakRevenue
-    : null;
+  // Format peak revenue in USD with shorthand notation
+  const formattedRevenue = formatRevenueUSD(peakRevenueUSD);
 
   return (
     <>
@@ -382,13 +375,17 @@ function HeroSection({
               }}
             />
 
-            {/* Back to Cenotaphery button - top right */}
+            {/* Back to Cenotaphery button - positioned below gradient start */}
             {memorial?.cenotaphery_slug && (
               <Link
                 href={`/cenotaphery/${memorial.cenotaphery_slug}`}
-                className="absolute top-6 right-6 lg:top-8 lg:right-8 z-20"
+                className="absolute top-[22%] right-6 lg:top-8 lg:right-8 z-30"
               >
-                <Button variant="dark-ghost" size="sm">
+                <Button
+                  variant="dark-ghost"
+                  size="sm"
+                  className="bg-slate-900/80 backdrop-blur-sm hover:bg-slate-800/90"
+                >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Cenotaphery
                 </Button>
@@ -396,34 +393,38 @@ function HeroSection({
             )}
 
             <div className="relative z-10 max-w-xl">
-              {/* Verification badge with tooltip */}
-              {organization.verification_status === "verified" && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="dark-verified" size="sm" className="mb-6 cursor-help">
-                        <ShieldCheck className="w-3 h-3 mr-1" />
-                        Verified
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent variant="dark" className="max-w-xs">
-                      <p>
-                        This organization&apos;s existence has been confirmed by multiple
-                        independent sources, ensuring this memorial represents a real organization.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-
-              {/* Organization name */}
+              {/* Organization name with verification badge */}
               <h1
                 className={cn(
-                  "font-display text-4xl md:text-5xl xl:text-6xl font-semibold mb-6 leading-tight",
+                  "font-display text-4xl md:text-5xl xl:text-6xl font-semibold mb-6 leading-tight flex flex-wrap items-center gap-3",
                   organization.is_public ? "text-marble-100" : "text-slate-400 italic"
                 )}
               >
-                {orgName}
+                <span>{orgName}</span>
+                {/* Verification badge inline with name */}
+                {organization.verification_status === "verified" && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="dark-verified"
+                          size="sm"
+                          className="cursor-help align-middle"
+                        >
+                          <ShieldCheck className="w-3 h-3 mr-1" />
+                          Verified
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent variant="dark" className="max-w-xs">
+                        <p>
+                          This organization&apos;s existence has been confirmed by multiple
+                          independent sources, ensuring this memorial represents a real
+                          organization.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </h1>
 
               {/* Epitaph */}
@@ -895,8 +896,7 @@ export function PublicView({
   publicNarratives,
   currentUserId,
   currentUserStoryId,
-  peakRevenue,
-  revenueCurrency,
+  peakRevenueUSD,
 }: PublicViewProps) {
   const dateRange = formatDateRange(organization.founded_date, organization.closed_date);
   const location = [organization.location_city, organization.location_country]
@@ -935,8 +935,7 @@ export function PublicView({
         dateRange={dateRange}
         location={location}
         isOwnCenotaph={isOwnCenotaph}
-        peakRevenue={peakRevenue}
-        revenueCurrency={revenueCurrency}
+        peakRevenueUSD={peakRevenueUSD}
       />
 
       {/* Story Insights - AI refined data only */}

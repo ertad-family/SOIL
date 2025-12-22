@@ -228,8 +228,7 @@ interface OrganizationClientProps {
   viewMode: "owner" | "visitor";
   publicNarratives: PublicNarrativeData[];
   currentUserStoryId: string | null;
-  peakRevenue: string | null;
-  revenueCurrency: string | null;
+  peakRevenueUSD: number | null;
 }
 
 const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
@@ -258,8 +257,7 @@ export function OrganizationClient({
   viewMode,
   publicNarratives,
   currentUserStoryId,
-  peakRevenue,
-  revenueCurrency,
+  peakRevenueUSD,
 }: OrganizationClientProps) {
   const { setPagePublic } = usePagePrivacy();
 
@@ -279,8 +277,7 @@ export function OrganizationClient({
         publicNarratives={publicNarratives}
         currentUserId={currentUserId}
         currentUserStoryId={currentUserStoryId}
-        peakRevenue={peakRevenue}
-        revenueCurrency={revenueCurrency}
+        peakRevenueUSD={peakRevenueUSD}
       />
     );
   }
