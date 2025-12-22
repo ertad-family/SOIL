@@ -20,8 +20,8 @@ BEGIN
   WITH chapter_sessions AS (
     -- Find chapter start events and their corresponding end events
     SELECT
-      start_evt.properties->>'chapterId' as chapter_id,
-      start_evt.properties->>'organizationType' as org_type,
+      start_evt.properties->>'chapterId' as ch_id,
+      start_evt.properties->>'organizationType' as ch_org_type,
       start_evt.created_at as start_time,
       -- Find the next pause or complete event for this chapter/story
       (
@@ -42,31 +42,31 @@ BEGIN
   session_durations AS (
     -- Calculate duration in minutes for each session
     SELECT
-      chapter_id,
-      EXTRACT(EPOCH FROM (end_time - start_time)) / 60.0 as duration_minutes
-    FROM chapter_sessions
-    WHERE end_time IS NOT NULL
-      AND EXTRACT(EPOCH FROM (end_time - start_time)) > 30 -- At least 30 seconds
-      AND EXTRACT(EPOCH FROM (end_time - start_time)) < 14400 -- Less than 4 hours
+      cs.ch_id,
+      EXTRACT(EPOCH FROM (cs.end_time - cs.start_time)) / 60.0 as duration_minutes
+    FROM chapter_sessions cs
+    WHERE cs.end_time IS NOT NULL
+      AND EXTRACT(EPOCH FROM (cs.end_time - cs.start_time)) > 30 -- At least 30 seconds
+      AND EXTRACT(EPOCH FROM (cs.end_time - cs.start_time)) < 14400 -- Less than 4 hours
   ),
   chapter_stats AS (
     -- Calculate percentiles per chapter
     SELECT
-      sd.chapter_id,
+      sd.ch_id,
       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sd.duration_minutes) as median,
       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY sd.duration_minutes) as p25,
       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY sd.duration_minutes) as p75,
       COUNT(*) as samples
     FROM session_durations sd
-    GROUP BY sd.chapter_id
+    GROUP BY sd.ch_id
   )
   SELECT
-    cs.chapter_id,
-    CASE WHEN cs.samples >= min_samples THEN ROUND(cs.median::numeric, 0) ELSE NULL END as median_minutes,
-    CASE WHEN cs.samples >= min_samples THEN ROUND(cs.p25::numeric, 0) ELSE NULL END as p25_minutes,
-    CASE WHEN cs.samples >= min_samples THEN ROUND(cs.p75::numeric, 0) ELSE NULL END as p75_minutes,
-    cs.samples as sample_count
-  FROM chapter_stats cs;
+    cst.ch_id,
+    CASE WHEN cst.samples >= min_samples THEN ROUND(cst.median::numeric, 0) ELSE NULL END,
+    CASE WHEN cst.samples >= min_samples THEN ROUND(cst.p25::numeric, 0) ELSE NULL END,
+    CASE WHEN cst.samples >= min_samples THEN ROUND(cst.p75::numeric, 0) ELSE NULL END,
+    cst.samples
+  FROM chapter_stats cst;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
