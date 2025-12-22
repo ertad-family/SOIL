@@ -402,7 +402,7 @@ export function CommunityHeroSection() {
             </div>
 
             {/* Newsletter subscription */}
-            <NewsletterWidget variant="compact" className="mt-8" />
+            <NewsletterWidget variant="compact" source="community_hero" className="mt-8" />
           </div>
 
           {/* Right: Interactive Diagram - 2/3 width */}

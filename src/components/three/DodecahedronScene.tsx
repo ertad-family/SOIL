@@ -3,7 +3,7 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, useFont } from "@react-three/drei";
 import { Suspense, useCallback, useRef, useEffect, useState } from "react";
-import { useIsMobile } from "@/lib/utils";
+import { useIsMobile, cn } from "@/lib/utils";
 
 // Preload the font used by Text3D in portal labels
 // This prevents black screen flash when first hovering over a portal
@@ -811,7 +811,15 @@ export function DodecahedronScene({
       )}
 
       {/* SOIL Logo - static overlay below the scene */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none select-none">
+      {/* On mobile: left-aligned to avoid overlap with navigation hint (#116) */}
+      {/* Safe-area-inset for notched devices (#112) */}
+      <div
+        className={cn(
+          "absolute bottom-8 pointer-events-none select-none",
+          isMobile ? "left-4" : "left-1/2 -translate-x-1/2"
+        )}
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <h1
           className="font-serif text-5xl font-semibold tracking-wider"
           style={{ color: "#B8ADA0" }}
@@ -822,6 +830,8 @@ export function DodecahedronScene({
       </div>
 
       {/* Navigation hint */}
+      {/* Safe-area-inset for notched devices (#112) */}
+      {/* Touch-friendly hint on mobile (#113) */}
       <div
         className="absolute bottom-8 right-8 pointer-events-none select-none text-right"
         style={{
@@ -830,10 +840,11 @@ export function DodecahedronScene({
           fontFamily: "monospace",
           textTransform: "uppercase",
           letterSpacing: "0.05em",
+          paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        <div>DRAG TO ROTATE</div>
-        <div>DOUBLE-CLICK PORTAL TO ENTER</div>
+        <div>{isMobile ? "SWIPE TO ROTATE" : "DRAG TO ROTATE"}</div>
+        <div>{isMobile ? "DOUBLE-TAP PORTAL TO ENTER" : "DOUBLE-CLICK PORTAL TO ENTER"}</div>
       </div>
     </div>
   );

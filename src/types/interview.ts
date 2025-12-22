@@ -111,6 +111,28 @@ export type SatisfactionRating = 1 | 2 | 3 | 4 | 5;
 export type Emotion = "distressed" | "worried" | "neutral" | "hopeful";
 
 // =============================================================================
+// LOCATION TYPES
+// =============================================================================
+
+/** Geographic location with coordinates for cenotaphery placement */
+export interface GeoLocation {
+  country: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  /** GeoNames ID for deduplication and standardization */
+  geoId?: number;
+}
+
+/** Creates an empty GeoLocation object */
+export const createEmptyGeoLocation = (): GeoLocation => ({
+  country: null,
+  city: null,
+  latitude: null,
+  longitude: null,
+});
+
+// =============================================================================
 // MODULE 0: BASIC INFO
 // =============================================================================
 
@@ -126,10 +148,7 @@ export interface BasicInfoData {
   organizationType: OrganizationType | null;
   businessModel: string | null;
   industry: string | null;
-  location: {
-    country: string | null;
-    city: string | null;
-  };
+  location: GeoLocation;
 
   // Screen 2: Timeline (now in organizations table)
   foundedDate: string | null; // ISO date string (YYYY-MM)
@@ -287,6 +306,69 @@ export type FinancialMetrics =
   | NgoMetrics
   | MediaMetrics;
 
+// =============================================================================
+// ESSENTIAL FINANCIAL METRICS (Universal across all org types)
+// =============================================================================
+
+/** Essential metric types - universal metrics all organizations track */
+export type EssentialMetricType =
+  | "revenue"
+  | "margins"
+  | "profitability"
+  | "cashPosition"
+  | "funding"
+  | "customerBase";
+
+/** Profitability status */
+export type ProfitabilityStatus = "profitable" | "almost" | "never";
+
+/** Revenue assessment */
+export interface RevenueMetric {
+  peakAnnual: string | null; // Free text for flexibility (e.g., "$1.2M", "~500K")
+  trend: MetricTrend | null;
+}
+
+/** Margins assessment */
+export interface MarginsMetric {
+  grossPercent: number | null;
+  netPercent: number | null;
+}
+
+/** Profitability assessment */
+export interface ProfitabilityMetric {
+  status: ProfitabilityStatus | null;
+  whenAchieved: string | null; // Date or lifecycle stage
+  whenLost: string | null; // Date or lifecycle stage
+}
+
+/** Cash position assessment */
+export interface CashPositionMetric {
+  burnRate: string | null; // Free text (e.g., "$50K/month")
+  runwayMonths: number | null;
+}
+
+/** Funding assessment */
+export interface FundingMetric {
+  totalRaised: string | null; // Free text (e.g., "$2.5M")
+  stage: "bootstrapped" | "pre_seed" | "seed" | "series_a" | "series_b_plus" | null;
+}
+
+/** Customer base assessment */
+export interface CustomerBaseMetric {
+  peakCount: number | null;
+  concentrationPercent: number | null; // Top customer as % of revenue
+}
+
+/** Essential metrics container */
+export interface EssentialMetrics {
+  revenue: RevenueMetric | null;
+  margins: MarginsMetric | null;
+  profitability: ProfitabilityMetric | null;
+  cashPosition: CashPositionMetric | null;
+  funding: FundingMetric | null;
+  customerBase: CustomerBaseMetric | null;
+}
+
 export interface MetricDynamic {
   metricName: string;
   peakValue: string | number | null;
@@ -307,9 +389,50 @@ export interface FinancialEvent {
   details: string | null;
 }
 
+/** Common currency codes */
+export type CurrencyCode =
+  | "USD"
+  | "EUR"
+  | "GBP"
+  | "CAD"
+  | "AUD"
+  | "CHF"
+  | "JPY"
+  | "CNY"
+  | "INR"
+  | "BRL"
+  | "MXN"
+  | "RUB"
+  | "KRW"
+  | "SGD"
+  | "HKD"
+  | "SEK"
+  | "NOK"
+  | "DKK"
+  | "PLN"
+  | "ILS"
+  | "ZAR"
+  | "AED"
+  | "THB"
+  | "IDR"
+  | "MYR"
+  | "PHP"
+  | "VND"
+  | "NZD"
+  | "CZK"
+  | "HUF"
+  | "TRY"
+  | "UAH"
+  | "CLP"
+  | "COP"
+  | "PEN"
+  | "ARS";
+
 export interface FinancialPictureData {
   uploadedFiles: UploadedFile[];
-  metrics: FinancialMetrics | null;
+  currency: CurrencyCode | null;
+  essentialMetrics: EssentialMetrics | null;
+  metrics: FinancialMetrics | null; // Org-type specific metrics (future use)
   dynamics: MetricDynamic[];
   events: FinancialEvent[];
 }
@@ -371,6 +494,71 @@ export interface DynamicPictureData {
 // MODULE 4: ENVIRONMENT ANALYSIS
 // =============================================================================
 
+/** Market resource types - resources you compete for */
+export type MarketResourceType = "customers" | "talent" | "suppliers" | "capital";
+
+/** Operating condition types - environmental factors you operate within */
+export type OperatingConditionType = "infrastructure" | "legal" | "regulatory" | "tax";
+
+/** Accessibility level for market resources */
+export type AccessibilityLevel = "easy" | "moderate" | "difficult";
+
+/** Direction of change over time */
+export type ChangeDirection = "improved" | "stable" | "worsened";
+
+/** Cost change direction */
+export type CostChangeDirection = "decreased" | "stable" | "increased";
+
+/** Competition intensity */
+export type CompetitionIntensity = "low" | "moderate" | "intense";
+
+/** Competition change direction */
+export type CompetitionChangeDirection = "less" | "stable" | "more";
+
+/** Operating condition state */
+export type ConditionState = "favorable" | "neutral" | "challenging";
+
+/** Market resource assessment - detailed info about competitive resources */
+export interface MarketResourceAssessment {
+  resourceType: MarketResourceType;
+
+  /** If true, organization didn't work with this resource type */
+  notApplicable?: boolean;
+
+  // Context question (who/what)
+  context: string | null;
+
+  // Accessibility (how easy to reach/find/get)
+  peakAccessibility: AccessibilityLevel | null;
+  accessibilityTrend: ChangeDirection | null;
+
+  // Cost
+  peakCost: CostLevel | null;
+  costTrend: CostChangeDirection | null;
+
+  // Competition
+  peakCompetition: CompetitionIntensity | null;
+  competitionTrend: CompetitionChangeDirection | null;
+}
+
+/** Operating condition assessment - environmental factors */
+export interface OperatingConditionAssessment {
+  conditionType: OperatingConditionType;
+
+  /** If true, this condition wasn't relevant to the organization */
+  notApplicable?: boolean;
+
+  // Context question (what specifically)
+  context: string | null;
+
+  // State assessment
+  peakState: ConditionState | null;
+  trend: ChangeDirection | null;
+}
+
+/**
+ * @deprecated Use MarketResourceType instead
+ */
 export type ResourceType =
   | "customers"
   | "talent"
@@ -381,19 +569,17 @@ export type ResourceType =
   | "regulatory"
   | "tax_burden";
 
+/**
+ * @deprecated Use MarketResourceAssessment or OperatingConditionAssessment instead
+ */
 export interface ResourceAssessment {
   resourceType: ResourceType;
-
-  // At peak
   peakAvailability: AvailabilityLevel | null;
   peakCost: CostLevel | null;
-  peakCompetition: CompetitionLevel | null; // Only for applicable resources
-
-  // Peak to death change
+  peakCompetition: CompetitionLevel | null;
   availabilityChange: TrendChange | null;
   costChange: TrendChange | null;
   competitionChange: TrendChange | null;
-
   whatChanged: string | null;
 }
 
@@ -429,8 +615,19 @@ export interface ExternalEvent {
 }
 
 export interface EnvironmentData {
-  resourceAssessments: ResourceAssessment[];
+  /** New structure: Market resources (customers, talent, suppliers, capital) */
+  marketResources: MarketResourceAssessment[];
+
+  /** New structure: Operating conditions (infrastructure, legal, regulatory, tax) */
+  operatingConditions: OperatingConditionAssessment[];
+
+  /** External events */
   events: ExternalEvent[];
+
+  /**
+   * @deprecated Use marketResources and operatingConditions instead
+   */
+  resourceAssessments?: ResourceAssessment[];
 }
 
 // =============================================================================
@@ -540,10 +737,7 @@ export interface Organization {
   description: string | null;
 
   // Location
-  location: {
-    country: string | null;
-    city: string | null;
-  };
+  location: GeoLocation;
 
   // Timeline
   foundedDate: string | null;
@@ -703,7 +897,7 @@ export const createEmptyBasicInfo = (): BasicInfoData => ({
   organizationType: null,
   businessModel: null,
   industry: null,
-  location: { country: null, city: null },
+  location: createEmptyGeoLocation(),
   foundedDate: null,
   closedDate: null,
   stageAtClosure: null,
@@ -719,9 +913,20 @@ export const createEmptyFunctionalMapping = (): FunctionalMappingData => ({
 
 export const createEmptyFinancialPicture = (): FinancialPictureData => ({
   uploadedFiles: [],
+  currency: null,
+  essentialMetrics: null,
   metrics: null,
   dynamics: [],
   events: [],
+});
+
+export const createEmptyEssentialMetrics = (): EssentialMetrics => ({
+  revenue: null,
+  margins: null,
+  profitability: null,
+  cashPosition: null,
+  funding: null,
+  customerBase: null,
 });
 
 export const createEmptyDynamicPicture = (): DynamicPictureData => ({
@@ -731,7 +936,8 @@ export const createEmptyDynamicPicture = (): DynamicPictureData => ({
 });
 
 export const createEmptyEnvironment = (): EnvironmentData => ({
-  resourceAssessments: [],
+  marketResources: [],
+  operatingConditions: [],
   events: [],
 });
 
@@ -868,7 +1074,7 @@ export const createEmptyOrganization = (
   businessModel: null,
   industry: null,
   description: null,
-  location: { country: null, city: null },
+  location: createEmptyGeoLocation(),
   foundedDate: null,
   closedDate: null,
   stageAtClosure: null,

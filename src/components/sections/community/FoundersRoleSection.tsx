@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -224,7 +225,7 @@ export function FoundersRoleSection() {
             </Card>
 
             {/* CTA */}
-            <a href="/memorials">
+            <Link href="/organization/create">
               <Button
                 variant="dark-primary"
                 size="lg"
@@ -242,7 +243,7 @@ export function FoundersRoleSection() {
               >
                 Create Your Cenotaph
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Right: Illustration */}

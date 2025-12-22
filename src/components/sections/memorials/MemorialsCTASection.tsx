@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { Clock, Shield, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Call-to-action section encouraging users to create their own cenotaph
+ * Call-to-action section encouraging users to share their story
  */
 export function MemorialsCTASection() {
   return (
@@ -17,22 +18,17 @@ export function MemorialsCTASection() {
 
         {/* Description */}
         <p className="text-lg md:text-xl text-slate-400 mb-8 leading-relaxed">
-          Creating a cenotaph is not admitting defeat.
+          Sharing your experience is an act of dignity.
           <br className="hidden md:block" />
-          It&apos;s an act of dignity. Your experience becomes
-          <br className="hidden md:block" />
-          part of research that helps others.
+          Your story becomes part of research that helps others.
         </p>
 
         {/* CTA Button */}
-        <Button
-          variant="cenotaph"
-          size="xl"
-          disabled
-          className="opacity-60 cursor-not-allowed mb-8"
-        >
-          Create your cenotaph
-        </Button>
+        <Link href="/organization/create">
+          <Button variant="dark-primary" size="xl" className="mb-8">
+            Share your story
+          </Button>
+        </Link>
 
         {/* Supporting info */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
@@ -49,11 +45,6 @@ export function MemorialsCTASection() {
             <span>Private by default</span>
           </div>
         </div>
-
-        {/* Coming soon note */}
-        <p className="mt-8 text-xs text-slate-600">
-          Cenotaph creation will be available in early 2025
-        </p>
       </div>
     </section>
   );

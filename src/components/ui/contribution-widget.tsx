@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ArrowRight } from "lucide-react";
 import { tabsData, colorClasses, ContributionOption } from "@/lib/contribution-data";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ui/share-button";
 
 interface ContributionCardProps {
   option: ContributionOption;
@@ -42,7 +43,14 @@ function ContributionCard({ option, color, compact }: ContributionCardProps) {
         >
           {option.description}
         </p>
-        {option.external ? (
+        {option.title === "Spread the Word" ? (
+          <ShareButton
+            url={option.href}
+            title="SOIL - Where founders share their stories for science"
+            description="Help build the future of organizational research. Join the movement at soil.rip"
+            className="w-full"
+          />
+        ) : option.external ? (
           <a href={option.href} target="_blank" rel="noopener noreferrer">
             <Button
               variant="dark-secondary"

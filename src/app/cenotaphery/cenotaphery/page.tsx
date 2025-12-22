@@ -15,7 +15,7 @@ const CenotapheryScene = dynamic(
 
 /**
  * Cenotaphery page - 3D pentagonal memorial space
- * Route: /memorials/cenotaphery
+ * Route: /cenotaphery/cenotaphery
  *
  * Renders as a full-screen overlay (like MenuTransition)
  * to cover the AppShell header/footer completely.
@@ -59,10 +59,10 @@ export default function CenotapheryPage() {
 
       {/* Back link */}
       <Link
-        href="/memorials"
+        href="/cenotaphery"
         className="absolute top-6 right-6 text-marble-400 hover:text-gold-500 transition-colors text-sm font-sans"
       >
-        &larr; Back to Memorials
+        &larr; Back to Cenotaphery
       </Link>
     </div>
   );

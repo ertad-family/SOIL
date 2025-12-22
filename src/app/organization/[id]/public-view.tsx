@@ -34,6 +34,8 @@ import type {
   PublicNamingPreference,
 } from "@/types/interview";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ui/share-button";
+import { PayRespectsButton, RespectsCounter } from "@/components/ui/pay-respects-button";
 
 // =============================================================================
 // TYPES
@@ -49,6 +51,9 @@ interface OrganizationData {
   description: string | null;
   location_country: string | null;
   location_city: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_geo_id: number | null;
   founded_date: string | null;
   closed_date: string | null;
   stage_at_closure: LifecycleStage | null;
@@ -210,11 +215,13 @@ function HeroSection({
   memorial,
   dateRange,
   location,
+  isOwnCenotaph,
 }: {
   organization: OrganizationData;
   memorial: MemorialData | null;
   dateRange: string | null;
   location: string | null;
+  isOwnCenotaph: boolean;
 }) {
   const [showFullImage, setShowFullImage] = useState(false);
   const { orgName } = getDisplayName(organization, null, null);
@@ -393,7 +400,33 @@ function HeroSection({
                     <span>Peak team: {organization.peak_team_size} people</span>
                   </div>
                 )}
+
+                {/* Respects counter - heart icon with count, always shown */}
+                {memorial && (
+                  <RespectsCounter
+                    memorialId={memorial.id}
+                    initialCount={memorial.respects_count}
+                    className="text-base"
+                  />
+                )}
               </div>
+
+              {/* Pay Respects + Share Button - inline, only for verified orgs with cenotaph */}
+              {organization.verification_status === "verified" && memorial && (
+                <div className="mt-8 flex flex-row flex-wrap items-center gap-3">
+                  {/* Pay Respects */}
+                  <PayRespectsButton memorialId={memorial.id} isOwnCenotaph={isOwnCenotaph} />
+
+                  {/* Share Button */}
+                  {memorial.cenotaph_image_url && (
+                    <ShareButton
+                      url={typeof window !== "undefined" ? window.location.href : ""}
+                      title={`${orgName} - preserved at SOIL`}
+                      description="A story of organizational experience, preserved for future founders to learn from."
+                    />
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -789,6 +822,9 @@ export function PublicView({
   // Get the first narrative (primary story) - we can expand to show multiple later
   const primaryNarrative = publicNarratives[0];
 
+  // Check if current user is the owner (cannot pay respects to own cenotaph)
+  const isOwnCenotaph = currentUserId === organization.created_by;
+
   return (
     <div className="min-h-screen bg-slate-900 overflow-x-hidden">
       {/* Hero with Cenotaph */}
@@ -797,6 +833,7 @@ export function PublicView({
         memorial={memorial}
         dateRange={dateRange}
         location={location}
+        isOwnCenotaph={isOwnCenotaph}
       />
 
       {/* Story Insights - AI refined data only */}

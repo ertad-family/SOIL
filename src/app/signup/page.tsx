@@ -7,6 +7,7 @@ import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OAuthButtons, EmailFormToggle, saveLastAuthMethod } from "@/components/ui/oauth-buttons";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +40,7 @@ export default function SignupPage() {
 
       if (error) throw error;
 
+      saveLastAuthMethod("email");
       router.push("/signup/success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account. Please try again.");
@@ -49,89 +52,104 @@ export default function SignupPage() {
   return (
     <AuthLayout
       variant="dark"
-      title="Create Account"
-      subtitle="Join the community of founders preserving organizational knowledge"
-      backLink={{ href: "/", label: "Back to Home" }}
-      footer={
-        <p className="text-sm text-slate-400">
-          Already have an account?{" "}
+      title={
+        <span className="flex items-center justify-center gap-3">
+          <span>Create Account</span>
+          <span className="text-slate-500">or</span>
           <Link href="/login" className="text-gold-400 hover:text-gold-300 transition-colors">
-            Sign in
+            Sign In
           </Link>
-        </p>
+        </span>
       }
+      subtitle="Join the community of founders preserving organizational knowledge"
+      showLogo={false}
+      backLink={{ href: "/", label: "Back to Home" }}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {error && (
           <div className="p-3 text-sm text-error-400 bg-error-500/10 rounded-md border border-error-500/20">
             {error}
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label variant="dark" htmlFor="name">
-            Full Name
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            variant="dark"
-          />
-        </div>
+        <OAuthButtons />
 
-        <div className="space-y-2">
-          <Label variant="dark" htmlFor="email">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="founder@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            variant="dark"
-          />
-        </div>
+        <EmailFormToggle
+          isExpanded={showEmailForm}
+          onToggle={() => setShowEmailForm(!showEmailForm)}
+        />
 
-        <div className="space-y-2">
-          <Label variant="dark" htmlFor="password">
-            Password
-          </Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Create a strong password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            variant="dark"
-          />
-          <p className="text-xs text-slate-500">Minimum 6 characters</p>
-        </div>
+        {showEmailForm && (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <div className="space-y-2">
+              <Label variant="dark" htmlFor="name">
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                variant="dark"
+              />
+            </div>
 
-        <Button
-          type="submit"
-          variant="dark-primary"
-          size="lg"
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            "Create Account"
-          )}
-        </Button>
-      </form>
+            <div className="space-y-2">
+              <Label variant="dark" htmlFor="email">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="founder@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                variant="dark"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label variant="dark" htmlFor="password">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Create a strong password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                variant="dark"
+              />
+              <p className="text-xs text-slate-500">Minimum 6 characters</p>
+            </div>
+
+            <Button
+              type="submit"
+              variant="dark-primary"
+              size="lg"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </form>
+        )}
+      </div>
     </AuthLayout>
   );
 }

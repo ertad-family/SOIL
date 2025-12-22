@@ -23,7 +23,7 @@ export interface ContributionOption {
   icon: React.ReactNode;
   title: string;
   description: string;
-  cta: string;
+  cta?: string;
   href: string;
   external?: boolean;
 }
@@ -46,8 +46,7 @@ export const tabsData: Record<string, TabData> = {
         title: "Spread the Word",
         description:
           "Share SOIL with your professional network. Help founders discover a community that understands.",
-        cta: "Share on Social",
-        href: "#share",
+        href: "https://soil.rip",
       },
       {
         icon: <UserPlus className="w-6 h-6" />,

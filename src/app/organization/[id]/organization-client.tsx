@@ -68,14 +68,17 @@ import type {
   NarrativeData,
   FounderRole,
   PublicNamingPreference,
+  GeoLocation,
 } from "@/types/interview";
-import { MODULES } from "@/types/interview";
+import { MODULES, createEmptyGeoLocation } from "@/types/interview";
+import { LocationPicker } from "@/components/ui/location-picker";
 import {
   getBusinessModelsForOrgType,
   LIFECYCLE_STAGE_LABELS as LIFECYCLE_LABELS,
   LIFECYCLE_STAGE_DESCRIPTIONS,
 } from "@/data/function-matrix";
 import { PublicView } from "./public-view";
+import { ShareButton } from "@/components/ui/share-button";
 
 interface OrganizationData {
   id: string;
@@ -87,6 +90,9 @@ interface OrganizationData {
   description: string | null;
   location_country: string | null;
   location_city: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_geo_id: number | null;
   founded_date: string | null;
   closed_date: string | null;
   stage_at_closure: LifecycleStage | null;
@@ -1119,6 +1125,17 @@ function CenotaphAvatar({
             </div>
           </div>
         </button>
+
+        {/* Share Button - only when verified and has design */}
+        {isVerified && hasDesign && (
+          <div className="mt-3 flex justify-center">
+            <ShareButton
+              url={`${typeof window !== "undefined" ? window.location.origin : ""}/organization/${organizationId}`}
+              title={`${organization.name} - preserved at SOIL`}
+              description="A story of organizational experience, preserved for future founders to learn from."
+            />
+          </div>
+        )}
 
         {/* Image Popup Modal */}
         {showImagePopup && memorial.cenotaph_image_url && (
@@ -2316,8 +2333,13 @@ function EditOrganizationModal({
     organization_type: organization.organization_type,
     business_model: organization.business_model || "",
     industry: organization.industry || "",
-    location_country: organization.location_country || "",
-    location_city: organization.location_city || "",
+    location: {
+      country: organization.location_country,
+      city: organization.location_city,
+      latitude: organization.location_lat,
+      longitude: organization.location_lng,
+      geoId: organization.location_geo_id ?? undefined,
+    } as GeoLocation,
     founded_date: organization.founded_date || "",
     closed_date: organization.closed_date || "",
     stage_at_closure: organization.stage_at_closure,
@@ -2352,8 +2374,11 @@ function EditOrganizationModal({
           organization_type: formData.organization_type,
           business_model: formData.business_model || null,
           industry: formData.industry || null,
-          location_country: formData.location_country || null,
-          location_city: formData.location_city || null,
+          location_country: formData.location.country || null,
+          location_city: formData.location.city || null,
+          location_lat: formData.location.latitude || null,
+          location_lng: formData.location.longitude || null,
+          location_geo_id: formData.location.geoId || null,
           founded_date: formData.founded_date || null,
           closed_date: formData.closed_date || null,
           stage_at_closure: formData.stage_at_closure,
@@ -2483,27 +2508,15 @@ function EditOrganizationModal({
             </div>
 
             {/* Location */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Country</label>
-                <input
-                  type="text"
-                  value={formData.location_country}
-                  onChange={(e) => setFormData({ ...formData, location_country: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
-                  placeholder="Country"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">City</label>
-                <input
-                  type="text"
-                  value={formData.location_city}
-                  onChange={(e) => setFormData({ ...formData, location_city: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
-                  placeholder="City"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Location</label>
+              <p className="text-xs text-slate-400 mb-2">Start typing a city name to search</p>
+              <LocationPicker
+                value={formData.location}
+                onValueChange={(location) => setFormData({ ...formData, location })}
+                variant="dark"
+                placeholder="Search for a city..."
+              />
             </div>
 
             {/* Timeline */}

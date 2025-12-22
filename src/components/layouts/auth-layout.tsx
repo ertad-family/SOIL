@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export interface AuthLayoutProps {
   variant?: "default" | "dark";
   children: React.ReactNode;
-  title?: string;
+  title?: React.ReactNode;
   subtitle?: string;
   showLogo?: boolean;
   backLink?: {
@@ -76,7 +77,7 @@ const AuthLayout = React.forwardRef<HTMLDivElement, AuthLayoutProps>(
           {/* Content (form) */}
           <div
             className={cn(
-              "rounded-md p-8",
+              "rounded-xl p-6",
               isDark
                 ? "bg-slate-800 border border-slate-700 shadow-dark-lg"
                 : "bg-white border border-marble-300 shadow-md"
@@ -89,16 +90,10 @@ const AuthLayout = React.forwardRef<HTMLDivElement, AuthLayoutProps>(
           {(backLink || footer) && (
             <div className="text-center space-y-4">
               {backLink && (
-                <Link
-                  href={backLink.href}
-                  className={cn(
-                    "text-sm transition-colors",
-                    isDark
-                      ? "text-gold-400 hover:text-gold-300"
-                      : "text-gold-600 hover:text-gold-700"
-                  )}
-                >
-                  {backLink.label}
+                <Link href={backLink.href}>
+                  <Button variant="dark-ghost" size="sm">
+                    ← {backLink.label}
+                  </Button>
                 </Link>
               )}
               {footer}
