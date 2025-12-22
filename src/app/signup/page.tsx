@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OAuthButtons, EmailFormToggle, saveLastAuthMethod } from "@/components/ui/oauth-buttons";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2 } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,6 +23,10 @@ export default function SignupPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    // Force browser to paint loading state before starting auth
+    // This prevents the button from appearing unresponsive when auth is fast
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
     const supabase = createClient();
 
@@ -136,16 +139,9 @@ export default function SignupPage() {
               variant="dark-primary"
               size="lg"
               className="w-full"
-              disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                "Create Account"
-              )}
+              {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
         )}
