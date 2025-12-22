@@ -233,12 +233,10 @@ export default function VerifyPage() {
 
           {/* CTA: Learn More */}
           <div className="text-center">
-            <Link
-              href="/community"
-              className="text-sm text-slate-400 hover:text-gold-400 transition-colors inline-flex items-center gap-1"
-            >
-              Learn about our research & community
-              <ArrowRight className="w-3 h-3" />
+            <Link href="/community">
+              <Button variant="dark-ghost" size="sm">
+                ← Learn about our research & community
+              </Button>
             </Link>
           </div>
         </div>
@@ -328,12 +326,10 @@ export default function VerifyPage() {
 
           {/* CTA c: Learn More */}
           <div className="text-center">
-            <Link
-              href="/community"
-              className="text-sm text-slate-400 hover:text-gold-400 transition-colors inline-flex items-center gap-1"
-            >
-              Learn about our research & community
-              <ArrowRight className="w-3 h-3" />
+            <Link href="/community">
+              <Button variant="dark-ghost" size="sm">
+                ← Learn about our research & community
+              </Button>
             </Link>
           </div>
         </div>
