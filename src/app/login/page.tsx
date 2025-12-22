@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AuthLayout } from "@/components/layouts/auth-layout";
@@ -11,7 +11,7 @@ import { OAuthButtons, EmailFormToggle, saveLastAuthMethod } from "@/components/
 import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -138,5 +138,13 @@ export default function LoginPage() {
         )}
       </div>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
