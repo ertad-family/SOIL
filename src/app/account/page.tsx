@@ -113,6 +113,7 @@ export default async function AccountPage() {
           user.email?.split("@")[0] ||
           "User",
         avatarUrl: profile?.avatar_url,
+        role: profile?.role || "user",
       }}
       stories={(stories as unknown as StoryData[]) || []}
       memorials={(memorials as MemorialData[]) || []}
