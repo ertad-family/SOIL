@@ -25,6 +25,7 @@ import {
   getNextModule,
   calculateProgress,
 } from "@/types/interview";
+import { trackWizardEvent } from "@/lib/analytics";
 
 // =============================================================================
 // TYPES
@@ -246,6 +247,14 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
 
       if (insertError) {
         throw new Error(insertError.message);
+      }
+
+      // Track wizard started event
+      if (data?.id) {
+        trackWizardEvent("wizard_started", {
+          storyId: data.id,
+          progress: 0,
+        });
       }
 
       return data?.id || null;
@@ -542,6 +551,25 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
 
         setLastSavedAt(new Date());
         setHasUnsavedChanges(false);
+
+        // Track chapter completion event
+        if (isNewCompletion) {
+          const moduleInfo = MODULES.find((m) => m.id === moduleId);
+          trackWizardEvent("chapter_completed", {
+            storyId: story.id,
+            chapterId: moduleId,
+            chapterName: moduleInfo?.name,
+            progress: calculateProgress(newCompletedModules),
+          });
+
+          // Track wizard completion if all modules are done
+          if (allModulesComplete) {
+            trackWizardEvent("wizard_completed", {
+              storyId: story.id,
+              progress: 100,
+            });
+          }
+        }
 
         // Only trigger AI summary generation for NEW completions
         // Skip if user is just re-completing an already completed module without changes
