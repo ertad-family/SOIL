@@ -496,44 +496,46 @@ export async function generateTherapeuticAppraisal(
     return getContextualFallback(story, lastCompletedModule);
   }
 
-  const prompt = `You are a compassionate business therapist helping founders process the closure of their organization.
+  const prompt = `You are writing acknowledgment messages for founders documenting their organization's closure.
 
-A founder just completed the "${moduleName}" chapter of their story. Your job is to make them feel SEEN and UNDERSTOOD - not processed.
+A founder just completed the "${moduleName}" chapter. Write a brief, respectful acknowledgment.
 
-IMPORTANT GUIDELINES:
-1. Be SPECIFIC - reference actual details they shared (use the context below)
-2. Be WARM - this is therapeutic, not academic
-3. Be BRIEF - 1-2 sentences for affirmation, 1 sentence for anticipation
-4. Use second person ("You've...", "What you...")
-5. Acknowledge the EMOTIONAL weight, not just the facts
-6. Don't be generic - if you can't be specific, acknowledge the courage of sharing
+CRITICAL RULES:
+1. NEVER use first person ("I appreciate", "I understand") - there is no persona here
+2. NEVER mention the organization name - they know what they're documenting
+3. Be BRIEF - 1-2 short sentences max
+4. Be RESPECTFUL, not intimate - don't be over-the-top emotional
+5. Reference SPECIFIC details they shared (from context below)
+6. Use second person only ("You've...", "What you...", "This...")
 
 EMOTIONAL CONTEXT FROM THEIR CHAPTER:
 ${emotionalContext}
 
 WHAT TO GENERATE:
-1. "affirmation": A warm, acknowledging message (1-2 sentences) that:
-   - References something SPECIFIC they shared
-   - Validates the difficulty or courage it took
-   - Makes them feel understood, not just processed
+1. "affirmation": A brief, respectful message (1-2 sentences) that:
+   - References something specific they shared
+   - Acknowledges without being patronizing or overly emotional
+   - Uses impersonal or "you" language, NEVER "I" or "we"
 
 2. "anticipation": ${
     isLastModule
-      ? "A celebratory message (1 sentence) congratulating them on completing their full story and honoring their organization's legacy."
-      : `A brief message (1 sentence) preparing them for the next chapter ("${nextModule?.name}"). Hint at what awaits and acknowledge that some chapters are harder than others.`
+      ? "A brief message (1 sentence) noting their story is complete."
+      : `A brief message (1 sentence) about the next chapter ("${nextModule?.name}").`
   }
 
 TONE EXAMPLES:
-BAD: "Thank you for sharing this part of your journey. Every detail helps."
-GOOD: "Acknowledging the health impact this had on you takes real courage. Most people never admit that, even to themselves."
+BAD (first person): "I deeply appreciate you sharing this vulnerability"
+BAD (over-the-top): "This is uniquely painful and I'm honored you trusted us"
+BAD (mentions company): "What you shared about Acme Corp is valuable"
 
-BAD: "You've provided valuable information about your organization."
-GOOD: "The turnover patterns you've mapped in 4 functions tell a story of constant rebuilding. That's exhausting - and you've documented it honestly."
+GOOD: "Documenting health impacts like this takes honesty."
+GOOD: "The turnover patterns across 4 functions reveal a lot about what was happening."
+GOOD: "Recognizing that moment too late is hard to admit - but useful for others."
 
 Format your response as JSON:
 {
-  "affirmation": "Your specific, warm affirmation here...",
-  "anticipation": "Your anticipation message here..."
+  "affirmation": "Brief, respectful acknowledgment here...",
+  "anticipation": "Brief next step here..."
 }`;
 
   try {

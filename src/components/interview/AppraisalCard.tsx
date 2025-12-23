@@ -66,11 +66,10 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
         {/* Header */}
         <div>
           <h3 className="font-serif text-base font-medium text-marble-100">
-            {allChaptersComplete ? "Story Complete" : "Well Done"}
+            {allChaptersComplete
+              ? "Story Complete"
+              : `${processedChapterName || "Chapter"} Complete`}
           </h3>
-          {processedChapterName && (
-            <p className="text-xs text-slate-500 mt-0.5">After completing {processedChapterName}</p>
-          )}
         </div>
 
         {/* Affirmation message */}
@@ -95,11 +94,11 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
         )}
 
         {/* Anticipation for next chapter - only if there's a next chapter */}
-        {nextChapterName && (
+        {nextChapterName && appraisal.anticipation && (
           <div className="pt-2 border-t border-slate-700/50">
-            <div className="flex items-center gap-2 text-gold-400">
-              <ArrowRight className="h-3.5 w-3.5 flex-shrink-0" />
-              <p className="text-sm">Next up: {nextChapterName}</p>
+            <div className="flex items-start gap-2 text-gold-400">
+              <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+              <p className="text-sm">{appraisal.anticipation}</p>
             </div>
           </div>
         )}

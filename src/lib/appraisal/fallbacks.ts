@@ -424,22 +424,24 @@ function getFunctionalFallback(story: Story): FallbackContext {
  */
 function getNarrativeFallback(story: Story): FallbackContext {
   const signals = getNarrativeSignals(story);
-  const orgName = story.basicInfo?.organizationName || "your organization";
 
   let affirmation =
-    "Your reflections complete this story. What you've shared here will help others find meaning in their own journeys.";
+    "These reflections complete the story. What's been shared here will help others find meaning in their own journeys.";
 
   if (signals.includes("deep_reflections")) {
-    affirmation = `The depth of reflection you've shared is remarkable. These insights about ${orgName} will resonate with founders for years to come.`;
+    affirmation =
+      "The depth of reflection here is remarkable. These insights will resonate with founders for years to come.";
   } else if (signals.includes("legacy_defined")) {
-    affirmation = `You've defined a legacy for ${orgName}. That's not something that dies - it lives on in what others learn from your experience.`;
+    affirmation =
+      "A legacy has been defined here. That's not something that dies - it lives on in what others learn.";
   } else if (signals.includes("reflections_shared")) {
-    affirmation = `Thank you for sharing these reflections on ${orgName}. Every insight you've offered becomes wisdom for the next founder.`;
+    affirmation =
+      "Every insight shared here becomes wisdom for the next founder facing similar challenges.";
   }
 
   return {
     affirmation,
-    anticipation: `Your story is now complete. ${orgName} has been honored, and your experience will help others on their journey.`,
+    anticipation: "The story is now complete. This experience will help others on their journey.",
   };
 }
 
