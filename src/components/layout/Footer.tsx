@@ -6,6 +6,9 @@ import { FooterLandscape } from "@/components/three/FooterLandscape";
 import { openCookiePreferences } from "@/components/ui/cookie-consent-banner";
 import { useIsMobile } from "@/lib/utils";
 
+// Throttle interval for scroll updates (ms) - reduces GPU load (#200)
+const SCROLL_THROTTLE_MS = 100;
+
 // Primary navigation - main site sections
 const PRIMARY_LINKS = [
   { href: "/research", label: "Research" },
@@ -102,7 +105,10 @@ export function Footer() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    const handleScroll = () => {
+    let lastScrollTime = 0;
+    let rafId: number | null = null;
+
+    const updateScrollProgress = () => {
       if (!footerRef.current) return;
 
       const rect = footerRef.current.getBoundingClientRect();
@@ -119,13 +125,29 @@ export function Footer() {
       setScrollProgress(progress);
     };
 
-    handleScroll();
+    const handleScroll = () => {
+      const now = Date.now();
+      // Throttle scroll updates to reduce GPU load (#200)
+      if (now - lastScrollTime < SCROLL_THROTTLE_MS) return;
+      lastScrollTime = now;
+
+      // Use RAF to batch with next frame
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      rafId = requestAnimationFrame(updateScrollProgress);
+    };
+
+    updateScrollProgress();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll);
+    window.addEventListener("resize", updateScrollProgress);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("resize", updateScrollProgress);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 

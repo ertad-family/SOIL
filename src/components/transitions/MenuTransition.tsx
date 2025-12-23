@@ -2,10 +2,15 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useMenu } from "@/contexts/MenuContext";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/lib/utils";
+
+// Pages with heavy WebGL content where we should NOT preload the menu scene (#200)
+// This prevents 4+ WebGL contexts from running simultaneously
+const HEAVY_WEBGL_PAGES = ["/cenotaphery"];
 
 // Dynamically import DodecahedronScene to avoid SSR issues with Three.js
 const DodecahedronScene = dynamic(
@@ -42,6 +47,10 @@ type Phase =
 export function MenuTransition() {
   const { isOpen, currentSection, closeMenu, navigateViaPortal } = useMenu();
   const isMobile = useIsMobile();
+  const pathname = usePathname();
+
+  // Disable preloading on heavy WebGL pages to prevent GPU overload (#200)
+  const isHeavyPage = HEAVY_WEBGL_PAGES.some((page) => pathname.startsWith(page));
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [fadeOpacity, setFadeOpacity] = useState(0);
@@ -80,8 +89,9 @@ export function MenuTransition() {
   // ============================================================================
   useEffect(() => {
     // On desktop: wait for sceneReady (preloaded scene)
-    // On mobile: proceed immediately (scene loads on-demand when phase changes) (#195)
-    const canStart = isMobile
+    // On mobile or heavy WebGL pages: proceed immediately (scene loads on-demand) (#195, #200)
+    const shouldLoadOnDemand = isMobile || isHeavyPage;
+    const canStart = shouldLoadOnDemand
       ? isOpen && phase === "idle"
       : isOpen && phase === "idle" && sceneReady;
 
@@ -115,7 +125,7 @@ export function MenuTransition() {
 
       requestAnimationFrame(animate);
     }
-  }, [isOpen, phase, sceneReady, updatePhase, isMobile]);
+  }, [isOpen, phase, sceneReady, updatePhase, isMobile, isHeavyPage]);
 
   // ============================================================================
   // STEP 2: Fade-out (reveal scene)
@@ -358,9 +368,10 @@ export function MenuTransition() {
   }, [isOpen, phase, updatePhase]);
 
   // Show scene when not in idle phase, or always to pre-render (desktop only)
-  // On mobile: load on-demand to avoid background WebGL rendering (#195)
-  const showScene = isMobile
-    ? phase !== "idle" // Mobile: only mount when menu is actually open
+  // On mobile or heavy WebGL pages: load on-demand to avoid background WebGL rendering (#195, #200)
+  const shouldLoadOnDemand = isMobile || isHeavyPage;
+  const showScene = shouldLoadOnDemand
+    ? phase !== "idle" // Mobile/heavy pages: only mount when menu is actually open
     : phase !== "idle" || sceneReady; // Desktop: preload for instant experience
 
   return (
