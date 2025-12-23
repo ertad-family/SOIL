@@ -66,8 +66,8 @@ export function CookieConsentBanner() {
               </p>
             </div>
 
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 shrink-0">
+            {/* Buttons - reversed on mobile so primary action is first (#160) */}
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 shrink-0">
               <Button
                 variant="dark-secondary"
                 size="sm"
