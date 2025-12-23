@@ -79,7 +79,13 @@ export function MenuTransition() {
   // STEP 1: Menu clicked → Start fade-in
   // ============================================================================
   useEffect(() => {
-    if (isOpen && phase === "idle" && sceneReady) {
+    // On desktop: wait for sceneReady (preloaded scene)
+    // On mobile: proceed immediately (scene loads on-demand when phase changes) (#195)
+    const canStart = isMobile
+      ? isOpen && phase === "idle"
+      : isOpen && phase === "idle" && sceneReady;
+
+    if (canStart) {
       console.log("[MenuTransition] Menu opened, starting fade-in");
       updatePhase("fadingIn");
 
@@ -109,7 +115,7 @@ export function MenuTransition() {
 
       requestAnimationFrame(animate);
     }
-  }, [isOpen, phase, sceneReady, updatePhase]);
+  }, [isOpen, phase, sceneReady, updatePhase, isMobile]);
 
   // ============================================================================
   // STEP 2: Fade-out (reveal scene)
