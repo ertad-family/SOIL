@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
 import { WizardLayout } from "@/components/layouts/wizard-layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, CheckCircle2, Plus, AlertCircle } from "lucide-react";
+import { Loader2, Sparkles, CheckCircle2, Plus, AlertCircle, MessageSquare } from "lucide-react";
 import type { DesignOption, DesignStatus, OrganizationContext } from "@/types/cenotaph";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "@/components/ui/share-button";
@@ -49,6 +50,7 @@ export default function CenotaphWizardPage() {
   const router = useRouter();
   const supabase = createClient();
   const memorialId = params.memorialId as string;
+  const { scheduleExitPrompt, showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
 
   const [memorial, setMemorial] = useState<MemorialData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -220,6 +222,37 @@ export default function CenotaphWizardPage() {
       fetchMemorial();
     }
   }, [memorialId, supabase]);
+
+  // Schedule exit-intent for completed designs (show feedback prompt when leaving)
+  useEffect(() => {
+    if (memorial?.design_status === "completed" && !hasFeedbackBeenGiven("cenotaph_design")) {
+      scheduleExitPrompt({
+        type: "cenotaph_design",
+        contextId: memorial.id,
+        contextMetadata: {
+          organizationName: memorial.organization_name,
+          organizationId: memorial.organization_id,
+        },
+        title: "Your feedback matters",
+        description: "How was your cenotaph creation experience?",
+      });
+    }
+  }, [memorial, scheduleExitPrompt, hasFeedbackBeenGiven]);
+
+  // Handler for feedback button click
+  const handleFeedbackClick = useCallback(() => {
+    if (!memorial) return;
+    showPrompt({
+      type: "cenotaph_design",
+      contextId: memorial.id,
+      contextMetadata: {
+        organizationName: memorial.organization_name,
+        organizationId: memorial.organization_id,
+      },
+      title: "Your feedback matters",
+      description: "How was your cenotaph creation experience?",
+    });
+  }, [memorial, showPrompt]);
 
   // Generate designs
   const handleGenerate = useCallback(async () => {
@@ -611,6 +644,24 @@ export default function CenotaphWizardPage() {
                   />
                 </div>
               </div>
+
+              {/* Feedback prompt - only show if not already given */}
+              {!hasFeedbackBeenGiven("cenotaph_design") && (
+                <div className="mt-4 pt-4 border-t border-slate-700">
+                  <p className="text-xs text-slate-400 text-center mb-2">
+                    Your feedback helps us improve the experience for future creators
+                  </p>
+                  <Button
+                    variant="dark-ghost"
+                    size="sm"
+                    onClick={handleFeedbackClick}
+                    className="w-full justify-center"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 mr-2" />
+                    Share Your Feedback
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <>
