@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { FooterLandscape } from "@/components/three/FooterLandscape";
 import { openCookiePreferences } from "@/components/ui/cookie-consent-banner";
+import { useIsMobile } from "@/lib/utils";
 
 // Primary navigation - main site sections
 const PRIMARY_LINKS = [
@@ -98,6 +99,7 @@ function FooterSection({ title, links }: FooterSectionProps) {
 export function Footer() {
   const footerRef = useRef<HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,19 +131,21 @@ export function Footer() {
 
   return (
     <footer ref={footerRef} className="bg-marble-950 relative">
-      {/* Wireframe landscape background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <Suspense fallback={null}>
-          <FooterLandscape className="w-full h-full" scrollProgress={scrollProgress} />
-        </Suspense>
-      </div>
+      {/* Wireframe landscape background - disabled on mobile for performance (#109) */}
+      {!isMobile && (
+        <div className="absolute inset-0 overflow-hidden">
+          <Suspense fallback={null}>
+            <FooterLandscape className="w-full h-full" scrollProgress={scrollProgress} />
+          </Suspense>
+        </div>
+      )}
 
       {/* Content overlay */}
       <div className="relative z-10 max-w-content mx-auto px-6 pt-16 pb-16">
-        {/* Main navigation grid - first column wider, others closer together */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 lg:gap-6">
-          {/* Logo & description */}
-          <div className="flex flex-col gap-4">
+        {/* Main navigation grid - two columns on mobile, four on desktop (#109) */}
+        <div className="grid grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-6 lg:gap-6">
+          {/* Logo & description - full width on mobile */}
+          <div className="col-span-2 lg:col-span-1 flex flex-col gap-4">
             <Link
               href="/"
               className="font-serif text-2xl font-semibold tracking-wider !text-marble-100 hover:!text-marble-100"
