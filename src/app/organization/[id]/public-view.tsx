@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
@@ -23,8 +23,9 @@ import {
   LogIn,
   Plus,
   Flag,
-  ShieldCheck,
   Eye,
+  Calendar,
+  TrendingUp,
 } from "lucide-react";
 import type {
   OrganizationType,
@@ -35,9 +36,11 @@ import type {
   FounderRole,
   PublicNamingPreference,
 } from "@/types/interview";
-import { cn } from "@/lib/utils";
+import { cn, formatRevenueUSD } from "@/lib/utils";
 import { ShareButton } from "@/components/ui/share-button";
 import { PayRespectsButton, RespectsCounter } from "@/components/ui/pay-respects-button";
+import { VerifiedBadgeWithTooltip } from "@/components/ui/verified-badge-tooltip";
+import { BackButton } from "@/components/ui/back-button";
 
 // =============================================================================
 // TYPES
@@ -78,6 +81,7 @@ interface MemorialData {
   respects_count: number;
   cenotaph_image_url: string | null;
   design_status: string | null;
+  cenotaphery_slug: string | null;
 }
 
 interface PublicSummaryData {
@@ -101,6 +105,7 @@ interface PublicViewProps {
   publicNarratives: PublicNarrativeData[];
   currentUserId: string | null;
   currentUserStoryId: string | null;
+  peakRevenueUSD: number | null;
 }
 
 // =============================================================================
@@ -136,6 +141,20 @@ function formatDateRange(founded: string | null, closed: string | null): string 
   };
 
   return `${formatYear(founded)} — ${formatYear(closed)}`;
+}
+
+/** Calculate organization age in years */
+function calculateAge(founded: string | null, closed: string | null): number | null {
+  if (!founded || !closed) return null;
+
+  const foundedDate = new Date(founded);
+  const closedDate = new Date(closed);
+
+  // Calculate difference in years
+  const diffTime = closedDate.getTime() - foundedDate.getTime();
+  const diffYears = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365.25));
+
+  return diffYears > 0 ? diffYears : null;
 }
 
 /** Convert year to Roman numerals */
@@ -218,111 +237,44 @@ function HeroSection({
   dateRange,
   location,
   isOwnCenotaph,
+  peakRevenueUSD,
 }: {
   organization: OrganizationData;
   memorial: MemorialData | null;
   dateRange: string | null;
   location: string | null;
   isOwnCenotaph: boolean;
+  peakRevenueUSD: number | null;
 }) {
-  const [showFullImage, setShowFullImage] = useState(false);
   const { orgName } = getDisplayName(organization, null, null);
   const romanDateRange = formatDateRangeRoman(organization.founded_date, organization.closed_date);
+
+  // Calculate organization age
+  const organizationAge = calculateAge(organization.founded_date, organization.closed_date);
+
+  // Format peak revenue in USD with shorthand notation
+  const formattedRevenue = formatRevenueUSD(peakRevenueUSD);
 
   return (
     <>
       <section className="relative min-h-[85vh] overflow-hidden w-screen ml-[calc(-50vw+50%)]">
-        {/* Split background - marble-950 for cenotaph, gradient to slate for info */}
-        <div className="absolute inset-0 grid grid-cols-1 lg:grid-cols-2">
-          {/* Left: Dark marble background for cenotaph */}
-          <div className="relative bg-marble-950">
-            {/* Subtle ambient glow behind cenotaph */}
-            <div
-              className="absolute inset-0 opacity-40"
-              style={{
-                background:
-                  "radial-gradient(ellipse 80% 60% at 50% 60%, rgba(201, 148, 61, 0.12) 0%, transparent 70%)",
-              }}
-            />
-          </div>
-          {/* Right: Gradient to slate */}
-          <div
-            className="hidden lg:block"
-            style={{
-              background: "linear-gradient(90deg, #252220 0%, #1e293b 30%, #0f172a 100%)",
-            }}
-          />
-        </div>
-
-        {/* Mobile: single dark background */}
-        <div className="absolute inset-0 lg:hidden bg-marble-950" />
-
-        {/* Top gradients - smooth transition from header for both columns */}
-        <div className="absolute inset-x-0 top-0 h-48 z-20 pointer-events-none grid grid-cols-1 lg:grid-cols-2">
-          {/* Left column: blend from slate-900 (header) to marble-950 */}
-          <div
-            style={{
-              background: "linear-gradient(180deg, #0f172a 0%, transparent 100%)",
-            }}
-          />
-          {/* Right column: blend from slate-900 (header) to transparent */}
-          <div
-            className="hidden lg:block"
-            style={{
-              background: "linear-gradient(180deg, #0f172a 0%, transparent 100%)",
-            }}
-          />
-        </div>
-
-        {/* Bottom gradients - smooth transition to Roman divider */}
-        <div className="absolute inset-x-0 bottom-0 h-48 z-20 pointer-events-none grid grid-cols-1 lg:grid-cols-2">
-          {/* Left column: blend to slate-900 */}
-          <div
-            style={{
-              background: "linear-gradient(0deg, #0f172a 0%, transparent 100%)",
-            }}
-          />
-          {/* Right column: blend to slate-900 */}
-          <div
-            className="hidden lg:block"
-            style={{
-              background: "linear-gradient(0deg, #0f172a 0%, transparent 100%)",
-            }}
-          />
-        </div>
+        {/* Background - consistent slate-900 */}
+        <div className="absolute inset-0 bg-slate-900" />
 
         {/* Content grid */}
         <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
           {/* Left: Cenotaph as full-column background */}
           <div className="relative min-h-[50vh] lg:min-h-[85vh]">
             {memorial?.cenotaph_image_url ? (
-              <button
-                onClick={() => setShowFullImage(true)}
-                className="group absolute inset-0 w-full h-full cursor-pointer"
-              >
-                {/* Full-column cenotaph image */}
+              <div className="absolute inset-0">
                 <Image
                   src={memorial.cenotaph_image_url}
                   alt="Memorial cenotaph"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-contain object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                  className="object-contain object-center"
                 />
-                {/* Subtle golden glow on hover */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(201, 148, 61, 0.08) 0%, transparent 70%)",
-                  }}
-                />
-                {/* Hover hint at bottom */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="px-4 py-2 bg-marble-950/90 backdrop-blur-sm text-marble-300 text-sm font-medium rounded-full border border-marble-800">
-                    Click to enlarge
-                  </span>
-                </div>
-              </button>
+              </div>
             ) : (
               /* Placeholder when no cenotaph image */
               <div className="absolute inset-0 flex items-center justify-center">
@@ -334,32 +286,46 @@ function HeroSection({
                 </div>
               </div>
             )}
+
+            {/* Respects counter - positioned at bottom center of cenotaph */}
+            {memorial && (
+              <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
+                <RespectsCounter
+                  memorialId={memorial.id}
+                  initialCount={memorial.respects_count}
+                  className="text-lg text-marble-300/80 [&>span:first-child]:text-xl [&>span:first-child]:text-gold-400"
+                />
+              </div>
+            )}
           </div>
 
           {/* Right: Organization Info */}
           <div className="relative flex items-center lg:pl-8 xl:pl-16 px-6 lg:px-12 pb-16 lg:pb-0">
-            {/* Mobile gradient overlay */}
-            <div
-              className="absolute inset-0 lg:hidden"
-              style={{
-                background:
-                  "linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.95) 20%, #0f172a 100%)",
-              }}
-            />
+            {/* Back to Cenotaphery button - positioned at bottom right */}
+            {memorial?.cenotaphery_slug && (
+              <BackButton
+                href={`/cenotaphery/${memorial.cenotaphery_slug}`}
+                text="Back to Cenotaphery"
+                className="absolute bottom-6 right-6 lg:bottom-8 lg:right-8 z-30"
+              />
+            )}
 
             <div className="relative z-10 max-w-xl">
-              {/* Verification badge */}
+              {/* Verification badge above name */}
               {organization.verification_status === "verified" && (
-                <Badge variant="dark-verified" size="sm" className="mb-6">
-                  <ShieldCheck className="w-3 h-3 mr-1" />
-                  Verified
-                </Badge>
+                <div className="mb-4">
+                  <VerifiedBadgeWithTooltip
+                    headline="Verified Organization"
+                    description="This organization's existence has been confirmed by multiple independent sources, ensuring this memorial represents a real organization."
+                    showButton={false}
+                  />
+                </div>
               )}
 
               {/* Organization name */}
               <h1
                 className={cn(
-                  "font-display text-4xl md:text-5xl xl:text-6xl font-semibold mb-6 leading-tight",
+                  "font-display text-4xl md:text-5xl xl:text-6xl font-semibold leading-tight mb-6",
                   organization.is_public ? "text-marble-100" : "text-slate-400 italic"
                 )}
               >
@@ -396,20 +362,25 @@ function HeroSection({
                     <span>{location}</span>
                   </div>
                 )}
+                {organizationAge && (
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <Calendar className="w-4 h-4 text-slate-500" />
+                    <span>
+                      {organizationAge} {organizationAge === 1 ? "year" : "years"} of operation
+                    </span>
+                  </div>
+                )}
                 {organization.peak_team_size && (
                   <div className="flex items-center gap-3 text-slate-400">
                     <Users className="w-4 h-4 text-slate-500" />
                     <span>Peak team: {organization.peak_team_size} people</span>
                   </div>
                 )}
-
-                {/* Respects counter - heart icon with count, always shown */}
-                {memorial && (
-                  <RespectsCounter
-                    memorialId={memorial.id}
-                    initialCount={memorial.respects_count}
-                    className="text-base"
-                  />
+                {formattedRevenue && (
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <TrendingUp className="w-4 h-4 text-slate-500" />
+                    <span>Peak revenue: {formattedRevenue}</span>
+                  </div>
                 )}
               </div>
 
@@ -438,38 +409,6 @@ function HeroSection({
             </div>
           </div>
         </div>
-
-        {/* Full image modal */}
-        {showFullImage && memorial?.cenotaph_image_url && (
-          <div
-            className="fixed inset-0 z-50 bg-marble-950/98 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setShowFullImage(false)}
-          >
-            <div className="relative w-[90vw] h-[90vh] max-w-full max-h-[90vh]">
-              <Image
-                src={memorial.cenotaph_image_url}
-                alt="Memorial cenotaph"
-                fill
-                sizes="90vw"
-                className="object-contain"
-              />
-            </div>
-            <button
-              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-marble-900/80 border border-marble-700 text-marble-300 hover:text-marble-100 hover:bg-marble-800 transition-colors flex items-center justify-center"
-              onClick={() => setShowFullImage(false)}
-            >
-              <span className="sr-only">Close</span>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
       </section>
 
       {/* Roman divider with lifespan in Roman numerals */}
@@ -821,6 +760,7 @@ export function PublicView({
   publicNarratives,
   currentUserId,
   currentUserStoryId,
+  peakRevenueUSD,
 }: PublicViewProps) {
   const dateRange = formatDateRange(organization.founded_date, organization.closed_date);
   const location = [organization.location_city, organization.location_country]
@@ -859,6 +799,7 @@ export function PublicView({
         dateRange={dateRange}
         location={location}
         isOwnCenotaph={isOwnCenotaph}
+        peakRevenueUSD={peakRevenueUSD}
       />
 
       {/* Story Insights - AI refined data only */}

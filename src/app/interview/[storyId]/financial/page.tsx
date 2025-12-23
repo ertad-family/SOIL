@@ -757,13 +757,21 @@ export default function FinancialPage() {
         const revenue = metrics.revenue ?? { peakAnnual: null, trend: null };
         return (
           <div className="p-4 space-y-5 border-t border-slate-700 bg-slate-800/50">
-            <FormField variant="dark" label="What was your peak annual revenue?">
+            <FormField
+              variant="dark"
+              label={`What was your peak annual revenue? (in ${currencyInfo?.value || "your currency"})`}
+            >
               <Input
+                type="number"
                 variant="dark"
                 value={revenue.peakAnnual || ""}
                 onChange={(e) => updateMetric("revenue", { peakAnnual: e.target.value || null })}
-                placeholder="e.g., $1.2M, ~500K"
+                placeholder="e.g., 500000"
+                min="0"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Enter the raw number (e.g., 500000 for $500K or 1200000 for $1.2M)
+              </p>
             </FormField>
             <FormField variant="dark" label="How was revenue trending over time?">
               <RadioOptions

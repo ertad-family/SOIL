@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { buttonVariants } from "./button";
 import { cn } from "@/lib/utils";
-import { Heart, Check, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 
@@ -108,7 +108,7 @@ export function PayRespectsButton({
       case "paid":
         return <Check className="w-4 h-4" />;
       default:
-        return <Heart className="w-4 h-4" />;
+        return <span className="text-sm">✦</span>;
     }
   };
 
@@ -193,13 +193,14 @@ export function RespectsCounter({ memorialId, initialCount, className }: Respect
 
   return (
     <div className={cn("flex items-center gap-3 text-slate-400", className)}>
-      <Heart
+      <span
         className={cn(
-          "w-4 h-4 text-slate-500 transition-all duration-300",
+          "text-sm text-slate-500 transition-all duration-300",
           showPulse && "text-gold-400 scale-125"
         )}
-        fill={showPulse ? "currentColor" : "none"}
-      />
+      >
+        ✦
+      </span>
       <span className={cn("transition-all duration-300", showPulse && "text-gold-300 font-medium")}>
         {count.toLocaleString()}
       </span>
