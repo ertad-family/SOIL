@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, ReactNode, useEffect } from "react";
+import { Suspense, ReactNode, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useIsMobile } from "@/lib/utils";
 import { MenuProvider } from "@/contexts/MenuContext";
@@ -56,19 +56,21 @@ function VisitorParticles() {
 }
 
 /**
- * GeneralVisitorFeedback - Schedules exit-intent feedback prompt for general visitors.
+ * GeneralVisitorFeedback - Shows feedback prompt after 3 minutes for general visitors.
  *
  * Only triggers for visitors who:
  * 1. Are on public pages (not interview, account, admin, etc.)
  * 2. Haven't already given general feedback this session
- * 3. Have spent some time on the site (configured via context)
+ * 3. Have spent 3+ minutes on the site
  */
 function GeneralVisitorFeedback() {
   const pathname = usePathname();
-  const { scheduleExitPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
+  const { showPrompt, hasFeedbackBeenGiven, isPromptOpen } = useTestimonialPrompt();
+  const hasTriggeredRef = useRef(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Don't schedule for private/focused routes
+    // Don't trigger for private/focused routes
     const isPrivateRoute =
       pathname.startsWith("/interview") ||
       pathname.startsWith("/account") ||
@@ -80,16 +82,31 @@ function GeneralVisitorFeedback() {
 
     if (isPrivateRoute) return;
 
-    // Don't schedule if feedback already given
-    if (hasFeedbackBeenGiven("general")) return;
+    // Don't trigger if feedback already given or already triggered this session
+    if (hasFeedbackBeenGiven("general") || hasTriggeredRef.current) return;
 
-    // Schedule exit prompt for general visitors
-    scheduleExitPrompt({
-      type: "general",
-      title: "We value your opinion",
-      description: "You're one of the first 1000 visitors. Your feedback helps us improve.",
-    });
-  }, [pathname, scheduleExitPrompt, hasFeedbackBeenGiven]);
+    // Don't start timer if a prompt is already open
+    if (isPromptOpen) return;
+
+    // Set timer for 3 minutes (180000ms)
+    timerRef.current = setTimeout(() => {
+      // Double-check before showing
+      if (!hasFeedbackBeenGiven("general") && !hasTriggeredRef.current) {
+        hasTriggeredRef.current = true;
+        showPrompt({
+          type: "general",
+          title: "We value your opinion",
+          description: "You're one of the first 1000 visitors. Your feedback helps us improve.",
+        });
+      }
+    }, 180000); // 3 minutes
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [pathname, showPrompt, hasFeedbackBeenGiven, isPromptOpen]);
 
   return null;
 }
