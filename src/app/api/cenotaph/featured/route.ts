@@ -37,17 +37,20 @@ interface OrganizationData {
   privacy_display_style: PrivacyDisplayStyle | null;
 }
 
+interface OrganizationJoinData extends OrganizationData {
+  founded_date: string | null;
+  closed_date: string | null;
+  location_city: string | null;
+  industry: string | null;
+}
+
 interface MemorialRow {
   id: string;
   organization_name: string;
   epitaph: string | null;
   main_lesson: string | null;
-  industry: string | null;
-  location: string | null;
-  founded_date: string | null;
-  closed_date: string | null;
   cenotaph_image_url: string | null;
-  organizations: OrganizationData[] | OrganizationData | null;
+  organizations: OrganizationJoinData[] | OrganizationJoinData | null;
 }
 
 /**
@@ -59,11 +62,12 @@ interface MemorialRow {
 export async function GET() {
   const supabase = await createClient();
 
+  // Fetch from organizations table for dates/location (memorials table has legacy NULL fields)
   const { data: memorials, error } = await supabase
     .from("memorials")
     .select(
-      `id, organization_name, epitaph, main_lesson, industry, location, founded_date, closed_date, cenotaph_image_url,
-       organizations!organization_id (is_public, privacy_display_style)`
+      `id, organization_name, epitaph, main_lesson, cenotaph_image_url,
+       organizations!organization_id (is_public, privacy_display_style, founded_date, closed_date, location_city, industry)`
     )
     .eq("status", "published")
     .eq("design_status", "completed")
@@ -84,17 +88,22 @@ export async function GET() {
     const privacyStyle = org?.privacy_display_style ?? null;
     const displayName = getPrivacyDisplayName(isPublic, m.organization_name, privacyStyle);
 
+    // Use organization data for dates/location (memorials table has legacy NULL fields)
+    const foundedDate = org?.founded_date ?? null;
+    const closedDate = org?.closed_date ?? null;
+    const location = org?.location_city ?? null;
+    const industry = org?.industry ?? null;
+
     return {
       id: m.id,
       quote: m.epitaph || m.main_lesson || "A story worth remembering.",
       companyName: displayName,
       isPrivate: !isPublic,
-      years: formatYears(m.founded_date, m.closed_date),
-      location: m.location?.split(",")[0] || "Unknown",
-      industry: m.industry || "Other",
-      industryColor: getIndustryColor(m.industry),
+      years: formatYears(foundedDate, closedDate),
+      location: location || "Unknown",
+      industry: industry || "Other",
+      industryColor: getIndustryColor(industry),
       cenotaphImageUrl: m.cenotaph_image_url,
-      respects: 0, // Could be a counter in the future
     };
   });
 

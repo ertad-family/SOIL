@@ -1,6 +1,5 @@
 "use client";
 
-import { Heart } from "lucide-react";
 import { SectionLabel } from "@/components/ui/section-label";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +13,6 @@ interface FeaturedStory {
   industry: string;
   industryColor: string;
   cenotaphImageUrl?: string | null;
-  respects: number;
 }
 
 interface FeaturedStoriesSectionProps {
@@ -54,12 +52,6 @@ function StoryCard({ story }: { story: FeaturedStory }) {
         <p className="text-sm text-slate-400">
           {story.years} · {story.location}
         </p>
-      </div>
-
-      {/* Respects */}
-      <div className="mt-4 flex items-center gap-2 text-slate-500">
-        <Heart className="w-4 h-4" />
-        <span className="text-sm">{story.respects} Respects</span>
       </div>
 
       {/* Industry badge */}

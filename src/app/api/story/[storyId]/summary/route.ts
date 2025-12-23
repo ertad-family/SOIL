@@ -95,7 +95,19 @@ export async function POST(
     };
 
     // Generate the summary
-    const summary = await generateStorySummary(story, lastCompletedModule);
+    let summary;
+    try {
+      summary = await generateStorySummary(story, lastCompletedModule);
+    } catch (genError) {
+      console.error("Summary generation failed:", genError);
+      // Set status to failed when AI generation fails
+      await supabase.from("stories").update({ ai_summary_status: "failed" }).eq("id", storyId);
+
+      return NextResponse.json(
+        { success: false, error: "AI summary generation failed", status: "failed" },
+        { status: 500 }
+      );
+    }
 
     // Save the summary to the database
     const { error: updateError } = await supabase
@@ -124,7 +136,7 @@ export async function POST(
       status: "ready",
     });
   } catch (error) {
-    console.error("Error generating summary:", error);
+    console.error("Error in summary route:", error);
 
     return NextResponse.json(
       {
