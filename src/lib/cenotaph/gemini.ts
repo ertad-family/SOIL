@@ -13,11 +13,18 @@ import { GoogleGenAI } from "@google/genai";
 import type { DesignOption, DesignConcept } from "@/types/cenotaph";
 
 // Initialize Google GenAI client with Vertex AI
-// Using Vertex AI requires project ID and location
+// Using Vertex AI requires project ID, location, and service account credentials
+// Credentials are passed directly via googleAuthOptions instead of GOOGLE_APPLICATION_CREDENTIALS file
 const ai = new GoogleGenAI({
   vertexai: true,
   project: process.env.GOOGLE_CLOUD_PROJECT_ID || "",
   location: process.env.VERTEX_AI_LOCATION || "us-central1",
+  googleAuthOptions: {
+    credentials: {
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "",
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
+    },
+  },
 });
 
 // Model configuration
