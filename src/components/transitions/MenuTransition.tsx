@@ -351,8 +351,11 @@ export function MenuTransition() {
     }
   }, [isOpen, phase, updatePhase]);
 
-  // Show scene when not in idle phase, or always to pre-render
-  const showScene = phase !== "idle" || sceneReady;
+  // Show scene when not in idle phase, or always to pre-render (desktop only)
+  // On mobile: load on-demand to avoid background WebGL rendering (#195)
+  const showScene = isMobile
+    ? phase !== "idle" // Mobile: only mount when menu is actually open
+    : phase !== "idle" || sceneReady; // Desktop: preload for instant experience
 
   return (
     <>
@@ -374,56 +377,58 @@ export function MenuTransition() {
         />
       )}
 
-      {/* DodecahedronScene - ALWAYS mounted for pre-loading, visibility controlled */}
-      {/* Show scene only when overlay is opaque or fading out (after fadingIn complete) */}
+      {/* DodecahedronScene - preloaded on desktop, on-demand on mobile (#195) */}
+      {/* On mobile: unmounted when idle to prevent background WebGL rendering */}
       {/* overflow-hidden and touch-action prevent page scroll during 3D interaction (#115) */}
-      <div
-        className="fixed inset-0 z-[90] overflow-hidden"
-        style={{
-          pointerEvents:
-            phase === "menu" || phase === "flyingOut" || phase === "flyingIn" ? "auto" : "none",
-          // Only visible during: fadingOut, flyingOut, menu, flyingIn
-          // Hidden during: idle, fadingIn, navigating
-          visibility: ["fadingOut", "flyingOut", "menu", "flyingIn"].includes(phase)
-            ? "visible"
-            : "hidden",
-          // Prevent scroll gestures on mobile during menu phase (#115)
-          touchAction: phase === "menu" ? "none" : "auto",
-        }}
-      >
-        <Suspense fallback={null}>
-          <DodecahedronScene
-            className="w-full h-full"
-            initialView="inside"
-            exitPortalSection={currentSection}
-            onFlyOutComplete={handleFlyOutComplete}
-            onFlyInStart={handleFlyInStart}
-            onPortalClick={handlePortalNavigate}
-            initialFadeOpacity={0}
-            onExternalFadeProgress={handleFadeProgress}
-            hideInternalOverlay={true}
-            triggerFlyOutRef={triggerFlyOutRef}
-            triggerFlyInRef={triggerFlyInRef}
-            onReady={handleSceneReady}
-          />
-        </Suspense>
+      {showScene && (
+        <div
+          className="fixed inset-0 z-[90] overflow-hidden"
+          style={{
+            pointerEvents:
+              phase === "menu" || phase === "flyingOut" || phase === "flyingIn" ? "auto" : "none",
+            // Only visible during: fadingOut, flyingOut, menu, flyingIn
+            // Hidden during: idle, fadingIn, navigating
+            visibility: ["fadingOut", "flyingOut", "menu", "flyingIn"].includes(phase)
+              ? "visible"
+              : "hidden",
+            // Prevent scroll gestures on mobile during menu phase (#115)
+            touchAction: phase === "menu" ? "none" : "auto",
+          }}
+        >
+          <Suspense fallback={null}>
+            <DodecahedronScene
+              className="w-full h-full"
+              initialView="inside"
+              exitPortalSection={currentSection}
+              onFlyOutComplete={handleFlyOutComplete}
+              onFlyInStart={handleFlyInStart}
+              onPortalClick={handlePortalNavigate}
+              initialFadeOpacity={0}
+              onExternalFadeProgress={handleFadeProgress}
+              hideInternalOverlay={true}
+              triggerFlyOutRef={triggerFlyOutRef}
+              triggerFlyInRef={triggerFlyInRef}
+              onReady={handleSceneReady}
+            />
+          </Suspense>
 
-        {/* Return button - visible in menu phase */}
-        {/* Hide (ESC) hint on mobile where keyboard shortcuts don't apply (#117) */}
-        {phase === "menu" && (
-          <div className="absolute top-8 right-8 z-[95]">
-            <Button
-              variant="dark-secondary"
-              size="sm"
-              onClick={handleReturn}
-              leftIcon={<ArrowLeft className="w-4 h-4" />}
-              aria-label={isMobile ? "Return to page" : "Return to page (ESC)"}
-            >
-              {isMobile ? "Return" : "Return (ESC)"}
-            </Button>
-          </div>
-        )}
-      </div>
+          {/* Return button - visible in menu phase */}
+          {/* Hide (ESC) hint on mobile where keyboard shortcuts don't apply (#117) */}
+          {phase === "menu" && (
+            <div className="absolute top-8 right-8 z-[95]">
+              <Button
+                variant="dark-secondary"
+                size="sm"
+                onClick={handleReturn}
+                leftIcon={<ArrowLeft className="w-4 h-4" />}
+                aria-label={isMobile ? "Return to page" : "Return to page (ESC)"}
+              >
+                {isMobile ? "Return" : "Return (ESC)"}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }
