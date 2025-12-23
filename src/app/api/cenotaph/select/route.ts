@@ -122,9 +122,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
     }
 
     // Update memorial with selection and epitaph (keep only selected option, clear pending concepts)
+    // Also set status to "published" so it appears in public listings
     const { error: updateError } = await supabase
       .from("memorials")
       .update({
+        status: "published",
         design_status: "completed",
         cenotaph_image_url: selectedDesign.url,
         epitaph: epitaph.trim(),

@@ -576,24 +576,7 @@ Format your response as JSON:
     };
   } catch (error) {
     console.error("Error generating summary:", error);
-
-    // Return a graceful fallback
-    return {
-      text: `Based on ${story.completedModules.length} completed chapters, we're building an understanding of your organization's journey. The full summary will be available after processing.`,
-      lastModuleProcessed: lastCompletedModule,
-      keyFacts: [],
-      organizationType: extracted.organizationType,
-      industry: extracted.industry,
-      lifespanMonths: extracted.lifespanMonths,
-      peakTeamSize: extracted.peakTeamSize,
-      closurePattern: null,
-      appraisal: {
-        affirmation:
-          "Thank you for sharing this part of your journey. Every detail you provide helps build a complete picture.",
-        anticipation: isLastModule
-          ? "Your story is now complete. Thank you for preserving this legacy."
-          : `Next up: ${nextModuleName || "the next chapter"} awaits.`,
-      },
-    };
+    // Re-throw to let the API route handle the failure and set status to "failed"
+    throw error;
   }
 }
