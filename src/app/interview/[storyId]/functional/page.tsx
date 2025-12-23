@@ -54,7 +54,7 @@ const STEPS = [
 ];
 
 // =============================================================================
-// TOOLTIP COMPONENT
+// TOOLTIP COMPONENT (uses portal to avoid overflow clipping)
 // =============================================================================
 
 interface TooltipProps {
@@ -64,22 +64,48 @@ interface TooltipProps {
 
 function Tooltip({ content, children }: TooltipProps) {
   const [show, setShow] = React.useState(false);
+  const [position, setPosition] = React.useState({ top: 0, left: 0 });
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+
+  const updatePosition = React.useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+      });
+    }
+  }, []);
+
+  const handleMouseEnter = () => {
+    updatePosition();
+    setShow(true);
+  };
 
   return (
-    <div className="relative inline-flex items-center">
+    <>
       <div
-        onMouseEnter={() => setShow(true)}
+        ref={triggerRef}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setShow(false)}
         className="inline-flex items-center"
       >
         {children}
       </div>
-      {show && content && (
-        <div className="absolute z-50 left-0 top-full mt-2 w-72 p-3 rounded-lg bg-slate-700 border border-slate-600 shadow-xl">
+      {show && content && typeof document !== "undefined" && (
+        <div
+          style={{
+            position: "fixed",
+            top: position.top - window.scrollY,
+            left: Math.min(position.left, window.innerWidth - 300),
+            zIndex: 9999,
+          }}
+          className="w-72 p-3 rounded-lg bg-slate-700 border border-slate-600 shadow-xl pointer-events-none"
+        >
           <p className="text-sm text-slate-200 leading-relaxed">{content}</p>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
