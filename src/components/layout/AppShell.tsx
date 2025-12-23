@@ -84,10 +84,12 @@ export function AppShell({ children }: AppShellProps) {
 
             <Footer />
 
-            {/* Floating contribution button - hidden on mobile for performance (#109) */}
-            <div className="hidden md:block">
-              <LiquidContributionFab />
-            </div>
+            {/* Floating contribution button - hidden on mobile and in production */}
+            {process.env.NODE_ENV !== "production" && (
+              <div className="hidden md:block">
+                <LiquidContributionFab />
+              </div>
+            )}
           </div>
         </div>
       </MenuProvider>
