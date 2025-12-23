@@ -2,8 +2,9 @@
 
 import { Suspense, useRef, useEffect, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { OrbitControls, PerspectiveCamera, Stats } from "@react-three/drei";
+// Post-processing imports - currently disabled for performance (#200)
+// import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useIsMobile } from "@/lib/utils";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
@@ -11,7 +12,6 @@ import { Globe, GLOBE_RADIUS } from "./Globe";
 import { GlobeAtmosphere } from "./GlobeAtmosphere";
 import { GlobeMarkers } from "./GlobeMarkers";
 import type { CenotapheryMarker } from "@/types/cenotaphery";
-import { latLngToVector3 } from "@/types/cenotaphery";
 
 // Camera configuration from spec
 const CAMERA_CONFIG = {
@@ -19,7 +19,7 @@ const CAMERA_CONFIG = {
   near: 1,
   far: 1000,
   initialDistance: 300,
-  minDistance: 120,
+  minDistance: 160, // Increased from 120 to prevent zooming too close
   maxDistance: 400,
 };
 
@@ -37,8 +37,11 @@ interface GlobeSceneProps {
   markers: CenotapheryMarker[];
   selectedMarkerId: string | null;
   hoveredMarkerId: string | null;
+  activeMarkerId: string | null;
+  tooltipCooldownUntil: number; // Timestamp until which tooltip shouldn't reappear
   onMarkerSelect: (marker: CenotapheryMarker | null) => void;
   onMarkerHover: (marker: CenotapheryMarker | null) => void;
+  onActiveMarkerChange: (marker: CenotapheryMarker | null) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onReset: () => void;
@@ -51,28 +54,38 @@ const AUTO_ROTATE_SPEED = 0.1;
 /**
  * Rotatable globe group - handles drag-to-rotate and auto-rotation
  * Globe rotates around Y axis (longitude) and X axis (latitude)
+ * Only activates when mouse is hovering over the globe area
  */
 function RotatableGlobe({
   children,
   globeRef,
   autoRotate,
   setAutoRotate,
+  isGlobeHovered,
+  setIsGlobeHovered,
+  hoveredMarkerId,
 }: {
   children: React.ReactNode;
   globeRef: React.RefObject<THREE.Group | null>;
   autoRotate: boolean;
   setAutoRotate: (value: boolean) => void;
+  isGlobeHovered: boolean;
+  setIsGlobeHovered: (value: boolean) => void;
+  hoveredMarkerId: string | null;
 }) {
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const { gl } = useThree();
 
-  // Handle pointer events for drag rotation
+  // Handle pointer events for drag rotation - only when hovering over globe
   useEffect(() => {
     const canvas = gl.domElement;
 
     const onPointerDown = (e: PointerEvent) => {
+      // Only start drag if hovering over globe or a marker (markers are on the globe)
+      if (!isGlobeHovered && !hoveredMarkerId) return;
+
       isDragging.current = true;
       previousMouse.current = { x: e.clientX, y: e.clientY };
       velocity.current = { x: 0, y: 0 };
@@ -104,15 +117,17 @@ function RotatableGlobe({
     };
 
     const onPointerUp = () => {
-      isDragging.current = false;
-      canvas.style.cursor = "grab";
+      if (isDragging.current) {
+        isDragging.current = false;
+        // Restore cursor based on hover state (globe or marker)
+        canvas.style.cursor = isGlobeHovered || hoveredMarkerId ? "grab" : "default";
+      }
     };
 
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointerleave", onPointerUp);
-    canvas.style.cursor = "grab";
 
     return () => {
       canvas.removeEventListener("pointerdown", onPointerDown);
@@ -120,7 +135,23 @@ function RotatableGlobe({
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointerleave", onPointerUp);
     };
-  }, [gl, globeRef, setAutoRotate]);
+  }, [gl, globeRef, setAutoRotate, isGlobeHovered, hoveredMarkerId]);
+
+  // Update cursor when hover state changes
+  useEffect(() => {
+    const canvas = gl.domElement;
+    if (!isDragging.current) {
+      // When hovering a marker, the marker sets cursor to "pointer"
+      // When hovering globe (not marker), show "grab"
+      // When hovering neither, show "default"
+      if (!hoveredMarkerId && isGlobeHovered) {
+        canvas.style.cursor = "grab";
+      } else if (!hoveredMarkerId && !isGlobeHovered) {
+        canvas.style.cursor = "default";
+      }
+      // When hoveredMarkerId is set, marker already set cursor to "pointer"
+    }
+  }, [gl, isGlobeHovered, hoveredMarkerId]);
 
   // Auto-rotation and inertia
   useFrame((_, delta) => {
@@ -141,14 +172,35 @@ function RotatableGlobe({
         // Decay velocity
         velocity.current.x *= 0.95;
         velocity.current.y *= 0.95;
-      } else if (autoRotate) {
-        // Auto-rotate when not dragging and no inertia
-        globeRef.current.rotation.y += AUTO_ROTATE_SPEED * delta;
+      } else {
+        // Inertia has stopped - re-enable auto-rotation
+        if (!autoRotate) {
+          setAutoRotate(true);
+        }
+        // Auto-rotate when not dragging, no inertia, and not hovering a marker
+        if (!hoveredMarkerId) {
+          globeRef.current.rotation.y += AUTO_ROTATE_SPEED * delta;
+        }
       }
     }
   });
 
-  return <group ref={globeRef}>{children}</group>;
+  // Hit detection sphere radius - slightly larger than globe for easier targeting
+  const hitSphereRadius = GLOBE_RADIUS * 1.15;
+
+  return (
+    <group ref={globeRef}>
+      {/* Invisible hit detection sphere - slightly larger than globe */}
+      <mesh
+        onPointerEnter={() => setIsGlobeHovered(true)}
+        onPointerLeave={() => setIsGlobeHovered(false)}
+      >
+        <sphereGeometry args={[hitSphereRadius, 32, 32]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {children}
+    </group>
+  );
 }
 
 /**
@@ -179,8 +231,10 @@ function FlyToController({
     const lat = selectedMarker.coordinates.lat * (Math.PI / 180);
     const lng = selectedMarker.coordinates.lng * (Math.PI / 180);
 
-    // Target rotation: negate to bring marker to front
-    const targetY = -lng;
+    // Target rotation: negate longitude and add -90° offset
+    // The -π/2 offset accounts for the camera being on the +Z axis
+    // while latLngToVector3 places lng=0 on the +X axis
+    const targetY = -lng - Math.PI / 2;
     const targetX = lat;
 
     // Start animation
@@ -258,6 +312,33 @@ function LoadingFallback() {
 }
 
 /**
+ * Performance logger - logs renderer stats every 2 seconds (development only)
+ */
+function PerformanceLogger() {
+  const { gl } = useThree();
+  const lastLogTime = useRef(0);
+
+  useFrame((state) => {
+    const now = state.clock.elapsedTime;
+    if (now - lastLogTime.current > 2) {
+      lastLogTime.current = now;
+      const info = gl.info;
+      console.log("[GlobeScene Performance]", {
+        drawCalls: info.render.calls,
+        triangles: info.render.triangles,
+        points: info.render.points,
+        lines: info.render.lines,
+        textures: info.memory.textures,
+        geometries: info.memory.geometries,
+        programs: info.programs?.length || 0,
+      });
+    }
+  });
+
+  return null;
+}
+
+/**
  * Component to handle zoom events from UI buttons
  */
 function ZoomHandler({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
@@ -297,6 +378,101 @@ function ZoomHandler({ controlsRef }: { controlsRef: React.RefObject<OrbitContro
   return null;
 }
 
+// Auto-cycle interval in seconds
+const AUTO_CYCLE_INTERVAL = 4;
+
+/**
+ * Component to handle auto-cycling through visible markers during rotation
+ */
+function AutoCycleController({
+  markers,
+  globeRef,
+  autoRotate,
+  selectedMarkerId,
+  hoveredMarkerId,
+  tooltipCooldownUntil,
+  onActiveMarkerChange,
+}: {
+  markers: CenotapheryMarker[];
+  globeRef: React.RefObject<THREE.Group | null>;
+  autoRotate: boolean;
+  selectedMarkerId: string | null;
+  hoveredMarkerId: string | null;
+  tooltipCooldownUntil: number;
+  onActiveMarkerChange: (marker: CenotapheryMarker | null) => void;
+}) {
+  const lastCycleTime = useRef(0);
+  const currentActiveIndex = useRef(0);
+  const { camera } = useThree();
+
+  useFrame((state) => {
+    if (!globeRef.current) return;
+
+    // Don't show tooltip if user has selected or is hovering a marker
+    if (selectedMarkerId || hoveredMarkerId) {
+      lastCycleTime.current = state.clock.elapsedTime;
+      return;
+    }
+
+    // Don't show tooltip during cooldown period (after tooltip was closed)
+    if (Date.now() < tooltipCooldownUntil) {
+      return;
+    }
+
+    // Get visible markers (front-facing hemisphere)
+    const cameraDirection = new THREE.Vector3();
+    camera.getWorldDirection(cameraDirection);
+
+    const visibleMarkers = markers.filter((marker) => {
+      // Calculate marker world position
+      const phi = (90 - marker.coordinates.lat) * (Math.PI / 180);
+      const theta = (marker.coordinates.lng + 180) * (Math.PI / 180);
+      const radius = 103; // GLOBE_RADIUS + MARKER_HEIGHT
+
+      const localPos = new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+
+      // Transform to world space using globe rotation
+      const worldPos = localPos.clone().applyEuler(globeRef.current!.rotation);
+
+      // Check if facing camera (dot product with camera direction < 0 means visible)
+      // Camera looks towards origin, so visible markers have worldPos pointing away from camera
+      return worldPos.dot(cameraDirection) < 0;
+    });
+
+    // Show tooltip on visible markers
+    if (visibleMarkers.length > 0) {
+      // Only auto-cycle during auto-rotation, otherwise just show first visible marker
+      if (autoRotate) {
+        const elapsed = state.clock.elapsedTime - lastCycleTime.current;
+
+        if (elapsed >= AUTO_CYCLE_INTERVAL) {
+          currentActiveIndex.current = (currentActiveIndex.current + 1) % visibleMarkers.length;
+          lastCycleTime.current = state.clock.elapsedTime;
+          onActiveMarkerChange(visibleMarkers[currentActiveIndex.current]);
+        } else if (lastCycleTime.current === 0) {
+          // Initial activation
+          lastCycleTime.current = state.clock.elapsedTime;
+          onActiveMarkerChange(visibleMarkers[0]);
+        }
+      } else {
+        // During manual rotation, show first visible marker (no cycling)
+        onActiveMarkerChange(visibleMarkers[0]);
+      }
+    } else {
+      // No visible markers - clear active marker to hide tooltip
+      onActiveMarkerChange(null);
+      currentActiveIndex.current = 0;
+      lastCycleTime.current = 0;
+    }
+  });
+
+  return null;
+}
+
 /**
  * Inner scene content (inside Canvas)
  */
@@ -304,14 +480,18 @@ function SceneContent({
   markers,
   selectedMarkerId,
   hoveredMarkerId,
+  activeMarkerId,
+  tooltipCooldownUntil,
   onMarkerSelect,
   onMarkerHover,
+  onActiveMarkerChange,
   controlsRef,
   isMobile,
 }: Omit<GlobeSceneProps, "onZoomIn" | "onZoomOut" | "onReset"> & { isMobile: boolean }) {
   const selectedMarker = markers.find((m) => m.id === selectedMarkerId) || null;
   const globeRef = useRef<THREE.Group>(null);
   const [autoRotate, setAutoRotate] = useState(true);
+  const [isGlobeHovered, setIsGlobeHovered] = useState(false);
 
   return (
     <>
@@ -323,11 +503,11 @@ function SceneContent({
         far={CAMERA_CONFIG.far}
       />
 
-      {/* OrbitControls only for zoom now */}
+      {/* OrbitControls only for zoom - only enabled when hovering over globe */}
       <OrbitControls
         ref={controlsRef}
         enableRotate={CONTROLS_CONFIG.enableRotate}
-        enableZoom={CONTROLS_CONFIG.enableZoom}
+        enableZoom={isGlobeHovered} // Only zoom when hovering over globe
         zoomSpeed={CONTROLS_CONFIG.zoomSpeed}
         enablePan={CONTROLS_CONFIG.enablePan}
         enableDamping={CONTROLS_CONFIG.enableDamping}
@@ -344,27 +524,56 @@ function SceneContent({
 
       <ZoomHandler controlsRef={controlsRef} />
 
+      {/* AutoCycleController - Re-enabled for issue #59 auto-tooltip feature */}
+      <AutoCycleController
+        markers={markers}
+        globeRef={globeRef}
+        autoRotate={autoRotate}
+        selectedMarkerId={selectedMarkerId}
+        hoveredMarkerId={hoveredMarkerId}
+        tooltipCooldownUntil={tooltipCooldownUntil}
+        onActiveMarkerChange={onActiveMarkerChange}
+      />
+
       <Lighting />
 
       <Suspense fallback={<LoadingFallback />}>
-        <RotatableGlobe globeRef={globeRef} autoRotate={autoRotate} setAutoRotate={setAutoRotate}>
+        <RotatableGlobe
+          globeRef={globeRef}
+          autoRotate={autoRotate}
+          setAutoRotate={setAutoRotate}
+          isGlobeHovered={isGlobeHovered}
+          setIsGlobeHovered={setIsGlobeHovered}
+          hoveredMarkerId={hoveredMarkerId}
+        >
           <Globe />
           <GlobeAtmosphere />
           <GlobeMarkers
             markers={markers}
             selectedMarkerId={selectedMarkerId}
             hoveredMarkerId={hoveredMarkerId}
+            activeMarkerId={activeMarkerId}
             onMarkerSelect={onMarkerSelect}
             onMarkerHover={onMarkerHover}
           />
         </RotatableGlobe>
       </Suspense>
 
-      {/* Post-processing effects - disabled on mobile for performance */}
+      {/* Post-processing effects - DISABLED for performance (#200) */}
+      {/* TODO: Re-enable after WebGL optimization
       {!isMobile && (
         <EffectComposer>
           <Bloom intensity={0.5} luminanceThreshold={0.6} luminanceSmoothing={0.9} />
         </EffectComposer>
+      )}
+      */}
+
+      {/* DEBUG: Performance monitoring (#200) - only in development */}
+      {process.env.NODE_ENV === "development" && (
+        <>
+          <Stats showPanel={0} className="stats" />
+          <PerformanceLogger />
+        </>
       )}
     </>
   );
@@ -377,8 +586,11 @@ export function GlobeScene({
   markers,
   selectedMarkerId,
   hoveredMarkerId,
+  activeMarkerId,
+  tooltipCooldownUntil,
   onMarkerSelect,
   onMarkerHover,
+  onActiveMarkerChange,
   controlsRef,
 }: GlobeSceneProps) {
   // Mobile detection for performance optimization
@@ -398,8 +610,11 @@ export function GlobeScene({
           markers={markers}
           selectedMarkerId={selectedMarkerId}
           hoveredMarkerId={hoveredMarkerId}
+          activeMarkerId={activeMarkerId}
+          tooltipCooldownUntil={tooltipCooldownUntil}
           onMarkerSelect={onMarkerSelect}
           onMarkerHover={onMarkerHover}
+          onActiveMarkerChange={onActiveMarkerChange}
           controlsRef={controlsRef}
           isMobile={isMobile}
         />

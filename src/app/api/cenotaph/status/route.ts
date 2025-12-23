@@ -2,20 +2,37 @@
  * GET /api/cenotaph/status?memorialId=xxx
  * Get design generation status for a memorial
  * Issue: #23 Cenotaph creation wizard
+ * Security: #78 - Added authentication and ownership verification
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import type { DesignStatusResponse, CenotaphDesign, DesignStatus } from "@/types/cenotaph";
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest): Promise<NextResponse<DesignStatusResponse>> {
   try {
+    // Initialize authenticated client
+    const supabase = await createClient();
+
+    // Check authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          status: "not_started",
+          options: null,
+          selectedId: null,
+          imageUrl: null,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const memorialId = searchParams.get("memorialId");
 
@@ -34,7 +51,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<DesignStat
 
     const { data: memorial, error } = await supabase
       .from("memorials")
-      .select("design_status, cenotaph_design, cenotaph_image_url")
+      .select("user_id, design_status, cenotaph_design, cenotaph_image_url")
       .eq("id", memorialId)
       .single();
 
@@ -48,6 +65,20 @@ export async function GET(request: NextRequest): Promise<NextResponse<DesignStat
           error: "Memorial not found",
         },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership - user must own the memorial
+    if (memorial.user_id !== user.id) {
+      return NextResponse.json(
+        {
+          status: "not_started",
+          options: null,
+          selectedId: null,
+          imageUrl: null,
+          error: "Forbidden",
+        },
+        { status: 403 }
       );
     }
 

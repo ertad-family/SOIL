@@ -95,10 +95,10 @@ export function getMarkerColor(marker: CenotapheryMarker): string {
 
 /**
  * Get marker size based on fill percentage
- * Range: 0.3 to 0.6 units (small pin-like markers)
+ * Range: 1.5 to 3.0 units (visible glowing markers) - increased for better visibility (#59)
  */
 export function getMarkerSize(marker: CenotapheryMarker): number {
-  const baseSize = 0.3;
+  const baseSize = 1.5;
   const maxMultiplier = 1;
   const fillRatio = marker.statistics.cenotaphCount / marker.statistics.capacity;
   return baseSize * (1 + fillRatio * maxMultiplier);

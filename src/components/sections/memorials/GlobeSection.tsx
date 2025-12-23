@@ -34,107 +34,159 @@ interface GlobeSectionProps {
 }
 
 /**
- * Side panel showing either default state or selected marker details
+ * Floating tooltip card showing marker details - positioned to the left of the globe
+ * Only visible on desktop; mobile uses bottom sheet
  */
-function SidePanel({
-  selectedMarker,
-  globalStats,
-  onClose,
-}: {
-  selectedMarker: CenotapheryMarker | null;
-  globalStats: GlobeSectionProps["globalStats"];
-  onClose: () => void;
-}) {
-  if (!selectedMarker) {
-    // Default state - prompt to select
-    return (
-      <div className="h-full flex flex-col p-6">
-        <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-            <MapPin className="w-8 h-8 text-gold-400" />
-          </div>
-          <h3 className="text-xl font-display font-medium text-marble-100 mb-2">
-            Select a memorial
-          </h3>
-          <p className="text-slate-400 mb-6">Click on a marker on the globe to explore</p>
-
-          {/* Animated dots */}
-          <div className="flex gap-2 mb-8">
-            <span
-              className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"
-              style={{ animationDelay: "0s" }}
-            />
-            <span
-              className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"
-              style={{ animationDelay: "0.2s" }}
-            />
-            <span
-              className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"
-              style={{ animationDelay: "0.4s" }}
-            />
-          </div>
-        </div>
-
-        {/* Quick stats */}
-        <div className="border-t border-slate-800 pt-6">
-          <p className="text-sm text-slate-500 uppercase tracking-widest mb-4">Quick stats</p>
-          <ul className="space-y-2 text-slate-400">
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />
-              {globalStats.totalCountries} active memorials
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />
-              {globalStats.totalStories.toLocaleString()} total cenotaphs
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />
-              {globalStats.totalIndustries} industries
-            </li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-
-  // Selected marker state
-  const fillPercentage = selectedMarker.statistics.fillPercentage;
-  const isFull = selectedMarker.status === "full";
+function FloatingTooltip({ marker, onClose }: { marker: CenotapheryMarker; onClose: () => void }) {
+  const fillPercentage = marker.statistics.fillPercentage;
+  const isFull = marker.status === "full";
 
   return (
-    <div className="h-full flex flex-col p-6 overflow-y-auto">
+    <div className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2 w-[280px] bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl z-10 animate-in fade-in slide-in-from-left-4 duration-300">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 p-1 text-slate-500 hover:text-marble-100 transition-colors"
+        aria-label="Close"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <div className="p-5">
+        {/* Header */}
+        <div className="mb-4">
+          {isFull && (
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-gold-500/20 rounded-full mb-2">
+              <span className="text-gold-400 text-xs font-medium">COMPLETED</span>
+            </div>
+          )}
+
+          <h3 className="text-lg font-display font-semibold text-marble-100 leading-tight pr-6">
+            {marker.name}
+          </h3>
+
+          {marker.honorificName && (
+            <p className="text-gold-400 italic text-sm mt-1">
+              &ldquo;{marker.honorificName}&rdquo;
+            </p>
+          )}
+        </div>
+
+        {/* Location & Style */}
+        <div className="flex flex-wrap gap-2 mb-4 text-xs text-slate-400">
+          <span className="flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded">
+            <MapPin className="w-3 h-3" />
+            {marker.location.city ? `${marker.location.city}, ` : ""}
+            {marker.location.country}
+          </span>
+          <span className="flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded">
+            <Building2 className="w-3 h-3" />
+            {marker.style.charAt(0).toUpperCase() + marker.style.slice(1)}
+          </span>
+        </div>
+
+        {/* Capacity bar */}
+        <div className="mb-4">
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                isFull ? "bg-gold-400" : fillPercentage >= 90 ? "bg-gold-500" : "bg-info-500"
+              }`}
+              style={{ width: `${fillPercentage}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-slate-400">
+            <span className="text-marble-100 font-medium">
+              {marker.statistics.cenotaphCount.toLocaleString()}
+            </span>
+            {" / "}
+            {marker.statistics.capacity.toLocaleString()}{" "}
+            <span className="text-slate-500">({fillPercentage}%)</span>
+          </p>
+        </div>
+
+        {/* Recent activity - compact */}
+        <div className="mb-4 p-3 bg-slate-800/30 rounded-lg">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-lg font-mono text-gold-400">
+                +{marker.recentActivity.newCenotaphsThisWeek}
+              </p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wide">new this week</p>
+            </div>
+            <div>
+              <p className="text-lg font-mono text-marble-100">
+                {marker.recentActivity.totalVisitsThisWeek.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wide">visits</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Enter button */}
+        <Link href={`/cenotaphery/${marker.id}`}>
+          <Button variant="cenotaph" size="md" fullWidth>
+            Enter Memorial
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Mobile bottom sheet content for selected marker
+ */
+function MobileSheetContent({
+  marker,
+  onClose,
+}: {
+  marker: CenotapheryMarker;
+  onClose: () => void;
+}) {
+  const fillPercentage = marker.statistics.fillPercentage;
+  const isFull = marker.status === "full";
+
+  return (
+    <div className="p-5">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4">
         {isFull && (
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold-500/20 rounded-full mb-3">
-            <span className="text-gold-400 text-sm font-medium">COMPLETED</span>
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-gold-500/20 rounded-full mb-2">
+            <span className="text-gold-400 text-xs font-medium">COMPLETED</span>
           </div>
         )}
 
-        <h3 className="text-2xl font-display font-semibold text-marble-100 mb-1">
-          {selectedMarker.name}
-        </h3>
+        <h3 className="text-xl font-display font-semibold text-marble-100">{marker.name}</h3>
 
-        {selectedMarker.honorificName && (
-          <p className="text-gold-400 italic mb-3">&ldquo;{selectedMarker.honorificName}&rdquo;</p>
+        {marker.honorificName && (
+          <p className="text-gold-400 italic text-sm mt-1">&ldquo;{marker.honorificName}&rdquo;</p>
         )}
+      </div>
 
-        <div className="flex flex-wrap gap-3 text-sm text-slate-400">
-          <span className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            {selectedMarker.location.city ? `${selectedMarker.location.city}, ` : ""}
-            {selectedMarker.location.country}
-          </span>
-          <span className="flex items-center gap-1">
-            <Building2 className="w-4 h-4" />
-            {selectedMarker.style.charAt(0).toUpperCase() + selectedMarker.style.slice(1)} style
-          </span>
-        </div>
+      {/* Location & Style */}
+      <div className="flex flex-wrap gap-2 mb-4 text-xs text-slate-400">
+        <span className="flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded">
+          <MapPin className="w-3 h-3" />
+          {marker.location.city ? `${marker.location.city}, ` : ""}
+          {marker.location.country}
+        </span>
+        <span className="flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded">
+          <Building2 className="w-3 h-3" />
+          {marker.style.charAt(0).toUpperCase() + marker.style.slice(1)}
+        </span>
       </div>
 
       {/* Capacity bar */}
-      <div className="mb-6">
-        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+      <div className="mb-4">
+        <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               isFull ? "bg-gold-400" : fillPercentage >= 90 ? "bg-gold-500" : "bg-info-500"
@@ -142,38 +194,37 @@ function SidePanel({
             style={{ width: `${fillPercentage}%` }}
           />
         </div>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-1.5 text-sm text-slate-400">
           <span className="text-marble-100 font-medium">
-            {selectedMarker.statistics.cenotaphCount.toLocaleString()}
+            {marker.statistics.cenotaphCount.toLocaleString()}
           </span>
           {" / "}
-          {selectedMarker.statistics.capacity.toLocaleString()}{" "}
+          {marker.statistics.capacity.toLocaleString()}{" "}
           <span className="text-slate-500">({fillPercentage}%)</span>
         </p>
       </div>
 
       {/* Recent activity */}
-      <div className="mb-6 p-4 bg-slate-800/50 rounded-lg">
-        <p className="text-sm text-slate-500 uppercase tracking-widest mb-3">This week</p>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="mb-5 p-3 bg-slate-800/30 rounded-lg">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-2xl font-mono text-gold-400">
-              +{selectedMarker.recentActivity.newCenotaphsThisWeek}
+            <p className="text-xl font-mono text-gold-400">
+              +{marker.recentActivity.newCenotaphsThisWeek}
             </p>
-            <p className="text-xs text-slate-400">new cenotaphs</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wide">new this week</p>
           </div>
           <div>
-            <p className="text-2xl font-mono text-marble-100">
-              {selectedMarker.recentActivity.totalVisitsThisWeek.toLocaleString()}
+            <p className="text-xl font-mono text-marble-100">
+              {marker.recentActivity.totalVisitsThisWeek.toLocaleString()}
             </p>
-            <p className="text-xs text-slate-400">visits</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wide">visits</p>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="mt-auto space-y-3">
-        <Link href={`/cenotaphery/${selectedMarker.id}`}>
+      <div className="space-y-3">
+        <Link href={`/cenotaphery/${marker.id}`}>
           <Button variant="cenotaph" size="lg" fullWidth>
             Enter Memorial
           </Button>
@@ -326,18 +377,30 @@ function ListView({
 /**
  * Main Globe Section with globe, side panel, and controls
  */
+// Cooldown duration after closing tooltip (ms)
+const TOOLTIP_COOLDOWN_MS = 5000;
+
 export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
+  const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [isListView, setIsListView] = useState(false);
+  const [tooltipCooldownUntil, setTooltipCooldownUntil] = useState(0);
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const handleMarkerSelect = useCallback((marker: CenotapheryMarker | null) => {
     setSelectedMarkerId(marker?.id ?? null);
+    // Clear active marker when user selects
+    if (marker) setActiveMarkerId(null);
   }, []);
 
   const handleMarkerHover = useCallback((marker: CenotapheryMarker | null) => {
     setHoveredMarkerId(marker?.id ?? null);
+  }, []);
+
+  const handleActiveMarkerChange = useCallback((marker: CenotapheryMarker | null) => {
+    // Only update active marker if user hasn't selected or hovered
+    setActiveMarkerId(marker?.id ?? null);
   }, []);
 
   const handleZoomIn = useCallback(() => {
@@ -361,82 +424,85 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
 
   const selectedMarker = markers.find((m) => m.id === selectedMarkerId) || null;
 
+  // FloatingTooltip only shows when marker is clicked (selected), not auto-highlighted
+  const tooltipMarker = selectedMarker;
+
   return (
     <section className="relative min-h-[600px] h-[80vh] max-h-[900px] bg-gradient-to-b from-slate-950 to-slate-900">
-      <div className="h-full flex flex-col lg:flex-row">
-        {/* Globe or List View */}
-        <div className="relative flex-1 min-h-[400px] lg:min-h-0">
-          {isListView ? (
-            <ListView
-              markers={markers}
-              selectedMarkerId={selectedMarkerId}
-              onSelect={handleMarkerSelect}
-            />
-          ) : (
-            <GlobeScene
-              markers={markers}
-              selectedMarkerId={selectedMarkerId}
-              hoveredMarkerId={hoveredMarkerId}
-              onMarkerSelect={handleMarkerSelect}
-              onMarkerHover={handleMarkerHover}
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              onReset={handleReset}
-              controlsRef={controlsRef}
-            />
-          )}
-
-          {/* Control bar */}
-          <ControlBar
+      {/* Globe or List View - now takes full width */}
+      <div className="relative h-full">
+        {isListView ? (
+          <ListView
+            markers={markers}
+            selectedMarkerId={selectedMarkerId}
+            onSelect={handleMarkerSelect}
+          />
+        ) : (
+          <GlobeScene
+            markers={markers}
+            selectedMarkerId={selectedMarkerId}
+            hoveredMarkerId={hoveredMarkerId}
+            activeMarkerId={activeMarkerId}
+            tooltipCooldownUntil={tooltipCooldownUntil}
+            onMarkerSelect={handleMarkerSelect}
+            onMarkerHover={handleMarkerHover}
+            onActiveMarkerChange={handleActiveMarkerChange}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
             onReset={handleReset}
-            onToggleList={() => setIsListView(!isListView)}
-            isListView={isListView}
+            controlsRef={controlsRef}
           />
+        )}
+
+        {/* Floating Tooltip - Desktop only, positioned left of globe */}
+        {tooltipMarker && !isListView && (
+          <FloatingTooltip
+            marker={tooltipMarker}
+            onClose={() => {
+              setSelectedMarkerId(null);
+              setActiveMarkerId(null);
+              // Set cooldown to prevent immediate reappearance
+              setTooltipCooldownUntil(Date.now() + TOOLTIP_COOLDOWN_MS);
+            }}
+          />
+        )}
+
+        {/* Control bar */}
+        <ControlBar
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onReset={handleReset}
+          onToggleList={() => setIsListView(!isListView)}
+          isListView={isListView}
+        />
+      </div>
+
+      {/* Bottom Sheet - Mobile/Tablet */}
+      <div
+        className={`lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 transition-transform duration-300 ease-out ${
+          tooltipMarker ? "translate-y-0" : "translate-y-full"
+        }`}
+        style={{ maxHeight: "70vh" }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center py-3">
+          <div className="w-12 h-1 bg-slate-700 rounded-full" />
         </div>
 
-        {/* Side Panel - Desktop */}
-        <div className="hidden lg:block w-[350px] border-l border-slate-800 bg-slate-900/80 backdrop-blur-sm">
-          <SidePanel
-            selectedMarker={selectedMarker}
-            globalStats={globalStats}
-            onClose={() => setSelectedMarkerId(null)}
-          />
-        </div>
-
-        {/* Bottom Sheet - Mobile/Tablet */}
-        <div
-          className={`lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 transition-transform duration-300 ease-out ${
-            selectedMarker ? "translate-y-0" : "translate-y-[calc(100%-80px)]"
-          }`}
-          style={{ height: "70vh", maxHeight: "500px" }}
-        >
-          {/* Drag handle */}
-          <div className="flex justify-center py-3">
-            <div className="w-12 h-1 bg-slate-700 rounded-full" />
+        {/* Expanded content */}
+        {tooltipMarker && (
+          <div className="overflow-y-auto" style={{ maxHeight: "calc(70vh - 44px)" }}>
+            <MobileSheetContent
+              marker={tooltipMarker}
+              onClose={() => {
+                setSelectedMarkerId(null);
+                setActiveMarkerId(null);
+                // Set cooldown to prevent immediate reappearance
+                setTooltipCooldownUntil(Date.now() + TOOLTIP_COOLDOWN_MS);
+              }}
+            />
           </div>
-
-          {/* Collapsed preview */}
-          {!selectedMarker && (
-            <div className="px-6 pb-4">
-              <p className="text-slate-400 text-sm">
-                Select a memorial on the globe to view details
-              </p>
-            </div>
-          )}
-
-          {/* Expanded content */}
-          {selectedMarker && (
-            <div className="h-[calc(100%-44px)] overflow-y-auto">
-              <SidePanel
-                selectedMarker={selectedMarker}
-                globalStats={globalStats}
-                onClose={() => setSelectedMarkerId(null)}
-              />
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </section>
   );

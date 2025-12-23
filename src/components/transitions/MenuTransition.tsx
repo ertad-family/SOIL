@@ -369,10 +369,12 @@ export function MenuTransition() {
 
   // Show scene when not in idle phase, or always to pre-render (desktop only)
   // On mobile or heavy WebGL pages: load on-demand to avoid background WebGL rendering (#195, #200)
+  // Desktop: always mount scene (visibility is controlled separately via CSS)
+  // This allows the scene to preload and set sceneReady=true
   const shouldLoadOnDemand = isMobile || isHeavyPage;
   const showScene = shouldLoadOnDemand
     ? phase !== "idle" // Mobile/heavy pages: only mount when menu is actually open
-    : phase !== "idle" || sceneReady; // Desktop: preload for instant experience
+    : true; // Desktop: always mount for preloading (visibility controlled by CSS)
 
   return (
     <>

@@ -87,6 +87,52 @@ export async function GET() {
     memorialCounts.map((mc: MemorialCountRow) => [mc.cenotaphery_id, mc.count])
   );
 
+  // Calculate date for "this week" (last 7 days)
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const oneWeekAgoISO = oneWeekAgo.toISOString();
+
+  // Fetch new cenotaphs this week per cenotaphery
+  const newCenotaphsPromises = cenotapheryIds.map(async (cenotapheryId: string) => {
+    const { count, error } = await supabase
+      .from("memorials")
+      .select("*", { count: "exact", head: true })
+      .eq("cenotaphery_id", cenotapheryId)
+      .eq("status", "published")
+      .eq("design_status", "completed")
+      .not("cenotaph_image_url", "is", null)
+      .gte("created_at", oneWeekAgoISO);
+
+    if (error) {
+      console.error(`Error counting new memorials for ${cenotapheryId}:`, error);
+      return { cenotaphery_id: cenotapheryId, count: 0 };
+    }
+
+    return { cenotaphery_id: cenotapheryId, count: count || 0 };
+  });
+
+  const newCenotaphsCounts = await Promise.all(newCenotaphsPromises);
+  const newCenotaphsMap = new Map<string, number>(
+    newCenotaphsCounts.map((mc: MemorialCountRow) => [mc.cenotaphery_id, mc.count])
+  );
+
+  // Fetch visits this week via RPC function (bypasses RLS)
+  const { data: visitCounts, error: visitsError } = await supabase.rpc(
+    "get_cenotaphery_visits_this_week"
+  );
+
+  if (visitsError) {
+    console.error("Error fetching visit counts:", visitsError);
+  }
+
+  // Create visits map from RPC results
+  const visitsMap = new Map<string, number>();
+  if (visitCounts) {
+    for (const row of visitCounts as { cenotaphery_slug: string; visit_count: number }[]) {
+      visitsMap.set(row.cenotaphery_slug, row.visit_count);
+    }
+  }
+
   // Transform cenotapheries with statistics
   const transformedCenotapheries = cenotapheries.map((c: CenotapheryRow) => {
     const cenotaphCount = countMap.get(c.id) || 0;
@@ -122,10 +168,10 @@ export async function GET() {
         | "middle_eastern"
         | "african",
       location: c.location,
-      // Default recentActivity (could be calculated from created_at in future)
+      // Recent activity calculated from memorials and analytics_events
       recentActivity: {
-        newCenotaphsThisWeek: 0,
-        totalVisitsThisWeek: 0,
+        newCenotaphsThisWeek: newCenotaphsMap.get(c.id) || 0,
+        totalVisitsThisWeek: visitsMap.get(c.slug) || 0,
       },
     };
   });
