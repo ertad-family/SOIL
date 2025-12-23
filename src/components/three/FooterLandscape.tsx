@@ -570,8 +570,8 @@ function LandscapeScene({ isMobile }: { isMobile: boolean }) {
         </lineSegments>
       ))}
 
-      {/* Floating golden particles - reduced on mobile for performance */}
-      <FooterParticles count={isMobile ? 8 : 25} />
+      {/* Floating golden particles - reduced for performance (#200) */}
+      <FooterParticles count={isMobile ? 4 : 8} />
     </group>
   );
 }

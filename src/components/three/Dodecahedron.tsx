@@ -12,6 +12,7 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
+import { useIsMobile } from "@/lib/utils";
 
 // Portal configuration for each face with varying hole sizes
 export const FACE_CONFIG = [
@@ -535,8 +536,10 @@ function SketchFace({ vertices, center, normal, initialTextureIndex }: SketchFac
 // Interactive Portal component with hover/click
 function Portal({ face, textures, onPortalClick }: PortalProps) {
   const [hovered, setHovered] = useState(false);
+  const [selected, setSelected] = useState(false); // For mobile tap-to-show (#187)
   const [fadeOpacity, setFadeOpacity] = useState(0);
   const groupRef = useRef<THREE.Group>(null);
+  const isMobile = useIsMobile();
 
   // Persist animation state across hover on/off cycles
   const labelAnimState = useRef<LabelAnimState>({
@@ -546,8 +549,8 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
     lastSettledAngle: null,
   });
 
-  // Target opacity based on hover state
-  const targetOpacity = hovered ? 1 : 0;
+  // Target opacity based on hover or selected state
+  const targetOpacity = hovered || selected ? 1 : 0;
 
   // Animate fade in/out
   useFrame((_, delta) => {
@@ -602,8 +605,27 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
 
   const handlePointerOut = useCallback(() => {
     setHovered(false);
+    // Clear selection on pointer out (except on mobile where tap should persist)
+    if (!isMobile) {
+      setSelected(false);
+    }
     document.body.style.cursor = "auto";
-  }, []);
+  }, [isMobile]);
+
+  // Single click handler for mobile tap-to-show-label (#187)
+  const handleClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
+      if (face.config?.active && isMobile) {
+        // Toggle selection on mobile - shows label on tap
+        setSelected((prev) => !prev);
+        // Also trigger label animation
+        labelAnimState.current.initialized = false;
+        labelAnimState.current.velocity = 0;
+      }
+    },
+    [face.config?.active, isMobile]
+  );
 
   // Double-click to navigate - prevents accidental clicks during rotation
   const handleDoubleClick = useCallback(
@@ -611,6 +633,9 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
       e.stopPropagation();
 
       if (face.config?.active && onPortalClick && groupRef.current) {
+        // Clear selection when navigating
+        setSelected(false);
+
         // Get world position and normal from the portal group
         const worldCenter = new THREE.Vector3();
         groupRef.current.getWorldPosition(worldCenter);
@@ -630,9 +655,10 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
     [face.config, onPortalClick]
   );
 
-  // Emissive color for hover state
-  const innerRingEmissive = hovered ? "#4a8a6a" : face.config?.active ? "#2a4a3a" : "#000000";
-  const innerRingEmissiveIntensity = hovered ? 0.4 : face.config?.active ? 0.1 : 0;
+  // Emissive color for hover/selected state
+  const isHighlighted = hovered || selected;
+  const innerRingEmissive = isHighlighted ? "#4a8a6a" : face.config?.active ? "#2a4a3a" : "#000000";
+  const innerRingEmissiveIntensity = isHighlighted ? 0.4 : face.config?.active ? 0.1 : 0;
 
   return (
     <group ref={groupRef} position={ringPos} quaternion={quaternion}>
@@ -643,6 +669,7 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
           <mesh
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
+            onClick={handleClick}
             onDoubleClick={handleDoubleClick}
           >
             <circleGeometry args={[face.holeRadius, 32]} />
@@ -693,8 +720,8 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
             </>
           )}
 
-          {/* Glassmorphism cover - fades in/out */}
-          {(hovered || fadeOpacity > 0) && (
+          {/* Glassmorphism cover - fades in/out (includes selected state for mobile tap #187) */}
+          {(hovered || selected || fadeOpacity > 0) && (
             <mesh position={[0, 0, 0.01]}>
               <circleGeometry args={[face.holeRadius, 64]} />
               <MeshTransmissionMaterial
@@ -714,8 +741,8 @@ function Portal({ face, textures, onPortalClick }: PortalProps) {
             </mesh>
           )}
 
-          {/* Label - fades in/out */}
-          {(hovered || fadeOpacity > 0) && face.config?.name && (
+          {/* Label - fades in/out (includes selected state for mobile tap #187) */}
+          {(hovered || selected || fadeOpacity > 0) && face.config?.name && (
             <PendulumLabel
               name={face.config.name}
               animState={labelAnimState}

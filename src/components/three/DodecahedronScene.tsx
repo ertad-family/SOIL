@@ -832,6 +832,7 @@ export function DodecahedronScene({
       {/* Navigation hint */}
       {/* Safe-area-inset for notched devices (#112) */}
       {/* Touch-friendly hint on mobile (#113) */}
+      {/* Tap-to-show hint for mobile (#187) */}
       <div
         className="absolute bottom-8 right-8 pointer-events-none select-none text-right"
         style={{
@@ -844,6 +845,7 @@ export function DodecahedronScene({
         }}
       >
         <div>{isMobile ? "SWIPE TO ROTATE" : "DRAG TO ROTATE"}</div>
+        {isMobile && <div>TAP PORTAL TO SEE NAME</div>}
         <div>{isMobile ? "DOUBLE-TAP PORTAL TO ENTER" : "DOUBLE-CLICK PORTAL TO ENTER"}</div>
       </div>
     </div>

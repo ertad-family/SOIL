@@ -5,6 +5,11 @@ import Image from "next/image";
 import { Calendar, Briefcase, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Simple blur placeholder for smooth image loading
+// A small SVG that creates a gradient blur effect matching the slate/gold theme
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNTMiIHZpZXdCb3g9IjAgMCA0MCA1MyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWUyOTNiIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiMzMzQxNTUiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwZjE3MjkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNTMiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=";
+
 interface CenotaphCardProps {
   id: string;
   organizationName: string;
@@ -97,6 +102,9 @@ export function CenotaphCard({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            loading="lazy"
           />
 
           {/* Gradient overlay for text readability */}
