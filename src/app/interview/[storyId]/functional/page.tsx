@@ -27,31 +27,22 @@ import {
   CheckCircle2,
   Plus,
   Info,
-  ArrowRight,
   ArrowLeft,
 } from "lucide-react";
 import type { CustomFunction, FunctionalCategoryAnswer } from "@/types/interview";
-import {
-  FUNCTION_CATEGORIES,
-  ORG_SPECIFIC_CATEGORIES,
-  getCategoriesForOrgType,
-  getVisibleFunctionsForCategory,
-  ORG_TYPE_LABELS,
-} from "@/data/function-matrix";
-import {
-  CATEGORY_QUESTIONS,
-  getCategoryHeader,
-  getCategoryContext,
-} from "@/data/functional-questions";
+import { useFunctions, useFunctionCatalog, ORG_TYPE_LABELS } from "@/hooks/useFunctions";
+import { CATEGORY_QUESTIONS, getCategoryHeader } from "@/data/functional-questions";
 
 // =============================================================================
 // WIZARD STEPS
 // =============================================================================
 
-const STEPS = [
-  { id: "mapping", label: "Select Functions", description: "Check functions that existed" },
-  { id: "details", label: "Describe Functions", description: "Tell us how they worked" },
-];
+// Base step for function selection
+const BASE_STEP = {
+  id: "mapping",
+  label: "Select Functions",
+  description: "Check functions that existed",
+};
 
 // =============================================================================
 // TOOLTIP COMPONENT (uses portal to avoid overflow clipping)
@@ -100,9 +91,9 @@ function Tooltip({ content, children }: TooltipProps) {
             left: Math.min(position.left, window.innerWidth - 300),
             zIndex: 9999,
           }}
-          className="w-72 p-3 rounded-lg bg-slate-700 border border-slate-600 shadow-xl pointer-events-none"
+          className="function-tooltip"
         >
-          <p className="text-sm text-slate-200 leading-relaxed">{content}</p>
+          <p className="text-sm leading-relaxed">{content}</p>
         </div>
       )}
     </>
@@ -118,71 +109,147 @@ interface AddFunctionDialogProps {
   onOpenChange: (open: boolean) => void;
   onAdd: (func: CustomFunction) => void;
   currentOrgType: string;
+  existingFunctionIds: Set<string>; // Function IDs already visible for current org type
+  customFunctionIds: Set<string>; // Custom function IDs already added
 }
 
-function AddFunctionDialog({ open, onOpenChange, onAdd, currentOrgType }: AddFunctionDialogProps) {
-  const [mode, setMode] = React.useState<"catalog" | "custom">("catalog");
-  const [selectedOrgType, setSelectedOrgType] = React.useState<string>("");
-  const [selectedCategory, setSelectedCategory] = React.useState<string>("");
-  const [selectedFunction, setSelectedFunction] = React.useState<string>("");
+interface FunctionOption {
+  functionId: string;
+  functionName: string;
+  description?: string;
+  categoryId: string;
+  categoryName: string;
+  orgType: string | null;
+}
+
+function AddFunctionDialog({
+  open,
+  onOpenChange,
+  onAdd,
+  currentOrgType,
+  existingFunctionIds,
+  customFunctionIds,
+}: AddFunctionDialogProps) {
+  // Search state
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedFunction, setSelectedFunction] = React.useState<FunctionOption | null>(null);
+  const [showDropdown, setShowDropdown] = React.useState(false);
+
+  // Custom function state
   const [customName, setCustomName] = React.useState("");
   const [customCategory, setCustomCategory] = React.useState("");
   const [customDescription, setCustomDescription] = React.useState("");
 
-  // Get all org types except current
-  const otherOrgTypes = Object.keys(ORG_SPECIFIC_CATEGORIES).filter((t) => t !== currentOrgType);
+  // Fetch all functions from API
+  const { allCategories, isLoading: catalogLoading } = useFunctionCatalog();
 
-  // Get categories for selected org type
-  const catalogCategories = React.useMemo(() => {
-    if (!selectedOrgType) return [];
-    // Get base categories plus org-specific
-    const orgSpecific =
-      ORG_SPECIFIC_CATEGORIES[selectedOrgType as keyof typeof ORG_SPECIFIC_CATEGORIES] || [];
-    return [...FUNCTION_CATEGORIES, ...orgSpecific];
-  }, [selectedOrgType]);
+  // Get common categories for custom function dropdown
+  const commonCategories = React.useMemo(() => {
+    return allCategories.filter((cat) => cat.orgType === null);
+  }, [allCategories]);
 
-  // Get functions for selected category
-  const catalogFunctions = React.useMemo(() => {
-    if (!selectedCategory) return [];
-    const category = catalogCategories.find((c) => c.id === selectedCategory);
-    return category?.functions || [];
-  }, [catalogCategories, selectedCategory]);
+  // Build flat list of all functions, excluding those already available
+  const availableFunctions = React.useMemo((): FunctionOption[] => {
+    const result: FunctionOption[] = [];
+    for (const category of allCategories) {
+      for (const func of category.functions) {
+        // Skip functions that are already visible for current org type
+        if (existingFunctionIds.has(func.id)) continue;
+        // Skip functions that have already been added as custom
+        if (customFunctionIds.has(func.id)) continue;
 
+        result.push({
+          functionId: func.id,
+          functionName: func.name,
+          description: func.description,
+          categoryId: category.id,
+          categoryName: category.name,
+          orgType: category.orgType,
+        });
+      }
+    }
+    return result;
+  }, [allCategories, existingFunctionIds, customFunctionIds]);
+
+  // Filter functions by search query - only when there's a query
+  const filteredFunctions = React.useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase();
+    return availableFunctions
+      .filter(
+        (f) =>
+          f.functionName.toLowerCase().includes(query) ||
+          f.categoryName.toLowerCase().includes(query) ||
+          f.description?.toLowerCase().includes(query)
+      )
+      .slice(0, 10); // Limit to 10 results
+  }, [availableFunctions, searchQuery]);
+
+  // Handle function selection from search
+  const handleSelectFunction = (func: FunctionOption) => {
+    setSelectedFunction(func);
+    setSearchQuery(func.functionName);
+    setShowDropdown(false);
+  };
+
+  // Handle add function from catalog
   const handleAddFromCatalog = () => {
-    if (!selectedFunction || !selectedCategory) return;
-    const func = catalogFunctions.find((f) => f.id === selectedFunction);
-    if (!func) return;
+    if (!selectedFunction) return;
 
     onAdd({
-      id: `custom_${selectedFunction}_${Date.now()}`,
-      name: func.name,
-      categoryId: selectedCategory,
-      description: func.description,
-      sourceOrgType: selectedOrgType,
+      id: `custom_${selectedFunction.functionId}_${Date.now()}`,
+      name: selectedFunction.functionName,
+      categoryId: selectedFunction.categoryId,
+      description: selectedFunction.description,
+      sourceOrgType: selectedFunction.orgType || undefined,
     });
 
     // Reset and close
-    setSelectedOrgType("");
-    setSelectedCategory("");
-    setSelectedFunction("");
-    onOpenChange(false);
+    resetAndClose();
   };
 
+  // Handle add custom function
   const handleAddCustom = () => {
-    if (!customName || !customCategory) return;
+    if (!customName.trim() || !customCategory) return;
 
     onAdd({
       id: `custom_${customName.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`,
-      name: customName,
+      name: customName.trim(),
       categoryId: customCategory,
-      description: customDescription || undefined,
+      description: customDescription.trim() || undefined,
     });
 
     // Reset and close
+    resetAndClose();
+  };
+
+  // Reset all state and close
+  const resetAndClose = () => {
+    setSearchQuery("");
+    setSelectedFunction(null);
+    setShowDropdown(false);
     setCustomName("");
     setCustomCategory("");
     setCustomDescription("");
     onOpenChange(false);
+  };
+
+  // Reset when dialog closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+      setSelectedFunction(null);
+      setShowDropdown(false);
+      setCustomName("");
+      setCustomCategory("");
+      setCustomDescription("");
+    }
+  }, [open]);
+
+  // Get org type label for display
+  const getOrgTypeLabel = (orgType: string | null): string => {
+    if (!orgType) return "Common";
+    return ORG_TYPE_LABELS[orgType as keyof typeof ORG_TYPE_LABELS] || orgType;
   };
 
   return (
@@ -191,146 +258,146 @@ function AddFunctionDialog({ open, onOpenChange, onAdd, currentOrgType }: AddFun
         <DialogHeader>
           <DialogTitle variant="dark">Add Function</DialogTitle>
           <DialogDescription variant="dark">
-            Add a function from another organization type&apos;s catalog, or create a custom one.
+            Search for a function from the catalog or create a custom one.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Mode selector */}
-        <div className="flex gap-2 mb-4">
-          <Button
-            variant={mode === "catalog" ? "dark-primary" : "dark-secondary"}
-            size="sm"
-            onClick={() => setMode("catalog")}
-          >
-            From Catalog
-          </Button>
-          <Button
-            variant={mode === "custom" ? "dark-primary" : "dark-secondary"}
-            size="sm"
-            onClick={() => setMode("custom")}
-          >
-            Custom Function
-          </Button>
-        </div>
+        <div className="space-y-6">
+          {/* ============ SEARCH FROM CATALOG ============ */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-slate-300">Search Catalog</h4>
 
-        {mode === "catalog" ? (
-          <div className="space-y-4">
-            {/* Org type selector */}
-            <FormField variant="dark" label="Organization Type">
-              <select
-                value={selectedOrgType}
+            {/* Search input with dropdown */}
+            <div className="relative">
+              <Input
+                variant="dark"
+                value={searchQuery}
                 onChange={(e) => {
-                  setSelectedOrgType(e.target.value);
-                  setSelectedCategory("");
-                  setSelectedFunction("");
+                  setSearchQuery(e.target.value);
+                  setSelectedFunction(null);
+                  setShowDropdown(e.target.value.trim().length > 0);
                 }}
-                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-              >
-                <option value="">Select organization type...</option>
-                {otherOrgTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {ORG_TYPE_LABELS[type as keyof typeof ORG_TYPE_LABELS]}
-                  </option>
-                ))}
-              </select>
-            </FormField>
+                onFocus={() => {
+                  if (searchQuery.trim().length > 0) setShowDropdown(true);
+                }}
+                onBlur={() => {
+                  // Delay hiding to allow click on dropdown items
+                  setTimeout(() => setShowDropdown(false), 200);
+                }}
+                placeholder={catalogLoading ? "Loading..." : "Type to search functions..."}
+                disabled={catalogLoading}
+              />
 
-            {/* Category selector */}
-            {selectedOrgType && (
-              <FormField variant="dark" label="Category">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    setSelectedFunction("");
-                  }}
-                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-                >
-                  <option value="">Select category...</option>
-                  {catalogCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
+              {/* Dropdown - only show when typing */}
+              {showDropdown && !catalogLoading && filteredFunctions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800 shadow-lg">
+                  {filteredFunctions.map((func) => (
+                    <button
+                      key={`${func.categoryId}-${func.functionId}`}
+                      onMouseDown={() => handleSelectFunction(func)}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-700 transition-colors border-b border-slate-700/50 last:border-b-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-marble-100">
+                          {func.functionName}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {getOrgTypeLabel(func.orgType)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">{func.categoryName}</div>
+                    </button>
                   ))}
-                </select>
-              </FormField>
-            )}
+                </div>
+              )}
+            </div>
 
-            {/* Function selector */}
-            {selectedCategory && (
-              <FormField variant="dark" label="Function">
-                <select
-                  value={selectedFunction}
-                  onChange={(e) => setSelectedFunction(e.target.value)}
-                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-                >
-                  <option value="">Select function...</option>
-                  {catalogFunctions.map((func) => (
-                    <option key={func.id} value={func.id}>
-                      {func.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            )}
-
-            {/* Show description if function selected */}
+            {/* Selected function preview */}
             {selectedFunction && (
-              <div className="p-3 rounded-lg bg-slate-700/50 text-sm text-slate-300">
-                {catalogFunctions.find((f) => f.id === selectedFunction)?.description ||
-                  "No description available."}
+              <div className="p-3 rounded-lg bg-gold-500/10 border border-gold-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-marble-100">{selectedFunction.functionName}</h4>
+                  <span className="text-xs px-2 py-0.5 rounded bg-slate-600 text-slate-300">
+                    {getOrgTypeLabel(selectedFunction.orgType)}
+                  </span>
+                </div>
+                <div className="text-sm text-gold-400">
+                  Category: {selectedFunction.categoryName}
+                </div>
+                {selectedFunction.description && (
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {selectedFunction.description}
+                  </p>
+                )}
+                <Button
+                  variant="dark-primary"
+                  size="sm"
+                  onClick={handleAddFromCatalog}
+                  className="mt-2"
+                >
+                  Add This Function
+                </Button>
               </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            <FormField variant="dark" label="Function Name" required>
+
+          {/* ============ DIVIDER ============ */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-slate-700" />
+            <span className="text-xs text-slate-500 uppercase">or create custom</span>
+            <div className="flex-1 h-px bg-slate-700" />
+          </div>
+
+          {/* ============ CUSTOM FUNCTION FORM ============ */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-slate-300">Custom Function</h4>
+
+            <div className="grid gap-3">
               <Input
                 variant="dark"
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
-                placeholder="e.g., Partner Management"
+                placeholder="Function name (e.g., Partner Management)"
               />
-            </FormField>
 
-            <FormField variant="dark" label="Category" required>
               <select
                 value={customCategory}
                 onChange={(e) => setCustomCategory(e.target.value)}
                 className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+                disabled={catalogLoading}
               >
                 <option value="">Select category...</option>
-                {FUNCTION_CATEGORIES.map((cat) => (
+                {commonCategories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
                 ))}
                 <option value="other">Other</option>
               </select>
-            </FormField>
 
-            <FormField variant="dark" label="Description" hint="Optional">
               <Textarea
                 variant="dark"
                 value={customDescription}
                 onChange={(e) => setCustomDescription(e.target.value)}
-                placeholder="Describe what this function does..."
-                rows={3}
+                placeholder="Description (optional)"
+                rows={2}
               />
-            </FormField>
+
+              <Button
+                variant="dark-secondary"
+                onClick={handleAddCustom}
+                disabled={!customName.trim() || !customCategory}
+                className="w-full"
+              >
+                Add Custom Function
+              </Button>
+            </div>
           </div>
-        )}
+        </div>
 
         <DialogFooter>
           <Button variant="dark-secondary" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="dark-primary"
-            onClick={mode === "catalog" ? handleAddFromCatalog : handleAddCustom}
-            disabled={mode === "catalog" ? !selectedFunction : !customName || !customCategory}
-          >
-            Add Function
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -351,15 +418,27 @@ export default function FunctionalPage() {
   const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set());
   const [showAddFunctionDialog, setShowAddFunctionDialog] = React.useState(false);
 
+  // Track excluded categories (marked as "None existed")
+  const excludedCategories = React.useMemo(() => {
+    return new Set(story?.functionalMapping.excludedCategories ?? []);
+  }, [story?.functionalMapping.excludedCategories]);
+
   // Get org type and stage from story
   const orgType = story?.basicInfo.organizationType;
   const stage = story?.basicInfo.stageAtClosure || "growth";
+
+  // Fetch functions from API
+  const {
+    isLoading: functionsLoading,
+    getCategoriesForOrgType,
+    getVisibleFunctionsForCategory,
+  } = useFunctions();
 
   // Get categories for this org type (filtered to only show relevant ones)
   const categories = React.useMemo(() => {
     if (!orgType) return [];
     return getCategoriesForOrgType(orgType);
-  }, [orgType]);
+  }, [orgType, getCategoriesForOrgType]);
 
   // Get selected functions from story
   const selectedFunctions = React.useMemo(() => {
@@ -376,12 +455,15 @@ export default function FunctionalPage() {
     return story?.functionalMapping.categoryAnswers ?? {};
   }, [story?.functionalMapping.categoryAnswers]);
 
-  // Calculate which categories have selected functions
+  // Calculate which categories have selected functions (excluding "None existed" categories)
   const categoriesWithSelections = React.useMemo(() => {
     const result: Set<string> = new Set();
 
     // Check base functions
     for (const category of categories) {
+      // Skip excluded categories
+      if (excludedCategories.has(category.id)) continue;
+
       const visibleFuncs = orgType
         ? getVisibleFunctionsForCategory(orgType, category.id, stage)
         : [];
@@ -393,15 +475,71 @@ export default function FunctionalPage() {
       }
     }
 
-    // Check custom functions
+    // Check custom functions (also skip excluded categories)
     for (const customFunc of customFunctions) {
+      if (excludedCategories.has(customFunc.categoryId)) continue;
       if (selectedFunctions.has(customFunc.id)) {
         result.add(customFunc.categoryId);
       }
     }
 
     return result;
-  }, [categories, customFunctions, orgType, selectedFunctions, stage]);
+  }, [
+    categories,
+    customFunctions,
+    orgType,
+    selectedFunctions,
+    stage,
+    excludedCategories,
+    getVisibleFunctionsForCategory,
+  ]);
+
+  // Get all function IDs visible for current org type (to exclude from Add Function dialog)
+  const existingFunctionIds = React.useMemo(() => {
+    const result = new Set<string>();
+    if (!orgType) return result;
+
+    for (const category of categories) {
+      const visibleFuncs = getVisibleFunctionsForCategory(orgType, category.id, stage);
+      for (const func of visibleFuncs) {
+        result.add(func.id);
+      }
+    }
+    return result;
+  }, [categories, orgType, stage, getVisibleFunctionsForCategory]);
+
+  // Get custom function IDs (to exclude from Add Function dialog)
+  const customFunctionIds = React.useMemo(() => {
+    return new Set(customFunctions.map((f) => f.id));
+  }, [customFunctions]);
+
+  // Convert categoriesWithSelections to ordered array for step navigation
+  const activeCategoriesArray = React.useMemo(() => {
+    // Get categories in display order
+    return categories.filter((cat) => categoriesWithSelections.has(cat.id)).map((cat) => cat.id);
+  }, [categories, categoriesWithSelections]);
+
+  // Build dynamic steps: Step 0 = Select Functions, then one step per category
+  const dynamicSteps = React.useMemo(() => {
+    const steps = [BASE_STEP];
+    for (const catId of activeCategoriesArray) {
+      const category = categories.find((c) => c.id === catId);
+      if (category) {
+        steps.push({
+          id: catId,
+          label: category.name,
+          description: "Tell us how it worked",
+        });
+      }
+    }
+    return steps;
+  }, [activeCategoriesArray, categories]);
+
+  // Get current category ID for step > 0
+  const currentCategoryId = currentStep > 0 ? activeCategoriesArray[currentStep - 1] : null;
+  const currentCategory = currentCategoryId
+    ? categories.find((c) => c.id === currentCategoryId)
+    : null;
 
   // Get selected function names for a category (for header)
   const getSelectedFunctionNames = (categoryId: string): string[] => {
@@ -427,21 +565,11 @@ export default function FunctionalPage() {
     return names;
   };
 
-  // Progress calculation
+  // Progress calculation - based on current step within total steps
   const progressPercent = React.useMemo(() => {
-    if (currentStep === 0) {
-      // Step 1: progress based on categories viewed/interacted with
-      return selectedFunctions.size > 0 ? 50 : 0;
-    } else {
-      // Step 2: progress based on answered categories
-      if (categoriesWithSelections.size === 0) return 50;
-      const answeredCategories = Array.from(categoriesWithSelections).filter((catId) => {
-        const answer = categoryAnswers[catId];
-        return answer && (answer.organization || answer.satisfaction || answer.health);
-      });
-      return 50 + Math.round((answeredCategories.length / categoriesWithSelections.size) * 50);
-    }
-  }, [currentStep, selectedFunctions.size, categoriesWithSelections, categoryAnswers]);
+    if (dynamicSteps.length <= 1) return 0;
+    return Math.round((currentStep / (dynamicSteps.length - 1)) * 100);
+  }, [currentStep, dynamicSteps.length]);
 
   // ==========================================================================
   // HANDLERS
@@ -515,19 +643,67 @@ export default function FunctionalPage() {
     });
   };
 
-  // Navigate to next step
-  const handleNextStep = () => {
-    if (currentStep === 0) {
-      setCurrentStep(1);
+  // Toggle category exclusion ("None existed")
+  const toggleCategoryExcluded = (categoryId: string) => {
+    if (!story) return;
+
+    const currentExcluded = story.functionalMapping.excludedCategories ?? [];
+    const isCurrentlyExcluded = currentExcluded.includes(categoryId);
+
+    let updatedExcluded: string[];
+    let updatedSelected = story.functionalMapping.selectedFunctions ?? [];
+
+    if (isCurrentlyExcluded) {
+      // Re-enable category
+      updatedExcluded = currentExcluded.filter((id) => id !== categoryId);
     } else {
-      handleComplete();
+      // Exclude category - also deselect all functions in this category
+      updatedExcluded = [...currentExcluded, categoryId];
+
+      // Get all functions in this category to deselect them
+      if (orgType) {
+        const visibleFuncs = getVisibleFunctionsForCategory(orgType, categoryId, stage);
+        const categoryFuncIds = visibleFuncs.map((f) => f.id);
+        updatedSelected = updatedSelected.filter((id) => !categoryFuncIds.includes(id));
+      }
+
+      // Also deselect custom functions in this category
+      const customInCategory = customFunctions.filter((f) => f.categoryId === categoryId);
+      const customIds = customInCategory.map((f) => f.id);
+      updatedSelected = updatedSelected.filter((id) => !customIds.includes(id));
+
+      // Collapse the category
+      setExpandedCategories((prev) => {
+        const next = new Set(prev);
+        next.delete(categoryId);
+        return next;
+      });
+    }
+
+    updateFunctionalMapping({
+      excludedCategories: updatedExcluded,
+      selectedFunctions: updatedSelected,
+    });
+  };
+
+  // Navigate to next step
+  const handleNextStep = async () => {
+    if (currentStep < dynamicSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+      // Scroll to top when moving to next category
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      // Complete the module
+      await handleComplete();
     }
   };
 
   // Navigate to previous step
   const handlePrevStep = () => {
-    if (currentStep === 1) {
-      setCurrentStep(0);
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      // Scroll to top when moving to previous category
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       router.push(`/interview/${story?.id}`);
     }
@@ -550,7 +726,7 @@ export default function FunctionalPage() {
   // LOADING STATE
   // ==========================================================================
 
-  if (isLoading || !story) {
+  if (isLoading || functionsLoading || !story) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <Spinner size="lg" />
@@ -593,7 +769,8 @@ export default function FunctionalPage() {
       <div className="mb-6">
         <p className="text-slate-300">
           Select functions that existed in your organization at its peak. Hover over each function
-          to see what it includes.
+          to see what it includes. Use &quot;Add Function&quot; below to add functions from other
+          organization types or create custom ones.
         </p>
         <p className="text-sm text-slate-400 mt-2">
           We&apos;ve organized functions typical for{" "}
@@ -608,11 +785,17 @@ export default function FunctionalPage() {
           <span className="font-medium text-marble-100">{selectedFunctions.size}</span> functions
           selected
         </span>
-        <span className="text-sm text-slate-400">
-          across{" "}
-          <span className="font-medium text-marble-100">{categoriesWithSelections.size}</span>{" "}
-          categories
-        </span>
+        <div className="flex items-center gap-4">
+          {excludedCategories.size > 0 && (
+            <span className="text-sm text-slate-400">
+              <span className="font-medium text-slate-500">{excludedCategories.size}</span> excluded
+            </span>
+          )}
+          <span className="text-sm text-slate-400">
+            <span className="font-medium text-marble-100">{categoriesWithSelections.size}</span>{" "}
+            categories active
+          </span>
+        </div>
       </div>
 
       {/* Categories accordion */}
@@ -631,34 +814,75 @@ export default function FunctionalPage() {
         ).length;
         const totalSelected = selectedInCategory + selectedCustomInCategory;
         const isExpanded = expandedCategories.has(category.id);
+        const isExcluded = excludedCategories.has(category.id);
 
         return (
-          <div key={category.id} className="border border-slate-700 rounded-lg overflow-hidden">
+          <div
+            key={category.id}
+            className={cn(
+              "border border-slate-700 rounded-lg overflow-hidden",
+              isExcluded && "opacity-60"
+            )}
+          >
             {/* Category header */}
-            <button
-              onClick={() => toggleCategory(category.id)}
-              className="w-full flex items-center justify-between p-4 bg-slate-800/50 hover:bg-slate-800 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                {isExpanded ? (
-                  <ChevronDown className="h-5 w-5 text-slate-400" />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-slate-400" />
+            <div className="w-full flex items-center justify-between p-4 bg-slate-800/50">
+              <button
+                onClick={() => !isExcluded && toggleCategory(category.id)}
+                className={cn(
+                  "flex items-center gap-3 flex-1",
+                  !isExcluded && "hover:opacity-80 transition-opacity"
                 )}
-                <span className="font-medium text-marble-100">{category.name}</span>
-                {totalSelected > 0 && (
+                disabled={isExcluded}
+              >
+                {!isExcluded &&
+                  (isExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-slate-400" />
+                  ))}
+                <span
+                  className={cn(
+                    "font-medium",
+                    isExcluded ? "text-slate-500 line-through" : "text-marble-100"
+                  )}
+                >
+                  {category.name}
+                </span>
+                {!isExcluded && totalSelected > 0 && (
                   <span className="px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-400 text-xs">
                     {totalSelected} selected
                   </span>
                 )}
+              </button>
+              <div className="flex items-center gap-3">
+                {isExcluded ? (
+                  <button
+                    onClick={() => toggleCategoryExcluded(category.id)}
+                    className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  >
+                    Undo
+                  </button>
+                ) : (
+                  <>
+                    <span className="text-sm text-slate-400">
+                      {visibleFunctions.length + categoryCustomFuncs.length} functions
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCategoryExcluded(category.id);
+                      }}
+                      className="text-xs px-2 py-1 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700"
+                    >
+                      None existed
+                    </button>
+                  </>
+                )}
               </div>
-              <span className="text-sm text-slate-400">
-                {visibleFunctions.length + categoryCustomFuncs.length} functions
-              </span>
-            </button>
+            </div>
 
-            {/* Functions list */}
-            {isExpanded && (
+            {/* Functions list - only show when expanded and not excluded */}
+            {isExpanded && !isExcluded && (
               <div className="divide-y divide-slate-700/50">
                 {visibleFunctions.map((func) => {
                   const isSelected = selectedFunctions.has(func.id);
@@ -669,8 +893,7 @@ export default function FunctionalPage() {
                       key={func.id}
                       className={cn(
                         "flex items-center gap-3 p-3 transition-colors",
-                        isSelected ? "bg-gold-500/10" : "hover:bg-slate-800/30",
-                        isDimmed && !isSelected && "opacity-60"
+                        isSelected ? "bg-gold-500/10" : "hover:bg-slate-800/30"
                       )}
                     >
                       {/* Checkbox */}
@@ -680,7 +903,8 @@ export default function FunctionalPage() {
                           "w-5 h-5 rounded flex items-center justify-center flex-shrink-0",
                           isSelected
                             ? "bg-gold-500 text-slate-900"
-                            : "border border-slate-600 hover:border-slate-500"
+                            : "border border-slate-600 hover:border-slate-500",
+                          isDimmed && !isSelected && "opacity-60"
                         )}
                       >
                         {isSelected && <Check className="h-3.5 w-3.5" />}
@@ -692,7 +916,8 @@ export default function FunctionalPage() {
                           onClick={() => toggleFunction(func.id)}
                           className={cn(
                             "text-sm text-left flex items-center gap-2",
-                            isSelected ? "text-marble-100 font-medium" : "text-slate-300"
+                            isSelected ? "text-marble-100 font-medium" : "text-slate-300",
+                            isDimmed && !isSelected && "opacity-60"
                           )}
                         >
                           {func.name}
@@ -770,6 +995,8 @@ export default function FunctionalPage() {
         onOpenChange={setShowAddFunctionDialog}
         onAdd={handleAddCustomFunction}
         currentOrgType={orgType}
+        existingFunctionIds={existingFunctionIds}
+        customFunctionIds={customFunctionIds}
       />
     </div>
   );
@@ -779,9 +1006,8 @@ export default function FunctionalPage() {
   // ==========================================================================
 
   const renderStep2 = () => {
-    const categoriesArray = Array.from(categoriesWithSelections);
-
-    if (categoriesArray.length === 0) {
+    // Show only the current category
+    if (!currentCategoryId || !currentCategory) {
       return (
         <div className="text-center py-12">
           <AlertCircle className="h-12 w-12 mx-auto text-gold-500 mb-4" />
@@ -795,59 +1021,78 @@ export default function FunctionalPage() {
       );
     }
 
+    const categoryName = currentCategory.name;
+    const selectedNames = getSelectedFunctionNames(currentCategoryId);
+    const answer = categoryAnswers[currentCategoryId] ?? {
+      organization: "",
+      satisfaction: "",
+      health: "",
+    };
+
     return (
-      <div className="space-y-8">
-        {/* Instructions */}
-        <p className="text-slate-300">
-          Now tell us about how each area worked in your organization. The more detail you provide,
-          the more valuable your story becomes.
-        </p>
+      <div className="space-y-6">
+        {/* Category header card */}
+        <Card variant="dark" padding="sm">
+          <h3 className="font-display text-lg font-medium text-marble-100 mb-2">{categoryName}</h3>
+          <p className="text-sm text-gold-400 mb-1">
+            {getCategoryHeader(categoryName, selectedNames).split("\n\n")[0]}
+          </p>
+          <p className="text-sm text-slate-400">
+            {getCategoryHeader(categoryName, selectedNames).split("\n\n")[1]}
+          </p>
+        </Card>
 
-        {/* Category question sections */}
-        {categoriesArray.map((categoryId) => {
-          const category = categories.find((c) => c.id === categoryId);
-          const categoryName = category?.name || categoryId;
-          const selectedNames = getSelectedFunctionNames(categoryId);
-          const answer = categoryAnswers[categoryId] ?? {
-            organization: "",
-            satisfaction: "",
-            health: "",
-          };
-          const context = getCategoryContext(categoryId);
+        {/* Questions */}
+        <div className="space-y-4">
+          {CATEGORY_QUESTIONS.map((question) => (
+            <FormField
+              key={question.id}
+              variant="dark"
+              label={
+                <span className="inline-flex items-center gap-2">
+                  {question.label}
+                  <Tooltip content={question.placeholder}>
+                    <Info className="h-4 w-4 text-slate-500 hover:text-slate-400 cursor-help" />
+                  </Tooltip>
+                </span>
+              }
+            >
+              <Textarea
+                variant="dark"
+                value={answer[question.id]}
+                onChange={(e) =>
+                  updateCategoryAnswer(currentCategoryId, question.id, e.target.value)
+                }
+                rows={4}
+              />
+            </FormField>
+          ))}
+        </div>
 
-          return (
-            <div key={categoryId} className="space-y-4">
-              {/* Category header card */}
-              <Card variant="dark" className="p-4 bg-slate-800/50 border-gold-500/30">
-                <h3 className="font-medium text-marble-100 mb-2">{categoryName}</h3>
-                <p className="text-sm text-gold-400 mb-2">
-                  {getCategoryHeader(categoryName, selectedNames).split("\n\n")[0]}
-                </p>
-                <p className="text-sm text-slate-300">
-                  {getCategoryHeader(categoryName, selectedNames).split("\n\n")[1]}
-                </p>
-                {context && <p className="text-xs text-slate-400 mt-2 italic">{context}</p>}
-              </Card>
-
-              {/* Questions */}
-              <div className="space-y-4 pl-4 border-l-2 border-slate-700">
-                {CATEGORY_QUESTIONS.map((question) => (
-                  <FormField key={question.id} variant="dark" label={question.label}>
-                    <Textarea
-                      variant="dark"
-                      value={answer[question.id]}
-                      onChange={(e) =>
-                        updateCategoryAnswer(categoryId, question.id, e.target.value)
-                      }
-                      placeholder={question.placeholder}
-                      rows={4}
-                    />
-                  </FormField>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        {/* Progress indicator for categories */}
+        <div className="flex items-center justify-center gap-1 pt-4 border-t border-slate-700 flex-wrap">
+          {activeCategoriesArray.map((catId, index) => {
+            const cat = categories.find((c) => c.id === catId);
+            const isActive = index === currentStep - 1;
+            const isPast = index < currentStep - 1;
+            const stepIndex = index + 1; // Step 0 is function selection
+            return (
+              <button
+                key={catId}
+                onClick={() => setCurrentStep(stepIndex)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors",
+                  isActive && "bg-gold-500/20 text-gold-400 font-medium",
+                  isPast && "text-slate-400 hover:text-slate-300",
+                  !isActive && !isPast && "text-slate-500 hover:text-slate-400"
+                )}
+              >
+                {isPast && <CheckCircle2 className="h-3 w-3" />}
+                {cat?.name || catId}
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -856,24 +1101,36 @@ export default function FunctionalPage() {
   // RENDER
   // ==========================================================================
 
+  // Determine if on last step
+  const isLastStep = currentStep === dynamicSteps.length - 1;
+
+  // Determine subtitle based on current step
+  const getSubtitle = () => {
+    if (currentStep === 0) {
+      return "Select functions that existed in your organization";
+    }
+    if (currentCategory) {
+      return `Tell us about ${currentCategory.name}`;
+    }
+    return "Tell us how each area worked";
+  };
+
   return (
     <WizardLayout
       variant="dark"
-      steps={STEPS}
+      steps={dynamicSteps}
       currentStep={currentStep}
       onBack={handlePrevStep}
       onNext={handleNextStep}
       cancelHref={`/interview/${story.id}`}
       isLoading={isSubmitting}
-      canGoNext={currentStep === 0 ? selectedFunctions.size > 0 : true}
-      nextLabel={currentStep === 0 ? "Continue" : "Complete"}
-      backLabel={currentStep === 0 ? "Back" : "Previous Step"}
-      title="Functional Mapping"
-      subtitle={
-        currentStep === 0
-          ? "Select functions that existed in your organization"
-          : "Tell us how each area worked"
+      canGoNext={
+        currentStep === 0 ? selectedFunctions.size > 0 || excludedCategories.size > 0 : true
       }
+      nextLabel={isLastStep ? "Complete" : "Continue"}
+      backLabel={currentStep === 0 ? "Back" : "Previous"}
+      title="Functional Mapping"
+      subtitle={getSubtitle()}
       progress={progressPercent}
     >
       {currentStep === 0 ? renderStep1() : renderStep2()}
