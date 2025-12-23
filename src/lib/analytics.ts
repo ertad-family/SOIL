@@ -1,7 +1,10 @@
 /**
  * Analytics utility for tracking events locally and to external services
  * Part of issue #168: Internal analytics dashboard
+ * Updated for issue #184: GDPR/CCPA Compliance - consent check added
  */
+
+import { hasAnalyticsConsent } from "@/lib/consent";
 
 // Event categories for organization
 export type EventCategory =
@@ -68,6 +71,14 @@ export async function trackEvent(
   options: TrackEventOptions = {}
 ): Promise<void> {
   const { category, properties = {}, skipGA = false } = options;
+
+  // Check consent before tracking (client-side only)
+  if (typeof window !== "undefined" && !hasAnalyticsConsent()) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[Analytics] Skipped (no consent):", eventName);
+    }
+    return;
+  }
 
   // Development logging
   if (process.env.NODE_ENV === "development") {

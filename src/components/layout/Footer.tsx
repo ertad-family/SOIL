@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { FooterLandscape } from "@/components/three/FooterLandscape";
+import { openCookiePreferences } from "@/components/ui/cookie-consent-banner";
 
 // Primary navigation - main site sections
 const PRIMARY_LINKS = [
@@ -31,6 +32,7 @@ const SERVICE_LINKS = [
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms of Service" },
   { href: "/sitemap.xml", label: "Sitemap" },
+  { href: "#", label: "Cookie Preferences", onClick: openCookiePreferences },
 ];
 
 // Connect section - contacts & social media (horizontal layout)
@@ -44,11 +46,24 @@ interface FooterLinkProps {
   href: string;
   label: string;
   disabled?: boolean;
+  onClick?: () => void;
 }
 
-function FooterLink({ href, label, disabled }: FooterLinkProps) {
+function FooterLink({ href, label, disabled, onClick }: FooterLinkProps) {
   if (disabled) {
     return <span className="text-slate-500 text-sm cursor-not-allowed">{label}</span>;
+  }
+
+  // If onClick is provided, render as button
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className="!text-marble-400 hover:!text-gold-400 text-sm transition-colors text-left"
+      >
+        {label}
+      </button>
+    );
   }
 
   return (
