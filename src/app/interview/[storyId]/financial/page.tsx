@@ -592,13 +592,24 @@ export default function FinancialPage() {
     if (!story) return;
 
     const currentMetrics = getOrCreateMetrics();
+    const currentNA = story.financialPicture?.notApplicableMetrics ?? [];
     updateFinancialPicture({
       essentialMetrics: { ...currentMetrics, [type]: null },
+      notApplicableMetrics: currentNA.includes(type) ? currentNA : [...currentNA, type],
     });
     setExpandedMetrics((prev) => {
       const next = new Set(prev);
       next.delete(type);
       return next;
+    });
+  };
+
+  const undoMetricNotApplicable = (type: EssentialMetricType) => {
+    if (!story) return;
+
+    const currentNA = story.financialPicture?.notApplicableMetrics ?? [];
+    updateFinancialPicture({
+      notApplicableMetrics: currentNA.filter((m) => m !== type),
     });
   };
 
@@ -712,6 +723,7 @@ export default function FinancialPage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       router.push(`/interview/${story?.id}`);
     }
@@ -720,6 +732,7 @@ export default function FinancialPage() {
   const handleNext = async () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       setIsSubmitting(true);
       try {
@@ -1274,57 +1287,81 @@ export default function FinancialPage() {
               const isActive = isMetricActive(config.type);
               const isComplete = isMetricComplete(essentialMetrics, config.type);
               const isExpanded = expandedMetrics.has(config.type);
+              const isMarkedNA =
+                story?.financialPicture?.notApplicableMetrics?.includes(config.type) ?? false;
 
               return (
                 <div key={config.type}>
                   <div
                     className={cn(
                       "w-full flex items-center gap-3 p-3 transition-colors",
-                      isActive ? "bg-gold-500/10" : "hover:bg-slate-800/50"
+                      isActive ? "bg-gold-500/10" : "hover:bg-slate-800/50",
+                      isMarkedNA && "opacity-60"
                     )}
                   >
                     <button
-                      onClick={() => toggleMetric(config.type)}
+                      onClick={() => !isMarkedNA && toggleMetric(config.type)}
+                      disabled={isMarkedNA}
                       className={cn(
                         "w-5 h-5 rounded flex items-center justify-center flex-shrink-0",
                         isActive
                           ? "bg-gold-500 text-slate-900"
-                          : "border border-slate-600 hover:border-slate-500"
+                          : "border border-slate-600 hover:border-slate-500",
+                        isMarkedNA && "cursor-not-allowed opacity-50"
                       )}
                     >
                       {isActive && <Check className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       onClick={() => {
+                        if (isMarkedNA) return;
                         if (isActive) {
                           toggleMetricExpand(config.type);
                         } else {
                           toggleMetric(config.type);
                         }
                       }}
+                      disabled={isMarkedNA}
                       className={cn(
                         "text-sm flex-1 text-left",
                         isActive
                           ? "text-marble-100 font-medium"
-                          : "text-slate-300 hover:text-slate-200"
+                          : "text-slate-300 hover:text-slate-200",
+                        isMarkedNA && "text-slate-500 line-through cursor-not-allowed"
                       )}
                     >
                       <span>{config.name}</span>
-                      <span className="text-slate-500 ml-2 text-xs">{config.description}</span>
+                      <span
+                        className={cn(
+                          "ml-2 text-xs",
+                          isMarkedNA ? "text-slate-600" : "text-slate-500"
+                        )}
+                      >
+                        {config.description}
+                      </span>
                     </button>
-                    {isActive && isComplete && (
+                    {!isMarkedNA && isActive && isComplete && (
                       <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                     )}
-                    {isActive && !isComplete && (
+                    {!isMarkedNA && isActive && !isComplete && (
                       <span className="text-xs text-slate-500">needs details</span>
                     )}
-                    <button
-                      onClick={() => markMetricNotApplicable(config.type)}
-                      className="text-xs px-2 py-1 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700"
-                    >
-                      N/A
-                    </button>
-                    {isActive && (
+                    {isMarkedNA ? (
+                      <button
+                        onClick={() => undoMetricNotApplicable(config.type)}
+                        className="text-xs px-2 py-1 rounded text-amber-500 hover:text-amber-400 hover:bg-slate-700"
+                      >
+                        Undo
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => markMetricNotApplicable(config.type)}
+                        className="text-xs px-2 py-1 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700"
+                      >
+                        N/A
+                      </button>
+                    )}
+                    {!isMarkedNA && isActive && (
                       <button
                         onClick={() => toggleMetricExpand(config.type)}
                         className="p-1 hover:bg-slate-700 rounded"
@@ -1337,7 +1374,7 @@ export default function FinancialPage() {
                       </button>
                     )}
                   </div>
-                  {isActive && isExpanded && renderMetricForm(config)}
+                  {!isMarkedNA && isActive && isExpanded && renderMetricForm(config)}
                 </div>
               );
             })}

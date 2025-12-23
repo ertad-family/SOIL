@@ -468,6 +468,7 @@ export interface FinancialPictureData {
   metrics: FinancialMetrics | null; // Org-type specific metrics (future use)
   dynamics: MetricDynamic[];
   events: FinancialEvent[];
+  notApplicableMetrics?: EssentialMetricType[]; // Metrics explicitly marked as N/A
 }
 
 // =============================================================================
