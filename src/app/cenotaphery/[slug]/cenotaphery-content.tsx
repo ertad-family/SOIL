@@ -10,6 +10,8 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Spinner } from "@/components/ui/spinner";
 import { Landmark, ArrowRight, Award, Vote, Trophy, BookOpen, Crown, Star } from "lucide-react";
 import Link from "next/link";
+import { ShareButton } from "@/components/ui/share-button";
+import { BackButton } from "@/components/ui/back-button";
 import { trackEvent } from "@/lib/analytics";
 
 interface Cenotaph {
@@ -64,10 +66,7 @@ export function CenotapheryContent({ slug }: { slug: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get cenotaphery display info from API or use slug as fallback
-  const cenotapheryName = cenotapheryInfo?.name || `Cenotaphery: ${slug}`;
-  const cenotapheryDescription =
-    cenotapheryInfo?.description || "A digital memorial for organizations.";
+  // Check if this is the first cenotaphery (special treatment)
   const isFirstCenotaphery = slug === "the-first";
 
   // Fetch cenotaphery with cenotaphs
@@ -158,6 +157,11 @@ export function CenotapheryContent({ slug }: { slug: string }) {
         </div>
 
         <div className="relative max-w-content mx-auto px-6">
+          {/* Back navigation - top right */}
+          <div className="flex justify-end mb-6">
+            <BackButton href="/cenotaphery" text="Back to Globe" />
+          </div>
+
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Left Column: Title, Description & Benefits */}
             <div>
@@ -166,67 +170,97 @@ export function CenotapheryContent({ slug }: { slug: string }) {
                 <SectionLabel>cenotaphery</SectionLabel>
               </div>
 
-              {/* Title */}
-              <h1 className="font-serif text-4xl md:text-5xl lg:text-5xl font-semibold mb-6 tracking-wide">
-                <span className="text-gradient-gold">{cenotapheryName}</span>
-              </h1>
-
-              {/* Description */}
-              <p className="text-lg text-slate-400 leading-relaxed mb-8">
-                {cenotapheryDescription}
-              </p>
-
-              {/* First Founders Benefits - Only for "the-first" */}
-              {isFirstCenotaphery && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-marble-200 uppercase tracking-wider">
-                    Founding Member Benefits
-                  </h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <Crown className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-marble-200">Exclusivity</span> — Limited to the first
-                        100 founders only
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <Star className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-marble-200">Premier Placement</span> — Forever first
-                        on the platform
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <Vote className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-marble-200">Governance Rights</span> — Vote on project
-                        roadmap
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <Trophy className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-marble-200">Awards Recognition</span> — Day of the
-                        Dead Venture & Cenotavr Awards
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <Award className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-marble-200">Founder² Title</span> — Honorary
-                        &quot;Founder Squared of SOIL&quot; status
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <BookOpen className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-marble-200">Research Citation</span> — Mentioned in
-                        first research papers
-                      </span>
-                    </li>
-                  </ul>
+              {/* Loading skeleton for hero content */}
+              {isLoading && !cenotapheryInfo ? (
+                <div className="animate-pulse">
+                  {/* Title skeleton */}
+                  <div className="h-12 bg-slate-700/50 rounded-lg w-3/4 mb-6" />
+                  {/* Description skeleton */}
+                  <div className="space-y-3 mb-8">
+                    <div className="h-5 bg-slate-700/50 rounded w-full" />
+                    <div className="h-5 bg-slate-700/50 rounded w-5/6" />
+                    <div className="h-5 bg-slate-700/50 rounded w-4/6" />
+                  </div>
+                  {/* Benefits skeleton for the-first */}
+                  {isFirstCenotaphery && (
+                    <div className="space-y-4">
+                      <div className="h-4 bg-slate-700/50 rounded w-48" />
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-5 h-5 bg-slate-700/50 rounded" />
+                          <div className="h-4 bg-slate-700/50 rounded flex-1" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <>
+                  {/* Title */}
+                  <h1 className="font-serif text-4xl md:text-5xl lg:text-5xl font-semibold mb-6 tracking-wide">
+                    <span className="text-gradient-gold">
+                      {cenotapheryInfo?.name || `Cenotaphery: ${slug}`}
+                    </span>
+                  </h1>
+
+                  {/* Description */}
+                  <p className="text-lg text-slate-400 leading-relaxed mb-8">
+                    {cenotapheryInfo?.description || "A digital memorial for organizations."}
+                  </p>
+
+                  {/* First Founders Benefits - Only for "the-first" */}
+                  {isFirstCenotaphery && (
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-medium text-marble-200 uppercase tracking-wider">
+                        Founding Member Benefits
+                      </h3>
+                      <ul className="space-y-3">
+                        <li className="flex items-start gap-3 text-slate-400">
+                          <Crown className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <span className="text-marble-200">Exclusivity</span> — Limited to the
+                            first 100 founders only
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3 text-slate-400">
+                          <Star className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <span className="text-marble-200">Premier Placement</span> — Forever
+                            first on the platform
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3 text-slate-400">
+                          <Vote className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <span className="text-marble-200">Governance Rights</span> — Vote on
+                            project roadmap
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3 text-slate-400">
+                          <Trophy className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <span className="text-marble-200">Awards Recognition</span> — Day of the
+                            Dead Venture & Cenotavr Awards
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3 text-slate-400">
+                          <Award className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <span className="text-marble-200">Founder² Title</span> — Honorary
+                            &quot;Founder Squared of SOIL&quot; status
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3 text-slate-400">
+                          <BookOpen className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                          <span>
+                            <span className="text-marble-200">Research Citation</span> — Mentioned
+                            in first research papers
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -366,6 +400,47 @@ export function CenotapheryContent({ slug }: { slug: string }) {
           </>
         )}
       </section>
+
+      {/* CTA Section - Encourage visitors to create their own memorial */}
+      {!isLoading && !error && (
+        <section className="py-16 md:py-24 bg-gradient-to-b from-slate-900 to-slate-950">
+          <div className="max-w-content mx-auto px-6">
+            {/* Roman divider */}
+            <div className="divider-roman mb-12">
+              <span className="text-gold-500 font-serif text-sm tracking-[0.3em] px-6">✦</span>
+            </div>
+
+            <div className="max-w-2xl mx-auto text-center">
+              <h2 className="font-display text-2xl md:text-3xl font-medium text-marble-100 mb-4">
+                Honor Your Organization&apos;s Journey
+              </h2>
+              <p className="text-slate-400 text-lg mb-8 leading-relaxed">
+                Every organization has a story worth preserving. Create a cenotaph to honor your
+                organization&apos;s legacy and contribute to our collective understanding of what
+                makes ventures succeed or fail.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link href="/organization/create?returnTo=interview">
+                  <Button
+                    variant="dark-primary"
+                    size="lg"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                  >
+                    Create Your Memorial
+                  </Button>
+                </Link>
+
+                <ShareButton
+                  url={`https://soil.rip/cenotaphery/${slug}`}
+                  title={`Visit ${cenotapheryInfo?.name || "this cenotaphery"} on SOIL`}
+                  description="A digital memorial for organizations that have ended their journey. Honor their legacy."
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

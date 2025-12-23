@@ -13,6 +13,7 @@ interface FeaturedStory {
   location: string;
   industry: string;
   industryColor: string;
+  cenotaphImageUrl?: string | null;
   respects: number;
 }
 
@@ -99,16 +100,6 @@ export function FeaturedStoriesSection({ stories }: FeaturedStoriesSectionProps)
           {stories.map((story) => (
             <StoryCard key={story.id} story={story} />
           ))}
-        </div>
-
-        {/* View more link */}
-        <div className="mt-8 text-center">
-          <button
-            className="text-gold-400 hover:text-gold-300 transition-colors text-sm font-medium"
-            disabled
-          >
-            View more stories →
-          </button>
         </div>
       </div>
     </section>
