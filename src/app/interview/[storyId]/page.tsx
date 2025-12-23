@@ -4,11 +4,21 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useInterview } from "@/contexts/InterviewContext";
+import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { Check, ArrowRight, Clock, Calendar, Users, Layers, FileText } from "lucide-react";
+import {
+  Check,
+  ArrowRight,
+  Clock,
+  Calendar,
+  Users,
+  Layers,
+  FileText,
+  MessageSquare,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MODULES, FounderRole } from "@/types/interview";
 import { RomanNumeral, type RomanNumeralValue } from "@/components/ui/roman-numeral";
@@ -48,6 +58,7 @@ export default function StoryOverviewPage() {
     navigateToModule,
     refreshSummary,
   } = useInterview();
+  const { scheduleExitPrompt, showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
 
   // Fetch chapter time estimates
   const [chapterEstimates, setChapterEstimates] = React.useState<ChapterEstimate[]>([]);
@@ -128,6 +139,37 @@ export default function StoryOverviewPage() {
     }
     return hasAnyEstimate ? total : null;
   }, [showEstimates, story, displayedModules, getChapterEstimate]);
+
+  // Schedule exit-intent for coined stories (show feedback prompt when leaving)
+  React.useEffect(() => {
+    if (story?.status === "coined" && !hasFeedbackBeenGiven("story_contribution")) {
+      scheduleExitPrompt({
+        type: "story_contribution",
+        contextId: story.id,
+        contextMetadata: {
+          organizationName: story.basicInfo?.organizationName,
+          organizationId: story.organizationId,
+        },
+        title: "Your feedback matters",
+        description: "How was your experience contributing your startup's story to science?",
+      });
+    }
+  }, [story, scheduleExitPrompt, hasFeedbackBeenGiven]);
+
+  // Handler for feedback button click
+  const handleFeedbackClick = React.useCallback(() => {
+    if (!story) return;
+    showPrompt({
+      type: "story_contribution",
+      contextId: story.id,
+      contextMetadata: {
+        organizationName: story.basicInfo?.organizationName,
+        organizationId: story.organizationId,
+      },
+      title: "Your feedback matters",
+      description: "How was your experience contributing your startup's story to science?",
+    });
+  }, [story, showPrompt]);
 
   if (isLoading) {
     return (
@@ -379,6 +421,24 @@ export default function StoryOverviewPage() {
                     />
                   </div>
                 </div>
+
+                {/* Feedback prompt - only show if not already given */}
+                {!hasFeedbackBeenGiven("story_contribution") && (
+                  <div className="mt-4 pt-4 border-t border-slate-700">
+                    <p className="text-xs text-slate-400 text-center mb-2">
+                      Your feedback helps us improve the experience for future founders
+                    </p>
+                    <Button
+                      variant="dark-ghost"
+                      size="sm"
+                      onClick={handleFeedbackClick}
+                      className="w-full justify-center"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 mr-2" />
+                      Share Your Feedback
+                    </Button>
+                  </div>
+                )}
               </Card>
             )}
 

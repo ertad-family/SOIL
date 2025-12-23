@@ -1,15 +1,20 @@
 "use client";
 
-import { Suspense, ReactNode } from "react";
+import { Suspense, ReactNode, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useIsMobile } from "@/lib/utils";
 import { MenuProvider } from "@/contexts/MenuContext";
 import { PagePrivacyProvider, usePagePrivacy } from "@/contexts/PagePrivacyContext";
+import {
+  TestimonialPromptProvider,
+  useTestimonialPrompt,
+} from "@/contexts/TestimonialPromptContext";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { MenuTransition } from "@/components/transitions/MenuTransition";
 import { GlobalParticles } from "@/components/three/GlobalParticles";
 import { LiquidContributionFab } from "@/components/ui/liquid-contribution-fab";
+import { Toaster } from "@/components/ui/toaster";
 
 interface AppShellProps {
   children: ReactNode;
@@ -51,6 +56,45 @@ function VisitorParticles() {
 }
 
 /**
+ * GeneralVisitorFeedback - Schedules exit-intent feedback prompt for general visitors.
+ *
+ * Only triggers for visitors who:
+ * 1. Are on public pages (not interview, account, admin, etc.)
+ * 2. Haven't already given general feedback this session
+ * 3. Have spent some time on the site (configured via context)
+ */
+function GeneralVisitorFeedback() {
+  const pathname = usePathname();
+  const { scheduleExitPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
+
+  useEffect(() => {
+    // Don't schedule for private/focused routes
+    const isPrivateRoute =
+      pathname.startsWith("/interview") ||
+      pathname.startsWith("/account") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/organization/create") ||
+      pathname.startsWith("/cenotaph/create") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/signup");
+
+    if (isPrivateRoute) return;
+
+    // Don't schedule if feedback already given
+    if (hasFeedbackBeenGiven("general")) return;
+
+    // Schedule exit prompt for general visitors
+    scheduleExitPrompt({
+      type: "general",
+      title: "We value your opinion",
+      description: "You're one of the first 1000 visitors. Your feedback helps us improve.",
+    });
+  }, [pathname, scheduleExitPrompt, hasFeedbackBeenGiven]);
+
+  return null;
+}
+
+/**
  * AppShell - Global layout wrapper for all pages.
  *
  * Provides:
@@ -65,33 +109,41 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <PagePrivacyProvider>
       <MenuProvider>
-        <div className="dark">
-          {/* Global floating particles (controlled by page privacy) */}
-          <VisitorParticles />
+        <TestimonialPromptProvider>
+          {/* General visitor feedback exit-intent */}
+          <GeneralVisitorFeedback />
 
-          {/* Global menu transition - single instance for entire app */}
-          <MenuTransition />
+          <div className="dark">
+            {/* Global floating particles (controlled by page privacy) */}
+            <VisitorParticles />
 
-          <div className="min-h-screen bg-slate-900 dark:bg-slate-900 text-marble-100 flex flex-col">
-            <Header />
+            {/* Global menu transition - single instance for entire app */}
+            <MenuTransition />
 
-            {/* Page content */}
-            <main className="flex-1 relative">
-              {children}
-              {/* Auto gradient transition to footer - applies to all pages */}
-              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-marble-950 pointer-events-none z-10" />
-            </main>
+            <div className="min-h-screen bg-slate-900 dark:bg-slate-900 text-marble-100 flex flex-col">
+              <Header />
 
-            <Footer />
+              {/* Page content */}
+              <main className="flex-1 relative">
+                {children}
+                {/* Auto gradient transition to footer - applies to all pages */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-marble-950 pointer-events-none z-10" />
+              </main>
 
-            {/* Floating contribution button - hidden on mobile and in production */}
-            {process.env.NODE_ENV !== "production" && (
-              <div className="hidden md:block">
-                <LiquidContributionFab />
-              </div>
-            )}
+              <Footer />
+
+              {/* Floating contribution button - hidden on mobile and in production */}
+              {process.env.NODE_ENV !== "production" && (
+                <div className="hidden md:block">
+                  <LiquidContributionFab />
+                </div>
+              )}
+            </div>
+
+            {/* Toast notifications */}
+            <Toaster />
           </div>
-        </div>
+        </TestimonialPromptProvider>
       </MenuProvider>
     </PagePrivacyProvider>
   );

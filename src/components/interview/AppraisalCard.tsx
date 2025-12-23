@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, MessageSquare } from "lucide-react";
 import type { Story } from "@/types/interview";
 import { MODULES } from "@/types/interview";
+import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
 
 interface AppraisalCardProps {
   story: Story;
@@ -16,6 +18,7 @@ interface AppraisalCardProps {
  * Only appears when there's an appraisal to show.
  */
 export function AppraisalCard({ story }: AppraisalCardProps) {
+  const { showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
   const appraisal = story.aiSummary?.appraisal;
   const lastModuleProcessed = story.aiSummary?.lastModuleProcessed;
 
@@ -33,6 +36,24 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
 
   const nextChapterName = getNextIncompleteChapter();
   const allChaptersComplete = !nextChapterName;
+
+  // Check if feedback has already been given for chapter completion
+  const feedbackAlreadyGiven = hasFeedbackBeenGiven("chapter_completion");
+
+  // Handle feedback button click
+  const handleFeedbackClick = () => {
+    showPrompt({
+      type: "chapter_completion",
+      contextId: story.id,
+      contextMetadata: {
+        chapter: lastModuleProcessed,
+        chapterName: processedChapterName,
+        organizationName: story.basicInfo?.organizationName,
+      },
+      title: "Your feedback is crucial",
+      description: `You're one of the first 100 founders to use SOIL. How was your experience with ${processedChapterName || "this chapter"}?`,
+    });
+  };
 
   // Only show when there's an actual appraisal to display
   if (!appraisal) {
@@ -54,6 +75,24 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
 
         {/* Affirmation message */}
         <p className="text-slate-300 text-sm leading-relaxed">{appraisal.affirmation}</p>
+
+        {/* Feedback prompt - only show if not already given */}
+        {!feedbackAlreadyGiven && (
+          <div className="pt-3 border-t border-slate-700/50">
+            <p className="text-xs text-slate-400 mb-2">
+              You&apos;re one of the first 100 founders. Your feedback is crucial.
+            </p>
+            <Button
+              variant="dark-ghost"
+              size="sm"
+              onClick={handleFeedbackClick}
+              className="w-full justify-center"
+            >
+              <MessageSquare className="h-3.5 w-3.5 mr-2" />
+              Share Your Feedback
+            </Button>
+          </div>
+        )}
 
         {/* Anticipation for next chapter - only if there's a next chapter */}
         {nextChapterName && (
