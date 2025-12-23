@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useMemo, useCallback } from "react";
-import { useFrame, useThree, ThreeEvent } from "@react-three/fiber";
+import { useMemo, useCallback } from "react";
+import { useThree, ThreeEvent } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { GLOBE_RADIUS } from "./Globe";
@@ -17,11 +17,18 @@ interface GlobeMarkersProps {
   onMarkerHover: (marker: CenotapheryMarker | null) => void;
 }
 
-// Marker height above globe surface
-const MARKER_HEIGHT = 3;
+// Obelisk dimensions - scaled down by 50%
+const OBELISK_HEIGHT = 4; // Total height of obelisk shaft
+const OBELISK_BASE_WIDTH = 0.8; // Width at base
+const OBELISK_TOP_WIDTH = 0.4; // Width at top (before pyramidion)
+const PYRAMIDION_HEIGHT = 1; // Height of the pyramidal top
+
+// Distance from globe surface to obelisk base
+const MARKER_HEIGHT = 1;
 
 /**
- * Individual marker component with glow effect and enhanced active state
+ * Individual obelisk marker component - Classic Egyptian style
+ * Tall, four-sided tapering pillar with pyramidal top (pyramidion)
  */
 function Marker({
   marker,
@@ -38,15 +45,9 @@ function Marker({
   onSelect: () => void;
   onHover: (hovered: boolean) => void;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
   const { gl } = useThree();
 
-  // Animated values for smooth transitions
-  const animatedScale = useRef(1);
-  const animatedEmissive = useRef(0.2);
-
-  // Calculate 3D position from lat/lng
+  // Calculate 3D position from lat/lng (base of obelisk)
   const position = useMemo(() => {
     const [x, y, z] = latLngToVector3(
       marker.coordinates.lat,
@@ -56,75 +57,35 @@ function Marker({
     return new THREE.Vector3(x, y, z);
   }, [marker.coordinates]);
 
+  // Calculate rotation to point obelisk radially outward from globe center
+  const rotation = useMemo(() => {
+    // The obelisk should point in the direction of the position vector
+    // Default cylinder points along Y axis, we need to rotate it to point along position
+    const up = new THREE.Vector3(0, 1, 0);
+    const direction = position.clone().normalize();
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
+    const euler = new THREE.Euler().setFromQuaternion(quaternion);
+    return euler;
+  }, [position]);
+
   // Get color and size based on marker state
   const color = useMemo(() => getMarkerColor(marker), [marker]);
-  const baseSize = useMemo(() => getMarkerSize(marker), [marker]);
+  const sizeMultiplier = useMemo(() => getMarkerSize(marker), [marker]);
 
-  // Target scale based on state: active > selected > hovered > normal
-  const getTargetScale = () => {
-    if (isSelected) return 1.3;
-    if (isActive) return 1.8; // Bigger when auto-highlighted
-    if (isHovered) return 1.2;
-    return 1.0;
-  };
+  // Scale obelisk based on marker importance (0.5 to 1.5 range)
+  const obeliskScale = 0.5 + sizeMultiplier * 0.3;
 
-  // Target emissive intensity
-  const getTargetEmissive = () => {
-    if (isSelected) return 0.6;
-    if (isActive) return 0.8; // Brighter when auto-highlighted
-    if (isHovered) return 0.5;
-    return 0.2;
-  };
+  // Static scale based on state (no animation for performance)
+  const stateScale = isSelected ? 1.2 : isActive ? 1.4 : isHovered ? 1.1 : 1.0;
+  const finalScale = obeliskScale * stateScale;
 
-  // Smooth animation with ease-in-ease-out using lerp
-  useFrame((state) => {
-    const targetScale = getTargetScale();
-    const targetEmissive = getTargetEmissive();
-
-    // Ease-in-ease-out lerp factor (slower for smoother transitions)
-    const lerpFactor = 0.08;
-
-    // Animate scale
-    animatedScale.current = THREE.MathUtils.lerp(animatedScale.current, targetScale, lerpFactor);
-
-    // Animate emissive
-    animatedEmissive.current = THREE.MathUtils.lerp(
-      animatedEmissive.current,
-      targetEmissive,
-      lerpFactor
-    );
-
-    // Apply animated values
-    if (meshRef.current) {
-      const material = meshRef.current.material as THREE.MeshStandardMaterial;
-      material.emissiveIntensity = animatedEmissive.current;
-
-      // Pulse animation for full markers or active markers
-      if (marker.status === "full" || isActive) {
-        const pulseIntensity = isActive ? 0.15 : 0.1;
-        const pulse = 1 + Math.sin(state.clock.elapsedTime * 2) * pulseIntensity;
-        meshRef.current.scale.setScalar(baseSize * animatedScale.current * pulse);
-      } else {
-        meshRef.current.scale.setScalar(baseSize * animatedScale.current);
-      }
-    }
-
-    // Glow intensity animation
-    if (glowRef.current) {
-      const material = glowRef.current.material as THREE.MeshBasicMaterial;
-      const targetOpacity = isActive ? 0.7 : isHovered || isSelected ? 0.6 : 0.3;
-      material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, lerpFactor);
-
-      // Scale glow with marker
-      glowRef.current.scale.setScalar(baseSize * animatedScale.current * 1.5);
-    }
-  });
+  const emissiveIntensity = isSelected ? 0.6 : isActive ? 0.8 : isHovered ? 0.5 : 0.2;
+  const glowOpacity = isActive ? 0.5 : isHovered || isSelected ? 0.4 : 0.2;
 
   const handlePointerOver = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
       onHover(true);
-      // Override grab cursor from globe rotation - use canvas directly
       gl.domElement.style.cursor = "pointer";
     },
     [onHover, gl]
@@ -134,10 +95,8 @@ function Marker({
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
       onHover(false);
-      // Restore grab cursor for globe rotation
-      gl.domElement.style.cursor = "grab";
     },
-    [onHover, gl]
+    [onHover]
   );
 
   const handleClick = useCallback(
@@ -148,59 +107,82 @@ function Marker({
     [onSelect]
   );
 
-  // Hitbox size - larger than visual for easier clicking
-  const hitboxSize = 3;
+  // Obelisk shaft dimensions (in local space, will be scaled)
+  const shaftHeight = OBELISK_HEIGHT;
+  const shaftBaseRadius = OBELISK_BASE_WIDTH / 2;
+  const shaftTopRadius = OBELISK_TOP_WIDTH / 2;
+
+  // Pyramidion (top pyramid) dimensions
+  const pyramidionHeight = PYRAMIDION_HEIGHT;
 
   return (
-    <group position={position}>
-      {/* Invisible hitbox for easier clicking */}
+    <group position={position} rotation={rotation}>
+      {/* Invisible hitbox for easier clicking - elongated box */}
       <mesh
-        scale={hitboxSize}
+        position={[0, (shaftHeight / 2) * finalScale, 0]}
+        scale={[3, shaftHeight * finalScale, 3]}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
         onClick={handleClick}
       >
-        <sphereGeometry args={[1, 8, 8]} />
+        <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Glow sphere (behind marker) - scale controlled by useFrame */}
-      <mesh ref={glowRef} scale={baseSize * 1.5}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshBasicMaterial color={color} transparent opacity={0.2} depthWrite={false} />
+      {/* Glow effect - soft sphere around obelisk */}
+      <mesh position={[0, (shaftHeight / 2) * finalScale, 0]} scale={finalScale * 2}>
+        <sphereGeometry args={[1, 8, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={glowOpacity} depthWrite={false} />
       </mesh>
 
-      {/* Main marker sphere - scale and emissive controlled by useFrame for smooth animation */}
-      <mesh ref={meshRef} scale={baseSize}>
-        <sphereGeometry args={[1, 16, 16]} />
+      {/* Obelisk shaft - tapered cylinder with 4 sides */}
+      <mesh position={[0, (shaftHeight / 2) * finalScale, 0]} scale={finalScale}>
+        <cylinderGeometry args={[shaftTopRadius, shaftBaseRadius, shaftHeight, 4]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.2}
-          metalness={0.3}
-          roughness={0.5}
+          emissiveIntensity={emissiveIntensity}
+          metalness={0.4}
+          roughness={0.3}
         />
       </mesh>
 
-      {/* Selection ring - small and subtle */}
+      {/* Pyramidion (top pyramid) - 4-sided cone */}
+      <mesh position={[0, (shaftHeight + pyramidionHeight / 2) * finalScale, 0]} scale={finalScale}>
+        <coneGeometry args={[shaftTopRadius, pyramidionHeight, 4]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={emissiveIntensity * 1.2}
+          metalness={0.5}
+          roughness={0.2}
+        />
+      </mesh>
+
+      {/* Selection ring at base */}
       {isSelected && (
-        <mesh rotation={[Math.PI / 2, 0, 0]} scale={baseSize * 1.8}>
-          <ringGeometry args={[1.3, 1.5, 32]} />
+        <mesh scale={finalScale * 2}>
+          <ringGeometry args={[1.5, 2, 4]} />
           <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
         </mesh>
       )}
 
-      {/* Hover tooltip - using Html from drei */}
-      {isHovered && !isSelected && (
+      {/* Tooltip - positioned above obelisk tip, clickable to open card */}
+      {(isHovered || isActive) && !isSelected && (
         <Html
-          position={[0, baseSize * 2 + 2, 0]}
+          position={[0, (shaftHeight + pyramidionHeight + 3) * finalScale, 0]}
           center
           style={{
-            pointerEvents: "none",
             whiteSpace: "nowrap",
           }}
         >
-          <div className="px-3 py-2 bg-slate-900/95 border border-gold-500/30 rounded-lg shadow-xl">
+          <div
+            className="px-3 py-2 bg-slate-900/95 border border-gold-500/30 rounded-lg shadow-xl cursor-pointer hover:border-gold-500/50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+          >
             <p className="text-marble-100 text-sm font-medium">{marker.name}</p>
             <p className="text-slate-400 text-xs">
               {marker.statistics.cenotaphCount} / {marker.statistics.capacity}

@@ -377,11 +377,15 @@ function ListView({
 /**
  * Main Globe Section with globe, side panel, and controls
  */
+// Cooldown duration after closing tooltip (ms)
+const TOOLTIP_COOLDOWN_MS = 5000;
+
 export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [isListView, setIsListView] = useState(false);
+  const [tooltipCooldownUntil, setTooltipCooldownUntil] = useState(0);
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const handleMarkerSelect = useCallback((marker: CenotapheryMarker | null) => {
@@ -419,10 +423,9 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
   }, []);
 
   const selectedMarker = markers.find((m) => m.id === selectedMarkerId) || null;
-  const activeMarker = markers.find((m) => m.id === activeMarkerId) || null;
 
-  // Show tooltip for selected marker, or active marker if no selection/hover
-  const tooltipMarker = selectedMarker || (hoveredMarkerId ? null : activeMarker);
+  // FloatingTooltip only shows when marker is clicked (selected), not auto-highlighted
+  const tooltipMarker = selectedMarker;
 
   return (
     <section className="relative min-h-[600px] h-[80vh] max-h-[900px] bg-gradient-to-b from-slate-950 to-slate-900">
@@ -440,6 +443,7 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
             selectedMarkerId={selectedMarkerId}
             hoveredMarkerId={hoveredMarkerId}
             activeMarkerId={activeMarkerId}
+            tooltipCooldownUntil={tooltipCooldownUntil}
             onMarkerSelect={handleMarkerSelect}
             onMarkerHover={handleMarkerHover}
             onActiveMarkerChange={handleActiveMarkerChange}
@@ -457,6 +461,8 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
             onClose={() => {
               setSelectedMarkerId(null);
               setActiveMarkerId(null);
+              // Set cooldown to prevent immediate reappearance
+              setTooltipCooldownUntil(Date.now() + TOOLTIP_COOLDOWN_MS);
             }}
           />
         )}
@@ -491,6 +497,8 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
               onClose={() => {
                 setSelectedMarkerId(null);
                 setActiveMarkerId(null);
+                // Set cooldown to prevent immediate reappearance
+                setTooltipCooldownUntil(Date.now() + TOOLTIP_COOLDOWN_MS);
               }}
             />
           </div>
