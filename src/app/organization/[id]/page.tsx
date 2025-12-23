@@ -369,46 +369,44 @@ export default async function OrganizationPage({ params }: PageProps) {
   // (converted from original currency at story coining time)
   const peakRevenueUSD: number | null = organization.peak_revenue_usd ?? null;
 
-  // For public view: fetch narrative data from coined stories
+  // Fetch narrative data from coined stories (always fetch - needed for owner's "View as Visitor" preview)
   let publicNarratives: PublicNarrativeData[] = [];
-  if (!isOwner) {
-    // Use public_coined_stories view - exposes only AI-refined data, no raw interview data
-    const { data: coinedStories } = await supabase
-      .from("public_coined_stories")
-      .select("id, user_id, founder_role, public_naming, coined_at, ai_summary")
-      .eq("organization_id", id);
+  // Use public_coined_stories view - exposes only AI-refined data, no raw interview data
+  const { data: coinedStories } = await supabase
+    .from("public_coined_stories")
+    .select("id, user_id, founder_role, public_naming, coined_at, ai_summary")
+    .eq("organization_id", id);
 
-    if (coinedStories && coinedStories.length > 0) {
-      // Get author names for coined stories
-      const coinedUserIds = coinedStories.map((s) => s.user_id);
-      const { data: authorProfiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", coinedUserIds);
+  if (coinedStories && coinedStories.length > 0) {
+    // Get author names for coined stories
+    const coinedUserIds = coinedStories.map((s) => s.user_id);
+    const { data: authorProfiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", coinedUserIds);
 
-      const authorMap = new Map(authorProfiles?.map((p) => [p.id, p.display_name]) || []);
+    const authorMap = new Map(authorProfiles?.map((p) => [p.id, p.display_name]) || []);
 
-      publicNarratives = coinedStories.map((story) => {
-        // Extract summary data from ai_summary if available
-        const aiSummary = story.ai_summary as AISummary | null;
-        const summary: PublicSummaryData | null = aiSummary
-          ? {
-              text: aiSummary.text,
-              keyFacts: aiSummary.keyFacts || [],
-              closurePattern: aiSummary.closurePattern || null,
-            }
-          : null;
+    publicNarratives = coinedStories.map((story) => {
+      // Extract summary data from ai_summary if available
+      const aiSummary = story.ai_summary as AISummary | null;
+      const summary: PublicSummaryData | null = aiSummary
+        ? {
+            text: aiSummary.text,
+            keyFacts: aiSummary.keyFacts || [],
+            closurePattern: aiSummary.closurePattern || null,
+          }
+        : null;
 
-        return {
-          storyId: story.id,
-          authorName: authorMap.get(story.user_id) || null,
-          founderRole: story.founder_role,
-          publicNaming: story.public_naming,
-          coinedAt: story.coined_at,
-          summary,
-        };
-      });
-    }
+      return {
+        storyId: story.id,
+        authorName: authorMap.get(story.user_id) || null,
+        founderRole: story.founder_role,
+        publicNaming: story.public_naming,
+        coinedAt: story.coined_at,
+        summary,
+      };
+    });
   }
 
   // For owner view: fetch current user's profile and story for verification modal

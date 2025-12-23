@@ -11,6 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
 import {
+  CURRENCY_OPTIONS,
+  getCurrencyForCountry,
+  getCurrencyByCode,
+  formatCurrencyOption,
+} from "@/lib/currencies";
+import { Combobox } from "@/components/ui/combobox";
+import {
   Plus,
   Trash2,
   Upload,
@@ -44,160 +51,6 @@ const STEPS = [
   { id: "financial", label: "Financial Picture", description: "Metrics and events" },
   { id: "documents", label: "Documents", description: "Upload supporting documents (optional)" },
 ];
-
-// =============================================================================
-// CURRENCY CONFIGURATION
-// =============================================================================
-
-const CURRENCY_OPTIONS: Array<{ value: CurrencyCode; label: string; symbol: string }> = [
-  { value: "USD", label: "US Dollar", symbol: "$" },
-  { value: "EUR", label: "Euro", symbol: "€" },
-  { value: "GBP", label: "British Pound", symbol: "£" },
-  { value: "CAD", label: "Canadian Dollar", symbol: "CA$" },
-  { value: "AUD", label: "Australian Dollar", symbol: "A$" },
-  { value: "CHF", label: "Swiss Franc", symbol: "CHF" },
-  { value: "JPY", label: "Japanese Yen", symbol: "¥" },
-  { value: "CNY", label: "Chinese Yuan", symbol: "¥" },
-  { value: "INR", label: "Indian Rupee", symbol: "₹" },
-  { value: "BRL", label: "Brazilian Real", symbol: "R$" },
-  { value: "MXN", label: "Mexican Peso", symbol: "MX$" },
-  { value: "RUB", label: "Russian Ruble", symbol: "₽" },
-  { value: "KRW", label: "South Korean Won", symbol: "₩" },
-  { value: "SGD", label: "Singapore Dollar", symbol: "S$" },
-  { value: "HKD", label: "Hong Kong Dollar", symbol: "HK$" },
-  { value: "SEK", label: "Swedish Krona", symbol: "kr" },
-  { value: "NOK", label: "Norwegian Krone", symbol: "kr" },
-  { value: "DKK", label: "Danish Krone", symbol: "kr" },
-  { value: "PLN", label: "Polish Zloty", symbol: "zł" },
-  { value: "ILS", label: "Israeli Shekel", symbol: "₪" },
-  { value: "ZAR", label: "South African Rand", symbol: "R" },
-  { value: "AED", label: "UAE Dirham", symbol: "د.إ" },
-  { value: "THB", label: "Thai Baht", symbol: "฿" },
-  { value: "IDR", label: "Indonesian Rupiah", symbol: "Rp" },
-  { value: "MYR", label: "Malaysian Ringgit", symbol: "RM" },
-  { value: "PHP", label: "Philippine Peso", symbol: "₱" },
-  { value: "VND", label: "Vietnamese Dong", symbol: "₫" },
-  { value: "NZD", label: "New Zealand Dollar", symbol: "NZ$" },
-  { value: "CZK", label: "Czech Koruna", symbol: "Kč" },
-  { value: "HUF", label: "Hungarian Forint", symbol: "Ft" },
-  { value: "TRY", label: "Turkish Lira", symbol: "₺" },
-  { value: "UAH", label: "Ukrainian Hryvnia", symbol: "₴" },
-  { value: "CLP", label: "Chilean Peso", symbol: "CL$" },
-  { value: "COP", label: "Colombian Peso", symbol: "CO$" },
-  { value: "PEN", label: "Peruvian Sol", symbol: "S/" },
-  { value: "ARS", label: "Argentine Peso", symbol: "AR$" },
-];
-
-/** Map country codes to their default currency */
-const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
-  // North America
-  "United States": "USD",
-  USA: "USD",
-  US: "USD",
-  Canada: "CAD",
-  CA: "CAD",
-  Mexico: "MXN",
-  MX: "MXN",
-  // Europe
-  "United Kingdom": "GBP",
-  UK: "GBP",
-  GB: "GBP",
-  Germany: "EUR",
-  DE: "EUR",
-  France: "EUR",
-  FR: "EUR",
-  Italy: "EUR",
-  IT: "EUR",
-  Spain: "EUR",
-  ES: "EUR",
-  Netherlands: "EUR",
-  NL: "EUR",
-  Belgium: "EUR",
-  BE: "EUR",
-  Austria: "EUR",
-  AT: "EUR",
-  Ireland: "EUR",
-  IE: "EUR",
-  Portugal: "EUR",
-  PT: "EUR",
-  Finland: "EUR",
-  FI: "EUR",
-  Greece: "EUR",
-  GR: "EUR",
-  Switzerland: "CHF",
-  CH: "CHF",
-  Sweden: "SEK",
-  SE: "SEK",
-  Norway: "NOK",
-  NO: "NOK",
-  Denmark: "DKK",
-  DK: "DKK",
-  Poland: "PLN",
-  PL: "PLN",
-  "Czech Republic": "CZK",
-  Czechia: "CZK",
-  CZ: "CZK",
-  Hungary: "HUF",
-  HU: "HUF",
-  Ukraine: "UAH",
-  UA: "UAH",
-  Russia: "RUB",
-  RU: "RUB",
-  Turkey: "TRY",
-  TR: "TRY",
-  // Asia Pacific
-  Japan: "JPY",
-  JP: "JPY",
-  China: "CNY",
-  CN: "CNY",
-  India: "INR",
-  IN: "INR",
-  "South Korea": "KRW",
-  Korea: "KRW",
-  KR: "KRW",
-  Singapore: "SGD",
-  SG: "SGD",
-  "Hong Kong": "HKD",
-  HK: "HKD",
-  Thailand: "THB",
-  TH: "THB",
-  Indonesia: "IDR",
-  ID: "IDR",
-  Malaysia: "MYR",
-  MY: "MYR",
-  Philippines: "PHP",
-  PH: "PHP",
-  Vietnam: "VND",
-  VN: "VND",
-  Australia: "AUD",
-  AU: "AUD",
-  "New Zealand": "NZD",
-  NZ: "NZD",
-  // Middle East & Africa
-  Israel: "ILS",
-  IL: "ILS",
-  "United Arab Emirates": "AED",
-  UAE: "AED",
-  AE: "AED",
-  "South Africa": "ZAR",
-  ZA: "ZAR",
-  // South America
-  Brazil: "BRL",
-  BR: "BRL",
-  Argentina: "ARS",
-  AR: "ARS",
-  Chile: "CLP",
-  CL: "CLP",
-  Colombia: "COP",
-  CO: "COP",
-  Peru: "PEN",
-  PE: "PEN",
-};
-
-function getCurrencyForCountry(country: string | null | undefined): CurrencyCode {
-  if (!country) return "USD";
-  return COUNTRY_TO_CURRENCY[country] ?? "USD";
-}
 
 // =============================================================================
 // METRICS CONFIGURATION
@@ -504,7 +357,13 @@ export default function FinancialPage() {
 
   // Get the current currency (with fallback)
   const currentCurrency = currency ?? getCurrencyForCountry(organizationCountry);
-  const currencyInfo = CURRENCY_OPTIONS.find((c) => c.value === currentCurrency);
+  const currencyInfo = getCurrencyByCode(currentCurrency);
+
+  // Prepare currency options for Combobox
+  const currencyComboboxOptions = CURRENCY_OPTIONS.map((c) => ({
+    value: c.value,
+    label: formatCurrencyOption(c),
+  }));
 
   // ==========================================================================
   // CURRENCY HANDLER
@@ -592,13 +451,24 @@ export default function FinancialPage() {
     if (!story) return;
 
     const currentMetrics = getOrCreateMetrics();
+    const currentNA = story.financialPicture?.notApplicableMetrics ?? [];
     updateFinancialPicture({
       essentialMetrics: { ...currentMetrics, [type]: null },
+      notApplicableMetrics: currentNA.includes(type) ? currentNA : [...currentNA, type],
     });
     setExpandedMetrics((prev) => {
       const next = new Set(prev);
       next.delete(type);
       return next;
+    });
+  };
+
+  const undoMetricNotApplicable = (type: EssentialMetricType) => {
+    if (!story) return;
+
+    const currentNA = story.financialPicture?.notApplicableMetrics ?? [];
+    updateFinancialPicture({
+      notApplicableMetrics: currentNA.filter((m) => m !== type),
     });
   };
 
@@ -712,6 +582,7 @@ export default function FinancialPage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       router.push(`/interview/${story?.id}`);
     }
@@ -720,6 +591,7 @@ export default function FinancialPage() {
   const handleNext = async () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       setIsSubmitting(true);
       try {
@@ -1220,17 +1092,15 @@ export default function FinancialPage() {
               : "Select the primary currency for your financial data"
           }
         >
-          <select
+          <Combobox
+            variant="dark"
+            options={currencyComboboxOptions}
             value={currentCurrency}
-            onChange={(e) => handleCurrencyChange(e.target.value as CurrencyCode)}
-            className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-          >
-            {CURRENCY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.symbol} {option.label} ({option.value})
-              </option>
-            ))}
-          </select>
+            onValueChange={handleCurrencyChange}
+            placeholder="Select currency..."
+            searchPlaceholder="Search currencies..."
+            emptyText="No currency found."
+          />
         </FormField>
       </div>
 
@@ -1274,57 +1144,81 @@ export default function FinancialPage() {
               const isActive = isMetricActive(config.type);
               const isComplete = isMetricComplete(essentialMetrics, config.type);
               const isExpanded = expandedMetrics.has(config.type);
+              const isMarkedNA =
+                story?.financialPicture?.notApplicableMetrics?.includes(config.type) ?? false;
 
               return (
                 <div key={config.type}>
                   <div
                     className={cn(
                       "w-full flex items-center gap-3 p-3 transition-colors",
-                      isActive ? "bg-gold-500/10" : "hover:bg-slate-800/50"
+                      isActive ? "bg-gold-500/10" : "hover:bg-slate-800/50",
+                      isMarkedNA && "opacity-60"
                     )}
                   >
                     <button
-                      onClick={() => toggleMetric(config.type)}
+                      onClick={() => !isMarkedNA && toggleMetric(config.type)}
+                      disabled={isMarkedNA}
                       className={cn(
                         "w-5 h-5 rounded flex items-center justify-center flex-shrink-0",
                         isActive
                           ? "bg-gold-500 text-slate-900"
-                          : "border border-slate-600 hover:border-slate-500"
+                          : "border border-slate-600 hover:border-slate-500",
+                        isMarkedNA && "cursor-not-allowed opacity-50"
                       )}
                     >
                       {isActive && <Check className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       onClick={() => {
+                        if (isMarkedNA) return;
                         if (isActive) {
                           toggleMetricExpand(config.type);
                         } else {
                           toggleMetric(config.type);
                         }
                       }}
+                      disabled={isMarkedNA}
                       className={cn(
                         "text-sm flex-1 text-left",
                         isActive
                           ? "text-marble-100 font-medium"
-                          : "text-slate-300 hover:text-slate-200"
+                          : "text-slate-300 hover:text-slate-200",
+                        isMarkedNA && "text-slate-500 line-through cursor-not-allowed"
                       )}
                     >
                       <span>{config.name}</span>
-                      <span className="text-slate-500 ml-2 text-xs">{config.description}</span>
+                      <span
+                        className={cn(
+                          "ml-2 text-xs",
+                          isMarkedNA ? "text-slate-600" : "text-slate-500"
+                        )}
+                      >
+                        {config.description}
+                      </span>
                     </button>
-                    {isActive && isComplete && (
+                    {!isMarkedNA && isActive && isComplete && (
                       <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                     )}
-                    {isActive && !isComplete && (
+                    {!isMarkedNA && isActive && !isComplete && (
                       <span className="text-xs text-slate-500">needs details</span>
                     )}
-                    <button
-                      onClick={() => markMetricNotApplicable(config.type)}
-                      className="text-xs px-2 py-1 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700"
-                    >
-                      N/A
-                    </button>
-                    {isActive && (
+                    {isMarkedNA ? (
+                      <button
+                        onClick={() => undoMetricNotApplicable(config.type)}
+                        className="text-xs px-2 py-1 rounded text-amber-500 hover:text-amber-400 hover:bg-slate-700"
+                      >
+                        Undo
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => markMetricNotApplicable(config.type)}
+                        className="text-xs px-2 py-1 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700"
+                      >
+                        N/A
+                      </button>
+                    )}
+                    {!isMarkedNA && isActive && (
                       <button
                         onClick={() => toggleMetricExpand(config.type)}
                         className="p-1 hover:bg-slate-700 rounded"
@@ -1337,7 +1231,7 @@ export default function FinancialPage() {
                       </button>
                     )}
                   </div>
-                  {isActive && isExpanded && renderMetricForm(config)}
+                  {!isMarkedNA && isActive && isExpanded && renderMetricForm(config)}
                 </div>
               );
             })}

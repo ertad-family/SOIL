@@ -3,11 +3,13 @@
  * Generate AI summary for a story after module completion
  *
  * Issue: #20 Update the story page
+ * Issue: #177 Therapeutic appraisal personalization
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateStorySummary } from "@/lib/summary/generate-summary";
+import { generateTherapeuticAppraisal } from "@/lib/appraisal/generate-appraisal";
 import type { Story, ModuleId, AISummary, AISummaryStatus } from "@/types/interview";
 
 // Initialize Supabase client with service role for server-side operations
@@ -94,8 +96,36 @@ export async function POST(
       aiSummaryUpdatedAt: storyData.ai_summary_updated_at,
     };
 
-    // Generate the summary
-    const summary = await generateStorySummary(story, lastCompletedModule);
+    // Generate the research summary
+    let summary: AISummary;
+    try {
+      summary = await generateStorySummary(story, lastCompletedModule);
+    } catch (genError) {
+      console.error("Summary generation failed:", genError);
+      // Set status to failed when AI generation fails
+      await supabase.from("stories").update({ ai_summary_status: "failed" }).eq("id", storyId);
+
+      return NextResponse.json(
+        { success: false, error: "AI summary generation failed", status: "failed" },
+        { status: 500 }
+      );
+    }
+
+    // Generate therapeutic appraisal separately (Issue #177)
+    // This uses a dedicated prompt focused on emotional acknowledgment
+    try {
+      const therapeuticAppraisal = await generateTherapeuticAppraisal(story, lastCompletedModule);
+      // Replace summary's generic appraisal with the therapeutic one
+      summary = {
+        ...summary,
+        appraisal: therapeuticAppraisal,
+      };
+      console.log("[Summary] Therapeutic appraisal generated successfully");
+    } catch (appraisalError) {
+      // If therapeutic appraisal fails, keep the summary's original appraisal (or null)
+      console.error("Therapeutic appraisal generation failed, using fallback:", appraisalError);
+      // Don't fail the whole request - the summary is still valid
+    }
 
     // Save the summary to the database
     const { error: updateError } = await supabase
@@ -124,7 +154,7 @@ export async function POST(
       status: "ready",
     });
   } catch (error) {
-    console.error("Error generating summary:", error);
+    console.error("Error in summary route:", error);
 
     return NextResponse.json(
       {

@@ -14,10 +14,24 @@ import { Footer } from "./Footer";
 import { MenuTransition } from "@/components/transitions/MenuTransition";
 import { GlobalParticles } from "@/components/three/GlobalParticles";
 import { LiquidContributionFab } from "@/components/ui/liquid-contribution-fab";
+import { BugReportFab } from "@/components/ui/bug-report-fab";
 import { Toaster } from "@/components/ui/toaster";
+import { initConsoleCapture } from "@/lib/console-capture";
 
 interface AppShellProps {
   children: ReactNode;
+}
+
+/**
+ * ConsoleCapture - Initializes console log capture for bug reporting.
+ * Runs once on mount to intercept console methods.
+ */
+function ConsoleCapture() {
+  useEffect(() => {
+    initConsoleCapture();
+  }, []);
+
+  return null;
 }
 
 /**
@@ -127,6 +141,9 @@ export function AppShell({ children }: AppShellProps) {
     <PagePrivacyProvider>
       <MenuProvider>
         <TestimonialPromptProvider>
+          {/* Initialize console capture for bug reporting */}
+          <ConsoleCapture />
+
           {/* General visitor feedback exit-intent */}
           <GeneralVisitorFeedback />
 
@@ -155,6 +172,9 @@ export function AppShell({ children }: AppShellProps) {
                   <LiquidContributionFab />
                 </div>
               )}
+
+              {/* Bug report button - always visible */}
+              <BugReportFab />
             </div>
 
             {/* Toast notifications */}
