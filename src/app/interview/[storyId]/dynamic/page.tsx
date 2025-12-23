@@ -386,6 +386,7 @@ export default function DynamicPage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       router.push(`/interview/${story?.id}`);
     }
@@ -394,6 +395,7 @@ export default function DynamicPage() {
   const handleNext = async () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       setIsSubmitting(true);
       try {

@@ -468,6 +468,7 @@ export interface FinancialPictureData {
   metrics: FinancialMetrics | null; // Org-type specific metrics (future use)
   dynamics: MetricDynamic[];
   events: FinancialEvent[];
+  notApplicableMetrics?: EssentialMetricType[]; // Metrics explicitly marked as N/A
 }
 
 // =============================================================================
@@ -1271,5 +1272,7 @@ export const getPreviousModule = (currentId: ModuleId): ModuleMetadata | undefin
 };
 
 export const calculateProgress = (completedModules: ModuleId[]): number => {
-  return Math.round((completedModules.length / MODULES.length) * 100);
+  const storyModules = MODULES.filter((m) => m.id !== "basic_info");
+  const completedStoryModules = completedModules.filter((m) => m !== "basic_info");
+  return Math.round((completedStoryModules.length / storyModules.length) * 100);
 };
