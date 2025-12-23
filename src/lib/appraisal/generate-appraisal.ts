@@ -215,36 +215,71 @@ function extractDynamicEmotionalContext(story: Story): string {
 
   parts.push("INTERNAL DYNAMICS:");
 
-  // Overview insights
+  // Overview insights - include ALL fields for accuracy
   if (dyn.dynamicsOverview) {
     const ov = dyn.dynamicsOverview;
 
+    // Decline speed
     if (ov.declineSpeed === "sudden") {
-      parts.push("- Decline was SUDDEN - things fell apart quickly");
+      parts.push("- Decline speed: SUDDEN - things fell apart quickly");
     } else if (ov.declineSpeed === "gradual") {
-      parts.push("- Decline was gradual - a slow erosion");
+      parts.push("- Decline speed: GRADUAL - a slow erosion over time");
     } else if (ov.declineSpeed === "slow_with_hope") {
-      parts.push("- Decline was slow with moments of hope - an emotional rollercoaster");
+      parts.push("- Decline speed: SLOW with moments of hope");
+    } else {
+      parts.push("- Decline speed: not specified");
     }
 
-    if (ov.earlyWarnings === "missed_them") {
-      parts.push("- MISSED early warning signs - they can see them now");
+    // Early warnings
+    if (ov.earlyWarnings === "clearly_visible") {
+      parts.push("- Early warnings: were CLEARLY VISIBLE");
+    } else if (ov.earlyWarnings === "missed_them") {
+      parts.push("- Early warnings: MISSED them at the time");
     } else if (ov.earlyWarnings === "blindsided") {
-      parts.push("- Was BLINDSIDED - had no warning at all");
+      parts.push("- Early warnings: NONE - was blindsided");
+    } else {
+      parts.push("- Early warnings: not specified");
     }
 
+    // Point of no return
     if (ov.pointOfNoReturn === "yes") {
-      parts.push("- Identified a specific POINT OF NO RETURN");
+      parts.push("- Point of no return: YES, identified a specific moment");
       if (ov.pointOfNoReturnWhen) {
         parts.push(`  (when: ${ov.pointOfNoReturnWhen})`);
       }
+    } else if (ov.pointOfNoReturn === "no_gradual") {
+      parts.push("- Point of no return: NO single moment - was gradual");
+    } else if (ov.pointOfNoReturn === "hard_to_say") {
+      parts.push("- Point of no return: HARD TO SAY in hindsight");
+    } else {
+      parts.push("- Point of no return: not specified");
     }
 
-    if (ov.closureDecision === "alone") {
-      parts.push("- Made the closure decision ALONE");
-    } else if (ov.closureDecision === "circumstances") {
-      parts.push("- Circumstances forced the closure - not entirely their decision");
+    // Time to closure
+    if (ov.timeToClosureFrom) {
+      const timeMap: Record<string, string> = {
+        days: "DAYS",
+        weeks: "WEEKS",
+        months: "MONTHS",
+        over_year: "OVER A YEAR",
+      };
+      parts.push(
+        `- Time from point of no return to closure: ${timeMap[ov.timeToClosureFrom] || ov.timeToClosureFrom}`
+      );
     }
+
+    // Closure decision
+    if (ov.closureDecision === "alone") {
+      parts.push("- Closure decision: made ALONE");
+    } else if (ov.closureDecision === "founders_together") {
+      parts.push("- Closure decision: made with CO-FOUNDERS together");
+    } else if (ov.closureDecision === "board") {
+      parts.push("- Closure decision: made by BOARD");
+    } else if (ov.closureDecision === "circumstances") {
+      parts.push("- Closure decision: FORCED by circumstances");
+    }
+  } else {
+    parts.push("- No dynamics overview provided");
   }
 
   // Internal events with emotions
@@ -253,24 +288,42 @@ function extractDynamicEmotionalContext(story: Story): string {
     parts.push(`\nINTERNAL EVENTS DOCUMENTED (${events.length} total):`);
 
     const distressedEvents = events.filter((e) => e.emotionThen === "distressed");
+    const worriedEvents = events.filter((e) => e.emotionThen === "worried");
     const turningPoints = events.filter((e) => e.lookingBack === "turning_point");
     const missedWarnings = events.filter((e) => e.lookingBack === "warning_missed");
+    const rightCalls = events.filter((e) => e.lookingBack === "right_call");
+    const outsideControl = events.filter((e) => e.lookingBack === "outside_control");
 
     if (distressedEvents.length > 0) {
-      parts.push(`- ${distressedEvents.length} events that caused DISTRESS`);
+      parts.push(`- ${distressedEvents.length} events marked as DISTRESSING`);
+    }
+    if (worriedEvents.length > 0) {
+      parts.push(`- ${worriedEvents.length} events marked as WORRYING`);
     }
     if (turningPoints.length > 0) {
-      parts.push(`- ${turningPoints.length} identified as TURNING POINTS`);
+      parts.push(`- ${turningPoints.length} marked as TURNING POINTS`);
     }
     if (missedWarnings.length > 0) {
-      parts.push(`- ${missedWarnings.length} recognized as MISSED WARNINGS`);
+      parts.push(`- ${missedWarnings.length} marked as MISSED WARNINGS`);
     }
+    if (rightCalls.length > 0) {
+      parts.push(`- ${rightCalls.length} marked as RIGHT CALLS at the time`);
+    }
+    if (outsideControl.length > 0) {
+      parts.push(`- ${outsideControl.length} marked as OUTSIDE CONTROL`);
+    }
+
+    // Show actual event categories
+    const categories = [...new Set(events.map((e) => e.category))];
+    parts.push(`- Event categories: ${categories.join(", ")}`);
+  } else {
+    parts.push("\n- No internal events documented");
   }
 
   // Detected patterns
   if (dyn.detectedPatterns && dyn.detectedPatterns.length > 0) {
     parts.push(
-      `\nPatterns identified: ${dyn.detectedPatterns.map((p) => p.replace(/_/g, " ")).join(", ")}`
+      `\nDetected patterns: ${dyn.detectedPatterns.map((p) => p.replace(/_/g, " ")).join(", ")}`
     );
   }
 
@@ -505,8 +558,9 @@ CRITICAL RULES:
 2. NEVER mention the organization name - they know what they're documenting
 3. Be BRIEF - 1-2 short sentences max
 4. Be RESPECTFUL, not intimate - don't be over-the-top emotional
-5. Reference SPECIFIC details they shared (from context below)
+5. ONLY reference details ACTUALLY shown in the context below - do NOT invent or assume
 6. Use second person only ("You've...", "What you...", "This...")
+7. If context says "not specified" - don't mention that topic at all
 
 EMOTIONAL CONTEXT FROM THEIR CHAPTER:
 ${emotionalContext}
