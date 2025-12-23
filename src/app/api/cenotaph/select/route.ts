@@ -3,10 +3,12 @@
  * Select a design option as the final cenotaph
  * Also saves the selected concept to the catalog for future diversity
  * Issue: #23 Cenotaph creation wizard
+ * Security: #78 - Added authentication and ownership verification
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import type {
   SelectDesignRequest,
   SelectDesignResponse,
@@ -14,14 +16,27 @@ import type {
   DesignConcept,
 } from "@/types/cenotaph";
 
-// Initialize Supabase client
-const supabase = createClient(
+// Service role client for storage operations only
+const serviceSupabase = createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(request: NextRequest): Promise<NextResponse<SelectDesignResponse>> {
   try {
+    // Initialize authenticated client
+    const supabase = await createClient();
+
+    // Check authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const body: SelectDesignRequest = await request.json();
     const { memorialId, selectedDesignId, epitaph } = body;
 
@@ -36,12 +51,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
       return NextResponse.json({ success: false, error: "Epitaph is required" }, { status: 400 });
     }
 
-    // Fetch memorial with design options and organization data
+    // Fetch memorial with design options, organization data, and user_id for ownership check
     const { data: memorial, error: fetchError } = await supabase
       .from("memorials")
       .select(
         `
         id,
+        user_id,
         design_status,
         cenotaph_design,
         organization_type,
@@ -56,6 +72,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
 
     if (fetchError || !memorial) {
       return NextResponse.json({ success: false, error: "Memorial not found" }, { status: 404 });
+    }
+
+    // Verify ownership - user must own the memorial
+    if (memorial.user_id !== user.id) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     if (memorial.design_status !== "options_ready") {
@@ -160,7 +181,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<SelectDes
 
       if (filesToDelete.length > 0) {
         console.log(`Cleaning up ${filesToDelete.length} unselected designs...`);
-        supabase.storage
+        serviceSupabase.storage
           .from("cenotaph-designs")
           .remove(filesToDelete)
           .then(({ error }) => {
