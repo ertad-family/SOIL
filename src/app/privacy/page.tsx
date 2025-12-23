@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 // ============================================================================
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = "December 19, 2025";
+  const lastUpdated = "December 22, 2025";
 
   return (
     <div className="py-16 md:py-24">
@@ -553,37 +553,71 @@ export default function PrivacyPolicyPage() {
           </section>
 
           {/* Cookies and Tracking */}
-          <section>
+          <section id="cookies-and-tracking-technologies">
             <h2 className="font-display text-2xl font-medium text-marble-100 mb-4">
               9. Cookies and Tracking Technologies
             </h2>
             <div className="space-y-6 text-slate-400 leading-relaxed">
+              <p>
+                We use cookies and similar technologies to provide, improve, and protect our
+                Services. You can manage your cookie preferences at any time using the &quot;Cookie
+                Preferences&quot; link in our footer.
+              </p>
+
               <Card variant="dark" padding="lg" className="space-y-4">
                 <h3 className="font-display text-lg font-medium text-marble-100">
                   9.1 Essential Cookies
                 </h3>
-                <p>Required for the platform to function:</p>
+                <p>
+                  Required for the platform to function. These cannot be disabled without breaking
+                  core functionality:
+                </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Authentication tokens</li>
-                  <li>Session management</li>
-                  <li>Security features</li>
+                  <li>
+                    <strong className="text-marble-100">Authentication cookies</strong> (Supabase) —
+                    Session management and secure login
+                  </li>
+                  <li>
+                    <strong className="text-marble-100">soil_analytics_consent</strong> — Stores
+                    your cookie preference choice (1 year)
+                  </li>
                 </ul>
               </Card>
 
               <Card variant="dark" padding="lg" className="space-y-4">
                 <h3 className="font-display text-lg font-medium text-marble-100">
-                  9.2 Analytics Cookies
+                  9.2 Analytics Cookies (Requires Consent)
                 </h3>
-                <p>We use Google Analytics to understand how visitors use our website:</p>
-                <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Pages visited and time spent</li>
-                  <li>Traffic sources</li>
-                  <li>Device and browser information</li>
-                  <li>General geographic location (country/city level)</li>
+                <p>
+                  The following cookies and tracking technologies are only activated after you give
+                  consent:
+                </p>
+                <ul className="list-disc list-inside space-y-3 ml-4">
+                  <li>
+                    <strong className="text-marble-100">Google Analytics (GA4)</strong> — Collects
+                    anonymized data about pages visited, time spent, traffic sources, and device
+                    information
+                  </li>
+                  <li>
+                    <strong className="text-marble-100">Vercel Analytics</strong> — Performance
+                    monitoring and page view tracking provided by our hosting platform
+                  </li>
+                  <li>
+                    <strong className="text-marble-100">soil_visitor</strong> — Anonymous visitor
+                    identifier used for features like preventing duplicate &quot;Pay Respects&quot;
+                    actions (1 year, HTTP-only)
+                  </li>
+                  <li>
+                    <strong className="text-marble-100">Internal analytics</strong> — Event tracking
+                    for platform improvement (stored in Supabase)
+                  </li>
+                  <li>
+                    <strong className="text-marble-100">Referral tracking</strong> — Tracks ?ref=
+                    parameters for measuring share link effectiveness
+                  </li>
                 </ul>
                 <p className="mt-4">
-                  Google Analytics uses cookies to collect this information anonymously. You can
-                  opt-out of Google Analytics by installing the{" "}
+                  You can opt-out of Google Analytics separately by installing the{" "}
                   <a
                     href="https://tools.google.com/dlpage/gaoptout"
                     target="_blank"
@@ -601,8 +635,10 @@ export default function PrivacyPolicyPage() {
                   9.3 Managing Cookies
                 </h3>
                 <p>
-                  Most web browsers allow you to control cookies through their settings. However,
-                  disabling essential cookies may impact your ability to use our Services.
+                  You can manage your cookie preferences at any time by clicking the &quot;Cookie
+                  Preferences&quot; link in our website footer. You can also control cookies through
+                  your browser settings. Note that disabling essential cookies may impact your
+                  ability to use our Services.
                 </p>
               </Card>
             </div>
