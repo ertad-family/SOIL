@@ -36,11 +36,13 @@ interface TestimonialPromptContextType {
   markFeedbackGiven: (type: TestimonialType) => void;
   /** Check if feedback was already given for this type */
   hasFeedbackBeenGiven: (type: TestimonialType) => boolean;
+  /** Whether feedback status has been loaded from database */
+  isLoaded: boolean;
 }
 
 const TestimonialPromptContext = createContext<TestimonialPromptContextType | null>(null);
 
-// Session storage key for tracking given feedback
+// Session storage key for tracking given feedback (used as cache and for immediate updates)
 const FEEDBACK_GIVEN_KEY = "soil_feedback_given";
 
 // Get feedback given set from session storage
@@ -64,6 +66,18 @@ function saveFeedbackGiven(set: Set<string>) {
   }
 }
 
+// Fetch feedback status from database for authenticated users
+async function fetchFeedbackStatus(): Promise<string[]> {
+  try {
+    const response = await fetch("/api/testimonials/check");
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.submittedTypes || [];
+  } catch {
+    return [];
+  }
+}
+
 interface TestimonialPromptProviderProps {
   children: ReactNode;
   /** Minimum time (ms) user must spend on site before general exit prompt */
@@ -76,13 +90,32 @@ export function TestimonialPromptProvider({
 }: TestimonialPromptProviderProps) {
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [currentConfig, setCurrentConfig] = useState<TestimonialPromptConfig | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const scheduledPromptRef = useRef<TestimonialPromptConfig | null>(null);
   const feedbackGivenRef = useRef<Set<string>>(new Set());
   const pageLoadTimeRef = useRef<number>(Date.now());
 
-  // Load feedback given state on mount
+  // Load feedback given state on mount (from session storage + database)
   useEffect(() => {
-    feedbackGivenRef.current = getFeedbackGiven();
+    async function loadFeedbackStatus() {
+      // Start with session storage (immediate)
+      feedbackGivenRef.current = getFeedbackGiven();
+
+      // Fetch from database for authenticated users
+      const dbTypes = await fetchFeedbackStatus();
+      if (dbTypes.length > 0) {
+        // Merge database types with session storage
+        for (const type of dbTypes) {
+          feedbackGivenRef.current.add(type);
+        }
+        // Save merged set to session storage for future checks
+        saveFeedbackGiven(feedbackGivenRef.current);
+      }
+
+      setIsLoaded(true);
+    }
+
+    loadFeedbackStatus();
   }, []);
 
   // Show prompt immediately
@@ -160,30 +193,9 @@ export function TestimonialPromptProvider({
     }
   }, [currentConfig, markFeedbackGiven]);
 
-  // Set up beforeunload listener for general exit intent
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Only for general prompts scheduled via exit intent
-      const config = scheduledPromptRef.current;
-      if (!config || config.type !== "general") return;
-
-      // Check minimum time
-      const timeOnPage = Date.now() - pageLoadTimeRef.current;
-      if (timeOnPage < minTimeForGeneralPrompt) return;
-
-      // Check if feedback already given
-      if (feedbackGivenRef.current.has(config.type)) return;
-
-      // Show browser's native dialog
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [minTimeForGeneralPrompt]);
+  // Note: beforeunload is NOT used because it shows browser's native dialog
+  // which cannot be customized. Instead, we show modals automatically on
+  // completion states (story coined, cenotaph design complete).
 
   const hasScheduledPrompt = scheduledPromptRef.current !== null;
 
@@ -198,6 +210,7 @@ export function TestimonialPromptProvider({
         triggerExitPrompt,
         markFeedbackGiven,
         hasFeedbackBeenGiven,
+        isLoaded,
       }}
     >
       {children}

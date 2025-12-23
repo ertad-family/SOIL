@@ -50,7 +50,7 @@ export default function CenotaphWizardPage() {
   const router = useRouter();
   const supabase = createClient();
   const memorialId = params.memorialId as string;
-  const { scheduleExitPrompt, showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
+  const { showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
 
   const [memorial, setMemorial] = useState<MemorialData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -61,6 +61,8 @@ export default function CenotaphWizardPage() {
   const [epitaph, setEpitaph] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
+  // Track if design was already completed when page loaded (to avoid auto-showing modal on return visits)
+  const [wasCompletedOnLoad, setWasCompletedOnLoad] = useState(false);
 
   // Poll for generation completion when status is 'generating'
   useEffect(() => {
@@ -203,6 +205,7 @@ export default function CenotaphWizardPage() {
         if (status === "completed") {
           setCurrentStep(3); // Show completed state
           setSelectedDesignId(data.cenotaph_design?.selectedId || null);
+          setWasCompletedOnLoad(true); // Track that design was already completed on load
         } else if (status === "options_ready" && data?.cenotaph_design?.options?.length > 0) {
           setCurrentStep(3); // Go to select step - designs already exist
         } else if (status === "generating") {
@@ -223,21 +226,30 @@ export default function CenotaphWizardPage() {
     }
   }, [memorialId, supabase]);
 
-  // Schedule exit-intent for completed designs (show feedback prompt when leaving)
+  // Auto-show feedback modal when design is completed during this session
   useEffect(() => {
-    if (memorial?.design_status === "completed" && !hasFeedbackBeenGiven("cenotaph_design")) {
-      scheduleExitPrompt({
-        type: "cenotaph_design",
-        contextId: memorial.id,
-        contextMetadata: {
-          organizationName: memorial.organization_name,
-          organizationId: memorial.organization_id,
-        },
-        title: "Your feedback matters",
-        description: "How was your cenotaph creation experience?",
-      });
+    // Only show if design was completed DURING this session (not on return visits)
+    if (
+      memorial?.design_status === "completed" &&
+      !wasCompletedOnLoad &&
+      !hasFeedbackBeenGiven("cenotaph_design")
+    ) {
+      // Show modal after 2 seconds so user can see the completion screen first
+      const timer = setTimeout(() => {
+        showPrompt({
+          type: "cenotaph_design",
+          contextId: memorial.id,
+          contextMetadata: {
+            organizationName: memorial.organization_name,
+            organizationId: memorial.organization_id,
+          },
+          title: "Your feedback matters",
+          description: "How was your cenotaph creation experience?",
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [memorial, scheduleExitPrompt, hasFeedbackBeenGiven]);
+  }, [memorial, wasCompletedOnLoad, showPrompt, hasFeedbackBeenGiven]);
 
   // Handler for feedback button click
   const handleFeedbackClick = useCallback(() => {

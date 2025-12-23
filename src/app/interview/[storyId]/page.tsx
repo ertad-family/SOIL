@@ -58,7 +58,7 @@ export default function StoryOverviewPage() {
     navigateToModule,
     refreshSummary,
   } = useInterview();
-  const { scheduleExitPrompt, showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
+  const { showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
 
   // Fetch chapter time estimates
   const [chapterEstimates, setChapterEstimates] = React.useState<ChapterEstimate[]>([]);
@@ -140,21 +140,25 @@ export default function StoryOverviewPage() {
     return hasAnyEstimate ? total : null;
   }, [showEstimates, story, displayedModules, getChapterEstimate]);
 
-  // Schedule exit-intent for coined stories (show feedback prompt when leaving)
+  // Auto-show feedback modal for coined stories after a short delay
   React.useEffect(() => {
     if (story?.status === "coined" && !hasFeedbackBeenGiven("story_contribution")) {
-      scheduleExitPrompt({
-        type: "story_contribution",
-        contextId: story.id,
-        contextMetadata: {
-          organizationName: story.basicInfo?.organizationName,
-          organizationId: story.organizationId,
-        },
-        title: "Your feedback matters",
-        description: "How was your experience contributing your startup's story to science?",
-      });
+      // Show modal after 2 seconds so user can see the completion screen first
+      const timer = setTimeout(() => {
+        showPrompt({
+          type: "story_contribution",
+          contextId: story.id,
+          contextMetadata: {
+            organizationName: story.basicInfo?.organizationName,
+            organizationId: story.organizationId,
+          },
+          title: "Your feedback matters",
+          description: "How was your experience contributing your startup's story to science?",
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [story, scheduleExitPrompt, hasFeedbackBeenGiven]);
+  }, [story, showPrompt, hasFeedbackBeenGiven]);
 
   // Handler for feedback button click
   const handleFeedbackClick = React.useCallback(() => {
