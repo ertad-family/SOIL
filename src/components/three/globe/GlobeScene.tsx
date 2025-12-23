@@ -11,7 +11,6 @@ import { Globe, GLOBE_RADIUS } from "./Globe";
 import { GlobeAtmosphere } from "./GlobeAtmosphere";
 import { GlobeMarkers } from "./GlobeMarkers";
 import type { CenotapheryMarker } from "@/types/cenotaphery";
-import { latLngToVector3 } from "@/types/cenotaphery";
 
 // Camera configuration from spec
 const CAMERA_CONFIG = {
@@ -37,8 +36,10 @@ interface GlobeSceneProps {
   markers: CenotapheryMarker[];
   selectedMarkerId: string | null;
   hoveredMarkerId: string | null;
+  activeMarkerId: string | null;
   onMarkerSelect: (marker: CenotapheryMarker | null) => void;
   onMarkerHover: (marker: CenotapheryMarker | null) => void;
+  onActiveMarkerChange: (marker: CenotapheryMarker | null) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onReset: () => void;
@@ -179,8 +180,10 @@ function FlyToController({
     const lat = selectedMarker.coordinates.lat * (Math.PI / 180);
     const lng = selectedMarker.coordinates.lng * (Math.PI / 180);
 
-    // Target rotation: negate to bring marker to front
-    const targetY = -lng;
+    // Target rotation: negate longitude and add -90° offset
+    // The -π/2 offset accounts for the camera being on the +Z axis
+    // while latLngToVector3 places lng=0 on the +X axis
+    const targetY = -lng - Math.PI / 2;
     const targetX = lat;
 
     // Start animation
@@ -297,6 +300,84 @@ function ZoomHandler({ controlsRef }: { controlsRef: React.RefObject<OrbitContro
   return null;
 }
 
+// Auto-cycle interval in seconds
+const AUTO_CYCLE_INTERVAL = 4;
+
+/**
+ * Component to handle auto-cycling through visible markers during rotation
+ */
+function AutoCycleController({
+  markers,
+  globeRef,
+  autoRotate,
+  selectedMarkerId,
+  hoveredMarkerId,
+  onActiveMarkerChange,
+}: {
+  markers: CenotapheryMarker[];
+  globeRef: React.RefObject<THREE.Group | null>;
+  autoRotate: boolean;
+  selectedMarkerId: string | null;
+  hoveredMarkerId: string | null;
+  onActiveMarkerChange: (marker: CenotapheryMarker | null) => void;
+}) {
+  const lastCycleTime = useRef(0);
+  const currentActiveIndex = useRef(0);
+  const { camera } = useThree();
+
+  useFrame((state) => {
+    // Don't auto-cycle if user is interacting (selected or hovering) or not auto-rotating
+    if (selectedMarkerId || hoveredMarkerId || !autoRotate || !globeRef.current) {
+      if (selectedMarkerId || hoveredMarkerId) {
+        // Reset cycle when user interacts
+        lastCycleTime.current = state.clock.elapsedTime;
+      }
+      return;
+    }
+
+    // Get visible markers (front-facing hemisphere)
+    const cameraDirection = new THREE.Vector3();
+    camera.getWorldDirection(cameraDirection);
+
+    const visibleMarkers = markers.filter((marker) => {
+      // Calculate marker world position
+      const phi = (90 - marker.coordinates.lat) * (Math.PI / 180);
+      const theta = (marker.coordinates.lng + 180) * (Math.PI / 180);
+      const radius = 103; // GLOBE_RADIUS + MARKER_HEIGHT
+
+      const localPos = new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+
+      // Transform to world space using globe rotation
+      const worldPos = localPos.clone().applyEuler(globeRef.current!.rotation);
+
+      // Check if facing camera (dot product > 0 means visible)
+      // Use negative camera direction because camera looks towards origin
+      return worldPos.dot(cameraDirection.negate()) > 0;
+    });
+
+    // Cycle through visible markers
+    if (visibleMarkers.length > 0) {
+      const elapsed = state.clock.elapsedTime - lastCycleTime.current;
+
+      if (elapsed >= AUTO_CYCLE_INTERVAL) {
+        currentActiveIndex.current = (currentActiveIndex.current + 1) % visibleMarkers.length;
+        lastCycleTime.current = state.clock.elapsedTime;
+        onActiveMarkerChange(visibleMarkers[currentActiveIndex.current]);
+      } else if (lastCycleTime.current === 0) {
+        // Initial activation
+        lastCycleTime.current = state.clock.elapsedTime;
+        onActiveMarkerChange(visibleMarkers[0]);
+      }
+    }
+  });
+
+  return null;
+}
+
 /**
  * Inner scene content (inside Canvas)
  */
@@ -304,8 +385,10 @@ function SceneContent({
   markers,
   selectedMarkerId,
   hoveredMarkerId,
+  activeMarkerId,
   onMarkerSelect,
   onMarkerHover,
+  onActiveMarkerChange,
   controlsRef,
   isMobile,
 }: Omit<GlobeSceneProps, "onZoomIn" | "onZoomOut" | "onReset"> & { isMobile: boolean }) {
@@ -344,6 +427,15 @@ function SceneContent({
 
       <ZoomHandler controlsRef={controlsRef} />
 
+      <AutoCycleController
+        markers={markers}
+        globeRef={globeRef}
+        autoRotate={autoRotate}
+        selectedMarkerId={selectedMarkerId}
+        hoveredMarkerId={hoveredMarkerId}
+        onActiveMarkerChange={onActiveMarkerChange}
+      />
+
       <Lighting />
 
       <Suspense fallback={<LoadingFallback />}>
@@ -354,6 +446,7 @@ function SceneContent({
             markers={markers}
             selectedMarkerId={selectedMarkerId}
             hoveredMarkerId={hoveredMarkerId}
+            activeMarkerId={activeMarkerId}
             onMarkerSelect={onMarkerSelect}
             onMarkerHover={onMarkerHover}
           />
@@ -377,8 +470,10 @@ export function GlobeScene({
   markers,
   selectedMarkerId,
   hoveredMarkerId,
+  activeMarkerId,
   onMarkerSelect,
   onMarkerHover,
+  onActiveMarkerChange,
   controlsRef,
 }: GlobeSceneProps) {
   // Mobile detection for performance optimization
@@ -398,8 +493,10 @@ export function GlobeScene({
           markers={markers}
           selectedMarkerId={selectedMarkerId}
           hoveredMarkerId={hoveredMarkerId}
+          activeMarkerId={activeMarkerId}
           onMarkerSelect={onMarkerSelect}
           onMarkerHover={onMarkerHover}
+          onActiveMarkerChange={onActiveMarkerChange}
           controlsRef={controlsRef}
           isMobile={isMobile}
         />
