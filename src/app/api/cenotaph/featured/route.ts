@@ -46,13 +46,15 @@ interface MemorialRow {
   location: string | null;
   founded_date: string | null;
   closed_date: string | null;
+  cenotaph_image_url: string | null;
   organizations: OrganizationData[] | OrganizationData | null;
 }
 
 /**
  * GET /api/cenotaph/featured
  *
- * Fetches 3 most recent published memorials for featured stories section.
+ * Fetches 6 most recent published memorials for featured stories section.
+ * Returns cenotaph images for visual display.
  */
 export async function GET() {
   const supabase = await createClient();
@@ -60,14 +62,14 @@ export async function GET() {
   const { data: memorials, error } = await supabase
     .from("memorials")
     .select(
-      `id, organization_name, epitaph, main_lesson, industry, location, founded_date, closed_date,
+      `id, organization_name, epitaph, main_lesson, industry, location, founded_date, closed_date, cenotaph_image_url,
        organizations!organization_id (is_public, privacy_display_style)`
     )
     .eq("status", "published")
     .eq("design_status", "completed")
     .not("cenotaph_image_url", "is", null)
     .order("created_at", { ascending: false })
-    .limit(3);
+    .limit(6);
 
   if (error) {
     console.error("Error fetching featured memorials:", error);
@@ -91,6 +93,7 @@ export async function GET() {
       location: m.location?.split(",")[0] || "Unknown",
       industry: m.industry || "Other",
       industryColor: getIndustryColor(m.industry),
+      cenotaphImageUrl: m.cenotaph_image_url,
       respects: 0, // Could be a counter in the future
     };
   });

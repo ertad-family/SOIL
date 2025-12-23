@@ -55,10 +55,12 @@ interface FeaturedStory {
   id: string;
   quote: string;
   companyName: string;
+  isPrivate?: boolean;
   years: string;
   location: string;
   industry: string;
   industryColor: string;
+  cenotaphImageUrl?: string | null;
   respects: number;
 }
 

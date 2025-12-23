@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, CheckCircle2, Plus, AlertCircle } from "lucide-react";
 import type { DesignOption, DesignStatus, OrganizationContext } from "@/types/cenotaph";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ui/share-button";
 
 interface MemorialData {
   id: string;
@@ -589,6 +590,26 @@ export default function CenotaphWizardPage() {
                 <Button variant="dark-primary" onClick={() => router.push("/account")}>
                   Back to Account
                 </Button>
+              </div>
+
+              {/* Share CTA */}
+              <div className="mt-8 pt-8 border-t border-slate-700">
+                <p className="text-sm text-slate-400 text-center mb-3">
+                  Share your cenotaph creation with others
+                </p>
+                <div className="flex justify-center">
+                  <ShareButton
+                    url={
+                      memorial.organization_id
+                        ? `https://soil.rip/organization/${memorial.organization_id}`
+                        : "https://soil.rip"
+                    }
+                    title={`I just created a cenotaph for ${memorial.organization_name} on SOIL`}
+                    description="Honoring the legacy of organizations that shaped our world. Create yours at soil.rip"
+                    memorialId={memorial.id}
+                    organizationId={memorial.organization_id || undefined}
+                  />
+                </div>
               </div>
             </div>
           ) : (
