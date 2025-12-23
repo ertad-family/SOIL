@@ -209,7 +209,32 @@ export interface FunctionDetail {
   healthCheck: FunctionHealthCheck;
 }
 
+/**
+ * Category-level answers for simplified functional mapping (Phase 2)
+ */
+export interface FunctionalCategoryAnswer {
+  /** How the functions were organized, who owned them */
+  organization: string;
+  /** What worked well, pain points, satisfaction level */
+  satisfaction: string;
+  /** Health issues: turnover, understaffing, budget, quality, leadership */
+  health: string;
+}
+
+/**
+ * Custom function added by user (from catalog or fully custom)
+ */
+export interface CustomFunction {
+  id: string;
+  name: string;
+  categoryId: string;
+  description?: string;
+  /** If added from another org type's catalog */
+  sourceOrgType?: string;
+}
+
 export interface FunctionalMappingData {
+  // Legacy: detailed function data (for backward compatibility)
   functions: FunctionDetail[];
   customCategories: Array<{
     id: string;
@@ -218,6 +243,14 @@ export interface FunctionalMappingData {
   }>;
   /** Categories where "none of these functions existed" was selected */
   excludedCategories?: string[];
+
+  // New simplified fields (Phase 2)
+  /** Selected function IDs from Step 1 visual mapping */
+  selectedFunctions?: string[];
+  /** Custom functions added by user */
+  customFunctions?: CustomFunction[];
+  /** Category-level free-form answers from Step 2 */
+  categoryAnswers?: Record<string, FunctionalCategoryAnswer>;
 }
 
 // =============================================================================
@@ -948,6 +981,9 @@ export const createEmptyBasicInfo = (): BasicInfoData => ({
 export const createEmptyFunctionalMapping = (): FunctionalMappingData => ({
   functions: [],
   customCategories: [],
+  selectedFunctions: [],
+  customFunctions: [],
+  categoryAnswers: {},
 });
 
 export const createEmptyFinancialPicture = (): FinancialPictureData => ({
@@ -1137,7 +1173,7 @@ export const createEmptyStory = (
   organizationId,
   userId,
   status: "draft",
-  currentModule: "functional", // Start at functional (basic_info handled by org wizard)
+  currentModule: "founder", // Start at founder/Your Story (basic_info handled by org wizard)
   completedModules: [],
   founderRole: null,
   publicNaming: null,
@@ -1176,10 +1212,10 @@ export const MODULES: ModuleMetadata[] = [
     order: 0,
   },
   {
-    id: "functional",
-    name: "Functional Mapping",
-    description: "Organization structure at peak",
-    estimatedMinutes: 35,
+    id: "founder",
+    name: "Your Story",
+    description: "Background, journey, personal impact",
+    estimatedMinutes: 18,
     order: 1,
   },
   {
@@ -1204,10 +1240,10 @@ export const MODULES: ModuleMetadata[] = [
     order: 4,
   },
   {
-    id: "founder",
-    name: "Your Story",
-    description: "Background, journey, personal impact",
-    estimatedMinutes: 18,
+    id: "functional",
+    name: "Functional Mapping",
+    description: "Organization structure at peak",
+    estimatedMinutes: 20,
     order: 5,
   },
   {

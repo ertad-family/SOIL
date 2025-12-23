@@ -25,206 +25,290 @@ import {
   ChevronRight,
   AlertCircle,
   CheckCircle2,
-  MinusCircle,
+  Plus,
+  Info,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
-import type {
-  FunctionDetail,
-  FunctionHealthCheck,
-  ExecutionModel,
-  OwnerType,
-  ProviderType,
-  FormalizationLevel,
-  LifecycleStage,
-  SatisfactionRating,
-  TurnoverLevel,
-  StaffingLevel,
-  BudgetPressure,
-  QualityIssues,
-  LeadershipStatus,
-} from "@/types/interview";
+import type { CustomFunction, FunctionalCategoryAnswer } from "@/types/interview";
 import {
+  FUNCTION_CATEGORIES,
+  ORG_SPECIFIC_CATEGORIES,
   getCategoriesForOrgType,
   getVisibleFunctionsForCategory,
   ORG_TYPE_LABELS,
-  LIFECYCLE_STAGE_LABELS,
 } from "@/data/function-matrix";
+import {
+  CATEGORY_QUESTIONS,
+  getCategoryHeader,
+  getCategoryContext,
+} from "@/data/functional-questions";
 
 // =============================================================================
-// WIZARD STEPS (single step for this redesigned module)
+// WIZARD STEPS
 // =============================================================================
 
 const STEPS = [
-  { id: "mapping", label: "Map Functions", description: "Select and describe each function" },
+  { id: "mapping", label: "Select Functions", description: "Check functions that existed" },
+  { id: "details", label: "Describe Functions", description: "Tell us how they worked" },
 ];
 
 // =============================================================================
-// CONSTANTS
+// TOOLTIP COMPONENT
 // =============================================================================
 
-const EXECUTION_MODELS: Array<{ value: ExecutionModel; label: string }> = [
-  { value: "in_house", label: "In-house" },
-  { value: "outsourced", label: "Outsourced" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "none", label: "Did not exist" },
-];
-
-const OWNER_TYPES: Array<{ value: OwnerType; label: string }> = [
-  { value: "dedicated", label: "Dedicated owner" },
-  { value: "shared", label: "Shared responsibility" },
-  { value: "founder", label: "Founder handled it" },
-  { value: "nobody", label: "No clear owner" },
-];
-
-const PROVIDER_TYPES: Array<{ value: ProviderType; label: string }> = [
-  { value: "agency", label: "Agency" },
-  { value: "freelancer", label: "Freelancer" },
-  { value: "firm", label: "Professional firm" },
-  { value: "other", label: "Other" },
-];
-
-const FORMALIZATION_LEVELS: Array<{ value: FormalizationLevel; label: string }> = [
-  { value: "none", label: "No documentation" },
-  { value: "informal", label: "Informal processes" },
-  { value: "documented", label: "Written processes" },
-  { value: "tooled", label: "Tools enforcing processes" },
-  { value: "automated", label: "Automated workflows" },
-];
-
-const LIFECYCLE_STAGES: Array<{ value: LifecycleStage | "until_end"; label: string }> = [
-  { value: "formation", label: LIFECYCLE_STAGE_LABELS.formation },
-  { value: "establishment", label: LIFECYCLE_STAGE_LABELS.establishment },
-  { value: "growth", label: LIFECYCLE_STAGE_LABELS.growth },
-  { value: "maturity", label: LIFECYCLE_STAGE_LABELS.maturity },
-  { value: "until_end", label: "Until the end" },
-];
-
-const SATISFACTION_RATINGS: Array<{ value: SatisfactionRating; label: string }> = [
-  { value: 1, label: "1 - Very dissatisfied" },
-  { value: 2, label: "2 - Dissatisfied" },
-  { value: 3, label: "3 - Neutral" },
-  { value: 4, label: "4 - Satisfied" },
-  { value: 5, label: "5 - Very satisfied" },
-];
-
-// Health Check Options
-const TURNOVER_OPTIONS: Array<{ value: TurnoverLevel; label: string }> = [
-  { value: "low", label: "Low" },
-  { value: "normal", label: "Normal" },
-  { value: "high", label: "High" },
-];
-
-const STAFFING_OPTIONS: Array<{ value: StaffingLevel; label: string }> = [
-  { value: "adequate", label: "Adequate" },
-  { value: "understaffed", label: "Understaffed" },
-];
-
-const BUDGET_OPTIONS: Array<{ value: BudgetPressure; label: string }> = [
-  { value: "none", label: "None" },
-  { value: "some", label: "Some" },
-  { value: "severe", label: "Severe" },
-];
-
-const QUALITY_OPTIONS: Array<{ value: QualityIssues; label: string }> = [
-  { value: "none", label: "None" },
-  { value: "some", label: "Some" },
-  { value: "serious", label: "Serious" },
-];
-
-const LEADERSHIP_OPTIONS: Array<{ value: LeadershipStatus; label: string }> = [
-  { value: "stable", label: "Stable" },
-  { value: "gaps", label: "Gaps" },
-  { value: "vacuum", label: "Vacuum" },
-];
-
-// =============================================================================
-// HELPER: Create empty function detail
-// =============================================================================
-
-function createEmptyFunctionDetail(functionId: string, categoryId: string): FunctionDetail {
-  return {
-    functionId,
-    categoryId,
-    isActive: false,
-    isCustom: false,
-    executionModel: null,
-    headcount: null,
-    ftePercentages: [],
-    ownerType: null,
-    providerType: null,
-    formalization: null,
-    startedAt: null,
-    stoppedAt: null,
-    satisfaction: null,
-    issueDescription: null,
-    comments: null,
-    healthCheck: {
-      turnover: null,
-      staffing: null,
-      budgetPressure: null,
-      qualityIssues: null,
-      leadership: null,
-      crossFunctionConflict: null,
-      otherIssues: null,
-    },
-  };
-}
-
-// Check if a function has minimum required fields filled
-function isFunctionComplete(func: FunctionDetail): boolean {
-  return func.isActive && func.executionModel !== null;
-}
-
-// =============================================================================
-// OPTION BUTTON COMPONENT (Dark theme)
-// =============================================================================
-
-interface OptionButtonProps {
-  selected: boolean;
-  onClick: () => void;
+interface TooltipProps {
+  content: string;
   children: React.ReactNode;
-  className?: string;
 }
 
-function OptionButton({ selected, onClick, children, className }: OptionButtonProps) {
+function Tooltip({ content, children }: TooltipProps) {
+  const [show, setShow] = React.useState(false);
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "px-3 py-2 rounded-md border text-sm transition-colors",
-        selected
-          ? "bg-gold-500/20 border-gold-500 text-gold-300"
-          : "border-slate-600 text-slate-300 hover:border-slate-500 hover:text-slate-200",
-        className
+    <div className="relative inline-flex items-center">
+      <div
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        className="inline-flex items-center"
+      >
+        {children}
+      </div>
+      {show && content && (
+        <div className="absolute z-50 left-0 top-full mt-2 w-72 p-3 rounded-lg bg-slate-700 border border-slate-600 shadow-xl">
+          <p className="text-sm text-slate-200 leading-relaxed">{content}</p>
+        </div>
       )}
-    >
-      {children}
-    </button>
+    </div>
   );
 }
 
 // =============================================================================
-// PILL BUTTON COMPONENT (for health check)
+// ADD FUNCTION DIALOG
 // =============================================================================
 
-interface PillButtonProps {
-  selected: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
+interface AddFunctionDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (func: CustomFunction) => void;
+  currentOrgType: string;
 }
 
-function PillButton({ selected, onClick, children }: PillButtonProps) {
+function AddFunctionDialog({ open, onOpenChange, onAdd, currentOrgType }: AddFunctionDialogProps) {
+  const [mode, setMode] = React.useState<"catalog" | "custom">("catalog");
+  const [selectedOrgType, setSelectedOrgType] = React.useState<string>("");
+  const [selectedCategory, setSelectedCategory] = React.useState<string>("");
+  const [selectedFunction, setSelectedFunction] = React.useState<string>("");
+  const [customName, setCustomName] = React.useState("");
+  const [customCategory, setCustomCategory] = React.useState("");
+  const [customDescription, setCustomDescription] = React.useState("");
+
+  // Get all org types except current
+  const otherOrgTypes = Object.keys(ORG_SPECIFIC_CATEGORIES).filter((t) => t !== currentOrgType);
+
+  // Get categories for selected org type
+  const catalogCategories = React.useMemo(() => {
+    if (!selectedOrgType) return [];
+    // Get base categories plus org-specific
+    const orgSpecific =
+      ORG_SPECIFIC_CATEGORIES[selectedOrgType as keyof typeof ORG_SPECIFIC_CATEGORIES] || [];
+    return [...FUNCTION_CATEGORIES, ...orgSpecific];
+  }, [selectedOrgType]);
+
+  // Get functions for selected category
+  const catalogFunctions = React.useMemo(() => {
+    if (!selectedCategory) return [];
+    const category = catalogCategories.find((c) => c.id === selectedCategory);
+    return category?.functions || [];
+  }, [catalogCategories, selectedCategory]);
+
+  const handleAddFromCatalog = () => {
+    if (!selectedFunction || !selectedCategory) return;
+    const func = catalogFunctions.find((f) => f.id === selectedFunction);
+    if (!func) return;
+
+    onAdd({
+      id: `custom_${selectedFunction}_${Date.now()}`,
+      name: func.name,
+      categoryId: selectedCategory,
+      description: func.description,
+      sourceOrgType: selectedOrgType,
+    });
+
+    // Reset and close
+    setSelectedOrgType("");
+    setSelectedCategory("");
+    setSelectedFunction("");
+    onOpenChange(false);
+  };
+
+  const handleAddCustom = () => {
+    if (!customName || !customCategory) return;
+
+    onAdd({
+      id: `custom_${customName.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`,
+      name: customName,
+      categoryId: customCategory,
+      description: customDescription || undefined,
+    });
+
+    // Reset and close
+    setCustomName("");
+    setCustomCategory("");
+    setCustomDescription("");
+    onOpenChange(false);
+  };
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "px-3 py-1 rounded-full text-xs transition-colors",
-        selected ? "bg-gold-500 text-slate-900" : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-      )}
-    >
-      {children}
-    </button>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent variant="dark" size="lg">
+        <DialogHeader>
+          <DialogTitle variant="dark">Add Function</DialogTitle>
+          <DialogDescription variant="dark">
+            Add a function from another organization type&apos;s catalog, or create a custom one.
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Mode selector */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={mode === "catalog" ? "dark-primary" : "dark-secondary"}
+            size="sm"
+            onClick={() => setMode("catalog")}
+          >
+            From Catalog
+          </Button>
+          <Button
+            variant={mode === "custom" ? "dark-primary" : "dark-secondary"}
+            size="sm"
+            onClick={() => setMode("custom")}
+          >
+            Custom Function
+          </Button>
+        </div>
+
+        {mode === "catalog" ? (
+          <div className="space-y-4">
+            {/* Org type selector */}
+            <FormField variant="dark" label="Organization Type">
+              <select
+                value={selectedOrgType}
+                onChange={(e) => {
+                  setSelectedOrgType(e.target.value);
+                  setSelectedCategory("");
+                  setSelectedFunction("");
+                }}
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+              >
+                <option value="">Select organization type...</option>
+                {otherOrgTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {ORG_TYPE_LABELS[type as keyof typeof ORG_TYPE_LABELS]}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            {/* Category selector */}
+            {selectedOrgType && (
+              <FormField variant="dark" label="Category">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setSelectedFunction("");
+                  }}
+                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+                >
+                  <option value="">Select category...</option>
+                  {catalogCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            )}
+
+            {/* Function selector */}
+            {selectedCategory && (
+              <FormField variant="dark" label="Function">
+                <select
+                  value={selectedFunction}
+                  onChange={(e) => setSelectedFunction(e.target.value)}
+                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+                >
+                  <option value="">Select function...</option>
+                  {catalogFunctions.map((func) => (
+                    <option key={func.id} value={func.id}>
+                      {func.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            )}
+
+            {/* Show description if function selected */}
+            {selectedFunction && (
+              <div className="p-3 rounded-lg bg-slate-700/50 text-sm text-slate-300">
+                {catalogFunctions.find((f) => f.id === selectedFunction)?.description ||
+                  "No description available."}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <FormField variant="dark" label="Function Name" required>
+              <Input
+                variant="dark"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="e.g., Partner Management"
+              />
+            </FormField>
+
+            <FormField variant="dark" label="Category" required>
+              <select
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
+              >
+                <option value="">Select category...</option>
+                {FUNCTION_CATEGORIES.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+                <option value="other">Other</option>
+              </select>
+            </FormField>
+
+            <FormField variant="dark" label="Description" hint="Optional">
+              <Textarea
+                variant="dark"
+                value={customDescription}
+                onChange={(e) => setCustomDescription(e.target.value)}
+                placeholder="Describe what this function does..."
+                rows={3}
+              />
+            </FormField>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="dark-secondary" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="dark-primary"
+            onClick={mode === "catalog" ? handleAddFromCatalog : handleAddCustom}
+            disabled={mode === "catalog" ? !selectedFunction : !customName || !customCategory}
+          >
+            Add Function
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -236,182 +320,160 @@ export default function FunctionalPage() {
   const router = useRouter();
   const { story, isLoading, updateFunctionalMapping, completeModule } = useInterview();
 
+  const [currentStep, setCurrentStep] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set());
-  const [expandedFunctions, setExpandedFunctions] = React.useState<Set<string>>(new Set());
-  const [showIncompleteModal, setShowIncompleteModal] = React.useState(false);
+  const [showAddFunctionDialog, setShowAddFunctionDialog] = React.useState(false);
 
-  // Get org type and stage from basic info
+  // Get org type and stage from story
   const orgType = story?.basicInfo.organizationType;
   const stage = story?.basicInfo.stageAtClosure || "growth";
 
-  // Get categories for this org type
+  // Get categories for this org type (filtered to only show relevant ones)
   const categories = React.useMemo(() => {
     if (!orgType) return [];
     return getCategoriesForOrgType(orgType);
   }, [orgType]);
 
-  // Get functions from story (memoized to avoid dependency issues)
-  const functions = React.useMemo(() => {
-    return story?.functionalMapping.functions ?? [];
-  }, [story?.functionalMapping.functions]);
+  // Get selected functions from story
+  const selectedFunctions = React.useMemo(() => {
+    return new Set(story?.functionalMapping.selectedFunctions ?? []);
+  }, [story?.functionalMapping.selectedFunctions]);
 
-  // Get excluded categories from story
-  const excludedCategories = React.useMemo(() => {
-    return new Set(story?.functionalMapping.excludedCategories ?? []);
-  }, [story?.functionalMapping.excludedCategories]);
+  // Get custom functions from story
+  const customFunctions = React.useMemo(() => {
+    return story?.functionalMapping.customFunctions ?? [];
+  }, [story?.functionalMapping.customFunctions]);
 
-  // Get active functions count
-  const activeFunctionsCount = React.useMemo(() => {
-    return functions.filter((f) => f.isActive).length;
-  }, [functions]);
+  // Get category answers from story
+  const categoryAnswers = React.useMemo(() => {
+    return story?.functionalMapping.categoryAnswers ?? {};
+  }, [story?.functionalMapping.categoryAnswers]);
 
-  // Get completed functions count
-  const completedFunctionsCount = React.useMemo(() => {
-    return functions.filter((f) => isFunctionComplete(f)).length;
-  }, [functions]);
+  // Calculate which categories have selected functions
+  const categoriesWithSelections = React.useMemo(() => {
+    const result: Set<string> = new Set();
 
-  // Calculate progress: categories handled / total categories
-  // A category is "handled" if it's excluded OR has at least one function with details
-  const progressPercent = React.useMemo(() => {
-    if (categories.length === 0) return 0;
-
-    const handledCategories = categories.filter((cat) => {
-      // Category is excluded - it's handled
-      if (excludedCategories.has(cat.id)) return true;
-
-      // Category has at least one function selected and completed
-      const categoryFunctions = functions.filter((f) => f.categoryId === cat.id && f.isActive);
-      if (categoryFunctions.length === 0) return false;
-
-      // All selected functions in this category are complete
-      return categoryFunctions.every((f) => isFunctionComplete(f));
-    });
-
-    return Math.round((handledCategories.length / categories.length) * 100);
-  }, [categories, excludedCategories, functions]);
-
-  // Get incomplete categories for the confirmation modal
-  type IncompleteCategory = {
-    id: string;
-    name: string;
-    reason: "no_action" | "missing_details";
-    selectedCount: number;
-    incompleteCount: number;
-  };
-
-  const incompleteCategories = React.useMemo((): IncompleteCategory[] => {
-    return categories
-      .map((cat) => {
-        // Skip excluded categories
-        if (excludedCategories.has(cat.id)) return null;
-
-        const categoryFunctions = functions.filter((f) => f.categoryId === cat.id && f.isActive);
-
-        // No functions selected - no action taken
-        if (categoryFunctions.length === 0) {
-          return {
-            id: cat.id,
-            name: cat.name,
-            reason: "no_action" as const,
-            selectedCount: 0,
-            incompleteCount: 0,
-          };
+    // Check base functions
+    for (const category of categories) {
+      const visibleFuncs = orgType
+        ? getVisibleFunctionsForCategory(orgType, category.id, stage)
+        : [];
+      for (const func of visibleFuncs) {
+        if (selectedFunctions.has(func.id)) {
+          result.add(category.id);
+          break;
         }
-
-        // Some functions selected but incomplete
-        const incompleteFunctions = categoryFunctions.filter((f) => !isFunctionComplete(f));
-        if (incompleteFunctions.length > 0) {
-          return {
-            id: cat.id,
-            name: cat.name,
-            reason: "missing_details" as const,
-            selectedCount: categoryFunctions.length,
-            incompleteCount: incompleteFunctions.length,
-          };
-        }
-
-        return null;
-      })
-      .filter((cat): cat is IncompleteCategory => cat !== null);
-  }, [categories, excludedCategories, functions]);
-
-  // ==========================================================================
-  // FUNCTION HANDLERS
-  // ==========================================================================
-
-  // Toggle function active state and expand it
-  const toggleFunction = (functionId: string, categoryId: string) => {
-    if (!story) return;
-
-    const existingIndex = functions.findIndex((f) => f.functionId === functionId);
-    const isCurrentlyActive = existingIndex >= 0 && functions[existingIndex].isActive;
-
-    if (existingIndex >= 0) {
-      // Toggle existing
-      const updated = [...functions];
-      updated[existingIndex] = {
-        ...updated[existingIndex],
-        isActive: !isCurrentlyActive,
-      };
-      updateFunctionalMapping({ functions: updated });
-
-      // If activating, expand the function
-      if (!isCurrentlyActive) {
-        setExpandedFunctions((prev) => new Set([...prev, functionId]));
-      } else {
-        // If deactivating, collapse it
-        setExpandedFunctions((prev) => {
-          const next = new Set(prev);
-          next.delete(functionId);
-          return next;
-        });
       }
-    } else {
-      // Add new and activate
-      const newFunction = createEmptyFunctionDetail(functionId, categoryId);
-      newFunction.isActive = true;
-      updateFunctionalMapping({ functions: [...functions, newFunction] });
-      // Expand the new function
-      setExpandedFunctions((prev) => new Set([...prev, functionId]));
     }
+
+    // Check custom functions
+    for (const customFunc of customFunctions) {
+      if (selectedFunctions.has(customFunc.id)) {
+        result.add(customFunc.categoryId);
+      }
+    }
+
+    return result;
+  }, [categories, customFunctions, orgType, selectedFunctions, stage]);
+
+  // Get selected function names for a category (for header)
+  const getSelectedFunctionNames = (categoryId: string): string[] => {
+    const names: string[] = [];
+
+    // Base functions
+    if (orgType) {
+      const visibleFuncs = getVisibleFunctionsForCategory(orgType, categoryId, stage);
+      for (const func of visibleFuncs) {
+        if (selectedFunctions.has(func.id)) {
+          names.push(func.name);
+        }
+      }
+    }
+
+    // Custom functions
+    for (const customFunc of customFunctions) {
+      if (customFunc.categoryId === categoryId && selectedFunctions.has(customFunc.id)) {
+        names.push(customFunc.name);
+      }
+    }
+
+    return names;
   };
 
-  // Update function detail
-  const updateFunctionDetail = (functionId: string, updates: Partial<FunctionDetail>) => {
+  // Progress calculation
+  const progressPercent = React.useMemo(() => {
+    if (currentStep === 0) {
+      // Step 1: progress based on categories viewed/interacted with
+      return selectedFunctions.size > 0 ? 50 : 0;
+    } else {
+      // Step 2: progress based on answered categories
+      if (categoriesWithSelections.size === 0) return 50;
+      const answeredCategories = Array.from(categoriesWithSelections).filter((catId) => {
+        const answer = categoryAnswers[catId];
+        return answer && (answer.organization || answer.satisfaction || answer.health);
+      });
+      return 50 + Math.round((answeredCategories.length / categoriesWithSelections.size) * 50);
+    }
+  }, [currentStep, selectedFunctions.size, categoriesWithSelections, categoryAnswers]);
+
+  // ==========================================================================
+  // HANDLERS
+  // ==========================================================================
+
+  // Toggle function selection
+  const toggleFunction = (functionId: string) => {
     if (!story) return;
 
-    const existingIndex = functions.findIndex((f) => f.functionId === functionId);
-    if (existingIndex < 0) return;
+    const current = story.functionalMapping.selectedFunctions ?? [];
+    let updated: string[];
 
-    const updated = [...functions];
-    updated[existingIndex] = { ...updated[existingIndex], ...updates };
-    updateFunctionalMapping({ functions: updated });
+    if (current.includes(functionId)) {
+      updated = current.filter((id) => id !== functionId);
+    } else {
+      updated = [...current, functionId];
+    }
+
+    updateFunctionalMapping({ selectedFunctions: updated });
   };
 
-  // Update health check
-  const updateHealthCheck = (functionId: string, updates: Partial<FunctionHealthCheck>) => {
+  // Add custom function
+  const handleAddCustomFunction = (func: CustomFunction) => {
     if (!story) return;
 
-    const existingIndex = functions.findIndex((f) => f.functionId === functionId);
-    if (existingIndex < 0) return;
+    const currentCustom = story.functionalMapping.customFunctions ?? [];
+    const currentSelected = story.functionalMapping.selectedFunctions ?? [];
 
-    const updated = [...functions];
-    updated[existingIndex] = {
-      ...updated[existingIndex],
-      healthCheck: { ...updated[existingIndex].healthCheck, ...updates },
+    updateFunctionalMapping({
+      customFunctions: [...currentCustom, func],
+      selectedFunctions: [...currentSelected, func.id],
+    });
+  };
+
+  // Update category answer
+  const updateCategoryAnswer = (
+    categoryId: string,
+    field: keyof FunctionalCategoryAnswer,
+    value: string
+  ) => {
+    if (!story) return;
+
+    const currentAnswers = story.functionalMapping.categoryAnswers ?? {};
+    const currentCategoryAnswer = currentAnswers[categoryId] ?? {
+      organization: "",
+      satisfaction: "",
+      health: "",
     };
-    updateFunctionalMapping({ functions: updated });
-  };
 
-  // Check if function is active
-  const isFunctionActive = (functionId: string): boolean => {
-    return functions.some((f) => f.functionId === functionId && f.isActive);
-  };
-
-  // Get function detail
-  const getFunctionDetail = (functionId: string): FunctionDetail | undefined => {
-    return functions.find((f) => f.functionId === functionId);
+    updateFunctionalMapping({
+      categoryAnswers: {
+        ...currentAnswers,
+        [categoryId]: {
+          ...currentCategoryAnswer,
+          [field]: value,
+        },
+      },
+    });
   };
 
   // Toggle category expanded state
@@ -427,112 +489,26 @@ export default function FunctionalPage() {
     });
   };
 
-  // Toggle function expanded state (for editing details)
-  const toggleFunctionExpand = (functionId: string) => {
-    setExpandedFunctions((prev) => {
-      const next = new Set(prev);
-      if (next.has(functionId)) {
-        next.delete(functionId);
-      } else {
-        next.add(functionId);
-      }
-      return next;
-    });
-  };
-
-  // Toggle category excluded state ("None of these existed")
-  const toggleCategoryExcluded = (categoryId: string) => {
-    if (!story) return;
-
-    const currentExcluded = story.functionalMapping.excludedCategories ?? [];
-    const isCurrentlyExcluded = currentExcluded.includes(categoryId);
-
-    let newExcluded: string[];
-    if (isCurrentlyExcluded) {
-      // Remove from excluded
-      newExcluded = currentExcluded.filter((id) => id !== categoryId);
+  // Navigate to next step
+  const handleNextStep = () => {
+    if (currentStep === 0) {
+      setCurrentStep(1);
     } else {
-      // Add to excluded and remove any functions from this category
-      newExcluded = [...currentExcluded, categoryId];
-
-      // Deactivate all functions in this category
-      const updatedFunctions = functions.map((f) =>
-        f.categoryId === categoryId ? { ...f, isActive: false } : f
-      );
-      updateFunctionalMapping({
-        excludedCategories: newExcluded,
-        functions: updatedFunctions,
-      });
-      return;
-    }
-
-    updateFunctionalMapping({ excludedCategories: newExcluded });
-  };
-
-  // Check if category is excluded
-  const isCategoryExcluded = (categoryId: string): boolean => {
-    return excludedCategories.has(categoryId);
-  };
-
-  // Handle "Done" button - collapse current and expand next incomplete function
-  const handleFunctionDone = (currentFunctionId: string) => {
-    // Collapse current
-    setExpandedFunctions((prev) => {
-      const next = new Set(prev);
-      next.delete(currentFunctionId);
-      return next;
-    });
-
-    // Find next incomplete function across all categories
-    for (const category of categories) {
-      if (excludedCategories.has(category.id)) continue;
-
-      const visibleFuncs = getVisibleFunctionsForCategory(orgType!, category.id, stage);
-      for (const func of visibleFuncs) {
-        const detail = functions.find((f) => f.functionId === func.id);
-        // Skip current function
-        if (func.id === currentFunctionId) continue;
-        // Find active but incomplete function
-        if (detail?.isActive && !isFunctionComplete(detail)) {
-          // Expand category if not already
-          setExpandedCategories((prev) => new Set([...prev, category.id]));
-          // Expand function
-          setExpandedFunctions((prev) => new Set([...prev, func.id]));
-          // Scroll to element with offset for sticky header (~200px)
-          setTimeout(() => {
-            const element = document.getElementById(`func-${func.id}`);
-            if (element) {
-              const headerOffset = 200;
-              const elementPosition = element.getBoundingClientRect().top;
-              const offsetPosition = elementPosition + window.scrollY - headerOffset;
-              window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-            }
-          }, 100);
-          return;
-        }
-      }
+      handleComplete();
     }
   };
 
-  // ==========================================================================
-  // NAVIGATION HANDLERS
-  // ==========================================================================
-
-  const handleBack = () => {
-    router.push(`/interview/${story?.id}`);
-  };
-
-  const handleComplete = () => {
-    // If data is incomplete, show confirmation modal
-    if (incompleteCategories.length > 0) {
-      setShowIncompleteModal(true);
-      return;
+  // Navigate to previous step
+  const handlePrevStep = () => {
+    if (currentStep === 1) {
+      setCurrentStep(0);
+    } else {
+      router.push(`/interview/${story?.id}`);
     }
-    // Data is complete, proceed directly
-    performComplete();
   };
 
-  const performComplete = async () => {
+  // Complete module
+  const handleComplete = async () => {
     setIsSubmitting(true);
     try {
       await completeModule("functional");
@@ -542,16 +518,6 @@ export default function FunctionalPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCompleteAnyway = () => {
-    setShowIncompleteModal(false);
-    performComplete();
-  };
-
-  const handleSaveAndContinueLater = () => {
-    setShowIncompleteModal(false);
-    router.push(`/interview/${story?.id}`);
   };
 
   // ==========================================================================
@@ -592,505 +558,167 @@ export default function FunctionalPage() {
   }
 
   // ==========================================================================
-  // RENDER FUNCTION DETAIL FORM (inline within expanded function)
+  // STEP 1: VISUAL MAPPING
   // ==========================================================================
 
-  const renderFunctionDetailForm = (func: FunctionDetail, funcName: string) => {
-    const functionExisted = func.executionModel !== "none";
-
-    return (
-      <div className="p-4 space-y-6 border-t border-slate-700 bg-slate-800/50">
-        {/* Execution Model */}
-        <FormField variant="dark" label="How was this function handled?">
-          <div className="grid grid-cols-2 gap-2">
-            {EXECUTION_MODELS.map((option) => (
-              <OptionButton
-                key={option.value}
-                selected={func.executionModel === option.value}
-                onClick={() =>
-                  updateFunctionDetail(func.functionId, { executionModel: option.value })
-                }
-              >
-                {option.label}
-              </OptionButton>
-            ))}
-          </div>
-        </FormField>
-
-        {/* Only show details and health check if function existed */}
-        {functionExisted && (
-          <>
-            {/* In-house specifics */}
-            {(func.executionModel === "in_house" || func.executionModel === "hybrid") && (
-              <>
-                <FormField variant="dark" label="Headcount (people involved)">
-                  <Input
-                    variant="dark"
-                    type="number"
-                    min={0}
-                    value={func.headcount || ""}
-                    onChange={(e) =>
-                      updateFunctionDetail(func.functionId, {
-                        headcount: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                    placeholder="e.g., 3"
-                  />
-                </FormField>
-
-                <FormField variant="dark" label="Who owned this function?">
-                  <div className="grid grid-cols-2 gap-2">
-                    {OWNER_TYPES.map((option) => (
-                      <OptionButton
-                        key={option.value}
-                        selected={func.ownerType === option.value}
-                        onClick={() =>
-                          updateFunctionDetail(func.functionId, { ownerType: option.value })
-                        }
-                      >
-                        {option.label}
-                      </OptionButton>
-                    ))}
-                  </div>
-                </FormField>
-              </>
-            )}
-
-            {/* Outsourced specifics */}
-            {(func.executionModel === "outsourced" || func.executionModel === "hybrid") && (
-              <FormField variant="dark" label="Provider type">
-                <div className="grid grid-cols-2 gap-2">
-                  {PROVIDER_TYPES.map((option) => (
-                    <OptionButton
-                      key={option.value}
-                      selected={func.providerType === option.value}
-                      onClick={() =>
-                        updateFunctionDetail(func.functionId, { providerType: option.value })
-                      }
-                    >
-                      {option.label}
-                    </OptionButton>
-                  ))}
-                </div>
-              </FormField>
-            )}
-
-            {/* Formalization */}
-            <FormField variant="dark" label="How formalized was this function?">
-              <div className="space-y-2">
-                {FORMALIZATION_LEVELS.map((option) => (
-                  <OptionButton
-                    key={option.value}
-                    selected={func.formalization === option.value}
-                    onClick={() =>
-                      updateFunctionDetail(func.functionId, { formalization: option.value })
-                    }
-                    className="w-full text-left"
-                  >
-                    {option.label}
-                  </OptionButton>
-                ))}
-              </div>
-            </FormField>
-
-            {/* Timeline */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField variant="dark" label="When did this start?">
-                <select
-                  value={func.startedAt || ""}
-                  onChange={(e) =>
-                    updateFunctionDetail(func.functionId, {
-                      startedAt: (e.target.value as LifecycleStage) || null,
-                    })
-                  }
-                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-                >
-                  <option value="">Select...</option>
-                  {LIFECYCLE_STAGES.filter((s) => s.value !== "until_end").map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-
-              <FormField variant="dark" label="When did it stop?">
-                <select
-                  value={func.stoppedAt || ""}
-                  onChange={(e) =>
-                    updateFunctionDetail(func.functionId, {
-                      stoppedAt: (e.target.value as LifecycleStage | "until_end") || null,
-                    })
-                  }
-                  className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-                >
-                  <option value="">Select...</option>
-                  {LIFECYCLE_STAGES.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            </div>
-
-            {/* Satisfaction */}
-            <FormField variant="dark" label="How satisfied were you with this function?">
-              <select
-                value={func.satisfaction || ""}
-                onChange={(e) =>
-                  updateFunctionDetail(func.functionId, {
-                    satisfaction: e.target.value
-                      ? (parseInt(e.target.value) as SatisfactionRating)
-                      : null,
-                  })
-                }
-                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-              >
-                <option value="">Select...</option>
-                {SATISFACTION_RATINGS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            {/* Issue description if low satisfaction */}
-            {func.satisfaction !== null && func.satisfaction <= 3 && (
-              <FormField variant="dark" label="What was the issue?">
-                <Textarea
-                  variant="dark"
-                  value={func.issueDescription || ""}
-                  onChange={(e) =>
-                    updateFunctionDetail(func.functionId, { issueDescription: e.target.value })
-                  }
-                  placeholder="Describe what wasn't working..."
-                  rows={3}
-                />
-              </FormField>
-            )}
-
-            {/* Health Check Section */}
-            <div className="pt-4 border-t border-slate-700">
-              <h4 className="text-sm font-medium text-marble-100 mb-4">Health Assessment</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {/* Turnover */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">Turnover</label>
-                  <div className="flex flex-wrap gap-1">
-                    {TURNOVER_OPTIONS.map((option) => (
-                      <PillButton
-                        key={option.value}
-                        selected={func.healthCheck.turnover === option.value}
-                        onClick={() =>
-                          updateHealthCheck(func.functionId, { turnover: option.value })
-                        }
-                      >
-                        {option.label}
-                      </PillButton>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Staffing */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">Staffing</label>
-                  <div className="flex flex-wrap gap-1">
-                    {STAFFING_OPTIONS.map((option) => (
-                      <PillButton
-                        key={option.value}
-                        selected={func.healthCheck.staffing === option.value}
-                        onClick={() =>
-                          updateHealthCheck(func.functionId, { staffing: option.value })
-                        }
-                      >
-                        {option.label}
-                      </PillButton>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Budget */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">Budget Pressure</label>
-                  <div className="flex flex-wrap gap-1">
-                    {BUDGET_OPTIONS.map((option) => (
-                      <PillButton
-                        key={option.value}
-                        selected={func.healthCheck.budgetPressure === option.value}
-                        onClick={() =>
-                          updateHealthCheck(func.functionId, { budgetPressure: option.value })
-                        }
-                      >
-                        {option.label}
-                      </PillButton>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quality */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">Quality Issues</label>
-                  <div className="flex flex-wrap gap-1">
-                    {QUALITY_OPTIONS.map((option) => (
-                      <PillButton
-                        key={option.value}
-                        selected={func.healthCheck.qualityIssues === option.value}
-                        onClick={() =>
-                          updateHealthCheck(func.functionId, { qualityIssues: option.value })
-                        }
-                      >
-                        {option.label}
-                      </PillButton>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Leadership */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">Leadership</label>
-                  <div className="flex flex-wrap gap-1">
-                    {LEADERSHIP_OPTIONS.map((option) => (
-                      <PillButton
-                        key={option.value}
-                        selected={func.healthCheck.leadership === option.value}
-                        onClick={() =>
-                          updateHealthCheck(func.functionId, { leadership: option.value })
-                        }
-                      >
-                        {option.label}
-                      </PillButton>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Cross-function Conflict */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">
-                    Cross-function Conflict
-                  </label>
-                  <div className="flex gap-1">
-                    <PillButton
-                      selected={func.healthCheck.crossFunctionConflict === false}
-                      onClick={() =>
-                        updateHealthCheck(func.functionId, { crossFunctionConflict: false })
-                      }
-                    >
-                      No
-                    </PillButton>
-                    <PillButton
-                      selected={func.healthCheck.crossFunctionConflict === true}
-                      onClick={() =>
-                        updateHealthCheck(func.functionId, { crossFunctionConflict: true })
-                      }
-                    >
-                      Yes
-                    </PillButton>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Optional comments */}
-            <FormField variant="dark" label="Additional notes" hint="Optional">
-              <Textarea
-                variant="dark"
-                value={func.comments || ""}
-                onChange={(e) =>
-                  updateFunctionDetail(func.functionId, { comments: e.target.value })
-                }
-                placeholder="Any other observations about this function..."
-                rows={2}
-              />
-            </FormField>
-
-            {/* Save/Collapse button */}
-            <div className="pt-4 flex justify-end">
-              <Button
-                variant="dark-secondary"
-                size="sm"
-                onClick={() => handleFunctionDone(func.functionId)}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Done
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
-
-  // ==========================================================================
-  // RENDER MAIN CONTENT
-  // ==========================================================================
-
-  const renderContent = () => (
+  const renderStep1 = () => (
     <div className="space-y-4">
       {/* Instructions */}
-      <p className="text-slate-300 mb-6">
-        Select functions that existed in your organization. Click on each to provide details.
-        We&apos;ve organized functions typical for{" "}
-        <span className="font-medium text-gold-400">{ORG_TYPE_LABELS[orgType]}</span> organizations.
-      </p>
+      <div className="mb-6">
+        <p className="text-slate-300">
+          Select functions that existed in your organization at its peak. Hover over each function
+          to see what it includes.
+        </p>
+        <p className="text-sm text-slate-400 mt-2">
+          We&apos;ve organized functions typical for{" "}
+          <span className="font-medium text-gold-400">{ORG_TYPE_LABELS[orgType]}</span>{" "}
+          organizations.
+        </p>
+      </div>
 
       {/* Progress summary */}
       <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg mb-4">
         <span className="text-sm text-slate-400">
-          <span className="font-medium text-marble-100">{activeFunctionsCount}</span> functions
+          <span className="font-medium text-marble-100">{selectedFunctions.size}</span> functions
           selected
         </span>
         <span className="text-sm text-slate-400">
-          <span className="font-medium text-marble-100">{completedFunctionsCount}</span> with
-          details
+          across{" "}
+          <span className="font-medium text-marble-100">{categoriesWithSelections.size}</span>{" "}
+          categories
         </span>
       </div>
 
-      {/* Categories */}
+      {/* Categories accordion */}
       {categories.map((category) => {
         const visibleFunctions = getVisibleFunctionsForCategory(orgType, category.id, stage);
-        const selectedCount = visibleFunctions.filter((f) => isFunctionActive(f.id)).length;
-        const completedCount = visibleFunctions.filter((f) => {
-          const detail = getFunctionDetail(f.id);
-          return detail && isFunctionComplete(detail);
-        }).length;
+
+        // Skip completely hidden categories
+        if (visibleFunctions.length === 0) return null;
+
+        const categoryCustomFuncs = customFunctions.filter((f) => f.categoryId === category.id);
+        const selectedInCategory = visibleFunctions.filter((f) =>
+          selectedFunctions.has(f.id)
+        ).length;
+        const selectedCustomInCategory = categoryCustomFuncs.filter((f) =>
+          selectedFunctions.has(f.id)
+        ).length;
+        const totalSelected = selectedInCategory + selectedCustomInCategory;
         const isExpanded = expandedCategories.has(category.id);
-        const isExcluded = isCategoryExcluded(category.id);
 
         return (
-          <div
-            key={category.id}
-            className={cn(
-              "border rounded-lg overflow-hidden",
-              isExcluded ? "border-slate-600 opacity-60" : "border-slate-700"
-            )}
-          >
+          <div key={category.id} className="border border-slate-700 rounded-lg overflow-hidden">
             {/* Category header */}
-            <div className="flex items-center bg-slate-800/50">
-              <button
-                onClick={() => toggleCategory(category.id)}
-                className="flex-1 flex items-center gap-3 p-4 hover:bg-slate-800 transition-colors"
-              >
-                {isExpanded && !isExcluded ? (
+            <button
+              onClick={() => toggleCategory(category.id)}
+              className="w-full flex items-center justify-between p-4 bg-slate-800/50 hover:bg-slate-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {isExpanded ? (
                   <ChevronDown className="h-5 w-5 text-slate-400" />
                 ) : (
                   <ChevronRight className="h-5 w-5 text-slate-400" />
                 )}
-                <span
-                  className={cn(
-                    "font-medium",
-                    isExcluded ? "text-slate-400 line-through" : "text-marble-100"
-                  )}
-                >
-                  {category.name}
-                </span>
-                {isExcluded && <MinusCircle className="h-4 w-4 text-slate-500" />}
-                {!isExcluded && selectedCount > 0 && completedCount === selectedCount && (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                )}
-              </button>
-              <div className="flex items-center gap-3 pr-4">
-                {!isExcluded && (
-                  <span className="text-sm text-slate-400">
-                    {selectedCount}/{visibleFunctions.length}
+                <span className="font-medium text-marble-100">{category.name}</span>
+                {totalSelected > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-400 text-xs">
+                    {totalSelected} selected
                   </span>
                 )}
-                <button
-                  onClick={() => toggleCategoryExcluded(category.id)}
-                  className={cn(
-                    "text-xs px-2 py-1 rounded transition-colors",
-                    isExcluded
-                      ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                      : "text-slate-500 hover:text-slate-300 hover:bg-slate-700"
-                  )}
-                >
-                  {isExcluded ? "Undo" : "None existed"}
-                </button>
               </div>
-            </div>
+              <span className="text-sm text-slate-400">
+                {visibleFunctions.length + categoryCustomFuncs.length} functions
+              </span>
+            </button>
 
-            {/* Functions list - only show if expanded and not excluded */}
-            {isExpanded && !isExcluded && (
-              <div className="divide-y divide-slate-700">
+            {/* Functions list */}
+            {isExpanded && (
+              <div className="divide-y divide-slate-700/50">
                 {visibleFunctions.map((func) => {
-                  const isActive = isFunctionActive(func.id);
-                  const funcDetail = getFunctionDetail(func.id);
-                  const isComplete = funcDetail && isFunctionComplete(funcDetail);
-                  const isExpandedFunc = expandedFunctions.has(func.id);
+                  const isSelected = selectedFunctions.has(func.id);
                   const isDimmed = func.status === "dimmed";
 
                   return (
-                    <div key={func.id} id={`func-${func.id}`}>
-                      {/* Function row */}
-                      <div
+                    <div
+                      key={func.id}
+                      className={cn(
+                        "flex items-center gap-3 p-3 transition-colors",
+                        isSelected ? "bg-gold-500/10" : "hover:bg-slate-800/30",
+                        isDimmed && !isSelected && "opacity-60"
+                      )}
+                    >
+                      {/* Checkbox */}
+                      <button
+                        onClick={() => toggleFunction(func.id)}
                         className={cn(
-                          "w-full flex items-center gap-3 p-3 transition-colors",
-                          isActive
-                            ? "bg-gold-500/10"
-                            : isDimmed
-                              ? "opacity-60 hover:opacity-100"
-                              : "hover:bg-slate-800/50"
+                          "w-5 h-5 rounded flex items-center justify-center flex-shrink-0",
+                          isSelected
+                            ? "bg-gold-500 text-slate-900"
+                            : "border border-slate-600 hover:border-slate-500"
                         )}
                       >
-                        {/* Checkbox toggle */}
+                        {isSelected && <Check className="h-3.5 w-3.5" />}
+                      </button>
+
+                      {/* Function name with tooltip */}
+                      <Tooltip content={func.description || ""}>
                         <button
-                          onClick={() => toggleFunction(func.id, category.id)}
+                          onClick={() => toggleFunction(func.id)}
                           className={cn(
-                            "w-5 h-5 rounded flex items-center justify-center flex-shrink-0",
-                            isActive
-                              ? "bg-gold-500 text-slate-900"
-                              : "border border-slate-600 hover:border-slate-500"
-                          )}
-                        >
-                          {isActive && <Check className="h-3.5 w-3.5" />}
-                        </button>
-                        {/* Function name - clickable to expand/collapse when active, toggle when inactive */}
-                        <button
-                          onClick={() => {
-                            if (isActive) {
-                              toggleFunctionExpand(func.id);
-                            } else {
-                              toggleFunction(func.id, category.id);
-                            }
-                          }}
-                          className={cn(
-                            "text-sm flex-1 text-left",
-                            isActive
-                              ? "text-marble-100 font-medium"
-                              : "text-slate-300 hover:text-slate-200"
+                            "text-sm text-left flex items-center gap-2",
+                            isSelected ? "text-marble-100 font-medium" : "text-slate-300"
                           )}
                         >
                           {func.name}
+                          {func.description && <Info className="h-3.5 w-3.5 text-slate-500" />}
                         </button>
-                        {isComplete && (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-                        )}
-                        {isActive && !isComplete && (
-                          <span className="text-xs text-slate-500">needs details</span>
-                        )}
-                        {isDimmed && !isActive && (
-                          <span className="text-xs text-slate-500">(less common)</span>
-                        )}
-                        {isActive && (
-                          <button
-                            onClick={() => toggleFunctionExpand(func.id)}
-                            className="ml-2 p-1 hover:bg-slate-700 rounded"
-                          >
-                            {isExpandedFunc ? (
-                              <ChevronDown className="h-4 w-4 text-slate-400" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-slate-400" />
-                            )}
-                          </button>
-                        )}
-                      </div>
+                      </Tooltip>
 
-                      {/* Expanded function details */}
-                      {isActive &&
-                        isExpandedFunc &&
-                        funcDetail &&
-                        renderFunctionDetailForm(funcDetail, func.name)}
+                      {isDimmed && !isSelected && (
+                        <span className="text-xs text-slate-500 ml-auto">(less common)</span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Custom functions in this category */}
+                {categoryCustomFuncs.map((func) => {
+                  const isSelected = selectedFunctions.has(func.id);
+
+                  return (
+                    <div
+                      key={func.id}
+                      className={cn(
+                        "flex items-center gap-3 p-3 transition-colors",
+                        isSelected ? "bg-gold-500/10" : "hover:bg-slate-800/30"
+                      )}
+                    >
+                      <button
+                        onClick={() => toggleFunction(func.id)}
+                        className={cn(
+                          "w-5 h-5 rounded flex items-center justify-center flex-shrink-0",
+                          isSelected
+                            ? "bg-gold-500 text-slate-900"
+                            : "border border-slate-600 hover:border-slate-500"
+                        )}
+                      >
+                        {isSelected && <Check className="h-3.5 w-3.5" />}
+                      </button>
+
+                      <Tooltip content={func.description || ""}>
+                        <button
+                          onClick={() => toggleFunction(func.id)}
+                          className={cn(
+                            "text-sm text-left flex items-center gap-2",
+                            isSelected ? "text-marble-100 font-medium" : "text-slate-300"
+                          )}
+                        >
+                          {func.name}
+                          {func.description && <Info className="h-3.5 w-3.5 text-slate-500" />}
+                        </button>
+                      </Tooltip>
+
+                      <span className="text-xs text-slate-500 ml-auto">(custom)</span>
                     </div>
                   );
                 })}
@@ -1099,68 +727,130 @@ export default function FunctionalPage() {
           </div>
         );
       })}
+
+      {/* Add Function button */}
+      <Button
+        variant="dark-secondary"
+        className="w-full mt-4"
+        onClick={() => setShowAddFunctionDialog(true)}
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Function
+      </Button>
+
+      {/* Add Function Dialog */}
+      <AddFunctionDialog
+        open={showAddFunctionDialog}
+        onOpenChange={setShowAddFunctionDialog}
+        onAdd={handleAddCustomFunction}
+        currentOrgType={orgType}
+      />
     </div>
   );
+
+  // ==========================================================================
+  // STEP 2: CATEGORY QUESTIONS
+  // ==========================================================================
+
+  const renderStep2 = () => {
+    const categoriesArray = Array.from(categoriesWithSelections);
+
+    if (categoriesArray.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <AlertCircle className="h-12 w-12 mx-auto text-gold-500 mb-4" />
+          <h2 className="text-lg font-medium text-marble-100 mb-2">No functions selected</h2>
+          <p className="text-slate-400 mb-6">Go back to Step 1 and select at least one function.</p>
+          <Button variant="dark-secondary" onClick={() => setCurrentStep(0)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Selection
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8">
+        {/* Instructions */}
+        <p className="text-slate-300">
+          Now tell us about how each area worked in your organization. The more detail you provide,
+          the more valuable your story becomes.
+        </p>
+
+        {/* Category question sections */}
+        {categoriesArray.map((categoryId) => {
+          const category = categories.find((c) => c.id === categoryId);
+          const categoryName = category?.name || categoryId;
+          const selectedNames = getSelectedFunctionNames(categoryId);
+          const answer = categoryAnswers[categoryId] ?? {
+            organization: "",
+            satisfaction: "",
+            health: "",
+          };
+          const context = getCategoryContext(categoryId);
+
+          return (
+            <div key={categoryId} className="space-y-4">
+              {/* Category header card */}
+              <Card variant="dark" className="p-4 bg-slate-800/50 border-gold-500/30">
+                <h3 className="font-medium text-marble-100 mb-2">{categoryName}</h3>
+                <p className="text-sm text-gold-400 mb-2">
+                  {getCategoryHeader(categoryName, selectedNames).split("\n\n")[0]}
+                </p>
+                <p className="text-sm text-slate-300">
+                  {getCategoryHeader(categoryName, selectedNames).split("\n\n")[1]}
+                </p>
+                {context && <p className="text-xs text-slate-400 mt-2 italic">{context}</p>}
+              </Card>
+
+              {/* Questions */}
+              <div className="space-y-4 pl-4 border-l-2 border-slate-700">
+                {CATEGORY_QUESTIONS.map((question) => (
+                  <FormField key={question.id} variant="dark" label={question.label}>
+                    <Textarea
+                      variant="dark"
+                      value={answer[question.id]}
+                      onChange={(e) =>
+                        updateCategoryAnswer(categoryId, question.id, e.target.value)
+                      }
+                      placeholder={question.placeholder}
+                      rows={4}
+                    />
+                  </FormField>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // ==========================================================================
   // RENDER
   // ==========================================================================
 
   return (
-    <>
-      <WizardLayout
-        variant="dark"
-        steps={STEPS}
-        currentStep={0}
-        onBack={handleBack}
-        onNext={handleComplete}
-        cancelHref={`/interview/${story.id}`}
-        isLoading={isSubmitting}
-        canGoNext={true}
-        nextLabel="Complete"
-        title="Functional Mapping"
-        subtitle="Map your organization's structure at its peak"
-        progress={progressPercent}
-      >
-        {renderContent()}
-      </WizardLayout>
-
-      {/* Incomplete data confirmation modal */}
-      <Dialog open={showIncompleteModal} onOpenChange={setShowIncompleteModal}>
-        <DialogContent variant="dark" size="lg">
-          <DialogHeader>
-            <DialogTitle variant="dark">Some categories are incomplete</DialogTitle>
-            <DialogDescription variant="dark">
-              The following categories need attention before completing this module:
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="my-4 grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
-            {incompleteCategories.map((cat) => (
-              <div key={cat.id} className="flex items-start gap-3 p-3 rounded-md bg-slate-700/50">
-                <AlertCircle className="h-5 w-5 text-gold-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-marble-100">{cat.name}</p>
-                  <p className="text-xs text-slate-400">
-                    {cat.reason === "no_action"
-                      ? "No functions selected or excluded"
-                      : `${cat.incompleteCount} of ${cat.selectedCount} functions missing details`}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <DialogFooter>
-            <Button variant="dark-secondary" onClick={handleSaveAndContinueLater}>
-              Save & Continue Later
-            </Button>
-            <Button variant="dark-primary" onClick={handleCompleteAnyway} isLoading={isSubmitting}>
-              Complete Anyway
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <WizardLayout
+      variant="dark"
+      steps={STEPS}
+      currentStep={currentStep}
+      onBack={handlePrevStep}
+      onNext={handleNextStep}
+      cancelHref={`/interview/${story.id}`}
+      isLoading={isSubmitting}
+      canGoNext={currentStep === 0 ? selectedFunctions.size > 0 : true}
+      nextLabel={currentStep === 0 ? "Continue" : "Complete"}
+      backLabel={currentStep === 0 ? "Back" : "Previous Step"}
+      title="Functional Mapping"
+      subtitle={
+        currentStep === 0
+          ? "Select functions that existed in your organization"
+          : "Tell us how each area worked"
+      }
+      progress={progressPercent}
+    >
+      {currentStep === 0 ? renderStep1() : renderStep2()}
+    </WizardLayout>
   );
 }
