@@ -8,19 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Landmark,
-  ArrowRight,
-  Award,
-  Vote,
-  Trophy,
-  BookOpen,
-  Crown,
-  Star,
-  ChevronLeft,
-} from "lucide-react";
+import { Landmark, ArrowRight, Award, Vote, Trophy, BookOpen, Crown, Star } from "lucide-react";
 import Link from "next/link";
 import { ShareButton } from "@/components/ui/share-button";
+import { BackButton } from "@/components/ui/back-button";
 import { trackEvent } from "@/lib/analytics";
 
 interface Cenotaph {
@@ -166,14 +157,10 @@ export function CenotapheryContent({ slug }: { slug: string }) {
         </div>
 
         <div className="relative max-w-content mx-auto px-6">
-          {/* Back navigation */}
-          <Link
-            href="/cenotaphery"
-            className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-gold-400 transition-colors mb-6"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Memorials
-          </Link>
+          {/* Back navigation - top right */}
+          <div className="flex justify-end mb-6">
+            <BackButton href="/cenotaphery" text="Back to Globe" />
+          </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Left Column: Title, Description & Benefits */}
