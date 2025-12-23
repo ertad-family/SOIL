@@ -2,6 +2,7 @@
 
 import { Suspense, ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { useIsMobile } from "@/lib/utils";
 import { MenuProvider } from "@/contexts/MenuContext";
 import { PagePrivacyProvider, usePagePrivacy } from "@/contexts/PagePrivacyContext";
 import { Header } from "./Header";
@@ -23,6 +24,11 @@ interface AppShellProps {
 function VisitorParticles() {
   const pathname = usePathname();
   const { isPagePublic } = usePagePrivacy();
+  const isMobile = useIsMobile();
+
+  // Disable GlobalParticles entirely on mobile for performance (#195)
+  // This eliminates a separate WebGL context that competes for GPU resources
+  if (isMobile) return null;
 
   // Static check: always private routes (focused flows, dashboards)
   const staticPrivate =
