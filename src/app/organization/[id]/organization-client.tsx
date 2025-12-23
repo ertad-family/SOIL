@@ -36,7 +36,6 @@ import {
   CheckCircle2,
   Landmark,
   Eye,
-  Heart,
   ChevronRight,
   ArrowRight,
   Settings,
@@ -79,6 +78,7 @@ import {
 } from "@/data/function-matrix";
 import { PublicView } from "./public-view";
 import { ShareButton } from "@/components/ui/share-button";
+import { BackButton } from "@/components/ui/back-button";
 
 interface OrganizationData {
   id: string;
@@ -473,13 +473,7 @@ function OwnerView({
       variant="dark"
       pageTitle={orgData.name}
       pageDescription="Organization profile"
-      pageActions={
-        <a href="/account">
-          <Button variant="dark-ghost" size="sm">
-            ← Back to Account
-          </Button>
-        </a>
-      }
+      pageActions={<BackButton href="/account" text="Back to Account" />}
     >
       {/* Main Content: Info + Cenotaph Avatar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -1118,11 +1112,7 @@ function CenotaphAvatar({
                 }`}
               >
                 <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {memorial.views_count}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
+                  <span className="text-sm">✦</span>
                   {memorial.respects_count}
                 </span>
               </div>
