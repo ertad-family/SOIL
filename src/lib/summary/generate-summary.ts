@@ -16,10 +16,17 @@ import type { Story, ModuleId, AISummary, OrganizationType } from "@/types/inter
 import { MODULES } from "@/types/interview";
 
 // Initialize Google GenAI client with Vertex AI
+// Credentials are passed directly via googleAuthOptions instead of GOOGLE_APPLICATION_CREDENTIALS file
 const ai = new GoogleGenAI({
   vertexai: true,
   project: process.env.GOOGLE_CLOUD_PROJECT_ID || "",
   location: process.env.VERTEX_AI_LOCATION || "us-central1",
+  googleAuthOptions: {
+    credentials: {
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "",
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
+    },
+  },
 });
 
 const TEXT_MODEL = "gemini-2.0-flash-001";
