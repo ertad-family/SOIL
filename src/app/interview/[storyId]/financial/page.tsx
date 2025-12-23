@@ -11,6 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
 import {
+  CURRENCY_OPTIONS,
+  getCurrencyForCountry,
+  getCurrencyByCode,
+  formatCurrencyOption,
+} from "@/lib/currencies";
+import { Combobox } from "@/components/ui/combobox";
+import {
   Plus,
   Trash2,
   Upload,
@@ -44,160 +51,6 @@ const STEPS = [
   { id: "financial", label: "Financial Picture", description: "Metrics and events" },
   { id: "documents", label: "Documents", description: "Upload supporting documents (optional)" },
 ];
-
-// =============================================================================
-// CURRENCY CONFIGURATION
-// =============================================================================
-
-const CURRENCY_OPTIONS: Array<{ value: CurrencyCode; label: string; symbol: string }> = [
-  { value: "USD", label: "US Dollar", symbol: "$" },
-  { value: "EUR", label: "Euro", symbol: "€" },
-  { value: "GBP", label: "British Pound", symbol: "£" },
-  { value: "CAD", label: "Canadian Dollar", symbol: "CA$" },
-  { value: "AUD", label: "Australian Dollar", symbol: "A$" },
-  { value: "CHF", label: "Swiss Franc", symbol: "CHF" },
-  { value: "JPY", label: "Japanese Yen", symbol: "¥" },
-  { value: "CNY", label: "Chinese Yuan", symbol: "¥" },
-  { value: "INR", label: "Indian Rupee", symbol: "₹" },
-  { value: "BRL", label: "Brazilian Real", symbol: "R$" },
-  { value: "MXN", label: "Mexican Peso", symbol: "MX$" },
-  { value: "RUB", label: "Russian Ruble", symbol: "₽" },
-  { value: "KRW", label: "South Korean Won", symbol: "₩" },
-  { value: "SGD", label: "Singapore Dollar", symbol: "S$" },
-  { value: "HKD", label: "Hong Kong Dollar", symbol: "HK$" },
-  { value: "SEK", label: "Swedish Krona", symbol: "kr" },
-  { value: "NOK", label: "Norwegian Krone", symbol: "kr" },
-  { value: "DKK", label: "Danish Krone", symbol: "kr" },
-  { value: "PLN", label: "Polish Zloty", symbol: "zł" },
-  { value: "ILS", label: "Israeli Shekel", symbol: "₪" },
-  { value: "ZAR", label: "South African Rand", symbol: "R" },
-  { value: "AED", label: "UAE Dirham", symbol: "د.إ" },
-  { value: "THB", label: "Thai Baht", symbol: "฿" },
-  { value: "IDR", label: "Indonesian Rupiah", symbol: "Rp" },
-  { value: "MYR", label: "Malaysian Ringgit", symbol: "RM" },
-  { value: "PHP", label: "Philippine Peso", symbol: "₱" },
-  { value: "VND", label: "Vietnamese Dong", symbol: "₫" },
-  { value: "NZD", label: "New Zealand Dollar", symbol: "NZ$" },
-  { value: "CZK", label: "Czech Koruna", symbol: "Kč" },
-  { value: "HUF", label: "Hungarian Forint", symbol: "Ft" },
-  { value: "TRY", label: "Turkish Lira", symbol: "₺" },
-  { value: "UAH", label: "Ukrainian Hryvnia", symbol: "₴" },
-  { value: "CLP", label: "Chilean Peso", symbol: "CL$" },
-  { value: "COP", label: "Colombian Peso", symbol: "CO$" },
-  { value: "PEN", label: "Peruvian Sol", symbol: "S/" },
-  { value: "ARS", label: "Argentine Peso", symbol: "AR$" },
-];
-
-/** Map country codes to their default currency */
-const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
-  // North America
-  "United States": "USD",
-  USA: "USD",
-  US: "USD",
-  Canada: "CAD",
-  CA: "CAD",
-  Mexico: "MXN",
-  MX: "MXN",
-  // Europe
-  "United Kingdom": "GBP",
-  UK: "GBP",
-  GB: "GBP",
-  Germany: "EUR",
-  DE: "EUR",
-  France: "EUR",
-  FR: "EUR",
-  Italy: "EUR",
-  IT: "EUR",
-  Spain: "EUR",
-  ES: "EUR",
-  Netherlands: "EUR",
-  NL: "EUR",
-  Belgium: "EUR",
-  BE: "EUR",
-  Austria: "EUR",
-  AT: "EUR",
-  Ireland: "EUR",
-  IE: "EUR",
-  Portugal: "EUR",
-  PT: "EUR",
-  Finland: "EUR",
-  FI: "EUR",
-  Greece: "EUR",
-  GR: "EUR",
-  Switzerland: "CHF",
-  CH: "CHF",
-  Sweden: "SEK",
-  SE: "SEK",
-  Norway: "NOK",
-  NO: "NOK",
-  Denmark: "DKK",
-  DK: "DKK",
-  Poland: "PLN",
-  PL: "PLN",
-  "Czech Republic": "CZK",
-  Czechia: "CZK",
-  CZ: "CZK",
-  Hungary: "HUF",
-  HU: "HUF",
-  Ukraine: "UAH",
-  UA: "UAH",
-  Russia: "RUB",
-  RU: "RUB",
-  Turkey: "TRY",
-  TR: "TRY",
-  // Asia Pacific
-  Japan: "JPY",
-  JP: "JPY",
-  China: "CNY",
-  CN: "CNY",
-  India: "INR",
-  IN: "INR",
-  "South Korea": "KRW",
-  Korea: "KRW",
-  KR: "KRW",
-  Singapore: "SGD",
-  SG: "SGD",
-  "Hong Kong": "HKD",
-  HK: "HKD",
-  Thailand: "THB",
-  TH: "THB",
-  Indonesia: "IDR",
-  ID: "IDR",
-  Malaysia: "MYR",
-  MY: "MYR",
-  Philippines: "PHP",
-  PH: "PHP",
-  Vietnam: "VND",
-  VN: "VND",
-  Australia: "AUD",
-  AU: "AUD",
-  "New Zealand": "NZD",
-  NZ: "NZD",
-  // Middle East & Africa
-  Israel: "ILS",
-  IL: "ILS",
-  "United Arab Emirates": "AED",
-  UAE: "AED",
-  AE: "AED",
-  "South Africa": "ZAR",
-  ZA: "ZAR",
-  // South America
-  Brazil: "BRL",
-  BR: "BRL",
-  Argentina: "ARS",
-  AR: "ARS",
-  Chile: "CLP",
-  CL: "CLP",
-  Colombia: "COP",
-  CO: "COP",
-  Peru: "PEN",
-  PE: "PEN",
-};
-
-function getCurrencyForCountry(country: string | null | undefined): CurrencyCode {
-  if (!country) return "USD";
-  return COUNTRY_TO_CURRENCY[country] ?? "USD";
-}
 
 // =============================================================================
 // METRICS CONFIGURATION
@@ -504,7 +357,13 @@ export default function FinancialPage() {
 
   // Get the current currency (with fallback)
   const currentCurrency = currency ?? getCurrencyForCountry(organizationCountry);
-  const currencyInfo = CURRENCY_OPTIONS.find((c) => c.value === currentCurrency);
+  const currencyInfo = getCurrencyByCode(currentCurrency);
+
+  // Prepare currency options for Combobox
+  const currencyComboboxOptions = CURRENCY_OPTIONS.map((c) => ({
+    value: c.value,
+    label: formatCurrencyOption(c),
+  }));
 
   // ==========================================================================
   // CURRENCY HANDLER
@@ -1233,17 +1092,15 @@ export default function FinancialPage() {
               : "Select the primary currency for your financial data"
           }
         >
-          <select
+          <Combobox
+            variant="dark"
+            options={currencyComboboxOptions}
             value={currentCurrency}
-            onChange={(e) => handleCurrencyChange(e.target.value as CurrencyCode)}
-            className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-marble-100"
-          >
-            {CURRENCY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.symbol} {option.label} ({option.value})
-              </option>
-            ))}
-          </select>
+            onValueChange={handleCurrencyChange}
+            placeholder="Select currency..."
+            searchPlaceholder="Search currencies..."
+            emptyText="No currency found."
+          />
         </FormField>
       </div>
 

@@ -422,44 +422,12 @@ export interface FinancialEvent {
   details: string | null;
 }
 
-/** Common currency codes */
-export type CurrencyCode =
-  | "USD"
-  | "EUR"
-  | "GBP"
-  | "CAD"
-  | "AUD"
-  | "CHF"
-  | "JPY"
-  | "CNY"
-  | "INR"
-  | "BRL"
-  | "MXN"
-  | "RUB"
-  | "KRW"
-  | "SGD"
-  | "HKD"
-  | "SEK"
-  | "NOK"
-  | "DKK"
-  | "PLN"
-  | "ILS"
-  | "ZAR"
-  | "AED"
-  | "THB"
-  | "IDR"
-  | "MYR"
-  | "PHP"
-  | "VND"
-  | "NZD"
-  | "CZK"
-  | "HUF"
-  | "TRY"
-  | "UAH"
-  | "CLP"
-  | "COP"
-  | "PEN"
-  | "ARS";
+/**
+ * ISO 4217 currency code (3-letter string).
+ * Using string type to support all world currencies without restrictive union.
+ * Common examples: USD, EUR, GBP, JPY, CNY, etc.
+ */
+export type CurrencyCode = string;
 
 export interface FinancialPictureData {
   uploadedFiles: UploadedFile[];
