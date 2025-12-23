@@ -3,10 +3,11 @@
 import * as React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageSquare } from "lucide-react";
+import { ArrowRight, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
 import type { Story } from "@/types/interview";
 import { MODULES } from "@/types/interview";
 import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
+import { trackEvent } from "@/lib/analytics";
 
 interface AppraisalCardProps {
   story: Story;
@@ -21,6 +22,11 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
   const { showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
   const appraisal = story.aiSummary?.appraisal;
   const lastModuleProcessed = story.aiSummary?.lastModuleProcessed;
+
+  // Track appraisal feedback rating (thumbs up/down)
+  const [appraisalRating, setAppraisalRating] = React.useState<"positive" | "negative" | null>(
+    null
+  );
 
   // Get the name of the module that was processed when this appraisal was generated
   const processedChapterName = lastModuleProcessed
@@ -55,6 +61,21 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
     });
   };
 
+  // Handle appraisal rating (thumbs up/down)
+  const handleAppraisalRating = (rating: "positive" | "negative") => {
+    setAppraisalRating(rating);
+    trackEvent("appraisal_feedback", {
+      category: "engagement",
+      properties: {
+        rating,
+        storyId: story.id,
+        chapterId: lastModuleProcessed,
+        chapterName: processedChapterName,
+        affirmationText: appraisal?.affirmation?.substring(0, 100), // First 100 chars for context
+      },
+    });
+  };
+
   // Only show when there's an actual appraisal to display
   if (!appraisal) {
     return null;
@@ -66,15 +87,50 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
         {/* Header */}
         <div>
           <h3 className="font-serif text-base font-medium text-marble-100">
-            {allChaptersComplete ? "Story Complete" : "Well Done"}
+            {allChaptersComplete
+              ? "Story Complete"
+              : `${processedChapterName || "Chapter"} Complete`}
           </h3>
-          {processedChapterName && (
-            <p className="text-xs text-slate-500 mt-0.5">After completing {processedChapterName}</p>
-          )}
         </div>
 
         {/* Affirmation message */}
         <p className="text-slate-300 text-sm leading-relaxed">{appraisal.affirmation}</p>
+
+        {/* Appraisal rating - thumbs up/down */}
+        <div className="flex items-center gap-1 pt-1">
+          <span className="text-xs text-slate-500 mr-2">Was this helpful?</span>
+          <button
+            onClick={() => handleAppraisalRating("positive")}
+            disabled={appraisalRating !== null}
+            className={`p-1.5 rounded transition-colors ${
+              appraisalRating === "positive"
+                ? "text-green-400 bg-green-400/10"
+                : appraisalRating === null
+                  ? "text-slate-500 hover:text-green-400 hover:bg-green-400/10"
+                  : "text-slate-600 cursor-default"
+            }`}
+            aria-label="Helpful"
+          >
+            <ThumbsUp className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => handleAppraisalRating("negative")}
+            disabled={appraisalRating !== null}
+            className={`p-1.5 rounded transition-colors ${
+              appraisalRating === "negative"
+                ? "text-red-400 bg-red-400/10"
+                : appraisalRating === null
+                  ? "text-slate-500 hover:text-red-400 hover:bg-red-400/10"
+                  : "text-slate-600 cursor-default"
+            }`}
+            aria-label="Not helpful"
+          >
+            <ThumbsDown className="h-3.5 w-3.5" />
+          </button>
+          {appraisalRating && (
+            <span className="text-xs text-slate-500 ml-2">Thanks for the feedback</span>
+          )}
+        </div>
 
         {/* Feedback prompt - only show if not already given */}
         {!feedbackAlreadyGiven && (
@@ -95,11 +151,11 @@ export function AppraisalCard({ story }: AppraisalCardProps) {
         )}
 
         {/* Anticipation for next chapter - only if there's a next chapter */}
-        {nextChapterName && (
+        {nextChapterName && appraisal.anticipation && (
           <div className="pt-2 border-t border-slate-700/50">
-            <div className="flex items-center gap-2 text-gold-400">
-              <ArrowRight className="h-3.5 w-3.5 flex-shrink-0" />
-              <p className="text-sm">Next up: {nextChapterName}</p>
+            <div className="flex items-start gap-2 text-gold-400">
+              <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+              <p className="text-sm">{appraisal.anticipation}</p>
             </div>
           </div>
         )}
