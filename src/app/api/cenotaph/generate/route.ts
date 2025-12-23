@@ -5,10 +5,12 @@
  * 2. Imagen renders first 3 (or next 3 from pending) as images
  *
  * Issue: #23 Cenotaph creation wizard
+ * Security: #78 - Added authentication and ownership verification
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { buildOrganizationContext, validateUserPrompt } from "@/lib/cenotaph/prompt-builder";
 import {
   generateCreativeConcepts,
@@ -24,14 +26,27 @@ import type {
   DesignConcept,
 } from "@/types/cenotaph";
 
-// Initialize Supabase client with service role for storage operations
-const supabase = createClient(
+// Service role client for storage operations only
+const serviceSupabase = createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(request: NextRequest): Promise<NextResponse<GenerateDesignResponse>> {
   try {
+    // Initialize authenticated client
+    const supabase = await createClient();
+
+    // Check authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     // Parse request body
     const body: GenerateDesignRequest = await request.json();
     const { memorialId, userPrompt } = body;
@@ -49,13 +64,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
 
-    // Fetch memorial with organization and story data
+    // Fetch memorial with organization and story data, including user_id for ownership check
     const { data: memorial, error: memorialError } = await supabase
       .from("memorials")
       .select(
         `
         id,
         slug,
+        user_id,
         organization_name,
         organization_type,
         epitaph,
@@ -72,6 +88,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
 
     if (memorialError || !memorial) {
       return NextResponse.json({ success: false, error: "Memorial not found" }, { status: 404 });
+    }
+
+    // Verify ownership - user must own the memorial
+    if (memorial.user_id !== user.id) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     // Check if already generating
@@ -243,7 +264,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
 
     // Upload designs to storage
     console.log(`Uploading ${designs.length} designs to storage...`);
-    const processedDesigns = await processAndUploadDesigns(supabase, memorialId, designs);
+    const processedDesigns = await processAndUploadDesigns(serviceSupabase, memorialId, designs);
 
     // Get existing options and append new ones
     const existingOptions = memorial.cenotaph_design?.options || [];
