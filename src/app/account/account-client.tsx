@@ -6,7 +6,6 @@ import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SwitchWithLabel } from "@/components/ui/switch";
 import {
   Plus,
@@ -89,12 +88,6 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
     weeklyDigest: false,
   });
 
-  // Categorize stories
-  const inProgressStories = stories.filter(
-    (s) => s.status === "draft" || s.status === "in_progress"
-  );
-  const coinedStories = stories.filter((s) => s.status === "coined");
-
   // Find which organizations have cenotaphs
   const getMemorialForOrganization = (organizationId: string) =>
     memorials.find((m) => m.organization_id === organizationId);
@@ -121,56 +114,29 @@ export function AccountClient({ user, stories, memorials }: AccountClientProps) 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="in_progress">
-            <TabsList variant="dark">
-              <TabsTrigger value="in_progress" variant="dark">
-                In Progress ({inProgressStories.length})
-              </TabsTrigger>
-              <TabsTrigger value="coined" variant="dark">
-                Coined ({coinedStories.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="in_progress" variant="dark" className="mt-6">
-              {inProgressStories.length === 0 ? (
-                <EmptyState
-                  icon={<FileText className="w-12 h-12" />}
-                  title="No stories in progress"
-                  description="Create an organization and start documenting its story"
-                  actionLabel="Create Organization"
-                  actionHref="/organization/create?returnTo=interview"
-                />
-              ) : (
-                <div className="space-y-4">
-                  {inProgressStories.map((story) => (
-                    <StoryCard key={story.id} story={story} />
-                  ))}
-                </div>
+          {stories.length === 0 ? (
+            <EmptyState
+              icon={<FileText className="w-12 h-12" />}
+              title="No organizations yet"
+              description="Create an organization and start documenting its story"
+              actionLabel="Create Organization"
+              actionHref="/organization/create?returnTo=interview"
+            />
+          ) : (
+            <div className="space-y-4">
+              {stories.map((story) =>
+                story.status === "coined" ? (
+                  <CoinedStoryCard
+                    key={story.id}
+                    story={story}
+                    memorial={getMemorialForOrganization(story.organization_id)}
+                  />
+                ) : (
+                  <StoryCard key={story.id} story={story} />
+                )
               )}
-            </TabsContent>
-
-            <TabsContent value="coined" variant="dark" className="mt-6">
-              {coinedStories.length === 0 ? (
-                <EmptyState
-                  icon={<CheckCircle2 className="w-12 h-12" />}
-                  title="No coined stories yet"
-                  description="Complete an interview to coin your organization's story"
-                  actionLabel="View Stories"
-                  actionHref="/interview"
-                />
-              ) : (
-                <div className="space-y-4">
-                  {coinedStories.map((story) => (
-                    <CoinedStoryCard
-                      key={story.id}
-                      story={story}
-                      memorial={getMemorialForOrganization(story.organization_id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </CardContent>
       </Card>
 
