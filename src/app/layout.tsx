@@ -3,8 +3,8 @@ import { Cinzel, Sora, Manrope } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Analytics } from "@vercel/analytics/react";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { ConsentAwareAnalytics } from "@/components/analytics/ConsentAwareAnalytics";
+import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 
 // Sora - geometric sans-serif for headings (clean, modern)
 const sora = Sora({
@@ -63,10 +63,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TooltipProvider>
           <AppShell>{children}</AppShell>
         </TooltipProvider>
-        <Analytics />
-        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
-        )}
+        <CookieConsentBanner />
+        <ConsentAwareAnalytics />
       </body>
     </html>
   );
