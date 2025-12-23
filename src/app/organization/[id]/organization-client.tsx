@@ -261,15 +261,19 @@ export function OrganizationClient({
 }: OrganizationClientProps) {
   const { setPagePublic } = usePagePrivacy();
 
-  // Control visitor particles based on view mode
+  // Issue #62: Allow owners to toggle between owner and visitor view
+  const [overrideViewMode, setOverrideViewMode] = useState<"owner" | "visitor" | null>(null);
+  const effectiveViewMode = isOwner ? (overrideViewMode ?? viewMode) : viewMode;
+
+  // Control visitor particles based on effective view mode
   // Owner view = dashboard (no particles), Visitor view = public page (particles)
   useEffect(() => {
-    setPagePublic(viewMode === "visitor");
+    setPagePublic(effectiveViewMode === "visitor");
     return () => setPagePublic(true); // Reset on unmount
-  }, [viewMode, setPagePublic]);
+  }, [effectiveViewMode, setPagePublic]);
 
   // For visitor mode, render the public view
-  if (viewMode === "visitor") {
+  if (effectiveViewMode === "visitor") {
     return (
       <PublicView
         organization={organization}
@@ -278,6 +282,8 @@ export function OrganizationClient({
         currentUserId={currentUserId}
         currentUserStoryId={currentUserStoryId}
         peakRevenueUSD={peakRevenueUSD}
+        isOwnerPreview={isOwner && overrideViewMode === "visitor"}
+        onExitPreview={() => setOverrideViewMode("owner")}
       />
     );
   }
@@ -291,9 +297,13 @@ export function OrganizationClient({
       currentUserId={currentUserId!}
       currentUserData={currentUserData}
       isOwner={isOwner}
+      onViewAsVisitor={() => setOverrideViewMode("visitor")}
     />
   );
 }
+
+// Save status type for issue #75
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 /** Owner dashboard view - the existing implementation */
 function OwnerView({
@@ -303,6 +313,7 @@ function OwnerView({
   currentUserId,
   currentUserData,
   isOwner,
+  onViewAsVisitor,
 }: {
   organization: OrganizationData;
   stories: StoryData[];
@@ -310,13 +321,16 @@ function OwnerView({
   currentUserId: string;
   currentUserData: CurrentUserData;
   isOwner: boolean;
+  onViewAsVisitor: () => void;
 }) {
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(organization.is_public);
   const [privacyDisplayStyle, setPrivacyDisplayStyle] = useState<PrivacyDisplayStyle>(
     (organization.privacy_display_style as PrivacyDisplayStyle) || DEFAULT_PRIVACY_STYLE
   );
-  const [isSaving, setIsSaving] = useState(false);
+  // Issue #75: Enhanced save status with visual feedback
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Edit organization modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -397,9 +411,10 @@ function OwnerView({
 
   const location = [orgData.location_city, orgData.location_country].filter(Boolean).join(", ");
 
-  // Toggle visibility via API
+  // Toggle visibility via API with status feedback
   const handleVisibilityChange = async (checked: boolean) => {
-    setIsSaving(true);
+    setSaveStatus("saving");
+    setSaveError(null);
     try {
       const res = await fetch(`/api/organization/${organization.id}`, {
         method: "PATCH",
@@ -412,16 +427,20 @@ function OwnerView({
       }
 
       setIsPublic(checked);
+      setSaveStatus("saved");
+      // Auto-clear success status after 2.5 seconds
+      setTimeout(() => setSaveStatus("idle"), 2500);
     } catch (err) {
       console.error("Failed to update visibility:", err);
-    } finally {
-      setIsSaving(false);
+      setSaveStatus("error");
+      setSaveError("Failed to save visibility setting");
     }
   };
 
-  // Update privacy display style via API
+  // Update privacy display style via API with status feedback
   const handlePrivacyStyleChange = async (style: PrivacyDisplayStyle) => {
-    setIsSaving(true);
+    setSaveStatus("saving");
+    setSaveError(null);
     try {
       const res = await fetch(`/api/organization/${organization.id}`, {
         method: "PATCH",
@@ -434,12 +453,18 @@ function OwnerView({
       }
 
       setPrivacyDisplayStyle(style);
+      setSaveStatus("saved");
+      // Auto-clear success status after 2.5 seconds
+      setTimeout(() => setSaveStatus("idle"), 2500);
     } catch (err) {
       console.error("Failed to update privacy display style:", err);
-    } finally {
-      setIsSaving(false);
+      setSaveStatus("error");
+      setSaveError("Failed to save display style");
     }
   };
+
+  // State for delete operation (separate from settings save status)
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Delete organization via API
   const handleDelete = async () => {
@@ -449,7 +474,7 @@ function OwnerView({
       return;
     }
 
-    setIsSaving(true);
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/organization/${organization.id}`, {
         method: "DELETE",
@@ -464,7 +489,7 @@ function OwnerView({
       console.error("Failed to delete organization:", err);
       alert("Failed to delete organization");
     } finally {
-      setIsSaving(false);
+      setIsDeleting(false);
     }
   };
 
@@ -473,7 +498,19 @@ function OwnerView({
       variant="dark"
       pageTitle={orgData.name}
       pageDescription="Organization profile"
-      pageActions={<BackButton href="/account" text="Back to Account" />}
+      pageActions={
+        <div className="flex items-center gap-3">
+          <Button
+            variant="dark-secondary"
+            size="sm"
+            leftIcon={<Eye className="w-4 h-4" />}
+            onClick={onViewAsVisitor}
+          >
+            View as Visitor
+          </Button>
+          <BackButton href="/account" text="Back to Account" />
+        </div>
+      }
     >
       {/* Main Content: Info + Cenotaph Avatar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -880,13 +917,36 @@ function OwnerView({
       {isOwner && (
         <Card variant="dark">
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
-                <Settings className="w-5 h-5 text-gold-400" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-gold-400" />
+                </div>
+                <div>
+                  <CardTitle variant="dark">Settings</CardTitle>
+                  <CardDescription variant="dark">Manage this organization</CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle variant="dark">Settings</CardTitle>
-                <CardDescription variant="dark">Manage this organization</CardDescription>
+              {/* Save status indicator */}
+              <div className="flex items-center gap-2 text-sm">
+                {saveStatus === "saving" && (
+                  <span className="flex items-center gap-1.5 text-gold-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </span>
+                )}
+                {saveStatus === "saved" && (
+                  <span className="flex items-center gap-1.5 text-green-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Saved
+                  </span>
+                )}
+                {saveStatus === "error" && (
+                  <span className="flex items-center gap-1.5 text-error-400">
+                    <XCircle className="w-4 h-4" />
+                    {saveError || "Failed"}
+                  </span>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -899,7 +959,7 @@ function OwnerView({
                 description="Allow others to see this organization's profile and cenotaph"
                 checked={isPublic}
                 onCheckedChange={handleVisibilityChange}
-                disabled={isSaving}
+                disabled={saveStatus === "saving"}
               />
 
               {/* Privacy Display Style */}
@@ -911,7 +971,7 @@ function OwnerView({
                 <Select
                   value={privacyDisplayStyle}
                   onValueChange={(value) => handlePrivacyStyleChange(value as PrivacyDisplayStyle)}
-                  disabled={isPublic || isSaving}
+                  disabled={isPublic || saveStatus === "saving"}
                 >
                   <SelectTrigger variant="dark" className="w-full">
                     <SelectValue placeholder="Select display style" />
@@ -939,7 +999,7 @@ function OwnerView({
                   leftIcon={<Trash2 className="w-4 h-4" />}
                   className="text-error-400 hover:text-error-300"
                   onClick={handleDelete}
-                  disabled={isSaving}
+                  disabled={isDeleting}
                 >
                   Delete Organization
                 </Button>

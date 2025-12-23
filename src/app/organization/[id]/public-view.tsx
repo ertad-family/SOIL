@@ -106,6 +106,10 @@ interface PublicViewProps {
   currentUserId: string | null;
   currentUserStoryId: string | null;
   peakRevenueUSD: number | null;
+  /** Issue #62: When owner is previewing the visitor view */
+  isOwnerPreview?: boolean;
+  /** Issue #62: Callback to exit preview mode */
+  onExitPreview?: () => void;
 }
 
 // =============================================================================
@@ -761,6 +765,8 @@ export function PublicView({
   currentUserId,
   currentUserStoryId,
   peakRevenueUSD,
+  isOwnerPreview = false,
+  onExitPreview,
 }: PublicViewProps) {
   const dateRange = formatDateRange(organization.founded_date, organization.closed_date);
   const location = [organization.location_city, organization.location_country]
@@ -776,9 +782,9 @@ export function PublicView({
   // Track referral clicks from shared links
   useRefTracking();
 
-  // Track cenotaph view on mount
+  // Track cenotaph view on mount (skip when owner is previewing)
   useEffect(() => {
-    if (memorial?.id) {
+    if (memorial?.id && !isOwnerPreview) {
       trackEvent("cenotaph_view", {
         category: "discovery",
         properties: {
@@ -788,10 +794,31 @@ export function PublicView({
         },
       });
     }
-  }, [memorial?.id, organization.id, organization.name]);
+  }, [memorial?.id, organization.id, organization.name, isOwnerPreview]);
 
   return (
     <div className="min-h-screen bg-slate-900 overflow-x-hidden">
+      {/* Owner Preview Banner */}
+      {isOwnerPreview && (
+        <div className="sticky top-0 z-50 bg-gold-500/90 backdrop-blur-sm text-slate-900 py-2 px-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                You&apos;re viewing this page as a visitor
+              </span>
+            </div>
+            {onExitPreview && (
+              <button
+                onClick={onExitPreview}
+                className="text-sm font-medium underline hover:no-underline"
+              >
+                Back to Owner View
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* Hero with Cenotaph */}
       <HeroSection
         organization={organization}
