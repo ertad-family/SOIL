@@ -13,6 +13,7 @@ interface OrganizationData {
   peak_team_size: number | null;
   is_public: boolean;
   privacy_display_style: PrivacyDisplayStyle | null;
+  verification_status: string | null;
 }
 
 interface MemorialRow {
@@ -22,6 +23,7 @@ interface MemorialRow {
   design_status: string | null;
   created_at: string;
   organization_id: string | null;
+  respects_count: number;
   organizations: OrganizationData[] | OrganizationData | null;
 }
 
@@ -78,6 +80,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       design_status,
       created_at,
       organization_id,
+      respects_count,
       organizations!organization_id (
         name,
         organization_type,
@@ -88,7 +91,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         location_country,
         peak_team_size,
         is_public,
-        privacy_display_style
+        privacy_display_style,
+        verification_status
       )
     `
     )
@@ -202,6 +206,49 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     };
   });
 
+  // Calculate stats from all cenotaphs (before filtering)
+  const allCenotaphsData = cenotaphs || [];
+  const uniqueIndustries = new Set<string>();
+  let totalYearsOfHistory = 0;
+  let totalRespects = 0;
+
+  allCenotaphsData.forEach((c: MemorialRow) => {
+    const org = getOrg(c);
+    if (org?.industry) {
+      uniqueIndustries.add(org.industry);
+    }
+    // Calculate years of operation
+    if (org?.founded_date && org?.closed_date) {
+      const foundedYear = parseInt(org.founded_date.substring(0, 4), 10);
+      const closedYear = parseInt(org.closed_date.substring(0, 4), 10);
+      if (!isNaN(foundedYear) && !isNaN(closedYear)) {
+        totalYearsOfHistory += Math.max(0, closedYear - foundedYear);
+      }
+    }
+    totalRespects += c.respects_count || 0;
+  });
+
+  // Get top 3 most honored residents (by respects_count) - only from PUBLIC and VERIFIED organizations
+  const topHonored = [...allCenotaphsData]
+    .filter((c: MemorialRow) => {
+      const org = getOrg(c);
+      return org?.is_public === true && org?.verification_status === "verified";
+    })
+    .sort((a, b) => (b.respects_count || 0) - (a.respects_count || 0))
+    .slice(0, 3)
+    .map((c: MemorialRow) => {
+      const org = getOrg(c);
+      const orgName = org?.name ?? "Unknown Organization";
+
+      return {
+        id: c.id,
+        organizationId: c.organization_id,
+        organizationName: orgName,
+        isPrivate: false,
+        respectsCount: c.respects_count || 0,
+      };
+    });
+
   return NextResponse.json({
     cenotaphery: {
       slug: cenotaphery.slug,
@@ -214,5 +261,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     },
     cenotaphs: transformedCenotaphs,
     count: transformedCenotaphs.length,
+    stats: {
+      totalCenotaphs: allCenotaphsData.length,
+      spotsRemaining: Math.max(0, cenotaphery.capacity - allCenotaphsData.length),
+      industriesCount: uniqueIndustries.size,
+      totalYearsOfHistory,
+      totalRespects,
+    },
+    topHonored,
   });
 }

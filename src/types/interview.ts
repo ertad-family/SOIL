@@ -484,9 +484,20 @@ export interface InternalEvent {
   details: string | null;
 }
 
+/** Overview questions about the decline dynamics */
+export interface DynamicsOverview {
+  declineSpeed: "sudden" | "gradual" | "slow_with_hope" | null;
+  earlyWarnings: "clearly_visible" | "missed_them" | "blindsided" | null;
+  pointOfNoReturn: "yes" | "no_gradual" | "hard_to_say" | null;
+  pointOfNoReturnWhen: string | null; // If "yes", when was it
+  timeToClosureFrom: "days" | "weeks" | "months" | "over_year" | null;
+  closureDecision: "alone" | "founders_together" | "board" | "circumstances" | null;
+}
+
 export interface DynamicPictureData {
   detectedPatterns: DetectedPattern[];
   patternQuestions: PatternQuestion[];
+  dynamicsOverview?: DynamicsOverview; // New: overview questions about decline
   events: InternalEvent[];
 }
 
@@ -495,7 +506,19 @@ export interface DynamicPictureData {
 // =============================================================================
 
 /** Market resource types - resources you compete for */
-export type MarketResourceType = "customers" | "talent" | "suppliers" | "capital";
+export type MarketResourceType =
+  | "customers"
+  | "talent"
+  | "suppliers"
+  | "capital"
+  // NGO-specific resources
+  | "donors"
+  | "volunteers"
+  | "grants"
+  // Additional resources for various org types
+  | "partners"
+  | "technology"
+  | "community";
 
 /** Operating condition types - environmental factors you operate within */
 export type OperatingConditionType = "infrastructure" | "legal" | "regulatory" | "tax";
@@ -645,6 +668,22 @@ export interface FounderBackground {
   startedWith: "solo" | "one_other" | "team" | null;
   howFoundCoFounders: string | null; // If not solo
   roleClarity: "crystal_clear" | "figured_out" | "always_fuzzy" | null;
+
+  // Part B2: Co-founder Dynamics (if not solo)
+  cofounderSkillsComplementary: "very_complementary" | "some_overlap" | "too_similar" | null;
+  decisionMakingStyle: "consensus" | "domain_based" | "one_leader" | "situational" | null;
+  conflictResolution:
+    | "open_discussion"
+    | "avoided_conflict"
+    | "escalated_often"
+    | "third_party"
+    | null;
+  visionAlignment:
+    | "fully_aligned"
+    | "mostly_aligned"
+    | "different_visions"
+    | "never_discussed"
+    | null;
 
   // Part C: Along the Way
   motivationEvolution: "grew_stronger" | "stayed_steady" | "started_fading" | null;
@@ -950,6 +989,12 @@ export const createEmptyFounderContext = (): FounderContextData => ({
     startedWith: null,
     howFoundCoFounders: null,
     roleClarity: null,
+    // Co-founder dynamics
+    cofounderSkillsComplementary: null,
+    decisionMakingStyle: null,
+    conflictResolution: null,
+    visionAlignment: null,
+    // Along the way
     motivationEvolution: null,
     fadingNoticedAt: null,
     cofounderRelationship: null,

@@ -1045,9 +1045,15 @@ export default function FunctionalPage() {
                         >
                           {isActive && <Check className="h-3.5 w-3.5" />}
                         </button>
-                        {/* Function name - clickable to toggle */}
+                        {/* Function name - clickable to expand/collapse when active, toggle when inactive */}
                         <button
-                          onClick={() => toggleFunction(func.id, category.id)}
+                          onClick={() => {
+                            if (isActive) {
+                              toggleFunctionExpand(func.id);
+                            } else {
+                              toggleFunction(func.id, category.id);
+                            }
+                          }}
                           className={cn(
                             "text-sm flex-1 text-left",
                             isActive

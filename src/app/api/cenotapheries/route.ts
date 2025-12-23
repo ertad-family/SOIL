@@ -137,32 +137,14 @@ export async function GET() {
   );
   const totalCapacity = transformedCenotapheries.reduce((sum, c) => sum + c.statistics.capacity, 0);
 
-  // Count distinct countries from ALL organizations
-  const { data: allOrgsCountries } = await supabase
-    .from("organizations")
-    .select("location_country")
-    .not("location_country", "is", null);
-
-  const uniqueCountries = new Set(allOrgsCountries?.map((o) => o.location_country));
-  const totalCountries = uniqueCountries.size;
-
-  // Count distinct cities from ALL organizations
-  const { data: allOrgsCities } = await supabase
-    .from("organizations")
-    .select("location_city")
-    .not("location_city", "is", null);
-
-  const uniqueCities = new Set(allOrgsCities?.map((o) => o.location_city));
-  const totalCities = uniqueCities.size;
-
-  // Count distinct founders from ALL stories
-  const { data: allFounders } = await supabase
-    .from("stories")
-    .select("user_id")
-    .in("founder_role", ["founder", "cofounder"]);
-
-  const uniqueFounders = new Set(allFounders?.map((s) => s.user_id));
-  const totalFounders = uniqueFounders.size;
+  // Get global stats via RPC function (bypasses RLS)
+  const { data: globalStatsData } = await supabase.rpc("get_global_stats");
+  const stats = globalStatsData?.[0] ?? {
+    total_countries: 0,
+    total_cities: 0,
+    total_founders: 0,
+    total_organizations: 0,
+  };
 
   return NextResponse.json({
     cenotapheries: transformedCenotapheries,
@@ -170,9 +152,9 @@ export async function GET() {
       totalCenotapheries: transformedCenotapheries.length,
       totalCenotaphs,
       totalCapacity,
-      totalCountries,
-      totalCities,
-      totalFounders,
+      totalCountries: Number(stats.total_countries),
+      totalCities: Number(stats.total_cities),
+      totalFounders: Number(stats.total_founders),
     },
   });
 }

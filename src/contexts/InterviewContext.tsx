@@ -306,6 +306,60 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
         throw new Error(updateError.message);
       }
 
+      // Update USD revenue if story is already coined
+      // Read fresh data from DB to avoid stale closure issues
+      if (story.status === "coined") {
+        try {
+          // Fetch the just-saved financial data from DB
+          const { data: freshStory } = await supabase
+            .from("stories")
+            .select("financial_picture, organization_id")
+            .eq("id", story.id)
+            .single();
+
+          if (freshStory?.financial_picture) {
+            const fp = freshStory.financial_picture as {
+              currency?: string;
+              essentialMetrics?: { revenue?: { peakAnnual?: string } };
+            };
+            const peakAnnual = fp.essentialMetrics?.revenue?.peakAnnual;
+            const currency = fp.currency;
+
+            if (peakAnnual && currency) {
+              const revenueNumber = parseFloat(peakAnnual);
+              if (!isNaN(revenueNumber) && revenueNumber > 0) {
+                let revenueUSD = revenueNumber;
+                let exchangeRate = 1;
+                let rateDate = new Date().toISOString();
+
+                // Fetch exchange rate if not USD
+                if (currency !== "USD") {
+                  const res = await fetch(`/api/exchange/rate?from=${currency}&to=USD`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    exchangeRate = data.rate;
+                    rateDate = data.date;
+                    revenueUSD = revenueNumber * exchangeRate;
+                  }
+                }
+
+                // Update organization with USD revenue
+                await supabase
+                  .from("organizations")
+                  .update({
+                    peak_revenue_usd: revenueUSD,
+                    peak_revenue_exchange_rate: exchangeRate,
+                    peak_revenue_rate_date: rateDate,
+                  })
+                  .eq("id", freshStory.organization_id);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to update USD revenue:", e);
+        }
+      }
+
       setLastSavedAt(new Date());
       setHasUnsavedChanges(false);
     } catch (err) {
@@ -555,10 +609,12 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
         // Track chapter completion event
         if (isNewCompletion) {
           const moduleInfo = MODULES.find((m) => m.id === moduleId);
+          const organizationType = story.basicInfo?.organizationType ?? undefined;
           trackWizardEvent("chapter_completed", {
             storyId: story.id,
             chapterId: moduleId,
             chapterName: moduleInfo?.name,
+            organizationType,
             progress: calculateProgress(newCompletedModules),
           });
 
@@ -566,6 +622,7 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
           if (allModulesComplete) {
             trackWizardEvent("wizard_completed", {
               storyId: story.id,
+              organizationType,
               progress: 100,
             });
           }
@@ -664,6 +721,29 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     (moduleId: ModuleId) => {
       if (!story || !canNavigateToModule(moduleId)) return;
 
+      const organizationType = story.basicInfo?.organizationType ?? null;
+      const moduleInfo = MODULES.find((m) => m.id === moduleId);
+
+      // Track chapter_paused for the module we're leaving (if any)
+      if (story.currentModule && story.currentModule !== moduleId) {
+        const currentModuleInfo = MODULES.find((m) => m.id === story.currentModule);
+        trackWizardEvent("chapter_paused", {
+          storyId: story.id,
+          chapterId: story.currentModule,
+          chapterName: currentModuleInfo?.name,
+          organizationType: organizationType ?? undefined,
+        });
+      }
+
+      // Track chapter_started or chapter_resumed for the module we're entering
+      const isFirstVisit = !story.completedModules.includes(moduleId);
+      trackWizardEvent(isFirstVisit ? "chapter_started" : "chapter_resumed", {
+        storyId: story.id,
+        chapterId: moduleId,
+        chapterName: moduleInfo?.name,
+        organizationType: organizationType ?? undefined,
+      });
+
       updateStory({ currentModule: moduleId });
       router.push(`/interview/${story.id}/${moduleId.replace("_", "-")}`);
     },
@@ -685,12 +765,51 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
       return;
     }
 
+    // Convert peak revenue to USD and store in organization
+    const peakAnnual = story.financialPicture?.essentialMetrics?.revenue?.peakAnnual;
+    const currency = story.financialPicture?.currency;
+
+    if (peakAnnual && currency) {
+      try {
+        const revenueNumber = parseFloat(peakAnnual);
+        if (!isNaN(revenueNumber) && revenueNumber > 0) {
+          let revenueUSD = revenueNumber;
+          let exchangeRate = 1;
+          let rateDate = new Date().toISOString();
+
+          // Fetch exchange rate if not USD
+          if (currency !== "USD") {
+            const res = await fetch(`/api/exchange/rate?from=${currency}&to=USD`);
+            if (res.ok) {
+              const data = await res.json();
+              exchangeRate = data.rate;
+              rateDate = data.date;
+              revenueUSD = revenueNumber * exchangeRate;
+            }
+          }
+
+          // Update organization with USD revenue
+          await supabase
+            .from("organizations")
+            .update({
+              peak_revenue_usd: revenueUSD,
+              peak_revenue_exchange_rate: exchangeRate,
+              peak_revenue_rate_date: rateDate,
+            })
+            .eq("id", story.organizationId);
+        }
+      } catch (e) {
+        console.error("Failed to convert revenue to USD:", e);
+        // Continue with coining even if conversion fails
+      }
+    }
+
     updateStory({ status: "coined" });
     await saveStory();
 
     // Navigate to completion page
     router.push(`/interview/${story.id}/complete`);
-  }, [story, updateStory, saveStory, router]);
+  }, [story, updateStory, saveStory, router, supabase]);
 
   // ==========================================================================
   // DERIVED STATE

@@ -21,6 +21,7 @@ import {
   ChevronRight,
   CheckCircle2,
   Calendar,
+  Info,
 } from "lucide-react";
 import type {
   FinancialEvent,
@@ -293,6 +294,22 @@ const SEVERITY_OPTIONS: Array<{ value: ImpactSeverity; label: string }> = [
   { value: "significant", label: "Significant - Changed our trajectory" },
   { value: "critical", label: "Critical - Existential threat" },
 ];
+
+// =============================================================================
+// EVENT CONTEXT GUIDANCE (Issue #134)
+// =============================================================================
+
+const FINANCIAL_EVENTS_GUIDANCE = {
+  why: "Financial events often precede or follow organizational changes. Understanding the financial story helps identify which financial patterns correlate with different failure modes.",
+  what: [
+    "Funding events (raises, failed rounds, runway changes)",
+    "Revenue milestones (first revenue, lost contracts, growth/decline)",
+    "Cash crises or runway concerns",
+    "Major cost decisions (hiring, cuts, pivots)",
+    "Profitability changes",
+  ],
+  tip: "Include both positive and negative events. The full financial story—including near-misses and recoveries—is valuable for research.",
+};
 
 const LOOKING_BACK_OPTIONS: Array<{
   value: NonNullable<FinancialEvent["lookingBack"]>;
@@ -599,7 +616,13 @@ export default function FinancialPage() {
   const updateEvent = (eventId: string, updates: Partial<FinancialEvent>) => {
     if (!story) return;
     const updatedEvents = events.map((e) => (e.id === eventId ? { ...e, ...updates } : e));
-    updateFinancialPicture({ events: updatedEvents });
+    // Sort events by date (empty dates go to the end)
+    const sortedEvents = [...updatedEvents].sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+    updateFinancialPicture({ events: sortedEvents });
   };
 
   const removeEvent = (eventId: string) => {
@@ -734,13 +757,21 @@ export default function FinancialPage() {
         const revenue = metrics.revenue ?? { peakAnnual: null, trend: null };
         return (
           <div className="p-4 space-y-5 border-t border-slate-700 bg-slate-800/50">
-            <FormField variant="dark" label="What was your peak annual revenue?">
+            <FormField
+              variant="dark"
+              label={`What was your peak annual revenue? (in ${currencyInfo?.value || "your currency"})`}
+            >
               <Input
+                type="number"
                 variant="dark"
                 value={revenue.peakAnnual || ""}
                 onChange={(e) => updateMetric("revenue", { peakAnnual: e.target.value || null })}
-                placeholder="e.g., $1.2M, ~500K"
+                placeholder="e.g., 500000"
+                min="0"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Enter the raw number (e.g., 500000 for $500K or 1200000 for $1.2M)
+              </p>
             </FormField>
             <FormField variant="dark" label="How was revenue trending over time?">
               <RadioOptions
@@ -996,6 +1027,24 @@ export default function FinancialPage() {
 
   const renderEventsSection = () => (
     <div className="space-y-4">
+      {/* Event Context Guidance */}
+      <div className="bg-slate-800/30 border border-slate-600 rounded-lg p-4 mb-4">
+        <div className="flex gap-3">
+          <Info className="h-5 w-5 text-gold-500 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">Why we ask: </span>
+              {FINANCIAL_EVENTS_GUIDANCE.why}
+            </p>
+            <p className="text-sm text-slate-300">
+              <span className="font-medium text-gold-400">What to include: </span>
+              {FINANCIAL_EVENTS_GUIDANCE.what.join(", ")}.
+            </p>
+            <p className="text-sm text-slate-400 italic">{FINANCIAL_EVENTS_GUIDANCE.tip}</p>
+          </div>
+        </div>
+      </div>
+
       {events.map((event) => {
         const isExpanded = expandedEventId === event.id;
         const categoryInfo = EVENT_CATEGORIES.find((c) => c.value === event.category);
@@ -1246,7 +1295,13 @@ export default function FinancialPage() {
                       {isActive && <Check className="h-3.5 w-3.5" />}
                     </button>
                     <button
-                      onClick={() => toggleMetric(config.type)}
+                      onClick={() => {
+                        if (isActive) {
+                          toggleMetricExpand(config.type);
+                        } else {
+                          toggleMetric(config.type);
+                        }
+                      }}
                       className={cn(
                         "text-sm flex-1 text-left",
                         isActive
