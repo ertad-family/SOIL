@@ -48,6 +48,8 @@ export type EventName =
   // Virality events
   | "share_link_clicked"
   | "referral_converted"
+  // AI feedback events (Issue #177)
+  | "appraisal_feedback"
   // Custom string for flexibility
   | (string & {});
 

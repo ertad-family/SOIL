@@ -179,26 +179,47 @@ function extractFinancialEmotionalContext(story: Story): string {
   // Financial events with emotional weight
   const events = fin.events || [];
   if (events.length > 0) {
-    const criticalEvents = events.filter((e) => e.severity === "critical");
-    const tooLateEvents = events.filter((e) => e.lookingBack === "too_late");
-
     parts.push(`\nFINANCIAL EVENTS DOCUMENTED (${events.length} total):`);
 
+    // Severity breakdown
+    const criticalEvents = events.filter((e) => e.severity === "critical");
+    const significantEvents = events.filter((e) => e.severity === "significant");
+    const minorEvents = events.filter((e) => e.severity === "minor");
+
     if (criticalEvents.length > 0) {
-      parts.push(`- ${criticalEvents.length} CRITICAL events that threatened survival`);
+      parts.push(`- ${criticalEvents.length} CRITICAL events (threatened survival)`);
     }
+    if (significantEvents.length > 0) {
+      parts.push(`- ${significantEvents.length} SIGNIFICANT events (changed trajectory)`);
+    }
+    if (minorEvents.length > 0) {
+      parts.push(`- ${minorEvents.length} minor events (adapted)`);
+    }
+
+    // Looking back reflections
+    const tooLateEvents = events.filter((e) => e.lookingBack === "too_late");
+    const caughtInTimeEvents = events.filter((e) => e.lookingBack === "caught_in_time");
+    const nothingCouldDoEvents = events.filter((e) => e.lookingBack === "nothing_could_do");
+    const madeWorseEvents = events.filter((e) => e.lookingBack === "made_worse");
 
     if (tooLateEvents.length > 0) {
-      parts.push(`- ${tooLateEvents.length} events where they realized TOO LATE`);
+      parts.push(`- ${tooLateEvents.length} realized TOO LATE`);
+    }
+    if (caughtInTimeEvents.length > 0) {
+      parts.push(`- ${caughtInTimeEvents.length} CAUGHT IN TIME`);
+    }
+    if (nothingCouldDoEvents.length > 0) {
+      parts.push(`- ${nothingCouldDoEvents.length} marked as NOTHING COULD DO`);
+    }
+    if (madeWorseEvents.length > 0) {
+      parts.push(`- ${madeWorseEvents.length} where response MADE WORSE`);
     }
 
-    // Sample specific events
-    events.slice(0, 2).forEach((event) => {
-      const reflection = event.lookingBack?.replace(/_/g, " ") || "";
-      parts.push(
-        `- ${event.category}: ${event.subType || "event"} (${event.severity || "unknown"} severity${reflection ? `, looking back: ${reflection}` : ""})`
-      );
-    });
+    // Event categories
+    const categories = [...new Set(events.map((e) => e.category))];
+    parts.push(`- Event categories: ${categories.join(", ")}`);
+  } else {
+    parts.push("\n- No financial events documented");
   }
 
   return parts.join("\n");
