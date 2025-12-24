@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { usePagePrivacy } from "@/contexts/PagePrivacyContext";
 import Image from "next/image";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
@@ -386,6 +387,36 @@ function OwnerView({
     fetchVerificationRequests();
     fetchVerificationDocuments();
   }, [fetchVerificationRequests, fetchVerificationDocuments]);
+
+  // Subscribe to realtime updates for verification requests
+  const supabaseRef = useRef(createClient());
+  useEffect(() => {
+    if (!isOwner) return;
+
+    const supabase = supabaseRef.current;
+    const channel = supabase
+      .channel(`verification-requests-${organization.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "verification_requests",
+          filter: `organization_id=eq.${organization.id}`,
+        },
+        (payload) => {
+          // Update the specific request in state without full refetch
+          setVerificationRequests((prev) =>
+            prev.map((req) => (req.id === payload.new.id ? { ...req, ...payload.new } : req))
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [organization.id, isOwner]);
 
   // Calculate verification progress
   const confirmedCount = verificationRequests.filter((r) => r.status === "confirmed").length;
