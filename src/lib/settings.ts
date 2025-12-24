@@ -29,6 +29,7 @@ export interface SettingsMap {
 // Default values for known settings (fallback if DB unavailable)
 export const DEFAULT_SETTINGS: SettingsMap = {
   require_verification_for_cenotaph: false,
+  require_coined_story_for_cenotaph: false,
   enable_ai_cenotaph_generation: true,
   the_first_capacity: 100,
   standard_cenotaphery_capacity: 512,
@@ -78,6 +79,10 @@ export function getSettingValue<T>(settings: SettingsMap, key: string, defaultVa
 
 export function isVerificationRequired(settings: SettingsMap): boolean {
   return getSettingValue(settings, "require_verification_for_cenotaph", false);
+}
+
+export function isCoinedStoryRequired(settings: SettingsMap): boolean {
+  return getSettingValue(settings, "require_coined_story_for_cenotaph", false);
 }
 
 export function isAiGenerationEnabled(settings: SettingsMap): boolean {

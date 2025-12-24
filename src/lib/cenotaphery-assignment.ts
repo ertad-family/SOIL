@@ -9,6 +9,7 @@
 
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSetting } from "./settings.server";
 
 // Service role client for spawning cenotapheries (bypasses RLS)
 const getServiceClient = () =>
@@ -21,9 +22,27 @@ const getServiceClient = () =>
 const DEFAULT_LAT = 39.8283;
 const DEFAULT_LNG = -98.5795;
 
-// Capacity limits
-const THE_FIRST_CAPACITY = 100;
-const STANDARD_CAPACITY = 512;
+// Default capacity limits (fallback if DB settings unavailable)
+const DEFAULT_THE_FIRST_CAPACITY = 100;
+const DEFAULT_STANDARD_CAPACITY = 512;
+
+/**
+ * Get capacity settings from database
+ */
+async function getCapacitySettings(): Promise<{
+  theFirstCapacity: number;
+  standardCapacity: number;
+}> {
+  const theFirstCapacity = await getSetting<number>(
+    "the_first_capacity",
+    DEFAULT_THE_FIRST_CAPACITY
+  );
+  const standardCapacity = await getSetting<number>(
+    "standard_cenotaphery_capacity",
+    DEFAULT_STANDARD_CAPACITY
+  );
+  return { theFirstCapacity, standardCapacity };
+}
 
 interface OrganizationLocation {
   country: string | null;
@@ -189,7 +208,8 @@ async function spawnCenotaphery(
   level: CenotapheryLevel,
   location: string,
   lat: number,
-  lng: number
+  lng: number,
+  capacity: number
 ): Promise<Cenotaphery | null> {
   const serviceClient = getServiceClient();
 
@@ -227,7 +247,7 @@ async function spawnCenotaphery(
       description: `Auto-spawned ${level}-level cenotaphery for ${location}`,
       location,
       level,
-      capacity: STANDARD_CAPACITY,
+      capacity,
       status: "active",
       style: "modern",
       lat,
@@ -289,6 +309,9 @@ export async function assignCenotaphery(
   const spawnLat = lat ?? DEFAULT_LAT;
   const spawnLng = lng ?? DEFAULT_LNG;
 
+  // Fetch capacity settings from database
+  const { theFirstCapacity, standardCapacity } = await getCapacitySettings();
+
   // ==========================================================================
   // 1. PRIORITY: Check "the-first" (special founding circle)
   // ==========================================================================
@@ -300,8 +323,8 @@ export async function assignCenotaphery(
 
   if (theFirst) {
     const count = await countMemorialsInCenotaphery(supabase, theFirst.id);
-    if (count < THE_FIRST_CAPACITY) {
-      console.log(`Assigned to "the-first" (${count + 1}/${THE_FIRST_CAPACITY})`);
+    if (count < theFirstCapacity) {
+      console.log(`Assigned to "the-first" (${count + 1}/${theFirstCapacity})`);
       return theFirst.id;
     }
   }
@@ -350,7 +373,13 @@ export async function assignCenotaphery(
 
   // Spawn at country level first (most prestigious after the-first)
   if (country) {
-    const newCenotaphery = await spawnCenotaphery("country", country, spawnLat, spawnLng);
+    const newCenotaphery = await spawnCenotaphery(
+      "country",
+      country,
+      spawnLat,
+      spawnLng,
+      standardCapacity
+    );
     if (newCenotaphery) {
       return newCenotaphery.id;
     }
@@ -358,7 +387,13 @@ export async function assignCenotaphery(
 
   // Fall back to region level
   if (region) {
-    const newCenotaphery = await spawnCenotaphery("region", region, spawnLat, spawnLng);
+    const newCenotaphery = await spawnCenotaphery(
+      "region",
+      region,
+      spawnLat,
+      spawnLng,
+      standardCapacity
+    );
     if (newCenotaphery) {
       return newCenotaphery.id;
     }
@@ -366,14 +401,26 @@ export async function assignCenotaphery(
 
   // Fall back to city level
   if (city) {
-    const newCenotaphery = await spawnCenotaphery("city", city, spawnLat, spawnLng);
+    const newCenotaphery = await spawnCenotaphery(
+      "city",
+      city,
+      spawnLat,
+      spawnLng,
+      standardCapacity
+    );
     if (newCenotaphery) {
       return newCenotaphery.id;
     }
   }
 
   // Last resort: spawn new global cenotaphery
-  const newGlobal = await spawnCenotaphery("global", "all", DEFAULT_LAT, DEFAULT_LNG);
+  const newGlobal = await spawnCenotaphery(
+    "global",
+    "all",
+    DEFAULT_LAT,
+    DEFAULT_LNG,
+    standardCapacity
+  );
   if (newGlobal) {
     return newGlobal.id;
   }

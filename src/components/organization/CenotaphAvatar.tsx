@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { ShareButton } from "@/components/ui/share-button";
 import { useSettings } from "@/hooks/use-settings";
-import { isVerificationRequired } from "@/lib/settings";
+import { isVerificationRequired, isCoinedStoryRequired } from "@/lib/settings";
 import { marbleFrameStyles, marbleFrameEmptyStyles } from "./constants";
 import type { MemorialData, StoryData, OrganizationData } from "./types";
 
@@ -57,10 +57,14 @@ export function CenotaphAvatar({
   const hasCoinedStory = stories.some((s) => s.status === "coined");
   const isVerified = organization.verification_status === "verified";
 
-  // Feature flag: require verification before creating cenotaph
-  // Configurable via Admin > Settings
+  // Feature flags: configurable via Admin > Settings
   const requireVerification = isVerificationRequired(settings);
-  const canDesignCenotaph = requireVerification ? isVerified : true;
+  const requireCoinedStory = isCoinedStoryRequired(settings);
+
+  // Check if user can proceed directly without modal
+  const needsVerificationModal = requireVerification && !isVerified;
+  const needsStoryModal = requireCoinedStory && !hasCoinedStory;
+  const canProceedDirectly = !needsVerificationModal && !needsStoryModal;
 
   // Handle "Create Cenotaph" button click - creates memorial and redirects to wizard
   const handleCreateCenotaph = async () => {
@@ -219,7 +223,7 @@ export function CenotaphAvatar({
         {/* Design Cenotaph button (shown when no AI design yet) */}
         {needsDesign && (
           <div className="mt-3 text-center">
-            {canDesignCenotaph && hasCoinedStory ? (
+            {canProceedDirectly ? (
               <a href={`/cenotaph/create/${memorial.id}`}>
                 <Button
                   variant="dark-secondary"
@@ -245,8 +249,8 @@ export function CenotaphAvatar({
         {/* Cenotaph Requirements Modal */}
         <Dialog open={showRequirementModal} onOpenChange={setShowRequirementModal}>
           <DialogContent variant="dark" size="md">
-            {/* If NOT verified - show blocking verification requirement */}
-            {!isVerified ? (
+            {/* If verification required and NOT verified - show blocking verification requirement */}
+            {needsVerificationModal ? (
               <>
                 <DialogHeader>
                   <div className="flex items-center gap-3 mb-2">
@@ -412,7 +416,7 @@ export function CenotaphAvatar({
             Create a memorial to preserve this legacy
           </p>
           {isOwner &&
-            (canDesignCenotaph && hasCoinedStory ? (
+            (canProceedDirectly ? (
               <Button
                 variant="dark-primary"
                 size="sm"
@@ -438,8 +442,8 @@ export function CenotaphAvatar({
       {/* Cenotaph Requirements Modal (for empty state) */}
       <Dialog open={showRequirementModal} onOpenChange={setShowRequirementModal}>
         <DialogContent variant="dark" size="md">
-          {/* If NOT verified - show blocking verification requirement */}
-          {!isVerified ? (
+          {/* If verification required and NOT verified - show blocking verification requirement */}
+          {needsVerificationModal ? (
             <>
               <DialogHeader>
                 <div className="flex items-center gap-3 mb-2">
