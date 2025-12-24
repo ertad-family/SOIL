@@ -1,11 +1,12 @@
 /**
- * Project Settings Service
+ * Project Settings - Client-side
  *
  * Database-backed configuration system for runtime settings.
- * Settings are stored in project_settings table with JSONB values.
+ * This file contains only client-safe code (no next/headers).
+ *
+ * For server-side functions, use settings.server.ts
  */
 
-import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 // =============================================================================
@@ -26,90 +27,13 @@ export interface SettingsMap {
 }
 
 // Default values for known settings (fallback if DB unavailable)
-const DEFAULT_SETTINGS: SettingsMap = {
+export const DEFAULT_SETTINGS: SettingsMap = {
   require_verification_for_cenotaph: false,
   enable_ai_cenotaph_generation: true,
   the_first_capacity: 100,
   standard_cenotaphery_capacity: 512,
   maintenance_mode: false,
 };
-
-// =============================================================================
-// SERVER-SIDE FUNCTIONS
-// =============================================================================
-
-/**
- * Get a single setting value (server-side)
- */
-export async function getSetting<T>(key: string, defaultValue: T): Promise<T> {
-  try {
-    const supabase = await createServerClient();
-    const { data, error } = await supabase
-      .from("project_settings")
-      .select("value")
-      .eq("key", key)
-      .single();
-
-    if (error || !data) {
-      return defaultValue;
-    }
-
-    return data.value as T;
-  } catch {
-    return defaultValue;
-  }
-}
-
-/**
- * Get all settings (server-side)
- */
-export async function getAllSettings(): Promise<ProjectSetting[]> {
-  try {
-    const supabase = await createServerClient();
-    const { data, error } = await supabase
-      .from("project_settings")
-      .select("*")
-      .order("category")
-      .order("key");
-
-    if (error || !data) {
-      return [];
-    }
-
-    return data;
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Get settings as a key-value map (server-side)
- */
-export async function getSettingsMap(): Promise<SettingsMap> {
-  const settings = await getAllSettings();
-  const map: SettingsMap = { ...DEFAULT_SETTINGS };
-
-  for (const setting of settings) {
-    map[setting.key] = setting.value;
-  }
-
-  return map;
-}
-
-/**
- * Update a setting value (server-side, admin only)
- */
-export async function setSetting(key: string, value: unknown): Promise<boolean> {
-  try {
-    const supabase = await createServerClient();
-
-    const { error } = await supabase.from("project_settings").update({ value }).eq("key", key);
-
-    return !error;
-  } catch {
-    return false;
-  }
-}
 
 // =============================================================================
 // CLIENT-SIDE FUNCTIONS
