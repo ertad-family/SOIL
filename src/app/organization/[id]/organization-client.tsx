@@ -818,6 +818,7 @@ function OwnerView({
               organizationId={organization.id}
               organizationName={organization.name}
               confirmedCount={confirmedCount}
+              pendingCount={pendingCount}
               requesterName={currentUserData.name}
               requesterRole={currentUserData.role}
               onClose={() => setShowVerificationForm(false)}
@@ -1767,6 +1768,7 @@ function VerificationFormModal({
   organizationId,
   organizationName,
   confirmedCount,
+  pendingCount,
   requesterName,
   requesterRole,
   onClose,
@@ -1775,12 +1777,14 @@ function VerificationFormModal({
   organizationId: string;
   organizationName: string;
   confirmedCount: number;
+  pendingCount: number;
   requesterName: string;
   requesterRole: string | null;
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const neededCount = Math.max(1, 3 - confirmedCount);
+  // Calculate needed confirmations: 3 total required, minus confirmed and pending
+  const neededCount = Math.max(1, 3 - confirmedCount - pendingCount);
 
   // Format role for display
   const roleLabel = requesterRole
@@ -1889,8 +1893,22 @@ function VerificationFormModal({
           <p className="text-sm text-slate-400 mb-4">
             Ask people who can confirm that{" "}
             <strong className="text-marble-200">{organizationName}</strong> existed and your role in
-            it. You need <strong className="text-gold-400">{neededCount} more</strong> confirmation
-            {neededCount !== 1 ? "s" : ""}.
+            it.{" "}
+            {confirmedCount + pendingCount >= 3 ? (
+              <>
+                You already have{" "}
+                <strong className="text-gold-400">
+                  {pendingCount} pending request{pendingCount !== 1 ? "s" : ""}
+                </strong>
+                . Add more contacts to increase your chances.
+              </>
+            ) : (
+              <>
+                You need{" "}
+                <strong className="text-gold-400">{3 - confirmedCount - pendingCount} more</strong>{" "}
+                confirmation{3 - confirmedCount - pendingCount !== 1 ? "s" : ""}.
+              </>
+            )}
           </p>
 
           {error && (
