@@ -130,6 +130,24 @@ function generateCenotapheryName(level: CenotapheryLevel, location: string): str
 }
 
 /**
+ * Generate description for a cenotaphery based on level
+ */
+function generateCenotapheryDescription(level: CenotapheryLevel, location: string): string {
+  switch (level) {
+    case "city":
+      return `A sacred ground honoring organizations from ${location}`;
+    case "region":
+      return `A memorial space dedicated to the legacy of organizations from the ${location} region`;
+    case "country":
+      return `A national memorial preserving the stories of organizations from ${location}`;
+    case "global":
+      return `A universal memorial honoring organizations from around the world`;
+    default:
+      return `A memorial space honoring organizational legacies`;
+  }
+}
+
+/**
  * Count memorials in a cenotaphery
  */
 async function countMemorialsInCenotaphery(
@@ -244,7 +262,7 @@ async function spawnCenotaphery(
     .insert({
       slug,
       name,
-      description: `Auto-spawned ${level}-level cenotaphery for ${location}`,
+      description: generateCenotapheryDescription(level, location),
       location,
       level,
       capacity,
