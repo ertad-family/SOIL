@@ -83,8 +83,9 @@ function RotatableGlobe({
     const canvas = gl.domElement;
 
     const onPointerDown = (e: PointerEvent) => {
-      // Only start drag if hovering over globe or a marker (markers are on the globe)
-      if (!isGlobeHovered && !hoveredMarkerId) return;
+      // Allow touch events directly (no hover on mobile), but require hover for mouse (#228)
+      const isTouch = e.pointerType === "touch";
+      if (!isTouch && !isGlobeHovered && !hoveredMarkerId) return;
 
       isDragging.current = true;
       previousMouse.current = { x: e.clientX, y: e.clientY };
@@ -503,11 +504,11 @@ function SceneContent({
         far={CAMERA_CONFIG.far}
       />
 
-      {/* OrbitControls only for zoom - only enabled when hovering over globe */}
+      {/* OrbitControls only for zoom - enabled on mobile or when hovering (#228) */}
       <OrbitControls
         ref={controlsRef}
         enableRotate={CONTROLS_CONFIG.enableRotate}
-        enableZoom={isGlobeHovered} // Only zoom when hovering over globe
+        enableZoom={isMobile || isGlobeHovered} // Enable zoom on mobile or when hovering
         zoomSpeed={CONTROLS_CONFIG.zoomSpeed}
         enablePan={CONTROLS_CONFIG.enablePan}
         enableDamping={CONTROLS_CONFIG.enableDamping}
@@ -604,7 +605,8 @@ export function GlobeScene({
           alpha: true,
           powerPreference: isMobile ? "low-power" : "high-performance",
         }}
-        style={{ background: "transparent" }}
+        // touchAction: none prevents browser from intercepting touch for scroll/zoom (#228)
+        style={{ background: "transparent", touchAction: "none" }}
       >
         <SceneContent
           markers={markers}

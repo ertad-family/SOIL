@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Minus, Plus, RotateCcw, List, MapPin, Building2 } from "lucide-react";
@@ -426,6 +426,16 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
 
   // FloatingTooltip only shows when marker is clicked (selected), not auto-highlighted
   const tooltipMarker = selectedMarker;
+
+  // Lock body scroll when mobile bottom sheet is open (#225)
+  useEffect(() => {
+    if (tooltipMarker) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [tooltipMarker]);
 
   return (
     <section className="relative min-h-[600px] h-[80vh] max-h-[900px] bg-gradient-to-b from-slate-950 to-slate-900">
