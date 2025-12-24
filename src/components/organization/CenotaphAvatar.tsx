@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -23,6 +23,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ShareButton } from "@/components/ui/share-button";
+import { useSettings } from "@/hooks/use-settings";
+import { isVerificationRequired } from "@/lib/settings";
 import { marbleFrameStyles, marbleFrameEmptyStyles } from "./constants";
 import type { MemorialData, StoryData, OrganizationData } from "./types";
 
@@ -48,11 +50,17 @@ export function CenotaphAvatar({
   const [isCreating, setIsCreating] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false);
 
+  // Load project settings
+  const { settings } = useSettings();
+
   // Cenotaph design requirements check
   const hasCoinedStory = stories.some((s) => s.status === "coined");
   const isVerified = organization.verification_status === "verified";
-  // Only verification is required; story completion is optional but encouraged
-  const canDesignCenotaph = isVerified;
+
+  // Feature flag: require verification before creating cenotaph
+  // Configurable via Admin > Settings
+  const requireVerification = isVerificationRequired(settings);
+  const canDesignCenotaph = requireVerification ? isVerified : true;
 
   // Handle "Create Cenotaph" button click - creates memorial and redirects to wizard
   const handleCreateCenotaph = async () => {
