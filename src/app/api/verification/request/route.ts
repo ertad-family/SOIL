@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { triggerEmailWorkerAsync } from "@/lib/worker";
 
 // Types for request body
 interface VerificationContact {
@@ -112,8 +113,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create requests" }, { status: 500 });
     }
 
-    // TODO: Send verification emails to contacts
-    // For now, just return the created requests
+    // Trigger email worker immediately (fire-and-forget)
+    // If this fails, the cron job will pick up pending emails
+    triggerEmailWorkerAsync();
 
     return NextResponse.json({
       success: true,
