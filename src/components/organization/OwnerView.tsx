@@ -38,6 +38,8 @@ import {
 import { PrivacyDisplayStyle, PRIVACY_DISPLAY_LABELS } from "@/lib/privacy";
 import { BackButton } from "@/components/ui/back-button";
 
+import { useSettings } from "@/hooks/use-settings";
+import { isVerificationRequiredForPublicProfile } from "@/lib/settings";
 import { useVerification } from "./hooks/use-verification";
 import { useOrganizationSettings } from "./hooks/use-organization-settings";
 import { CenotaphAvatar } from "./CenotaphAvatar";
@@ -47,6 +49,7 @@ import { DocumentItem } from "./verification/DocumentItem";
 import { VerificationFormModal } from "./modals/VerificationFormModal";
 import { DocumentUploadModal } from "./modals/DocumentUploadModal";
 import { EditOrganizationModal } from "./modals/EditOrganizationModal";
+import { VerificationRequiredModal } from "./VerificationRequiredModal";
 import { ORG_TYPE_LABELS, STAGE_LABELS } from "./constants";
 import type { OrganizationData, StoryData, MemorialData, CurrentUserData } from "./types";
 
@@ -76,6 +79,10 @@ export function OwnerView({
   // Verification modal state
   const [showVerificationForm, setShowVerificationForm] = useState(false);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [showVerificationRequired, setShowVerificationRequired] = useState(false);
+
+  // Load project settings
+  const { settings: projectSettings } = useSettings();
 
   // Use verification hook
   const verification = useVerification({
@@ -84,7 +91,7 @@ export function OwnerView({
   });
 
   // Use organization settings hook
-  const settings = useOrganizationSettings({
+  const orgSettings = useOrganizationSettings({
     organizationId: organization.id,
     initialIsPublic: organization.is_public,
     initialPrivacyDisplayStyle: organization.privacy_display_style,
@@ -93,6 +100,22 @@ export function OwnerView({
   // My story (if I have one)
   const myStory = stories.find((s) => s.user_id === currentUserId);
   const otherStories = stories.filter((s) => s.user_id !== currentUserId);
+
+  // Check if verification is required for public profile
+  const isVerified = organization.verification_status === "verified";
+  const requireVerificationForPublic = isVerificationRequiredForPublicProfile(projectSettings);
+  const needsVerificationForPublic = requireVerificationForPublic && !isVerified;
+
+  // Handler for visibility toggle - checks verification first
+  const handleVisibilityToggle = (checked: boolean) => {
+    // If trying to make public and verification is required but not verified
+    if (checked && needsVerificationForPublic) {
+      setShowVerificationRequired(true);
+      return;
+    }
+    // Otherwise proceed with normal visibility change
+    orgSettings.handleVisibilityChange(checked);
+  };
 
   // Format dates
   const formatDate = (date: string | null) => {
@@ -194,10 +217,15 @@ export function OwnerView({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {settings.isPublic && (
+                  {orgSettings.isPublic ? (
                     <Badge variant="dark-outline" size="sm">
                       <Eye className="w-3 h-3 mr-1" />
                       Public
+                    </Badge>
+                  ) : (
+                    <Badge variant="dark-ghost" size="sm">
+                      <Eye className="w-3 h-3 mr-1" />
+                      Private
                     </Badge>
                   )}
                   <Badge
@@ -549,22 +577,22 @@ export function OwnerView({
               </div>
               {/* Save status indicator */}
               <div className="flex items-center gap-2 text-sm">
-                {settings.saveStatus === "saving" && (
+                {orgSettings.saveStatus === "saving" && (
                   <span className="flex items-center gap-1.5 text-gold-400">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Saving...
                   </span>
                 )}
-                {settings.saveStatus === "saved" && (
+                {orgSettings.saveStatus === "saved" && (
                   <span className="flex items-center gap-1.5 text-green-400">
                     <CheckCircle2 className="w-4 h-4" />
                     Saved
                   </span>
                 )}
-                {settings.saveStatus === "error" && (
+                {orgSettings.saveStatus === "error" && (
                   <span className="flex items-center gap-1.5 text-error-400">
                     <XCircle className="w-4 h-4" />
-                    {settings.saveError || "Failed"}
+                    {orgSettings.saveError || "Failed"}
                   </span>
                 )}
               </div>
@@ -577,9 +605,9 @@ export function OwnerView({
                 variant="dark"
                 label="Public profile"
                 description="Allow others to see this organization's profile and cenotaph"
-                checked={settings.isPublic}
-                onCheckedChange={settings.handleVisibilityChange}
-                disabled={settings.saveStatus === "saving"}
+                checked={orgSettings.isPublic}
+                onCheckedChange={handleVisibilityToggle}
+                disabled={orgSettings.saveStatus === "saving"}
               />
 
               {/* Privacy Display Style */}
@@ -589,11 +617,11 @@ export function OwnerView({
                   Choose how your organization name appears when private
                 </p>
                 <Select
-                  value={settings.privacyDisplayStyle}
+                  value={orgSettings.privacyDisplayStyle}
                   onValueChange={(value) =>
-                    settings.handlePrivacyStyleChange(value as PrivacyDisplayStyle)
+                    orgSettings.handlePrivacyStyleChange(value as PrivacyDisplayStyle)
                   }
-                  disabled={settings.isPublic || settings.saveStatus === "saving"}
+                  disabled={orgSettings.isPublic || orgSettings.saveStatus === "saving"}
                 >
                   <SelectTrigger variant="dark" className="w-full">
                     <SelectValue placeholder="Select display style" />
@@ -606,7 +634,7 @@ export function OwnerView({
                     ))}
                   </SelectContent>
                 </Select>
-                {settings.isPublic && (
+                {orgSettings.isPublic && (
                   <p className="text-xs text-slate-500 mt-1">
                     This setting only applies when your profile is private
                   </p>
@@ -620,8 +648,8 @@ export function OwnerView({
                   size="sm"
                   leftIcon={<Trash2 className="w-4 h-4" />}
                   className="text-error-400 hover:text-error-300"
-                  onClick={settings.handleDelete}
-                  disabled={settings.isDeleting}
+                  onClick={orgSettings.handleDelete}
+                  disabled={orgSettings.isDeleting}
                 >
                   Delete Organization
                 </Button>
@@ -630,6 +658,13 @@ export function OwnerView({
           </CardContent>
         </Card>
       )}
+
+      {/* Verification Required Modal for Public Profile */}
+      <VerificationRequiredModal
+        open={showVerificationRequired}
+        onOpenChange={setShowVerificationRequired}
+        variant="public-profile"
+      />
     </DashboardLayout>
   );
 }

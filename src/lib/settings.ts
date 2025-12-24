@@ -30,6 +30,7 @@ export interface SettingsMap {
 export const DEFAULT_SETTINGS: SettingsMap = {
   require_verification_for_cenotaph: false,
   require_coined_story_for_cenotaph: false,
+  require_verification_for_public_profile: false,
   enable_ai_cenotaph_generation: true,
   the_first_capacity: 100,
   standard_cenotaphery_capacity: 512,
@@ -83,6 +84,10 @@ export function isVerificationRequired(settings: SettingsMap): boolean {
 
 export function isCoinedStoryRequired(settings: SettingsMap): boolean {
   return getSettingValue(settings, "require_coined_story_for_cenotaph", false);
+}
+
+export function isVerificationRequiredForPublicProfile(settings: SettingsMap): boolean {
+  return getSettingValue(settings, "require_verification_for_public_profile", false);
 }
 
 export function isAiGenerationEnabled(settings: SettingsMap): boolean {
