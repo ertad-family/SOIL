@@ -1736,7 +1736,7 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
         <span className="text-slate-300 truncate">
           {request.verifier_name || request.verifier_email.split("@")[0]}
         </span>
-        <span className="text-slate-500 truncate text-xs">{request.verifier_email}</span>
+        <span className="text-slate-500 truncate">{request.verifier_email}</span>
         <span className="text-slate-500 flex-shrink-0">
           ({RELATIONSHIP_LABELS[request.relationship]})
         </span>
