@@ -38,6 +38,7 @@ import {
   Landmark,
   Eye,
   ChevronRight,
+  ChevronDown,
   ArrowRight,
   Settings,
   Trash2,
@@ -346,6 +347,8 @@ function OwnerView({
   const [showVerificationForm, setShowVerificationForm] = useState(false);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [isSubmittingVerification, setIsSubmittingVerification] = useState(false);
+  const [isRequestsCollapsed, setIsRequestsCollapsed] = useState(true);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   // Fetch verification requests
   const fetchVerificationRequests = useCallback(async () => {
@@ -382,6 +385,24 @@ function OwnerView({
       setIsLoadingDocuments(false);
     }
   }, [organization.id, isOwner]);
+
+  // Cancel a verification request
+  const cancelVerificationRequest = useCallback(async (requestId: string) => {
+    try {
+      const res = await fetch(`/api/verification/request?id=${requestId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        // Remove from local state
+        setVerificationRequests((prev) => prev.filter((r) => r.id !== requestId));
+      } else {
+        const data = await res.json();
+        console.error("Failed to cancel request:", data.error);
+      }
+    } catch (err) {
+      console.error("Failed to cancel verification request:", err);
+    }
+  }, []);
 
   useEffect(() => {
     fetchVerificationRequests();
@@ -570,6 +591,25 @@ function OwnerView({
                       Public
                     </Badge>
                   )}
+                  <Badge
+                    variant={
+                      organization.verification_status === "verified"
+                        ? "dark-verified"
+                        : hasDocumentVerification
+                          ? "dark-warning"
+                          : "dark-error"
+                    }
+                    size="sm"
+                  >
+                    {organization.verification_status === "verified" && (
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                    )}
+                    {organization.verification_status === "verified"
+                      ? "Verified"
+                      : hasDocumentVerification
+                        ? "Doc Verified"
+                        : "Unverified"}
+                  </Badge>
                 </div>
               </div>
               {orgData.description && (
@@ -620,6 +660,61 @@ function OwnerView({
               </div>
             </CardContent>
           </Card>
+
+          {/* Perspectives Card - shown here when verified (swapped position) */}
+          {organization.verification_status === "verified" && (
+            <Card variant="dark">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle variant="dark">Perspectives</CardTitle>
+                    <CardDescription variant="dark">
+                      Stories told about this organization
+                    </CardDescription>
+                  </div>
+                  {isOwner && !myStory && (
+                    <a href={`/interview?org=${organization.id}`}>
+                      <Button
+                        variant="dark-primary"
+                        size="sm"
+                        rightIcon={<Plus className="w-4 h-4" />}
+                      >
+                        Add Your Story
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {stories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400 mb-4">No stories yet</p>
+                    {isOwner && (
+                      <a href={`/organization/create?org=${organization.id}&returnTo=interview`}>
+                        <Button variant="dark-primary" rightIcon={<Plus className="w-4 h-4" />}>
+                          Add Your Story
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* My Story First */}
+                    {myStory && <StoryCard story={myStory} isOwn={true} authorName="You" />}
+                    {/* Other Stories */}
+                    {otherStories.map((story) => (
+                      <StoryCard
+                        key={story.id}
+                        story={story}
+                        isOwn={false}
+                        authorName={story.profile?.display_name || "Anonymous"}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Verification Card */}
           <Card variant="dark">
@@ -766,20 +861,43 @@ function OwnerView({
                   {/* Verification requests list */}
                   {isOwner && verificationRequests.length > 0 && (
                     <div className="border-t border-slate-700 pt-4">
-                      <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-2">
-                        Verification Requests
-                      </h4>
-                      {isLoadingRequests ? (
-                        <div className="flex items-center justify-center py-4">
-                          <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                      <button
+                        onClick={() => setIsRequestsCollapsed(!isRequestsCollapsed)}
+                        className="flex items-center justify-between w-full text-left group"
+                      >
+                        <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider">
+                          Verification Requests ({verificationRequests.length})
+                        </h4>
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-transform duration-200 ${
+                            isRequestsCollapsed ? "-rotate-90" : ""
+                          }`}
+                        />
+                      </button>
+                      <div
+                        className="grid transition-[grid-template-rows] duration-200 ease-out"
+                        style={{
+                          gridTemplateRows: isRequestsCollapsed ? "0fr" : "1fr",
+                        }}
+                      >
+                        <div className="overflow-hidden">
+                          {isLoadingRequests ? (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                            </div>
+                          ) : (
+                            <div className="space-y-2 pt-2">
+                              {verificationRequests.map((request) => (
+                                <VerificationRequestItem
+                                  key={request.id}
+                                  request={request}
+                                  onCancel={cancelVerificationRequest}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {verificationRequests.map((request) => (
-                            <VerificationRequestItem key={request.id} request={request} />
-                          ))}
-                        </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </>
@@ -898,52 +1016,56 @@ function OwnerView({
         </div>
       </div>
 
-      {/* Stories/Perspectives Section */}
-      <Card variant="dark" className="mb-8">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle variant="dark">Perspectives</CardTitle>
-              <CardDescription variant="dark">Stories told about this organization</CardDescription>
-            </div>
-            {isOwner && !myStory && (
-              <a href={`/interview?org=${organization.id}`}>
-                <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
-                  Add Your Story
-                </Button>
-              </a>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {stories.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-400 mb-4">No stories yet</p>
-              {isOwner && (
-                <a href={`/organization/create?org=${organization.id}&returnTo=interview`}>
-                  <Button variant="dark-primary" rightIcon={<Plus className="w-4 h-4" />}>
+      {/* Stories/Perspectives Section - shown here when NOT verified */}
+      {organization.verification_status !== "verified" && (
+        <Card variant="dark" className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle variant="dark">Perspectives</CardTitle>
+                <CardDescription variant="dark">
+                  Stories told about this organization
+                </CardDescription>
+              </div>
+              {isOwner && !myStory && (
+                <a href={`/interview?org=${organization.id}`}>
+                  <Button variant="dark-primary" size="sm" rightIcon={<Plus className="w-4 h-4" />}>
                     Add Your Story
                   </Button>
                 </a>
               )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {/* My Story First */}
-              {myStory && <StoryCard story={myStory} isOwn={true} authorName="You" />}
-              {/* Other Stories */}
-              {otherStories.map((story) => (
-                <StoryCard
-                  key={story.id}
-                  story={story}
-                  isOwn={false}
-                  authorName={story.profile?.display_name || "Anonymous"}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            {stories.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400 mb-4">No stories yet</p>
+                {isOwner && (
+                  <a href={`/organization/create?org=${organization.id}&returnTo=interview`}>
+                    <Button variant="dark-primary" rightIcon={<Plus className="w-4 h-4" />}>
+                      Add Your Story
+                    </Button>
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* My Story First */}
+                {myStory && <StoryCard story={myStory} isOwn={true} authorName="You" />}
+                {/* Other Stories */}
+                {otherStories.map((story) => (
+                  <StoryCard
+                    key={story.id}
+                    story={story}
+                    isOwn={false}
+                    authorName={story.profile?.display_name || "Anonymous"}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Settings Section (Owner Only) */}
       {isOwner && (
@@ -1711,7 +1833,15 @@ function getEmailStatus(request: VerificationRequest): {
 }
 
 // Verification Request Item Component
-function VerificationRequestItem({ request }: { request: VerificationRequest }) {
+function VerificationRequestItem({
+  request,
+  onCancel,
+}: {
+  request: VerificationRequest;
+  onCancel?: (id: string) => void;
+}) {
+  const [isCancelling, setIsCancelling] = useState(false);
+
   const statusIcons = {
     pending: <Clock className="w-4 h-4 text-gold-400" />,
     confirmed: <CheckCircle2 className="w-4 h-4 text-green-400" />,
@@ -1729,6 +1859,15 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
   // Only show email status for pending requests
   const emailStatus = request.status === "pending" ? getEmailStatus(request) : null;
 
+  // Can cancel if email hasn't been sent yet and status is pending
+  const canCancel = !request.email_sent_at && request.status === "pending";
+
+  const handleCancel = async () => {
+    if (!onCancel || isCancelling) return;
+    setIsCancelling(true);
+    onCancel(request.id);
+  };
+
   return (
     <div className="flex items-center justify-between py-2.5 px-3 rounded bg-slate-800/50 text-sm">
       <div className="flex items-center gap-2 min-w-0">
@@ -1742,6 +1881,27 @@ function VerificationRequestItem({ request }: { request: VerificationRequest }) 
         </span>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+        {/* Cancel button (only for unsent requests) */}
+        {canCancel && onCancel && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleCancel}
+                disabled={isCancelling}
+                className="p-1 text-slate-500 hover:text-red-400 transition-colors disabled:opacity-50"
+              >
+                {isCancelling ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Cancel request</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
         {/* Email status indicator (only for pending requests) */}
         {emailStatus && (
           <Tooltip>
