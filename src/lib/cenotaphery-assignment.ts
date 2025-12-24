@@ -45,6 +45,39 @@ interface Cenotaphery {
 
 type CenotapheryLevel = "global" | "country" | "region" | "city";
 
+// Federal states use "Federal Cenotaphery of...", others use "National Cenotaphery of..."
+const FEDERAL_STATES = new Set([
+  "Russia",
+  "United States",
+  "USA",
+  "Germany",
+  "Brazil",
+  "India",
+  "Mexico",
+  "Argentina",
+  "Australia",
+  "Canada",
+  "Switzerland",
+  "Austria",
+  "Belgium",
+  "Nigeria",
+  "Pakistan",
+  "Malaysia",
+  "UAE",
+  "United Arab Emirates",
+  "Venezuela",
+  "Ethiopia",
+  "Iraq",
+  "Sudan",
+  "South Sudan",
+  "Nepal",
+  "Somalia",
+  "Bosnia and Herzegovina",
+  "Comoros",
+  "Micronesia",
+  "Saint Kitts and Nevis",
+]);
+
 /**
  * Generate a URL-safe slug from a location name
  */
@@ -66,7 +99,10 @@ function generateCenotapheryName(level: CenotapheryLevel, location: string): str
     case "region":
       return `${location} Regional Cenotaphery`;
     case "country":
-      return `Federal Cenotaphery of ${location}`;
+      // Use "Federal" for federal states, "National" for unitary states
+      return FEDERAL_STATES.has(location)
+        ? `Federal Cenotaphery of ${location}`
+        : `National Cenotaphery of ${location}`;
     case "global":
       return `Global Cenotaphery`;
     default:
