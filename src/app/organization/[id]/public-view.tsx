@@ -268,7 +268,7 @@ function HeroSection({
         {/* Content grid */}
         <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
           {/* Left: Cenotaph as full-column background */}
-          <div className="relative min-h-[50vh] lg:min-h-[85vh]">
+          <div className="relative aspect-[3/4] lg:aspect-auto lg:min-h-[85vh]">
             {memorial?.cenotaph_image_url ? (
               <div className="absolute inset-0">
                 <Image
