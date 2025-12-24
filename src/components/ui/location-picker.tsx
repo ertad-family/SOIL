@@ -238,6 +238,7 @@ const LocationPicker = React.forwardRef<HTMLInputElement, LocationPickerProps>(
       const newLocation: GeoLocation = {
         city: result.city,
         country: result.country,
+        region: result.adminName || null, // State/province/region from GeoNames
         latitude: result.latitude,
         longitude: result.longitude,
         geoId: result.geoId,
@@ -260,6 +261,7 @@ const LocationPicker = React.forwardRef<HTMLInputElement, LocationPickerProps>(
       onValueChange?.({
         city: null,
         country: null,
+        region: null,
         latitude: null,
         longitude: null,
       });

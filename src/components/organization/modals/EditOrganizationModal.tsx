@@ -32,6 +32,7 @@ export function EditOrganizationModal({
     industry: organization.industry || "",
     location: {
       country: organization.location_country,
+      region: organization.location_region,
       city: organization.location_city,
       latitude: organization.location_lat,
       longitude: organization.location_lng,
@@ -72,6 +73,7 @@ export function EditOrganizationModal({
           business_model: formData.business_model || null,
           industry: formData.industry || null,
           location_country: formData.location.country || null,
+          location_region: formData.location.region || null,
           location_city: formData.location.city || null,
           location_lat: formData.location.latitude || null,
           location_lng: formData.location.longitude || null,

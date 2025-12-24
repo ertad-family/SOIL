@@ -117,6 +117,8 @@ export type Emotion = "distressed" | "worried" | "neutral" | "hopeful";
 /** Geographic location with coordinates for cenotaphery placement */
 export interface GeoLocation {
   country: string | null;
+  /** Region/state/province (e.g., "California", "Île-de-France", "Kartli") */
+  region: string | null;
   city: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -127,6 +129,7 @@ export interface GeoLocation {
 /** Creates an empty GeoLocation object */
 export const createEmptyGeoLocation = (): GeoLocation => ({
   country: null,
+  region: null,
   city: null,
   latitude: null,
   longitude: null,
