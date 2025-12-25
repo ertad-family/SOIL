@@ -9,9 +9,10 @@
  * Cost control: #234 - Limited to MAX_GENERATIONS per memorial
  */
 
-// Maximum number of generation batches per memorial (cost control)
-// Each generation = 3 images ≈ $0.12, limit 2 = max 6 designs ≈ $0.24 per memorial
-const MAX_GENERATIONS = 2;
+// Base generation limit per memorial (cost control)
+// Each generation = 3 images ≈ $0.12, base limit 2 = max 6 designs ≈ $0.24 per memorial
+// Bonus attempts can be earned: +1 for verified organization, +1 for coined story
+const BASE_GENERATIONS = 2;
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -106,13 +107,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
     // Check generation limit (cost control - Issue #234)
     // Use Math.floor to handle any legacy float values in DB
     const currentAttempts = Math.floor(memorial.design_metadata?.attempts || 0);
-    if (currentAttempts >= MAX_GENERATIONS) {
+    // Calculate max generations: base + bonus attempts (from verification/coined story)
+    const bonusAttempts = Math.floor(memorial.design_metadata?.bonusAttempts || 0);
+    const maxGenerations = BASE_GENERATIONS + bonusAttempts;
+
+    if (currentAttempts >= maxGenerations) {
       return NextResponse.json(
         {
           success: false,
-          error: `Maximum design generations reached (${MAX_GENERATIONS}). You have used all available generation attempts.`,
+          error: `Maximum design generations reached (${maxGenerations}). You have used all available generation attempts.`,
           attemptsUsed: currentAttempts,
-          maxAttempts: MAX_GENERATIONS,
+          maxAttempts: maxGenerations,
         },
         { status: 429 }
       );
@@ -375,7 +380,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       .eq("id", memorialId);
 
     console.log(
-      `Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options. Pending concepts: ${remainingConcepts.length}. Attempts: ${newAttemptsCount}/${MAX_GENERATIONS}`
+      `Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options. Pending concepts: ${remainingConcepts.length}. Attempts: ${newAttemptsCount}/${maxGenerations}`
     );
 
     return NextResponse.json({
@@ -384,7 +389,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       newOptions: processedDesigns,
       status: "options_ready",
       attemptsUsed: newAttemptsCount,
-      maxAttempts: MAX_GENERATIONS,
+      maxAttempts: maxGenerations,
     });
   } catch (error) {
     console.error("Cenotaph generation error:", error);

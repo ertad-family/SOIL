@@ -132,6 +132,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // The trigger will automatically update organization verification_count and status
+    // When verification_status changes to 'verified' (3+ confirmations), a separate trigger adds bonus attempt
 
     return NextResponse.json({
       success: true,
