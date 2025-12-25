@@ -22,6 +22,7 @@ import {
   Loader2,
   FileText,
   Upload,
+  ArrowRight,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { SwitchWithLabel } from "@/components/ui/switch";
 import { VerifiedBadgeWithTooltip } from "@/components/ui/verified-badge-tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -236,12 +238,42 @@ export function OwnerView({
                       side="bottom"
                     />
                   ) : (
-                    <Badge
-                      variant={verification.hasDocumentVerification ? "dark-warning" : "dark-error"}
-                      size="sm"
-                    >
-                      {verification.hasDocumentVerification ? "Doc Verified" : "Unverified"}
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant={
+                            verification.hasDocumentVerification ? "dark-warning" : "dark-error"
+                          }
+                          size="sm"
+                          className="cursor-help"
+                        >
+                          {verification.hasDocumentVerification ? "Doc Verified" : "Unverified"}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent variant="dark" side="bottom" className="max-w-sm p-5">
+                        <div className="space-y-4">
+                          <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
+                            <ShieldCheck className="w-5 h-5 text-gold-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-base font-semibold text-marble-100 mb-2">
+                              Why verify?
+                            </h4>
+                            <p className="text-sm text-slate-400 leading-relaxed">
+                              Verification unlocks publishing your cenotaph publicly, making your
+                              experience searchable, enabling research use, and opening consulting
+                              opportunities.
+                            </p>
+                          </div>
+                          <Button variant="dark-secondary" size="sm" fullWidth asChild>
+                            <a href="/about/verification">
+                              Learn more
+                              <ArrowRight className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </div>

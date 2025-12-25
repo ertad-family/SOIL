@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-marble-50 text-marble-950 font-sans antialiased">
-        <TooltipProvider>
+        <TooltipProvider delayDuration={300}>
           <AppShell>{children}</AppShell>
         </TooltipProvider>
         <CookieConsentBanner />
