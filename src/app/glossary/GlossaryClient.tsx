@@ -85,6 +85,7 @@ export function GlossaryClient({ cenotapheryCapacity }: GlossaryClientProps) {
         definition:
           "Ancient bronze artifact (2nd-4th century AD) that serves as SOIL&apos;s navigation interface and central symbol. Features 12 pentagonal faces with circular holes of varying diameters and 20 vertices topped with small spheres. Its unknown purpose mirrors lost organizational knowledge that SOIL seeks to preserve.",
         category: "Places & Objects",
+        link: { text: "Discover the symbolism", url: "/about/dodecahedron" },
       },
 
       // People & Roles
