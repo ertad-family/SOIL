@@ -33,6 +33,7 @@ const SECONDARY_LINKS = [
 const SERVICE_LINKS = [
   { href: "/account", label: "Account" },
   { href: "#", label: "Search", disabled: true },
+  { href: "/glossary", label: "Glossary" },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms of Service" },
   { href: "/sitemap.xml", label: "Sitemap" },
