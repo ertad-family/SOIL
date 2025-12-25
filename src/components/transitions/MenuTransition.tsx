@@ -326,6 +326,18 @@ export function MenuTransition() {
   }, [phase, currentSection, updatePhase, closeMenu]);
 
   // ============================================================================
+  // Lock body scroll when menu is open (#198)
+  // ============================================================================
+  useEffect(() => {
+    if (phase === "menu") {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [phase]);
+
+  // ============================================================================
   // Handle closing without navigation
   // ============================================================================
   useEffect(() => {
