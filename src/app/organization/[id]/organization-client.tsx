@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { usePagePrivacy } from "@/contexts/PagePrivacyContext";
 import { PublicView } from "./public-view";
 import { OwnerView } from "@/components/organization/OwnerView";
@@ -38,9 +39,15 @@ export function OrganizationClient({
   peakRevenueUSD,
 }: OrganizationClientProps) {
   const { setPagePublic } = usePagePrivacy();
+  const searchParams = useSearchParams();
 
   // Issue #62: Allow owners to toggle between owner and visitor view
-  const [overrideViewMode, setOverrideViewMode] = useState<"owner" | "visitor" | null>(null);
+  // Support ?view=visitor query param to start in visitor mode (e.g., after cenotaph creation)
+  const viewQueryParam = searchParams.get("view");
+  const initialOverride = isOwner && viewQueryParam === "visitor" ? "visitor" : null;
+  const [overrideViewMode, setOverrideViewMode] = useState<"owner" | "visitor" | null>(
+    initialOverride
+  );
   const effectiveViewMode = isOwner ? (overrideViewMode ?? viewMode) : viewMode;
 
   // Control visitor particles based on effective view mode

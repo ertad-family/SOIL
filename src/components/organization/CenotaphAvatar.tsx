@@ -346,7 +346,7 @@ export function CenotaphAvatar({
         {/* Change Design / Continue Designing button (shown when design exists and user is owner) */}
         {hasDesign && isOwner && (
           <div className="mt-3 text-center">
-            <a href={`/cenotaph/create/${memorial.id}`}>
+            <a href={`/cenotaph/create/${memorial.id}?edit=true`}>
               <Button
                 variant="dark-ghost"
                 size="sm"

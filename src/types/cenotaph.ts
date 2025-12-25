@@ -9,6 +9,7 @@ export interface DesignOption {
   id: string;
   url: string;
   prompt: string;
+  title?: string; // Short creative title (like a painting name)
   createdAt: string;
   conceptId?: string; // Reference to the concept that generated this design
 }

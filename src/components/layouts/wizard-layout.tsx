@@ -162,14 +162,9 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
           </div>
         </main>
 
-        {/* Footer */}
+        {/* Footer with navigation buttons */}
         <footer
-          className={cn(
-            "w-full backdrop-blur-md",
-            isDark
-              ? "bg-slate-900/90 border-t border-slate-700"
-              : "bg-white/90 border-t border-marble-300"
-          )}
+          className={cn("w-full backdrop-blur-md", isDark ? "bg-slate-900/90" : "bg-white/90")}
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
@@ -205,11 +200,9 @@ const WizardLayout = React.forwardRef<HTMLDivElement, WizardLayoutProps>(
           </div>
         </footer>
 
-        {/* Bottom separator section - prevents gradient overlay from covering footer */}
-        <div className={cn("w-full", isDark ? "bg-slate-900" : "bg-marble-50")}>
-          <div className="divider-roman">
-            <span className="text-gold-400 text-lg px-6">✦</span>
-          </div>
+        {/* Roman divider - lifts content above site footer gradient */}
+        <div className="py-32 flex justify-center">
+          <span className={cn("text-lg", isDark ? "text-slate-600" : "text-marble-400")}>✦</span>
         </div>
       </div>
     );
