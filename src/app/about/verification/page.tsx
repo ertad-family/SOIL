@@ -144,8 +144,8 @@ export default function VerificationPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-1">Public Cenotaph</h3>
                   <p className="text-sm text-slate-400">
-                    Publish your memorial for the world to see. Unverified stories remain private
-                    drafts.
+                    Publish your memorial with full details. Unverified organizations can be
+                    published anonymously, but only verified ones can display their name publicly.
                   </p>
                 </div>
               </div>
@@ -174,8 +174,8 @@ export default function VerificationPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-1">Research Contribution</h3>
                   <p className="text-sm text-slate-400">
-                    Your data can be used in organizational research, helping advance the science of
-                    startups.
+                    Only verified data can be used in organizational research. Help advance the
+                    science of startups by making your experience scientifically valuable.
                   </p>
                 </div>
               </div>

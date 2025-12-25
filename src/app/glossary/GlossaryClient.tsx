@@ -14,6 +14,7 @@ interface GlossaryTerm {
   term: string;
   definition: string;
   category: string;
+  link?: { text: string; url: string };
 }
 
 interface GlossaryClientProps {
@@ -164,8 +165,9 @@ export function GlossaryClient({ cenotapheryCapacity }: GlossaryClientProps) {
       {
         term: "Verification",
         definition:
-          "Process ensuring authenticity of cenotaphs through social verification (3+ colleague confirmations) or documentary verification (official documents). Required before cenotaphs become publicly visible and searchable.",
+          "Process ensuring authenticity of cenotaphs through social verification (3+ colleague confirmations) or documentary verification (official documents). Only verified data can be used in organizational research. Allows publishing organization name publicly.",
         category: "Interview System",
+        link: { text: "Learn more about verification", url: "/about/verification" },
       },
       {
         term: "Publicity Tiers",
@@ -264,6 +266,16 @@ export function GlossaryClient({ cenotapheryCapacity }: GlossaryClientProps) {
                           {term.term}
                         </h3>
                         <p className="text-slate-400 leading-relaxed">{term.definition}</p>
+                        {term.link && (
+                          <p className="mt-3">
+                            <a
+                              href={term.link.url}
+                              className="text-sm text-gold-400 hover:text-gold-300 underline transition-colors"
+                            >
+                              {term.link.text} →
+                            </a>
+                          </p>
+                        )}
                       </Card>
                     ))}
                   </div>
