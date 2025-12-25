@@ -6,7 +6,13 @@
  *
  * Issue: #23 Cenotaph creation wizard
  * Security: #78 - Added authentication and ownership verification
+ * Cost control: #234 - Limited to MAX_GENERATIONS per memorial
  */
+
+// Base generation limit per memorial (cost control)
+// Each generation = 3 images ≈ $0.12, base limit 2 = max 6 designs ≈ $0.24 per memorial
+// Bonus attempts can be earned: +1 for verified organization, +1 for coined story
+const BASE_GENERATIONS = 2;
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -17,6 +23,7 @@ import {
   generateImagesFromConcepts,
   processAndUploadDesigns,
   estimateCost,
+  type GenerationProgressCallback,
 } from "@/lib/cenotaph/gemini";
 import type {
   GenerateDesignRequest,
@@ -79,8 +86,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
         closure_type,
         design_status,
         cenotaph_design,
+        design_metadata,
         organization_id,
-        story_id
+        story_id,
+        cenotaphery_id
       `
       )
       .eq("id", memorialId)
@@ -93,6 +102,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
     // Verify ownership - user must own the memorial
     if (memorial.user_id !== user.id) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    // Check generation limit (cost control - Issue #234)
+    // Use Math.floor to handle any legacy float values in DB
+    const currentAttempts = Math.floor(memorial.design_metadata?.attempts || 0);
+    // Calculate max generations: base + bonus attempts (from verification/coined story)
+    const bonusAttempts = Math.floor(memorial.design_metadata?.bonusAttempts || 0);
+    const maxGenerations = BASE_GENERATIONS + bonusAttempts;
+
+    if (currentAttempts >= maxGenerations) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Maximum design generations reached (${maxGenerations}). You have used all available generation attempts.`,
+          attemptsUsed: currentAttempts,
+          maxAttempts: maxGenerations,
+        },
+        { status: 429 }
+      );
     }
 
     // Check if already generating
@@ -173,6 +201,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       }
     }
 
+    // Fetch cenotaphery data for regional character in design (Issue #233)
+    let cenotapheryLocation: string | null = null;
+    if (memorial.cenotaphery_id) {
+      const { data: cenotapheryData } = await supabase
+        .from("cenotapheries")
+        .select("name, location, level")
+        .eq("id", memorial.cenotaphery_id)
+        .single();
+
+      if (cenotapheryData) {
+        // Build location context string
+        cenotapheryLocation = cenotapheryData.location;
+        console.log(
+          `Cenotaphery: ${cenotapheryData.name} (${cenotapheryData.level} level, location: ${cenotapheryData.location})`
+        );
+      }
+    }
+
     // Update status to generating
     await supabase
       .from("memorials")
@@ -196,6 +242,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       // Generate new concepts
       console.log("Generating new creative concepts...");
 
+      // Update progress: concepts stage
+      const { error: conceptsProgressError } = await supabase
+        .from("memorials")
+        .update({
+          design_metadata: {
+            ...(memorial.design_metadata || {}),
+            attempts: currentAttempts,
+            generation_progress: { stage: "concepts", current: 0, total: 3 },
+          },
+        })
+        .eq("id", memorialId);
+
+      if (conceptsProgressError) {
+        console.error("Failed to update concepts progress:", conceptsProgressError);
+      }
+
       // Fetch all previously used concepts to avoid repetition
       const { data: usedConcepts } = await supabase
         .from("used_cenotaph_concepts")
@@ -203,8 +265,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
         .order("created_at", { ascending: false })
         .limit(100); // Get last 100 used concepts
 
-      // Build organization context for concept generation
-      const orgContext = buildOrganizationContext(organization, story, userPrompt);
+      // Build organization context for concept generation (including cenotaphery location for regional character)
+      const orgContext = buildOrganizationContext(
+        organization,
+        story,
+        userPrompt,
+        cenotapheryLocation
+      );
 
       // Generate 9 unique concepts
       const allConcepts = await generateCreativeConcepts(orgContext, usedConcepts || []);
@@ -217,7 +284,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
             design_metadata: {
               attempts: 1,
               lastError: "Failed to generate creative concepts",
-              modelUsed: "gemini-2.0-flash-001",
+              modelUsed: "gemini-2.5-flash",
               costEstimate: 0,
               generatedAt: new Date().toISOString(),
             },
@@ -237,9 +304,27 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       );
     }
 
+    // Progress callback to update DB with real-time progress
+    const updateProgress: GenerationProgressCallback = async (stage, current, total) => {
+      const progressData = {
+        ...(memorial.design_metadata || {}),
+        attempts: currentAttempts,
+        generation_progress: { stage, current, total },
+      };
+
+      const { error: updateError } = await supabase
+        .from("memorials")
+        .update({ design_metadata: progressData })
+        .eq("id", memorialId);
+
+      if (updateError) {
+        console.error("Failed to update progress:", updateError);
+      }
+    };
+
     // Generate images from the first 3 concepts
     console.log(`Generating images for ${conceptsToRender.length} concepts...`);
-    const designs = await generateImagesFromConcepts(conceptsToRender, memorialId);
+    const designs = await generateImagesFromConcepts(conceptsToRender, memorialId, updateProgress);
 
     if (designs.length === 0) {
       await supabase
@@ -270,6 +355,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
     const existingOptions = memorial.cenotaph_design?.options || [];
     const allOptions = [...existingOptions, ...processedDesigns];
 
+    // Calculate new attempts count (increment by 1 for each generation batch)
+    const newAttemptsCount = currentAttempts + 1;
+
     // Update memorial with design options and pending concepts
     await supabase
       .from("memorials")
@@ -281,7 +369,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
           pendingConcepts: remainingConcepts, // Save remaining concepts for "Generate More"
         },
         design_metadata: {
-          attempts: existingOptions.length / 3 + 1,
+          attempts: newAttemptsCount, // Increment attempts count
           lastError: null,
           modelUsed: "imagen-4.0-generate-001",
           costEstimate: estimateCost(allOptions.length),
@@ -292,7 +380,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       .eq("id", memorialId);
 
     console.log(
-      `Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options. Pending concepts: ${remainingConcepts.length}`
+      `Generated ${processedDesigns.length} new designs. Total: ${allOptions.length} options. Pending concepts: ${remainingConcepts.length}. Attempts: ${newAttemptsCount}/${maxGenerations}`
     );
 
     return NextResponse.json({
@@ -300,6 +388,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateD
       options: allOptions,
       newOptions: processedDesigns,
       status: "options_ready",
+      attemptsUsed: newAttemptsCount,
+      maxAttempts: maxGenerations,
     });
   } catch (error) {
     console.error("Cenotaph generation error:", error);

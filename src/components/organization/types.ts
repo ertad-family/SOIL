@@ -17,6 +17,7 @@ export interface OrganizationData {
   industry: string | null;
   description: string | null;
   location_country: string | null;
+  location_region: string | null;
   location_city: string | null;
   location_lat: number | null;
   location_lng: number | null;

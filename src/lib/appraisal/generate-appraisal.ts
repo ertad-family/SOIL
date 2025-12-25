@@ -28,7 +28,7 @@ const ai = new GoogleGenAI({
   },
 });
 
-const TEXT_MODEL = "gemini-2.0-flash-001";
+const TEXT_MODEL = "gemini-2.5-flash";
 
 export interface TherapeuticAppraisal {
   affirmation: string;

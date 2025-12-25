@@ -2,10 +2,13 @@
  * POST /api/memorial
  * Create a memorial (cenotaph record) for an organization
  * Called when user clicks "Create Cenotaph" button
+ *
+ * Issues: #222 (auto-spawn cenotapheries) + #107 (location-based assignment)
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { assignCenotaphery } from "@/lib/cenotaphery-assignment";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,10 +32,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Organization ID is required" }, { status: 400 });
     }
 
-    // Fetch organization and verify ownership
+    // Fetch organization with location data and verify ownership
     const { data: organization, error: orgError } = await supabase
       .from("organizations")
-      .select("id, name, organization_type, created_by")
+      .select(
+        "id, name, organization_type, created_by, location_country, location_region, location_city, location_lat, location_lng"
+      )
       .eq("id", organizationId)
       .single();
 
@@ -65,27 +70,15 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
-    // Determine cenotaphery assignment
-    // First 100 memorials go to "the-first" cenotaphery
-    // TODO: Implement location-based assignment algorithm (see tech debt issue #107)
-    let cenotapheryId: string | null = null;
-
-    const { data: firstCenotaphery } = await supabase
-      .from("cenotapheries")
-      .select("id")
-      .eq("slug", "the-first")
-      .single();
-
-    if (firstCenotaphery) {
-      const { count } = await supabase
-        .from("memorials")
-        .select("*", { count: "exact", head: true })
-        .eq("cenotaphery_id", firstCenotaphery.id);
-
-      if (count !== null && count < 100) {
-        cenotapheryId = firstCenotaphery.id;
-      }
-    }
+    // Assign cenotaphery based on location (prestige hierarchy)
+    // Algorithm: the-first (100) → country → region → city → global
+    const cenotapheryId = await assignCenotaphery(supabase, {
+      country: organization.location_country,
+      region: organization.location_region,
+      city: organization.location_city,
+      lat: organization.location_lat,
+      lng: organization.location_lng,
+    });
 
     // Create the memorial
     const { data: newMemorial, error: createError } = await supabase

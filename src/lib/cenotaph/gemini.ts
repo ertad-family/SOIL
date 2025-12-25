@@ -28,7 +28,8 @@ const ai = new GoogleGenAI({
 });
 
 // Model configuration
-const TEXT_MODEL = "gemini-2.0-flash-001"; // Fast text generation for concepts
+const TEXT_MODEL = "gemini-2.0-flash-001"; // Fast text generation for concepts (stable version)
+const SUMMARY_MODEL = "gemini-2.0-flash-001"; // Cheap & fast model for short summaries
 const IMAGE_MODEL = "imagen-4.0-generate-001"; // High-quality image generation
 
 interface GeneratedImage {
@@ -40,6 +41,55 @@ interface UsedConcept {
   concept_title: string;
   concept_description: string;
   style_keywords: string[];
+}
+
+/**
+ * Generate a short artistic title for a cenotaph design using Gemini 2.0 Flash
+ * Like a painting title - captures the essence in 2-5 words
+ */
+export async function generateDesignTitle(designPrompt: string): Promise<string> {
+  try {
+    const prompt = `You are an art curator. Given this cenotaph monument description, create a short artistic title (2-5 words) like a museum painting would have. The title should capture the essence and emotion of the artwork.
+
+DESCRIPTION:
+${designPrompt}
+
+Respond with ONLY the title, nothing else. No quotes, no explanation.`;
+
+    const response = await ai.models.generateContent({
+      model: SUMMARY_MODEL,
+      contents: prompt,
+      config: {
+        temperature: 0.7,
+        maxOutputTokens: 50,
+      },
+    });
+
+    const title = response.text?.trim() || "";
+    // Remove any quotes that might have been added
+    return title.replace(/^["']|["']$/g, "").trim();
+  } catch (error) {
+    console.error("Failed to generate design title:", error);
+    return ""; // Return empty string on error, fallback will be used
+  }
+}
+
+/**
+ * Generate titles for multiple design prompts in batch
+ */
+export async function generateDesignTitles(prompts: string[]): Promise<string[]> {
+  const titles: string[] = [];
+
+  for (const prompt of prompts) {
+    const title = await generateDesignTitle(prompt);
+    titles.push(title);
+    // Small delay between requests
+    if (prompts.indexOf(prompt) < prompts.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+  }
+
+  return titles;
 }
 
 /**
@@ -130,7 +180,7 @@ Example format:
       config: {
         temperature: 1.2, // High creativity
         topP: 0.95,
-        maxOutputTokens: 4000,
+        maxOutputTokens: 8192, // Increased for 9 detailed concepts
       },
     });
 
@@ -239,14 +289,29 @@ BASE/PLINTH REQUIREMENT:
 `;
 
 /**
+ * Callback for reporting generation progress
+ * @param stage - Current stage: "concepts", "image_1", "image_2", "image_3", "uploading"
+ * @param current - Current item being processed (1-indexed)
+ * @param total - Total items to process
+ */
+export type GenerationProgressCallback = (
+  stage: string,
+  current: number,
+  total: number
+) => Promise<void>;
+
+/**
  * Generate images from creative concepts
  * Takes concept descriptions and renders them as images
+ * @param onProgress - Optional callback for reporting progress
  */
 export async function generateImagesFromConcepts(
   concepts: DesignConcept[],
-  memorialId: string
+  memorialId: string,
+  onProgress?: GenerationProgressCallback
 ): Promise<DesignOption[]> {
   const options: DesignOption[] = [];
+  const total = concepts.length;
 
   for (let i = 0; i < concepts.length; i++) {
     const concept = concepts[i];
@@ -255,7 +320,11 @@ export async function generateImagesFromConcepts(
         `Generating image for concept "${concept.title}" (${i + 1}/${concepts.length})...`
       );
 
-      // Build the full prompt with visual requirements
+      // Report progress before starting this image
+      if (onProgress) {
+        await onProgress(`image_${i + 1}`, i + 1, total);
+      }
+
       const fullPrompt = `Create an outdoor memorial monument (cenotaph):
 
 ${concept.description}
@@ -273,6 +342,7 @@ Style: ${concept.styleKeywords.join(", ")}`;
           id: designId,
           url: `data:${image.mimeType};base64,${image.base64Data}`,
           prompt: concept.description.substring(0, 500),
+          title: concept.title, // Short creative title (like a painting name)
           createdAt: new Date().toISOString(),
           conceptId: concept.id,
         });

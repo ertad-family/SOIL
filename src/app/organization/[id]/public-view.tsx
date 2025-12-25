@@ -55,6 +55,7 @@ interface OrganizationData {
   industry: string | null;
   description: string | null;
   location_country: string | null;
+  location_region: string | null;
   location_city: string | null;
   location_lat: number | null;
   location_lng: number | null;
@@ -268,7 +269,7 @@ function HeroSection({
         {/* Content grid */}
         <div className="relative z-10 min-h-[85vh] grid grid-cols-1 lg:grid-cols-2">
           {/* Left: Cenotaph as full-column background */}
-          <div className="relative min-h-[50vh] lg:min-h-[85vh]">
+          <div className="relative aspect-[3/4] lg:aspect-auto lg:min-h-[85vh]">
             {memorial?.cenotaph_image_url ? (
               <div className="absolute inset-0">
                 <Image

@@ -3,16 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  Landmark,
-  Plus,
-  Pencil,
-  Shield,
-  Sparkles,
-  AlertCircle,
-  ArrowRight,
-  XCircle,
-} from "lucide-react";
+import { Landmark, Plus, Pencil, Sparkles, ArrowRight, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +14,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ShareButton } from "@/components/ui/share-button";
+import { useSettings } from "@/hooks/use-settings";
+import { isVerificationRequired, isCoinedStoryRequired } from "@/lib/settings";
 import { marbleFrameStyles, marbleFrameEmptyStyles } from "./constants";
+import { VerificationRequiredModal } from "./VerificationRequiredModal";
 import type { MemorialData, StoryData, OrganizationData } from "./types";
 
 interface CenotaphAvatarProps {
@@ -46,13 +40,33 @@ export function CenotaphAvatar({
   const router = useRouter();
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [showRequirementModal, setShowRequirementModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showStoryModal, setShowStoryModal] = useState(false);
+
+  // Load project settings
+  const { settings } = useSettings();
 
   // Cenotaph design requirements check
   const hasCoinedStory = stories.some((s) => s.status === "coined");
   const isVerified = organization.verification_status === "verified";
-  // Only verification is required; story completion is optional but encouraged
-  const canDesignCenotaph = isVerified;
+
+  // Feature flags: configurable via Admin > Settings
+  const requireVerification = isVerificationRequired(settings);
+  const requireCoinedStory = isCoinedStoryRequired(settings);
+
+  // Check if user can proceed directly without modal
+  const needsVerificationModal = requireVerification && !isVerified;
+  const needsStoryModal = requireCoinedStory && !hasCoinedStory;
+  const canProceedDirectly = !needsVerificationModal && !needsStoryModal;
+
+  // Show appropriate modal based on requirements
+  const showRequirementModal = () => {
+    if (needsVerificationModal) {
+      setShowVerificationModal(true);
+    } else if (needsStoryModal) {
+      setShowStoryModal(true);
+    }
+  };
 
   // Handle "Create Cenotaph" button click - creates memorial and redirects to wizard
   const handleCreateCenotaph = async () => {
@@ -211,7 +225,7 @@ export function CenotaphAvatar({
         {/* Design Cenotaph button (shown when no AI design yet) */}
         {needsDesign && (
           <div className="mt-3 text-center">
-            {canDesignCenotaph && hasCoinedStory ? (
+            {canProceedDirectly ? (
               <a href={`/cenotaph/create/${memorial.id}`}>
                 <Button
                   variant="dark-secondary"
@@ -226,7 +240,7 @@ export function CenotaphAvatar({
                 variant="dark-secondary"
                 size="sm"
                 leftIcon={<Sparkles className="w-4 h-4" />}
-                onClick={() => setShowRequirementModal(true)}
+                onClick={showRequirementModal}
               >
                 Design Cenotaph
               </Button>
@@ -234,141 +248,105 @@ export function CenotaphAvatar({
           </div>
         )}
 
-        {/* Cenotaph Requirements Modal */}
-        <Dialog open={showRequirementModal} onOpenChange={setShowRequirementModal}>
+        {/* Verification Required Modal */}
+        <VerificationRequiredModal
+          open={showVerificationModal}
+          onOpenChange={setShowVerificationModal}
+          variant="cenotaph"
+        />
+
+        {/* Story Encouragement Modal */}
+        <Dialog open={showStoryModal} onOpenChange={setShowStoryModal}>
           <DialogContent variant="dark" size="md">
-            {/* If NOT verified - show blocking verification requirement */}
-            {!isVerified ? (
-              <>
-                <DialogHeader>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-gold-400" />
-                    </div>
-                    <DialogTitle variant="dark">Verify Your Organization First</DialogTitle>
-                  </div>
-                  <DialogDescription variant="dark">
-                    Organization verification is required before creating a cenotaph memorial.
-                  </DialogDescription>
-                </DialogHeader>
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-gold-400" />
+                </div>
+                <DialogTitle variant="dark">Personalize Your Cenotaph</DialogTitle>
+              </div>
+              <DialogDescription variant="dark">
+                Your cenotaph can be much more meaningful with a completed story.
+              </DialogDescription>
+            </DialogHeader>
 
-                <div className="mt-4 p-4 rounded-lg border border-gold-500/30 bg-gold-500/5">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-marble-100 mb-1">Verification Required</h4>
-                      <p className="text-sm text-slate-400">
-                        Verify your organization to unlock cenotaph design. Verification ensures the
-                        authenticity of the memorial and allows it to be displayed publicly.
-                      </p>
-                      <p className="text-sm text-slate-500 mt-2">
-                        Use the Verification section on this page to request verification from
-                        colleagues or upload verification documents.
-                      </p>
+            <div className="mt-4 space-y-4">
+              {/* Personalized option */}
+              <div className="p-4 rounded-lg border border-gold-500/30 bg-gold-500/5">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-marble-100 mb-1">
+                      Complete Your Story for a Unique Cenotaph
+                    </h4>
+                    <p className="text-sm text-slate-400">
+                      Finishing your story allows us to create a highly personalized cenotaph that
+                      reflects your organization&apos;s unique history, lessons learned, and legacy.
+                      The AI will use your detailed narrative to generate a truly meaningful
+                      memorial.
+                    </p>
+                    <div className="mt-3">
+                      {myStory ? (
+                        <a href={`/interview/${myStory.id}`}>
+                          <Button
+                            variant="dark-primary"
+                            size="sm"
+                            rightIcon={<ArrowRight className="w-4 h-4" />}
+                          >
+                            Complete Story First (Recommended)
+                          </Button>
+                        </a>
+                      ) : (
+                        <a href={`/interview?org=${organizationId}`}>
+                          <Button
+                            variant="dark-primary"
+                            size="sm"
+                            rightIcon={<Plus className="w-4 h-4" />}
+                          >
+                            Start Your Story (Recommended)
+                          </Button>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <DialogFooter>
-                  <Button variant="dark-ghost" onClick={() => setShowRequirementModal(false)}>
-                    Close
-                  </Button>
-                </DialogFooter>
-              </>
-            ) : (
-              /* Verified but no coined story - show informational story encouragement */
-              <>
-                <DialogHeader>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-gold-400" />
-                    </div>
-                    <DialogTitle variant="dark">Personalize Your Cenotaph</DialogTitle>
-                  </div>
-                  <DialogDescription variant="dark">
-                    Your cenotaph can be much more meaningful with a completed story.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="mt-4 space-y-4">
-                  {/* Personalized option */}
-                  <div className="p-4 rounded-lg border border-gold-500/30 bg-gold-500/5">
-                    <div className="flex items-start gap-3">
-                      <Sparkles className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-marble-100 mb-1">
-                          Complete Your Story for a Unique Cenotaph
-                        </h4>
-                        <p className="text-sm text-slate-400">
-                          Finishing your story allows us to create a highly personalized cenotaph
-                          that reflects your organization&apos;s unique history, lessons learned,
-                          and legacy. The AI will use your detailed narrative to generate a truly
-                          meaningful memorial.
-                        </p>
-                        <div className="mt-3">
-                          {myStory ? (
-                            <a href={`/interview/${myStory.id}`}>
-                              <Button
-                                variant="dark-primary"
-                                size="sm"
-                                rightIcon={<ArrowRight className="w-4 h-4" />}
-                              >
-                                Complete Story First (Recommended)
-                              </Button>
-                            </a>
-                          ) : (
-                            <a href={`/interview?org=${organizationId}`}>
-                              <Button
-                                variant="dark-primary"
-                                size="sm"
-                                rightIcon={<Plus className="w-4 h-4" />}
-                              >
-                                Start Your Story (Recommended)
-                              </Button>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Generic option */}
-                  <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50">
-                    <div className="flex items-start gap-3">
-                      <Landmark className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-marble-200 mb-1">
-                          Proceed with Generic Design
-                        </h4>
-                        <p className="text-sm text-slate-500">
-                          You can create a cenotaph now based only on basic organization
-                          information. The design will be more generic and won&apos;t capture the
-                          full depth of your organization&apos;s story.
-                        </p>
-                      </div>
-                    </div>
+              {/* Generic option */}
+              <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50">
+                <div className="flex items-start gap-3">
+                  <Landmark className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-marble-200 mb-1">
+                      Proceed with Generic Design
+                    </h4>
+                    <p className="text-sm text-slate-500">
+                      You can create a cenotaph now based only on basic organization information.
+                      The design will be more generic and won&apos;t capture the full depth of your
+                      organization&apos;s story.
+                    </p>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <DialogFooter>
-                  <Button variant="dark-ghost" onClick={() => setShowRequirementModal(false)}>
-                    Cancel
-                  </Button>
-                  <a href={`/cenotaph/create/${memorial.id}`}>
-                    <Button variant="dark-secondary" size="sm">
-                      Proceed Anyway
-                    </Button>
-                  </a>
-                </DialogFooter>
-              </>
-            )}
+            <DialogFooter>
+              <Button variant="dark-ghost" onClick={() => setShowStoryModal(false)}>
+                Cancel
+              </Button>
+              <a href={`/cenotaph/create/${memorial.id}`}>
+                <Button variant="dark-secondary" size="sm">
+                  Proceed Anyway
+                </Button>
+              </a>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Change Design / Continue Designing button (shown when design exists and user is owner) */}
         {hasDesign && isOwner && (
           <div className="mt-3 text-center">
-            <a href={`/cenotaph/create/${memorial.id}`}>
+            <a href={`/cenotaph/create/${memorial.id}?edit=true`}>
               <Button
                 variant="dark-ghost"
                 size="sm"
@@ -404,7 +382,7 @@ export function CenotaphAvatar({
             Create a memorial to preserve this legacy
           </p>
           {isOwner &&
-            (canDesignCenotaph && hasCoinedStory ? (
+            (canProceedDirectly ? (
               <Button
                 variant="dark-primary"
                 size="sm"
@@ -419,7 +397,7 @@ export function CenotaphAvatar({
                 variant="dark-primary"
                 size="sm"
                 rightIcon={<Plus className="w-4 h-4" />}
-                onClick={() => setShowRequirementModal(true)}
+                onClick={showRequirementModal}
               >
                 Create Cenotaph
               </Button>
@@ -427,140 +405,101 @@ export function CenotaphAvatar({
         </div>
       </div>
 
-      {/* Cenotaph Requirements Modal (for empty state) */}
-      <Dialog open={showRequirementModal} onOpenChange={setShowRequirementModal}>
+      {/* Verification Required Modal (for empty state) */}
+      <VerificationRequiredModal
+        open={showVerificationModal}
+        onOpenChange={setShowVerificationModal}
+        variant="cenotaph"
+      />
+
+      {/* Story Encouragement Modal (for empty state) */}
+      <Dialog open={showStoryModal} onOpenChange={setShowStoryModal}>
         <DialogContent variant="dark" size="md">
-          {/* If NOT verified - show blocking verification requirement */}
-          {!isVerified ? (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-gold-400" />
-                  </div>
-                  <DialogTitle variant="dark">Verify Your Organization First</DialogTitle>
-                </div>
-                <DialogDescription variant="dark">
-                  Organization verification is required before creating a cenotaph memorial.
-                </DialogDescription>
-              </DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-gold-400" />
+              </div>
+              <DialogTitle variant="dark">Personalize Your Cenotaph</DialogTitle>
+            </div>
+            <DialogDescription variant="dark">
+              Your cenotaph can be much more meaningful with a completed story.
+            </DialogDescription>
+          </DialogHeader>
 
-              <div className="mt-4 p-4 rounded-lg border border-gold-500/30 bg-gold-500/5">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-marble-100 mb-1">Verification Required</h4>
-                    <p className="text-sm text-slate-400">
-                      Verify your organization to unlock cenotaph design. Verification ensures the
-                      authenticity of the memorial and allows it to be displayed publicly.
-                    </p>
-                    <p className="text-sm text-slate-500 mt-2">
-                      Use the Verification section on this page to request verification from
-                      colleagues or upload verification documents.
-                    </p>
+          <div className="mt-4 space-y-4">
+            {/* Personalized option */}
+            <div className="p-4 rounded-lg border border-gold-500/30 bg-gold-500/5">
+              <div className="flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-marble-100 mb-1">
+                    Complete Your Story for a Unique Cenotaph
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    Finishing your story allows us to create a highly personalized cenotaph that
+                    reflects your organization&apos;s unique history, lessons learned, and legacy.
+                    The AI will use your detailed narrative to generate a truly meaningful memorial.
+                  </p>
+                  <div className="mt-3">
+                    {myStory ? (
+                      <a href={`/interview/${myStory.id}`}>
+                        <Button
+                          variant="dark-primary"
+                          size="sm"
+                          rightIcon={<ArrowRight className="w-4 h-4" />}
+                        >
+                          Complete Story First (Recommended)
+                        </Button>
+                      </a>
+                    ) : (
+                      <a href={`/interview?org=${organizationId}`}>
+                        <Button
+                          variant="dark-primary"
+                          size="sm"
+                          rightIcon={<Plus className="w-4 h-4" />}
+                        >
+                          Start Your Story (Recommended)
+                        </Button>
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
+            </div>
 
-              <DialogFooter>
-                <Button variant="dark-ghost" onClick={() => setShowRequirementModal(false)}>
-                  Close
-                </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            /* Verified but no coined story - show informational story encouragement */
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-gold-400" />
-                  </div>
-                  <DialogTitle variant="dark">Personalize Your Cenotaph</DialogTitle>
-                </div>
-                <DialogDescription variant="dark">
-                  Your cenotaph can be much more meaningful with a completed story.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="mt-4 space-y-4">
-                {/* Personalized option */}
-                <div className="p-4 rounded-lg border border-gold-500/30 bg-gold-500/5">
-                  <div className="flex items-start gap-3">
-                    <Sparkles className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-marble-100 mb-1">
-                        Complete Your Story for a Unique Cenotaph
-                      </h4>
-                      <p className="text-sm text-slate-400">
-                        Finishing your story allows us to create a highly personalized cenotaph that
-                        reflects your organization&apos;s unique history, lessons learned, and
-                        legacy. The AI will use your detailed narrative to generate a truly
-                        meaningful memorial.
-                      </p>
-                      <div className="mt-3">
-                        {myStory ? (
-                          <a href={`/interview/${myStory.id}`}>
-                            <Button
-                              variant="dark-primary"
-                              size="sm"
-                              rightIcon={<ArrowRight className="w-4 h-4" />}
-                            >
-                              Complete Story First (Recommended)
-                            </Button>
-                          </a>
-                        ) : (
-                          <a href={`/interview?org=${organizationId}`}>
-                            <Button
-                              variant="dark-primary"
-                              size="sm"
-                              rightIcon={<Plus className="w-4 h-4" />}
-                            >
-                              Start Your Story (Recommended)
-                            </Button>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Generic option */}
-                <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50">
-                  <div className="flex items-start gap-3">
-                    <Landmark className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-marble-200 mb-1">
-                        Proceed with Generic Design
-                      </h4>
-                      <p className="text-sm text-slate-500">
-                        You can create a cenotaph now based only on basic organization information.
-                        The design will be more generic and won&apos;t capture the full depth of
-                        your organization&apos;s story.
-                      </p>
-                    </div>
-                  </div>
+            {/* Generic option */}
+            <div className="p-4 rounded-lg border border-slate-700 bg-slate-800/50">
+              <div className="flex items-start gap-3">
+                <Landmark className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-marble-200 mb-1">Proceed with Generic Design</h4>
+                  <p className="text-sm text-slate-500">
+                    You can create a cenotaph now based only on basic organization information. The
+                    design will be more generic and won&apos;t capture the full depth of your
+                    organization&apos;s story.
+                  </p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <DialogFooter>
-                <Button variant="dark-ghost" onClick={() => setShowRequirementModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="dark-secondary"
-                  size="sm"
-                  onClick={() => {
-                    setShowRequirementModal(false);
-                    handleCreateCenotaph();
-                  }}
-                  disabled={isCreating}
-                >
-                  {isCreating ? "Creating..." : "Proceed Anyway"}
-                </Button>
-              </DialogFooter>
-            </>
-          )}
+          <DialogFooter>
+            <Button variant="dark-ghost" onClick={() => setShowStoryModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="dark-secondary"
+              size="sm"
+              onClick={() => {
+                setShowStoryModal(false);
+                handleCreateCenotaph();
+              }}
+              disabled={isCreating}
+            >
+              {isCreating ? "Creating..." : "Proceed Anyway"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

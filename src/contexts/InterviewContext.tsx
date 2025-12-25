@@ -807,6 +807,18 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     updateStory({ status: "coined" });
     await saveStory();
 
+    // Add bonus generation attempt for completed story
+    try {
+      await fetch("/api/cenotaph/add-story-bonus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storyId: story.id }),
+      });
+    } catch (bonusError) {
+      // Log but don't fail if bonus addition fails
+      console.error("Failed to add story bonus:", bonusError);
+    }
+
     // Navigate to completion page
     router.push(`/interview/${story.id}/complete`);
   }, [story, updateStory, saveStory, router, supabase]);

@@ -15,11 +15,15 @@ import type { OrganizationContext, StoryContext } from "@/types/cenotaph";
 /**
  * Build organization context string for concept generation
  * This provides all the creative fuel for Gemini to generate unique ideas
+ *
+ * @param cenotapheryLocation - Geographic location of the cenotaphery (Issue #233)
+ *   Used to guide AI to incorporate regional cultural character into designs
  */
 export function buildOrganizationContext(
   organization: OrganizationContext,
   story: StoryContext,
-  userWishes: string
+  userWishes: string,
+  cenotapheryLocation?: string | null
 ): string {
   // Calculate lifespan
   let lifespan = "";
@@ -88,6 +92,15 @@ export function buildOrganizationContext(
   } else {
     parts.push(
       `\nFOUNDER'S CREATIVE DIRECTION: Open to any artistic interpretation. Surprise them with something beautiful and unique.`
+    );
+  }
+
+  // Cenotaphery regional context (Issue #233)
+  // This guides AI to incorporate regional cultural character without rigid mappings
+  if (cenotapheryLocation && cenotapheryLocation !== "all") {
+    parts.push(`\nCENOTAPHERY LOCATION: ${cenotapheryLocation}`);
+    parts.push(
+      `REGIONAL CHARACTER: Consider incorporating subtle cultural, architectural, or artistic influences from ${cenotapheryLocation} into the design. The cenotaph should feel connected to this region's heritage and aesthetic traditions while remaining unique and respectful.`
     );
   }
 

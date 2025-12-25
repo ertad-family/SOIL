@@ -47,6 +47,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       business_model,
       industry,
       location_country,
+      location_region,
       location_city,
       location_lat,
       location_lng,
@@ -70,6 +71,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (typeof industry === "string" || industry === null) updates.industry = industry;
     if (typeof location_country === "string" || location_country === null)
       updates.location_country = location_country;
+    if (typeof location_region === "string" || location_region === null)
+      updates.location_region = location_region;
     if (typeof location_city === "string" || location_city === null)
       updates.location_city = location_city;
     if (typeof location_lat === "number" || location_lat === null)

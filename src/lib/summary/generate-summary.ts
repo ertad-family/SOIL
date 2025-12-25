@@ -29,7 +29,7 @@ const ai = new GoogleGenAI({
   },
 });
 
-const TEXT_MODEL = "gemini-2.0-flash-001";
+const TEXT_MODEL = "gemini-2.5-flash";
 
 /**
  * Extract key facts from a story's completed modules

@@ -27,6 +27,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 Analytics
               </Link>
+              <Link
+                href="/admin/settings"
+                className="text-sm text-slate-400 hover:text-marble-100 transition-colors"
+              >
+                Settings
+              </Link>
             </nav>
           </div>
         </div>

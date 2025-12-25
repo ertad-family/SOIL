@@ -67,6 +67,8 @@ const DialogContent = React.forwardRef<
             "rounded-md border p-6 shadow-xl",
             "data-[state=open]:animate-scale-in data-[state=closed]:animate-fade-out",
             "focus:outline-none",
+            // Mobile: limit height to viewport and enable scroll (#227)
+            "max-h-[calc(100vh-2rem)] overflow-y-auto",
             sizes[size],
             // Light mode (Cenotaphery default)
             variant === "default" && ["bg-white border-marble-300", "text-marble-950"],

@@ -1,17 +1,29 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
 import { WizardLayout } from "@/components/layouts/wizard-layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, CheckCircle2, Plus, AlertCircle, MessageSquare } from "lucide-react";
-import type { DesignOption, DesignStatus, OrganizationContext } from "@/types/cenotaph";
+import {
+  Loader2,
+  Sparkles,
+  CheckCircle2,
+  Plus,
+  AlertCircle,
+  MapPin,
+  BookOpen,
+  ArrowRight,
+  HelpCircle,
+  RefreshCw,
+  ZoomIn,
+} from "lucide-react";
+import type { DesignOption, DesignStatus } from "@/types/cenotaph";
 import { cn } from "@/lib/utils";
-import { ShareButton } from "@/components/ui/share-button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface MemorialData {
   id: string;
@@ -26,6 +38,14 @@ interface MemorialData {
     selectedId: string | null;
   } | null;
   cenotaph_image_url: string | null;
+  design_metadata?: {
+    attempts?: number;
+    generation_progress?: {
+      stage: string; // "concepts" | "image_1" | "image_2" | "image_3"
+      current: number;
+      total: number;
+    };
+  } | null;
   organization?: {
     name: string;
     organization_type: string | null;
@@ -35,7 +55,57 @@ interface MemorialData {
     peak_team_size: number | null;
     location_country: string | null;
     location_city: string | null;
+    // Story is linked to organization, not memorial (one-to-many, returns array)
+    story?:
+      | {
+          id: string;
+          status: string;
+          completed_modules: string[];
+        }[]
+      | null;
   } | null;
+  cenotaphery?: {
+    id: string;
+    name: string;
+    location: string;
+    level: string;
+  } | null;
+}
+
+// Generation limit constants (must match API)
+const MAX_GENERATIONS = 2;
+
+// Convert generation stage to percentage for progress bar
+function stageToPercent(stage: string, current: number): number {
+  // stages: concepts (0-15%), image_1 (15-45%), image_2 (45-70%), image_3 (70-95%)
+  switch (stage) {
+    case "concepts":
+      return 10;
+    case "image_1":
+      return 15 + (current === 1 ? 15 : 0); // 15-30%
+    case "image_2":
+      return 45 + (current === 2 ? 12 : 0); // 45-57%
+    case "image_3":
+      return 70 + (current === 3 ? 12 : 0); // 70-82%
+    default:
+      return 5;
+  }
+}
+
+// Get human-readable stage label
+function getStageLabel(stage: string): string {
+  switch (stage) {
+    case "concepts":
+      return "Preparing creative concepts...";
+    case "image_1":
+      return "Generating design 1 of 3...";
+    case "image_2":
+      return "Generating design 2 of 3...";
+    case "image_3":
+      return "Generating design 3 of 3...";
+    default:
+      return "Starting generation...";
+  }
 }
 
 const WIZARD_STEPS = [
@@ -48,10 +118,10 @@ const WIZARD_STEPS = [
 export default function CenotaphWizardPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const memorialId = params.memorialId as string;
-  const { showPrompt, hasFeedbackBeenGiven } = useTestimonialPrompt();
-
+  const isEditMode = searchParams.get("edit") === "true";
   const [memorial, setMemorial] = useState<MemorialData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [userPrompt, setUserPrompt] = useState("");
@@ -61,103 +131,193 @@ export default function CenotaphWizardPage() {
   const [epitaph, setEpitaph] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
-  // Track if design was already completed when page loaded (to avoid auto-showing modal on return visits)
-  const [wasCompletedOnLoad, setWasCompletedOnLoad] = useState(false);
+  // Track generation attempts for cost control (#234)
+  const [attemptsUsed, setAttemptsUsed] = useState(0);
+  // Track if generation seems stuck (no progress for too long)
+  const [generationStuck, setGenerationStuck] = useState(false);
+  // Zoomed image for full-size preview
+  const [zoomedImage, setZoomedImage] = useState<DesignOption | null>(null);
+  // Track if generating titles for design options
+  const [isGeneratingTitles, setIsGeneratingTitles] = useState(false);
 
-  // Poll for generation completion when status is 'generating'
+  // Generate titles for design options that don't have them
+  // Uses cheap Gemini 2.0 Flash to create short artistic titles
   useEffect(() => {
-    // Only poll if we loaded with 'generating' status and aren't actively generating ourselves
-    if (!memorial || memorial.design_status !== "generating" || isGenerating) {
+    // Only run on Select step when we have options
+    if (currentStep !== 3 || !memorial?.cenotaph_design?.options?.length) {
       return;
     }
 
-    // Start showing progress animation for returning user
-    setGenerationProgress(30); // Start at 30% since generation already in progress
+    // Check if any options are missing titles
+    const optionsWithoutTitles = memorial.cenotaph_design.options.filter(
+      (opt) => !opt.title || opt.title.trim() === ""
+    );
 
-    // Slowly animate progress while polling (30% -> 85% over ~30 seconds)
-    const progressInterval = setInterval(() => {
-      setGenerationProgress((prev) => Math.min(prev + 1.5, 85));
-    }, 1000);
+    if (optionsWithoutTitles.length === 0 || isGeneratingTitles) {
+      return;
+    }
 
-    const pollInterval = setInterval(async () => {
+    // Generate titles via API
+    const generateTitles = async () => {
+      setIsGeneratingTitles(true);
       try {
-        const { data, error } = await supabase
-          .from("memorials")
-          .select("design_status, cenotaph_design")
-          .eq("id", memorialId)
-          .single();
+        const response = await fetch("/api/cenotaph/generate-titles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ memorialId }),
+        });
 
-        if (error) {
-          console.error("Polling error:", error);
-          return;
-        }
+        const result = await response.json();
 
-        if (data?.design_status === "options_ready" && data?.cenotaph_design?.options?.length > 0) {
-          // Generation completed - update state and move to select step
+        if (result.success && result.options) {
+          // Update local state with generated titles
           setMemorial((prev) =>
             prev
               ? {
                   ...prev,
-                  design_status: "options_ready",
-                  cenotaph_design: data.cenotaph_design,
+                  cenotaph_design: {
+                    ...prev.cenotaph_design!,
+                    options: result.options,
+                  },
                 }
               : null
           );
-          setGenerationProgress(100);
-          clearInterval(progressInterval);
-          setTimeout(() => setCurrentStep(3), 500); // Brief delay to show 100%
-          clearInterval(pollInterval);
         }
       } catch (err) {
-        console.error("Poll failed:", err);
+        console.error("Failed to generate titles:", err);
+      } finally {
+        setIsGeneratingTitles(false);
       }
-    }, 3000); // Poll every 3 seconds
-
-    return () => {
-      clearInterval(pollInterval);
-      clearInterval(progressInterval);
     };
-  }, [memorial, isGenerating, memorialId, supabase]);
 
-  // Animate progress bar during generation
+    generateTitles();
+  }, [currentStep, memorial?.cenotaph_design?.options, memorialId, isGeneratingTitles]);
+
+  // Poll for generation progress updates (more reliable than realtime)
+  // Works for both: returning users (memorial.design_status === "generating") and active generation (isGenerating)
   useEffect(() => {
-    if (!isGenerating) {
-      // Don't reset if we're polling (returning user)
-      if (memorial?.design_status !== "generating") {
+    const shouldPoll = (memorial?.design_status === "generating" && !isGenerating) || isGenerating;
+
+    if (!shouldPoll) {
+      // Reset progress when not generating
+      if (memorial?.design_status !== "generating" && !isGenerating) {
         setGenerationProgress(0);
+        setGenerationStuck(false);
       }
       return;
     }
 
-    // Progress: 0-30% fast (5s), 30-60% medium (15s), 60-90% slow (20s)
-    const intervals = [
-      { target: 30, duration: 5000, step: 100 },
-      { target: 60, duration: 15000, step: 200 },
-      { target: 90, duration: 20000, step: 500 },
-    ];
+    // Reset stuck state when starting new generation
+    setGenerationStuck(false);
 
-    let currentTarget = 0;
-    const timers: NodeJS.Timeout[] = [];
+    // Start with initial progress
+    if (!isGenerating && memorial?.design_metadata?.generation_progress) {
+      const initialProgress = memorial.design_metadata.generation_progress;
+      setGenerationProgress(stageToPercent(initialProgress.stage, initialProgress.current));
+    } else if (isGenerating) {
+      setGenerationProgress(5); // Just started
+    }
 
-    intervals.forEach(({ target, duration, step }) => {
-      const increment = (target - currentTarget) / (duration / step);
-      let progress = currentTarget;
+    // Track polls without progress change to detect stuck state
+    let lastProgressStage = "";
+    let stuckPollCount = 0;
+    const STUCK_THRESHOLD = 40; // ~60 seconds (40 * 1.5s) without progress = stuck
 
-      const timer = setInterval(() => {
-        progress += increment;
-        if (progress >= target) {
-          progress = target;
-          clearInterval(timer);
+    // Poll function to fetch and update progress
+    const pollProgress = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("memorials")
+          .select("design_status, cenotaph_design, design_metadata")
+          .eq("id", memorialId)
+          .single();
+
+        if (error) {
+          console.error("Polling error:", error.message || error.code || JSON.stringify(error));
+          stuckPollCount++;
+          if (stuckPollCount >= STUCK_THRESHOLD) {
+            setGenerationStuck(true);
+          }
+          return false;
         }
-        setGenerationProgress((prev) => Math.max(prev, Math.min(progress, 90)));
-      }, step);
 
-      timers.push(timer);
-      currentTarget = target;
-    });
+        // Check if generation failed
+        if (data?.design_status === "failed") {
+          setGenerationStuck(true);
+          setError(data?.design_metadata?.lastError || "Generation failed");
+          return true; // Stop polling
+        }
 
-    return () => timers.forEach((t) => clearInterval(t));
-  }, [isGenerating, memorial?.design_status]);
+        // Update progress based on real data from DB
+        const progress = data?.design_metadata?.generation_progress;
+        if (progress) {
+          const progressKey = `${progress.stage}_${progress.current}`;
+          if (progressKey !== lastProgressStage) {
+            lastProgressStage = progressKey;
+            stuckPollCount = 0; // Reset stuck counter on progress
+          } else {
+            stuckPollCount++;
+          }
+          const percent = stageToPercent(progress.stage, progress.current);
+          setGenerationProgress(percent);
+        } else {
+          stuckPollCount++;
+        }
+
+        // Check if stuck for too long
+        if (stuckPollCount >= STUCK_THRESHOLD) {
+          setGenerationStuck(true);
+        }
+
+        // Check if generation completed
+        if (data?.design_status === "options_ready" && data?.cenotaph_design?.options?.length > 0) {
+          // Generation completed - update state
+          setMemorial((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  design_status: "options_ready" as DesignStatus,
+                  cenotaph_design: data.cenotaph_design,
+                  design_metadata: data.design_metadata,
+                }
+              : null
+          );
+          setGenerationProgress(100);
+          return true; // Signal completion
+        }
+        return false;
+      } catch (err) {
+        console.error("Poll failed:", err);
+        stuckPollCount++;
+        if (stuckPollCount >= STUCK_THRESHOLD) {
+          setGenerationStuck(true);
+        }
+        return false;
+      }
+    };
+
+    // Start polling with immediate first poll after 500ms
+    let pollInterval: NodeJS.Timeout;
+    const initialPollTimeout = setTimeout(async () => {
+      const completed = await pollProgress();
+      if (!completed) {
+        // Continue polling every 1.5 seconds (faster to catch all stages)
+        pollInterval = setInterval(async () => {
+          const done = await pollProgress();
+          if (done) {
+            clearInterval(pollInterval);
+          }
+        }, 1500);
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(initialPollTimeout);
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [memorial?.design_status, isGenerating, memorialId, supabase]);
 
   // Fetch memorial data
   useEffect(() => {
@@ -177,6 +337,7 @@ export default function CenotaphWizardPage() {
             design_status,
             cenotaph_design,
             cenotaph_image_url,
+            design_metadata,
             organization:organizations (
               name,
               organization_type,
@@ -185,7 +346,18 @@ export default function CenotaphWizardPage() {
               closed_date,
               peak_team_size,
               location_country,
-              location_city
+              location_city,
+              story:stories (
+                id,
+                status,
+                completed_modules
+              )
+            ),
+            cenotaphery:cenotapheries (
+              id,
+              name,
+              location,
+              level
             )
           `
           )
@@ -195,6 +367,12 @@ export default function CenotaphWizardPage() {
         if (error) throw error;
         setMemorial(data as unknown as MemorialData);
 
+        // Initialize generation attempts from design_metadata (floor to handle legacy float values)
+        const attempts = Math.floor(
+          (data as unknown as MemorialData).design_metadata?.attempts || 0
+        );
+        setAttemptsUsed(attempts);
+
         // Initialize epitaph from memorial data if exists
         if (data?.epitaph) {
           setEpitaph(data.epitaph);
@@ -203,9 +381,17 @@ export default function CenotaphWizardPage() {
         // Set initial step based on current design status
         const status = data?.design_status;
         if (status === "completed") {
-          setCurrentStep(3); // Show completed state
-          setSelectedDesignId(data.cenotaph_design?.selectedId || null);
-          setWasCompletedOnLoad(true); // Track that design was already completed on load
+          if (isEditMode) {
+            // User clicked "Change Design" - go to Customize step
+            setCurrentStep(1);
+          } else {
+            // Design already completed - redirect to organization page
+            const redirectUrl = (data as unknown as MemorialData).organization_id
+              ? `/organization/${(data as unknown as MemorialData).organization_id}`
+              : "/account";
+            router.push(redirectUrl);
+            return;
+          }
         } else if (status === "options_ready" && data?.cenotaph_design?.options?.length > 0) {
           setCurrentStep(3); // Go to select step - designs already exist
         } else if (status === "generating") {
@@ -224,47 +410,7 @@ export default function CenotaphWizardPage() {
     if (memorialId) {
       fetchMemorial();
     }
-  }, [memorialId, supabase]);
-
-  // Auto-show feedback modal when design is completed during this session
-  useEffect(() => {
-    // Only show if design was completed DURING this session (not on return visits)
-    if (
-      memorial?.design_status === "completed" &&
-      !wasCompletedOnLoad &&
-      !hasFeedbackBeenGiven("cenotaph_design")
-    ) {
-      // Show modal after 2 seconds so user can see the completion screen first
-      const timer = setTimeout(() => {
-        showPrompt({
-          type: "cenotaph_design",
-          contextId: memorial.id,
-          contextMetadata: {
-            organizationName: memorial.organization_name,
-            organizationId: memorial.organization_id,
-          },
-          title: "Your feedback matters",
-          description: "How was your cenotaph creation experience?",
-        });
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [memorial, wasCompletedOnLoad, showPrompt, hasFeedbackBeenGiven]);
-
-  // Handler for feedback button click
-  const handleFeedbackClick = useCallback(() => {
-    if (!memorial) return;
-    showPrompt({
-      type: "cenotaph_design",
-      contextId: memorial.id,
-      contextMetadata: {
-        organizationName: memorial.organization_name,
-        organizationId: memorial.organization_id,
-      },
-      title: "Your feedback matters",
-      description: "How was your cenotaph creation experience?",
-    });
-  }, [memorial, showPrompt]);
+  }, [memorialId, supabase, isEditMode, router]);
 
   // Generate designs
   const handleGenerate = useCallback(async () => {
@@ -301,6 +447,11 @@ export default function CenotaphWizardPage() {
           : null
       );
 
+      // Update generation attempts count from API response
+      if (result.attemptsUsed !== undefined) {
+        setAttemptsUsed(result.attemptsUsed);
+      }
+
       setCurrentStep(3); // Move to select step
     } catch (err) {
       console.error("Generation error:", err);
@@ -309,6 +460,51 @@ export default function CenotaphWizardPage() {
       setIsGenerating(false);
     }
   }, [memorialId, userPrompt]);
+
+  // Reset stuck generation - allows user to retry
+  const handleResetGeneration = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setGenerationStuck(false);
+
+    try {
+      // Call API to reset design_status (bypasses RLS)
+      const response = await fetch("/api/cenotaph/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memorialId }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Reset failed");
+      }
+
+      // Update local state
+      setMemorial((prev) =>
+        prev
+          ? {
+              ...prev,
+              design_status: "not_started" as DesignStatus,
+            }
+          : null
+      );
+
+      // Go back to customize step
+      setCurrentStep(1);
+      setGenerationProgress(0);
+    } catch (err) {
+      console.error("Reset error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to reset generation. Please try refreshing the page."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [memorialId]);
 
   // Select design
   const handleSelect = useCallback(async () => {
@@ -334,34 +530,30 @@ export default function CenotaphWizardPage() {
         throw new Error(result.error || "Selection failed");
       }
 
-      // Update local state
-      setMemorial((prev) =>
-        prev
-          ? {
-              ...prev,
-              design_status: "completed",
-              cenotaph_image_url: result.imageUrl,
-              cenotaph_design: prev.cenotaph_design
-                ? {
-                    ...prev.cenotaph_design,
-                    selectedId: selectedDesignId,
-                  }
-                : null,
-            }
-          : null
-      );
-
-      // Stay on wizard page - design selection complete
+      // Redirect to organization page in visitor view to see the finished cenotaph
+      const redirectUrl = memorial?.organization_id
+        ? `/organization/${memorial.organization_id}?view=visitor`
+        : "/account";
+      router.push(redirectUrl);
     } catch (err) {
       console.error("Selection error:", err);
       setError(err instanceof Error ? err.message : "Failed to save selection");
     } finally {
       setIsLoading(false);
     }
-  }, [memorialId, selectedDesignId, epitaph]);
+  }, [memorialId, selectedDesignId, epitaph, memorial?.organization_id, router]);
+
+  // Check if designs exist and limit is reached
+  const hasExistingDesigns = (memorial?.cenotaph_design?.options?.length || 0) > 0;
+  const isLimitReached = attemptsUsed >= MAX_GENERATIONS;
 
   const handleNext = () => {
     if (currentStep === 1) {
+      // If limit reached but designs exist, skip to Select step
+      if (isLimitReached && hasExistingDesigns) {
+        setCurrentStep(3);
+        return;
+      }
       // Move to generate step and start generation
       setCurrentStep(2);
       handleGenerate();
@@ -428,15 +620,16 @@ export default function CenotaphWizardPage() {
       canGoBack={currentStep > 0 && currentStep !== 2 && !isGenerating}
       canGoNext={
         currentStep === 0 ||
-        (currentStep === 1 && !isGenerating) ||
-        (currentStep === 3 &&
-          !!selectedDesignId &&
-          epitaph.trim().length > 0 &&
-          memorial.design_status !== "completed")
+        (currentStep === 1 && !isGenerating && (!isLimitReached || hasExistingDesigns)) ||
+        (currentStep === 3 && !!selectedDesignId && epitaph.trim().length > 0)
       }
       nextLabel={
         currentStep === 1
-          ? "Generate Designs"
+          ? isLimitReached
+            ? hasExistingDesigns
+              ? "View Existing Designs"
+              : "Limit Reached"
+            : "Generate Designs"
           : currentStep === 3
             ? "Confirm Selection"
             : "Continue"
@@ -501,21 +694,187 @@ export default function CenotaphWizardPage() {
               </div>
             )}
           </div>
+
+          {/* Cenotaphery placement info */}
+          {memorial.cenotaphery && (
+            <div className="p-4 bg-gold-500/10 border border-gold-500/30 rounded-md">
+              <div className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-gold-400 mt-0.5" />
+                <div>
+                  <p className="text-gold-300 font-medium">Cenotaphery Placement</p>
+                  <p className="text-marble-100 mt-1">{memorial.cenotaphery.name}</p>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Your cenotaph will be placed in this cenotaphery, and its design will reflect
+                    the regional cultural character.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Step 2: Customize */}
       {currentStep === 1 && (
         <div className="space-y-6">
-          <p className="text-slate-300">
-            Share your vision for the memorial. Describe any specific elements, styles, or symbolism
-            you&apos;d like to see.
-          </p>
+          {/* Combined info card - Story progress + AI Design Process */}
+          {(() => {
+            // Story is linked to organization, not memorial (array from Supabase join)
+            const story = memorial.organization?.story?.[0];
+            const completedModules = story?.completed_modules || [];
+            // Exclude basic_info from count (6 story modules total)
+            const storyModules = completedModules.filter((m) => m !== "basic_info");
+            const totalModules = 6;
+            const progress = Math.round((storyModules.length / totalModules) * 100);
+            const hasStory = story !== null && story !== undefined;
+            const isCoinedOrComplete = story?.status === "coined";
+
+            return (
+              <div className="p-4 bg-gold-500/10 border border-gold-500/30 rounded-md space-y-4">
+                {/* AI Design Process info */}
+                <div className="flex items-start gap-3">
+                  <Sparkles className="h-5 w-5 text-gold-400 mt-0.5" />
+                  <div>
+                    <p className="text-gold-300 font-medium">AI Design Process</p>
+                    <p className="text-slate-300 text-sm mt-1">
+                      Our AI will create 3 unique design options based on your organization&apos;s
+                      story and your preferences. You can regenerate options if needed.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gold-500/30" />
+
+                {/* Story progress row */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <BookOpen
+                      className={cn(
+                        "h-5 w-5",
+                        isCoinedOrComplete
+                          ? "text-green-400"
+                          : hasStory
+                            ? "text-blue-400"
+                            : "text-slate-400"
+                      )}
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={cn(
+                            "font-medium",
+                            isCoinedOrComplete
+                              ? "text-green-300"
+                              : hasStory
+                                ? "text-blue-300"
+                                : "text-slate-300"
+                          )}
+                        >
+                          Story Progress
+                        </p>
+                        <span
+                          className={cn(
+                            "text-sm font-medium tabular-nums",
+                            isCoinedOrComplete
+                              ? "text-green-400"
+                              : hasStory
+                                ? "text-blue-400"
+                                : "text-slate-400"
+                          )}
+                        >
+                          {progress}%
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-sm mt-1">
+                        {isCoinedOrComplete
+                          ? "Complete! AI will create a highly personalized design."
+                          : storyModules.length >= 4
+                            ? "Good progress! AI has plenty of context."
+                            : storyModules.length > 0
+                              ? "More chapters = better design personalization."
+                              : "No story yet. Design will be more generic."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CTA button - show when story not complete */}
+                  {!isCoinedOrComplete && story?.id && (
+                    <a href={`/interview/${story.id}`}>
+                      <Button variant="dark-secondary" size="sm">
+                        Continue Story
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Generation limit warning */}
+          {isLimitReached && (
+            <TooltipProvider delayDuration={300}>
+              <div
+                className={cn(
+                  "p-4 rounded-md",
+                  hasExistingDesigns
+                    ? "bg-blue-500/10 border border-blue-500/30"
+                    : "bg-red-500/10 border border-red-500/30"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <AlertCircle
+                    className={cn(
+                      "h-5 w-5 mt-0.5",
+                      hasExistingDesigns ? "text-blue-400" : "text-red-400"
+                    )}
+                  />
+                  <div className="flex-1">
+                    <p
+                      className={cn(
+                        "font-medium",
+                        hasExistingDesigns ? "text-blue-300" : "text-red-300"
+                      )}
+                    >
+                      Generation limit reached ({attemptsUsed}/{MAX_GENERATIONS})
+                    </p>
+                    <p className="text-slate-400 text-sm mt-1">
+                      {hasExistingDesigns
+                        ? "You have used all generation attempts. You can still select from your existing designs."
+                        : "You have used all generation attempts. No designs were generated."}
+                    </p>
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="text-slate-400 hover:text-slate-300">
+                        <HelpCircle className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent variant="dark" side="right" className="max-w-xs">
+                      <p className="text-sm">
+                        Each memorial starts with {MAX_GENERATIONS} generation attempts. You can
+                        earn extra attempts by:
+                      </p>
+                      <ul className="text-sm mt-2 space-y-1 text-slate-300">
+                        <li>• Verifying your organization (+1)</li>
+                        <li>• Completing the full story (+1)</li>
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </TooltipProvider>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-marble-200 mb-2">
               Your Design Wishes (optional)
             </label>
+            <p className="text-slate-400 text-sm mb-3">
+              Share your vision for the memorial. Describe any specific elements, styles, or
+              symbolism you&apos;d like to see.
+            </p>
             <Textarea
               value={userPrompt}
               onChange={(e) => setUserPrompt(e.target.value)}
@@ -525,27 +884,45 @@ export default function CenotaphWizardPage() {
             />
             <p className="mt-2 text-sm text-slate-400">{userPrompt.length}/2000 characters</p>
           </div>
-
-          <div className="p-4 bg-gold-500/10 border border-gold-500/30 rounded-md">
-            <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-gold-400 mt-0.5" />
-              <div>
-                <p className="text-gold-300 font-medium">AI Design Process</p>
-                <p className="text-slate-300 text-sm mt-1">
-                  Our AI will create 3 unique design options based on your organization&apos;s story
-                  and your preferences. You can regenerate options if needed.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
       {/* Step 3: Generate (loading state) */}
       {currentStep === 2 &&
         (() => {
-          // Check if we're polling (returned to in-progress generation) vs actively generating
-          const isPolling = !isGenerating && memorial?.design_status === "generating";
+          // Get real stage from memorial data
+          const currentStage = memorial?.design_metadata?.generation_progress?.stage || "starting";
+          const stageLabel = getStageLabel(currentStage);
+
+          // Show stuck state if generation seems to have failed
+          if (generationStuck) {
+            return (
+              <div className="py-12 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 mb-6">
+                  <AlertCircle className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-xl text-marble-100 font-medium mb-4">Generation Issue</h3>
+                <p className="text-slate-400 max-w-md mx-auto mb-6">
+                  {error ||
+                    "The design generation seems to have stopped unexpectedly. This can happen due to AI service issues."}
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button
+                    variant="dark-secondary"
+                    onClick={handleResetGeneration}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Go Back & Retry
+                  </Button>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div className="py-12 text-center">
@@ -553,7 +930,7 @@ export default function CenotaphWizardPage() {
                 <Sparkles className="h-8 w-8 text-gold-500" />
               </div>
               <h3 className="text-xl text-marble-100 font-medium mb-4">
-                {isPolling ? "Generation in Progress" : "Creating Your Cenotaph Designs"}
+                Creating Your Cenotaph Designs
               </h3>
 
               {/* Progress bar */}
@@ -565,17 +942,7 @@ export default function CenotaphWizardPage() {
                   />
                 </div>
                 <div className="flex justify-between mt-2 text-sm">
-                  <span className="text-slate-400">
-                    {isPolling
-                      ? "Checking status..."
-                      : generationProgress < 30
-                        ? "Preparing prompts..."
-                        : generationProgress < 60
-                          ? "Generating design 1 of 3..."
-                          : generationProgress < 80
-                            ? "Generating design 2 of 3..."
-                            : "Generating design 3 of 3..."}
-                  </span>
+                  <span className="text-slate-400">{stageLabel}</span>
                   <span className="text-gold-400 font-medium tabular-nums">
                     {Math.round(generationProgress)}%
                   </span>
@@ -583,9 +950,7 @@ export default function CenotaphWizardPage() {
               </div>
 
               <p className="text-slate-500 text-sm max-w-md mx-auto">
-                {isPolling
-                  ? "Your designs are being generated. Please wait..."
-                  : "This usually takes 30-45 seconds"}
+                This usually takes 30-45 seconds
               </p>
             </div>
           );
@@ -594,165 +959,148 @@ export default function CenotaphWizardPage() {
       {/* Step 4: Select */}
       {currentStep === 3 && (
         <div className="space-y-6">
-          {memorial.design_status === "completed" ? (
-            <div className="text-center py-8">
-              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-xl text-marble-100 font-medium mb-2">Design Complete</h3>
-              <p className="text-slate-400 mb-6">Your cenotaph design has been saved.</p>
-              {memorial.cenotaph_image_url && (
-                <div className="relative max-w-sm mx-auto rounded-lg overflow-hidden border border-slate-600 aspect-square">
-                  <Image
-                    src={memorial.cenotaph_image_url}
-                    alt="Your cenotaph design"
-                    fill
-                    sizes="(max-width: 640px) 100vw, 384px"
-                    className="object-cover"
-                  />
-                </div>
+          {/* Generate More button with tooltip */}
+          <div className="flex items-center justify-end gap-2 mb-4">
+            <Button
+              variant="dark-ghost"
+              size="sm"
+              onClick={handleGenerate}
+              disabled={isGenerating || attemptsUsed >= MAX_GENERATIONS}
+            >
+              {isGenerating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-2" />
               )}
-              <div className="mt-6 flex gap-3 justify-center">
-                <Button
-                  variant="dark-ghost"
-                  onClick={() => {
-                    // Reset to allow generating new designs
-                    setMemorial((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            design_status: "options_ready",
-                            cenotaph_design: { options: [], selectedId: null },
-                          }
-                        : null
-                    );
-                    setSelectedDesignId(null);
-                    setCurrentStep(2);
-                    handleGenerate();
-                  }}
-                  leftIcon={<Sparkles className="h-4 w-4" />}
-                >
-                  Create New Design
-                </Button>
-                <Button variant="dark-primary" onClick={() => router.push("/account")}>
-                  Back to Account
-                </Button>
-              </div>
-
-              {/* Share CTA */}
-              <div className="mt-8 pt-8 border-t border-slate-700">
-                <p className="text-sm text-slate-400 text-center mb-3">
-                  Share your cenotaph creation with others
-                </p>
-                <div className="flex justify-center">
-                  <ShareButton
-                    url={
-                      memorial.organization_id
-                        ? `https://soil.rip/organization/${memorial.organization_id}`
-                        : "https://soil.rip"
-                    }
-                    title={`I just created a cenotaph for ${memorial.organization_name} on SOIL`}
-                    description="Honoring the legacy of organizations that shaped our world. Create yours at soil.rip"
-                    memorialId={memorial.id}
-                    organizationId={memorial.organization_id || undefined}
-                  />
-                </div>
-              </div>
-
-              {/* Feedback prompt - only show if not already given */}
-              {!hasFeedbackBeenGiven("cenotaph_design") && (
-                <div className="mt-4 pt-4 border-t border-slate-700">
-                  <p className="text-xs text-slate-400 text-center mb-2">
-                    Your feedback helps us improve the experience for future creators
-                  </p>
-                  <Button
-                    variant="dark-ghost"
-                    size="sm"
-                    onClick={handleFeedbackClick}
-                    className="w-full justify-center"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                    Share Your Feedback
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="flex justify-end mb-4">
-                <Button
-                  variant="dark-ghost"
-                  size="sm"
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4 mr-2" />
-                  )}
-                  {isGenerating ? "Generating..." : "Generate More"}
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6">
-                {memorial.cenotaph_design?.options?.map((option, index) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedDesignId(option.id)}
-                    className={cn(
-                      "relative rounded-2xl overflow-hidden border-2 transition-all",
-                      selectedDesignId === option.id
-                        ? "border-gold-500 ring-4 ring-gold-500/30"
-                        : "border-slate-700 hover:border-slate-500"
-                    )}
-                  >
-                    <div className="relative w-full aspect-square">
-                      <Image
-                        src={option.url}
-                        alt={`Design option ${index + 1}`}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 33vw"
-                        className="object-cover"
-                      />
-                    </div>
-                    {selectedDesignId === option.id && (
-                      <div className="absolute top-4 right-4 bg-gold-500 rounded-full p-2 shadow-lg">
-                        <CheckCircle2 className="h-8 w-8 text-slate-900" />
-                      </div>
-                    )}
+              {isGenerating
+                ? "Generating..."
+                : attemptsUsed >= MAX_GENERATIONS
+                  ? `Limit Reached (${attemptsUsed}/${MAX_GENERATIONS})`
+                  : `Generate More (${attemptsUsed}/${MAX_GENERATIONS})`}
+            </Button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="text-slate-500 hover:text-slate-400">
+                    <HelpCircle className="h-4 w-4" />
                   </button>
-                ))}
-              </div>
-              {(!memorial.cenotaph_design?.options ||
-                memorial.cenotaph_design.options.length === 0) && (
-                <div className="text-center py-8 text-slate-400">
-                  No designs available. Please go back and generate designs.
-                </div>
-              )}
-
-              {/* Epitaph input - required before confirming selection */}
-              {memorial.cenotaph_design?.options && memorial.cenotaph_design.options.length > 0 && (
-                <div className="mt-8 max-w-2xl mx-auto">
-                  <label className="block text-sm font-medium text-marble-200 mb-2">
-                    Epitaph <span className="text-red-400">*</span>
-                  </label>
-                  <p className="text-slate-400 text-sm mb-3">
-                    A brief inscription for your cenotaph. This will be displayed on the memorial
-                    card.
+                </TooltipTrigger>
+                <TooltipContent variant="dark" side="right" className="max-w-xs">
+                  <p className="text-sm">
+                    Each memorial starts with {MAX_GENERATIONS} generation attempts. You can earn
+                    extra attempts by:
                   </p>
-                  <Textarea
-                    value={epitaph}
-                    onChange={(e) => setEpitaph(e.target.value)}
-                    placeholder='Example: "Those who do not shepherd their sheep will not find any one day"'
-                    className="min-h-[100px] bg-slate-700 border-slate-600 text-marble-100 placeholder:text-slate-500"
-                    maxLength={200}
-                  />
-                  <p className="mt-2 text-sm text-slate-400">{epitaph.length}/200 characters</p>
-                </div>
-              )}
-            </>
+                  <ul className="text-sm mt-2 space-y-1 text-slate-300">
+                    <li>• Verifying your organization (+1)</li>
+                    <li>• Completing the full story (+1)</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <TooltipProvider delayDuration={300}>
+            <div className="grid grid-cols-3 gap-6">
+              {memorial.cenotaph_design?.options?.map((option, index) => (
+                <Tooltip key={option.id}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={cn(
+                        "relative rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group",
+                        selectedDesignId === option.id
+                          ? "border-gold-500 ring-4 ring-gold-500/30"
+                          : "border-slate-700 hover:border-slate-500"
+                      )}
+                      onClick={() => setSelectedDesignId(option.id)}
+                    >
+                      <div className="relative w-full aspect-square">
+                        <Image
+                          src={option.url}
+                          alt={option.title || `Design option ${index + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 33vw"
+                          className="object-cover"
+                        />
+                        {/* Zoom overlay on hover */}
+                        <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center">
+                          <button
+                            className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 hover:bg-slate-900 rounded-full p-3"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setZoomedImage(option);
+                            }}
+                            aria-label="View full size"
+                          >
+                            <ZoomIn className="h-6 w-6 text-marble-100" />
+                          </button>
+                        </div>
+                      </div>
+                      {selectedDesignId === option.id && (
+                        <div className="absolute top-4 right-4 bg-gold-500 rounded-full p-2 shadow-lg">
+                          <CheckCircle2 className="h-8 w-8 text-slate-900" />
+                        </div>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent variant="dark" side="bottom" className="max-w-xs">
+                    <p className="text-sm font-medium">{option.title || `Design ${index + 1}`}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          </TooltipProvider>
+
+          {(!memorial.cenotaph_design?.options ||
+            memorial.cenotaph_design.options.length === 0) && (
+            <div className="text-center py-8 text-slate-400">
+              No designs available. Please go back and generate designs.
+            </div>
+          )}
+
+          {/* Epitaph input - required before confirming selection */}
+          {memorial.cenotaph_design?.options && memorial.cenotaph_design.options.length > 0 && (
+            <div className="mt-8 max-w-2xl mx-auto">
+              <label className="block text-sm font-medium text-marble-200 mb-2">
+                Epitaph <span className="text-red-400">*</span>
+              </label>
+              <p className="text-slate-400 text-sm mb-3">
+                A brief inscription for your cenotaph. This will be displayed on the memorial card.
+              </p>
+              <Textarea
+                value={epitaph}
+                onChange={(e) => setEpitaph(e.target.value)}
+                placeholder='Example: "Those who do not shepherd their sheep will not find any one day"'
+                className="min-h-[100px] bg-slate-700 border-slate-600 text-marble-100 placeholder:text-slate-500"
+                maxLength={200}
+              />
+              <p className="mt-2 text-sm text-slate-400">{epitaph.length}/200 characters</p>
+            </div>
           )}
         </div>
       )}
+
+      {/* Zoom modal for full-size image preview */}
+      <Dialog open={!!zoomedImage} onOpenChange={(open) => !open && setZoomedImage(null)}>
+        <DialogContent variant="dark" size="full" className="p-2 bg-slate-900/95 border-slate-700">
+          {zoomedImage && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative w-full max-w-4xl aspect-square">
+                <Image
+                  src={zoomedImage.url}
+                  alt={zoomedImage.title || "Cenotaph design"}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 1024px"
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <p className="text-marble-100 font-medium text-lg">
+                {zoomedImage.title || "Cenotaph Design"}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </WizardLayout>
   );
 }
