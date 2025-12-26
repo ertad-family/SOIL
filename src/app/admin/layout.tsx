@@ -28,6 +28,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 Analytics
               </Link>
               <Link
+                href="/admin/testimonials"
+                className="text-sm text-slate-400 hover:text-marble-100 transition-colors"
+              >
+                Testimonials
+              </Link>
+              <Link
                 href="/admin/settings"
                 className="text-sm text-slate-400 hover:text-marble-100 transition-colors"
               >
