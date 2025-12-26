@@ -16,6 +16,8 @@ import {
   Stethoscope,
   Activity,
   GraduationCap,
+  Sparkles,
+  HandHeart,
 } from "lucide-react";
 
 // ============================================================================
@@ -280,26 +282,37 @@ function ValuesSection() {
     {
       icon: <Heart className="w-7 h-7" />,
       title: "Dignity",
-      description:
-        "Every founder and organization deserves respectful remembrance. Failure is human; our methodology honors rather than exploits this reality.",
+      description: "Every founder and organization deserves respectful remembrance.",
     },
     {
       icon: <Scale className="w-7 h-7" />,
       title: "Truth",
-      description:
-        "Honest, systematic understanding of why organizations die. No predetermined conclusions, no comfortable narratives — we let data reveal patterns.",
+      description: "Honest, systematic understanding of why organizations die.",
+    },
+    {
+      icon: <HandHeart className="w-7 h-7" />,
+      title: "Service",
+      description: "Data serves the ecosystem, not just profit.",
+    },
+    {
+      icon: <Sparkles className="w-7 h-7" />,
+      title: "Beauty",
+      description: "Excellence in design honors the effort founders invested.",
+    },
+    {
+      icon: <Users className="w-7 h-7" />,
+      title: "Community",
+      description: "Founders supporting founders through shared vulnerability.",
     },
     {
       icon: <Shield className="w-7 h-7" />,
       title: "Rigor",
-      description:
-        "Scientific standards for research and analysis. Peer review, transparent methodology, and honest acknowledgment of limitations.",
+      description: "Scientific standards for research and analysis.",
     },
     {
       icon: <Eye className="w-7 h-7" />,
       title: "Transparency",
-      description:
-        "Clear separation between nonprofit mission and commercial activities. Founders always know how their data is used and protected.",
+      description: "Clear about how data is used and how revenue flows.",
     },
   ];
 
@@ -311,9 +324,12 @@ function ValuesSection() {
           What We Stand For
         </h2>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
           {values.map((value, index) => (
-            <div key={index} className="space-y-4">
+            <div
+              key={index}
+              className="space-y-4 w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] min-w-[200px]"
+            >
               <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400">
                 {value.icon}
               </div>
