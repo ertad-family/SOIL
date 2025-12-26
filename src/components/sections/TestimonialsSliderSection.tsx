@@ -1,41 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SectionLabel } from "@/components/ui/section-label";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Testimonial {
-  quote: string;
-  author: string;
-  role: string;
+  id: string;
+  content: string;
+  rating: number | null;
+  display_name: string | null;
 }
 
-const testimonials: Testimonial[] = [
+// Fallback testimonials if none in database
+const fallbackTestimonials: Testimonial[] = [
   {
-    quote:
+    id: "fallback-1",
+    content:
       "Sharing my story with SOIL was unexpectedly healing. The interview framework helped me see patterns I had missed while living through the chaos. This isn't just data collection — it's a form of closure.",
-    author: "Sarah Chen",
-    role: "Former CEO, TechStart Inc.",
+    rating: 5,
+    display_name: "Sarah Chen, Former CEO",
   },
   {
-    quote:
+    id: "fallback-2",
+    content:
       "I was skeptical at first, but the anonymization gave me confidence to be completely honest. Knowing my experience might help future founders avoid the same mistakes made it worthwhile.",
-    author: "Marcus Webb",
-    role: "Serial Entrepreneur",
+    rating: 5,
+    display_name: "Marcus Webb, Serial Entrepreneur",
   },
   {
-    quote:
+    id: "fallback-3",
+    content:
       "The structured reflection process helped me understand why we failed, not just how. That insight is invaluable for my next venture. I recommend SOIL to every founder winding down.",
-    author: "Elena Rodriguez",
-    role: "Founder, GreenPath Solutions",
+    rating: 5,
+    display_name: "Elena Rodriguez, Founder",
   },
   {
-    quote:
+    id: "fallback-4",
+    content:
       "Finally, a place where failure isn't stigmatized but studied. SOIL treats organizational endings with the dignity they deserve. My company's story now contributes to something larger.",
-    author: "David Kim",
-    role: "Co-founder, DataSync",
+    rating: 5,
+    display_name: "David Kim, Co-founder",
   },
 ];
+
+/**
+ * Formats a count into a nice rounded display number
+ * Returns null if count < 10
+ * Otherwise rounds down to: 10, 20, 30...90, 100, 200...900, 1000, 2000, etc.
+ */
+function formatFounderCount(count: number): string | null {
+  if (count < 10) return null;
+
+  if (count < 100) {
+    // Round down to nearest 10
+    return `${Math.floor(count / 10) * 10}`;
+  } else if (count < 1000) {
+    // Round down to nearest 100
+    return `${Math.floor(count / 100) * 100}`;
+  } else {
+    // Round down to nearest 1000
+    return `${Math.floor(count / 1000) * 1000}`;
+  }
+}
 
 // Quote icon SVG
 function QuoteIcon() {
@@ -58,6 +84,50 @@ function QuoteIcon() {
 
 export function TestimonialsSliderSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonials);
+  const [founderCount, setFounderCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch testimonials (general and story_contribution) and founder count in parallel
+        const [generalRes, storyRes, statsRes] = await Promise.all([
+          fetch("/api/testimonials?type=general&limit=10"),
+          fetch("/api/testimonials?type=story_contribution&limit=10"),
+          fetch("/api/stats/founders"),
+        ]);
+
+        const [generalData, storyData, statsData] = await Promise.all([
+          generalRes.json(),
+          storyRes.json(),
+          statsRes.json(),
+        ]);
+
+        // Combine testimonials
+        const combined: Testimonial[] = [
+          ...(generalData.success ? generalData.testimonials : []),
+          ...(storyData.success ? storyData.testimonials : []),
+        ];
+
+        // Only use DB testimonials if we have at least one
+        if (combined.length > 0) {
+          setTestimonials(combined);
+        }
+
+        // Set founder count
+        if (statsData.success) {
+          setFounderCount(statsData.count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch testimonials data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % testimonials.length);
@@ -68,6 +138,7 @@ export function TestimonialsSliderSection() {
   };
 
   const currentTestimonial = testimonials[currentIndex];
+  const formattedCount = formatFounderCount(founderCount);
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden">
@@ -82,11 +153,13 @@ export function TestimonialsSliderSection() {
 
               <div className="min-h-[180px]">
                 <p className="text-marble-100 text-xl md:text-2xl leading-relaxed mb-8 transition-opacity duration-300">
-                  {currentTestimonial.quote}
+                  {currentTestimonial.content}
                 </p>
-                <span className="text-slate-400 text-base">
-                  - {currentTestimonial.author}, {currentTestimonial.role}
-                </span>
+                {currentTestimonial.display_name && (
+                  <span className="text-slate-400 text-base">
+                    - {currentTestimonial.display_name}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -142,20 +215,22 @@ export function TestimonialsSliderSection() {
                 </h2>
               </div>
 
-              {/* Counter */}
-              <div className="mt-auto pt-12">
-                <div className="flex items-baseline gap-1">
-                  <span className="font-display text-5xl md:text-6xl font-medium text-marble-100/80">
-                    500
-                  </span>
-                  <span className="font-display text-4xl md:text-5xl font-medium text-marble-100/80">
-                    +
+              {/* Counter - only show if we have 10+ founders */}
+              {formattedCount && (
+                <div className="mt-auto pt-12">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display text-5xl md:text-6xl font-medium text-marble-100/80">
+                      {formattedCount}
+                    </span>
+                    <span className="font-display text-4xl md:text-5xl font-medium text-marble-100/80">
+                      +
+                    </span>
+                  </div>
+                  <span className="text-marble-300 text-base mt-2 block">
+                    Founders joined our community
                   </span>
                 </div>
-                <span className="text-marble-300 text-base mt-2 block">
-                  Founders joined our community
-                </span>
-              </div>
+              )}
             </div>
           </div>
         </div>
