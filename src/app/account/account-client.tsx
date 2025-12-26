@@ -298,7 +298,7 @@ function StoryCard({ story }: { story: StoryData }) {
             {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {org.founded_date.replace("-", ".")} — {org.closed_date.replace("-", ".")}
+                {org.founded_date.replace("-", ".")} - {org.closed_date.replace("-", ".")}
               </span>
             )}
           </div>
@@ -388,7 +388,7 @@ function CoinedStoryCard({ story, memorial }: { story: StoryData; memorial?: Mem
             {org?.founded_date && org?.closed_date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {org.founded_date.replace("-", ".")} — {org.closed_date.replace("-", ".")}
+                {org.founded_date.replace("-", ".")} - {org.closed_date.replace("-", ".")}
               </span>
             )}
           </div>

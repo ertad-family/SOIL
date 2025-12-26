@@ -145,7 +145,7 @@ function formatDateRange(founded: string | null, closed: string | null): string 
     return new Date(date).getFullYear().toString();
   };
 
-  return `${formatYear(founded)} — ${formatYear(closed)}`;
+  return `${formatYear(founded)} - ${formatYear(closed)}`;
 }
 
 /** Calculate organization age in years */
@@ -206,7 +206,7 @@ function formatDateRangeRoman(founded: string | null, closed: string | null): st
   const closedYear = getYear(closed);
 
   if (foundedYear && closedYear) {
-    return `${toRomanNumerals(foundedYear)} — ${toRomanNumerals(closedYear)}`;
+    return `${toRomanNumerals(foundedYear)} - ${toRomanNumerals(closedYear)}`;
   } else if (foundedYear) {
     return toRomanNumerals(foundedYear);
   } else if (closedYear) {

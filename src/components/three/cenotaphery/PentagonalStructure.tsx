@@ -57,7 +57,7 @@ function getPentagonVertices(radius: number): THREE.Vector2[] {
 }
 
 /**
- * Направление НАРУЖУ от стены — перпендикуляр к стене, направленный от центра
+ * Направление НАРУЖУ от стены - перпендикуляр к стене, направленный от центра
  * Это направление, в котором углубляются ниши
  */
 function getWallOutwardNormal(vertices: THREE.Vector2[], wallIndex: number): THREE.Vector2 {
@@ -70,7 +70,7 @@ function getWallOutwardNormal(vertices: THREE.Vector2[], wallIndex: number): THR
   const perp1 = new THREE.Vector2(-dy, dx).normalize();
   const perp2 = new THREE.Vector2(dy, -dx).normalize();
 
-  // Середина стены — используем для определения направления "наружу"
+  // Середина стены - используем для определения направления "наружу"
   const wallMid = new THREE.Vector2((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
 
   // Выбираем перпендикуляр, который направлен ОТ центра (dot > 0 с wallMid)

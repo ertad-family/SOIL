@@ -18,7 +18,7 @@ export function ContributionWaysSection() {
             </h2>
             <p className="text-lg text-slate-400 max-w-3xl mx-auto">
               Every contribution matters. Whether you invest social capital, time, knowledge, or
-              money — you help preserve organizational wisdom for future generations.
+              money - you help preserve organizational wisdom for future generations.
             </p>
           </div>
 

@@ -347,7 +347,7 @@ export function EventsSection() {
             Connect In Person & Online
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mx-auto">
-            From annual celebrations and local meetups to our founders network — there are many ways
+            From annual celebrations and local meetups to our founders network - there are many ways
             to connect with the SOIL community.
           </p>
         </div>

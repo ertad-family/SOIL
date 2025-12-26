@@ -66,7 +66,7 @@ export default function TermsOfServicePage() {
                   A founder can create a complete, dignified{" "}
                   <GlossaryTerm term="Cenotaph">cenotaph</GlossaryTerm> (organizational memorial)
                   without paying anything. Paid services are separate offerings for additional needs
-                  — never &quot;upgrades&quot; or &quot;premium versions&quot; of the free
+                  - never &quot;upgrades&quot; or &quot;premium versions&quot; of the free
                   experience.
                 </p>
               </Card>
@@ -207,12 +207,12 @@ export default function TermsOfServicePage() {
                 <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
                   <li>
                     <strong className="text-marble-100">Therapeutic Course:</strong> 5 sessions with
-                    a business psychologist for professional psychological support during closure —
+                    a business psychologist for professional psychological support during closure -
                     a separate service, not a &quot;premium&quot; cenotaph
                   </li>
                   <li>
                     <strong className="text-marble-100">Single Therapy Session:</strong> 1 session
-                    with a business psychologist — optional professional support
+                    with a business psychologist - optional professional support
                   </li>
                   <li>
                     <strong className="text-marble-100">Crypt Storage:</strong> Secure preservation
@@ -707,7 +707,7 @@ export default function TermsOfServicePage() {
                   16.1 Annual Celebration
                 </h3>
                 <p>
-                  SOIL hosts the annual &quot;Day of the Dead Venture&quot; on October 19th — a
+                  SOIL hosts the annual &quot;Day of the Dead Venture&quot; on October 19th - a
                   global day of remembrance for failed organizations. Participation is voluntary.
                 </p>
               </Card>
@@ -787,7 +787,7 @@ export default function TermsOfServicePage() {
                 <div>
                   <p className="text-marble-100 font-medium">SOIL Foundation</p>
                   <p className="text-slate-500 text-sm">
-                    (Delaware 501(c)(3) Nonprofit — In Formation)
+                    (Delaware 501(c)(3) Nonprofit - In Formation)
                   </p>
                 </div>
                 <div className="space-y-2">

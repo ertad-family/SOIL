@@ -140,7 +140,7 @@ export default function VerifyPage() {
     if (!founded) return null;
     const start = founded.replace("-", ".");
     const end = closed ? closed.replace("-", ".") : "present";
-    return `${start} — ${end}`;
+    return `${start} - ${end}`;
   };
 
   // Loading state

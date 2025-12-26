@@ -30,7 +30,7 @@ const disciplines = [
   {
     face: 1,
     name: "Biology",
-    description: "Organization as organism — birth, growth, metabolism, death",
+    description: "Organization as organism - birth, growth, metabolism, death",
     icon: Microscope,
   },
   {
@@ -114,7 +114,7 @@ export default function DodecahedronPage() {
             The Roman Dodecahedron
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed mb-4">
-            A 2,000-year-old mystery — and SOIL&apos;s central symbol
+            A 2,000-year-old mystery - and SOIL&apos;s central symbol
           </p>
           <p className="text-slate-500 text-sm italic">
             &quot;Like the Roman craftsman who made these objects for purposes we can only guess,
@@ -182,16 +182,16 @@ export default function DodecahedronPage() {
             <p>
               Despite over a century of archaeological study,{" "}
               <strong className="text-marble-200">no Roman text mentions these objects</strong>.
-              Their purpose remains unknown. Over 50 theories have been proposed — astronomical
+              Their purpose remains unknown. Over 50 theories have been proposed - astronomical
               instrument, religious object, candleholder, military decoration, children&apos;s toy,
               knitting tool, divination device.
             </p>
             <p className="text-lg text-marble-200 font-medium">The mystery endures.</p>
             <p>
-              This is one of archaeology&apos;s most famous unsolved puzzles — a sophisticated
+              This is one of archaeology&apos;s most famous unsolved puzzles - a sophisticated
               artifact whose meaning was lost with its makers. Many dodecahedra have been found in
               burial contexts or ritual deposits, suggesting they held significant meaning to their
-              owners — important enough to accompany them in death or to be offered to the gods.
+              owners - important enough to accompany them in death or to be offered to the gods.
             </p>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function DodecahedronPage() {
                 <div>
                   <h3 className="font-medium text-marble-100 mb-2">Lost Knowledge</h3>
                   <p className="text-sm text-slate-400 leading-relaxed">
-                    The Roman Dodecahedron represents knowledge that was lost — sophisticated,
+                    The Roman Dodecahedron represents knowledge that was lost - sophisticated,
                     meaningful, carefully crafted, yet ultimately forgotten. This is precisely what
                     SOIL fights against: the loss of organizational knowledge when ventures die.
                   </p>
@@ -293,7 +293,7 @@ export default function DodecahedronPage() {
           <div className="space-y-6">
             <div className="text-slate-400 space-y-4">
               <p>
-                The circular holes in the Roman Dodecahedron are not merely decorative — they are{" "}
+                The circular holes in the Roman Dodecahedron are not merely decorative - they are{" "}
                 <strong className="text-marble-200">apertures of varying focal lengths</strong>.
                 Each hole offers a different view of what lies within.
               </p>

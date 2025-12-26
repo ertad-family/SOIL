@@ -37,7 +37,7 @@ function HeroSection() {
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
                 We are building toward a diagnostic center that will help organizations identify
-                risks early — powered by patterns discovered through systematic research on
+                risks early - powered by patterns discovered through systematic research on
                 organizational mortality.
               </p>
 
@@ -538,7 +538,7 @@ function WaitlistSection() {
           </h2>
           <p className="text-lg text-slate-400 mb-8">
             Be the first to know when the Diagnostics Center becomes available. We&apos;ll send
-            occasional updates on our research progress — no spam, ever.
+            occasional updates on our research progress - no spam, ever.
           </p>
 
           {status === "success" ? (

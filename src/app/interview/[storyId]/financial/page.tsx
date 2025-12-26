@@ -161,7 +161,7 @@ const FINANCIAL_EVENTS_GUIDANCE = {
     "Major cost decisions (hiring, cuts, pivots)",
     "Profitability changes",
   ],
-  tip: "Include both positive and negative events. The full financial story—including near-misses and recoveries—is valuable for research.",
+  tip: "Include both positive and negative events. The full financial story-including near-misses and recoveries-is valuable for research.",
 };
 
 const LOOKING_BACK_OPTIONS: Array<{
@@ -931,7 +931,7 @@ export default function FinancialPage() {
               >
                 <Calendar className="h-4 w-4 text-slate-500" />
                 <span className="text-sm text-marble-100">
-                  {event.date || "No date"} — {event.subType || categoryInfo?.label || "New Event"}
+                  {event.date || "No date"} - {event.subType || categoryInfo?.label || "New Event"}
                 </span>
               </button>
               <div className="flex items-center gap-2">

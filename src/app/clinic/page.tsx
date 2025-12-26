@@ -38,7 +38,7 @@ function HeroSection() {
                 Targeted <span className="text-gradient-gold">Intervention</span> for Organizations
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
-                We are building toward a clinic staffed by a new class of professionals —
+                We are building toward a clinic staffed by a new class of professionals -
                 organizational medicine specialists trained to diagnose and treat organizational
                 health issues using evidence-based protocols from our research.
               </p>
@@ -223,7 +223,7 @@ function VisionSection() {
           <Link href="/diagnostics" className="text-gold-400 hover:text-gold-300 transition-colors">
             Diagnostics Center
           </Link>{" "}
-          identifies issues, the Clinic provides targeted intervention — delivering evidence-based
+          identifies issues, the Clinic provides targeted intervention - delivering evidence-based
           treatment through trained organizational medicine specialists.
         </p>
 
@@ -373,7 +373,7 @@ function NewProfessionSection() {
               Organizational Medicine Specialists
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              The Clinic represents the pinnacle of our research mission — enabling a new class of
+              The Clinic represents the pinnacle of our research mission - enabling a new class of
               professionals trained in organizational medicine. These specialists will diagnose and
               treat organizational health issues using evidence-based protocols derived from our
               mortality research.
@@ -472,7 +472,7 @@ function CurrentStatusSection() {
             </h2>
             <p className="text-lg text-slate-400">
               The Clinic requires a research foundation, diagnostic capabilities, and trained
-              specialists. We are building these prerequisites in sequence — research data informs
+              specialists. We are building these prerequisites in sequence - research data informs
               protocols, protocols enable training, training produces specialists.
             </p>
           </div>
@@ -587,7 +587,7 @@ function WaitlistSection() {
           </h2>
           <p className="text-lg text-slate-400 mb-8">
             Be the first to know when the Clinic becomes available. We&apos;ll send occasional
-            updates on our progress — no spam, ever.
+            updates on our progress - no spam, ever.
           </p>
 
           {status === "success" ? (

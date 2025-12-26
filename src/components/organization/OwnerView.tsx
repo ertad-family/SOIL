@@ -128,7 +128,7 @@ export function OwnerView({
 
   const lifespan =
     orgData.founded_date && orgData.closed_date
-      ? `${formatDate(orgData.founded_date)} — ${formatDate(orgData.closed_date)}`
+      ? `${formatDate(orgData.founded_date)} - ${formatDate(orgData.closed_date)}`
       : null;
 
   const location = [orgData.location_city, orgData.location_country].filter(Boolean).join(", ");

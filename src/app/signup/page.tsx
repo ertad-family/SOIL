@@ -204,7 +204,7 @@ export default function SignupPage() {
                       <span className="text-gold-500 mt-1">•</span>
                       <span>
                         <strong className="text-marble-100">Data Usage:</strong> Your data is fully
-                        anonymized — no names or information that could identify people or
+                        anonymized - no names or information that could identify people or
                         organizations
                       </span>
                     </li>

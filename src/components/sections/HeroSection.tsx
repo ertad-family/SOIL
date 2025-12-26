@@ -16,7 +16,7 @@ export function HeroSection() {
               <span className="text-marble-100">Help Others Learn. Advance the Science.</span>
             </h1>
             <p className="mt-6 text-xl md:text-2xl text-marble-300 font-light">
-              For founders who&apos;ve closed their ventures — and those seeking their wisdom
+              For founders who&apos;ve closed their ventures - and those seeking their wisdom
             </p>
           </div>
 
@@ -24,7 +24,7 @@ export function HeroSection() {
           <div className="animate-fade-in-up stagger-1">
             <p className="text-slate-400 leading-relaxed mb-4">
               Your investment of time, money, and passion deserves more than your silent grief.
-              Share your story — find closure while helping future founders avoid the same path.
+              Share your story - find closure while helping future founders avoid the same path.
             </p>
             <p className="text-slate-400 leading-relaxed mb-8">
               SOIL is building the world&apos;s first database of{" "}

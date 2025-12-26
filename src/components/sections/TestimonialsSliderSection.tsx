@@ -16,7 +16,7 @@ const fallbackTestimonials: Testimonial[] = [
   {
     id: "fallback-1",
     content:
-      "Sharing my story with SOIL was unexpectedly healing. The interview framework helped me see patterns I had missed while living through the chaos. This isn't just data collection — it's a form of closure.",
+      "Sharing my story with SOIL was unexpectedly healing. The interview framework helped me see patterns I had missed while living through the chaos. This isn't just data collection - it's a form of closure.",
     rating: 5,
     display_name: "Sarah Chen, Former CEO",
   },

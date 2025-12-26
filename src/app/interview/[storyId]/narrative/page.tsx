@@ -126,7 +126,7 @@ export default function NarrativePage() {
   // Section-specific intro messages
   const sectionIntros: Record<SectionKey, string> = {
     understanding:
-      "Looking at everything — your organization, the environment, your own journey...",
+      "Looking at everything - your organization, the environment, your own journey...",
     hindsight: "With the clarity that only comes after...",
     lessons: "Every ending teaches something...",
     advice: "If someone was standing where you stood at the beginning...",

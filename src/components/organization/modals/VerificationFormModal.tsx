@@ -272,14 +272,14 @@ export function VerificationFormModal({
                       <strong className="text-marble-200">{requesterName}</strong>, who was{" "}
                       <strong className="text-gold-400">{roleLabel}</strong> of{" "}
                       <strong className="text-marble-200">{organizationName}</strong>, is
-                      documenting the organization&apos;s story on SOIL — a platform dedicated to
+                      documenting the organization&apos;s story on SOIL - a platform dedicated to
                       preserving the legacies of organizations that have closed.
                     </p>
 
                     <p>
                       Every year, millions of companies close their doors. Their stories, lessons,
                       and the people who built them risk being forgotten. SOIL exists to change that
-                      — creating digital cenotaphs that honor these journeys and help future
+                      - creating digital cenotaphs that honor these journeys and help future
                       founders learn from the past.
                     </p>
 

@@ -5,7 +5,7 @@ const missions = [
     numeral: "I",
     title: "Scientific Rigor",
     description:
-      "We apply systematic, evidence-based methodology to data collection and analysis. From structured interviews to emerging patterns, we let the data speak — no preconceptions, no shortcuts.",
+      "We apply systematic, evidence-based methodology to data collection and analysis. From structured interviews to emerging patterns, we let the data speak - no preconceptions, no shortcuts.",
   },
   {
     numeral: "II",
@@ -17,7 +17,7 @@ const missions = [
     numeral: "III",
     title: "Respect",
     description:
-      "Entrepreneurs are undervalued by society despite their sacrifices and contributions. We work to restore the recognition they deserve — from communities, institutions, and governments.",
+      "Entrepreneurs are undervalued by society despite their sacrifices and contributions. We work to restore the recognition they deserve - from communities, institutions, and governments.",
   },
 ];
 

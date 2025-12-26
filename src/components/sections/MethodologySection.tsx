@@ -8,7 +8,7 @@ const methodologySteps = [
   {
     title: "Data Collection",
     description:
-      "Our Interview Framework captures comprehensive organizational data through 6 structured modules — from functional mapping to founder narrative.",
+      "Our Interview Framework captures comprehensive organizational data through 6 structured modules - from functional mapping to founder narrative.",
   },
   {
     title: "Anonymization",
@@ -50,7 +50,7 @@ export function MethodologySection() {
             <p className="text-marble-100 text-lg leading-relaxed mb-6">
               SOIL is building the world&apos;s first systematic database of{" "}
               <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm>. We capture
-              comprehensive data from founders who&apos;ve closed their ventures — not to judge, but
+              comprehensive data from founders who&apos;ve closed their ventures - not to judge, but
               to learn.
             </p>
             <p className="text-slate-400 text-lg leading-relaxed">
@@ -61,7 +61,7 @@ export function MethodologySection() {
             </p>
           </div>
 
-          {/* Row 2: Counter | Button — same row, aligned */}
+          {/* Row 2: Counter | Button - same row, aligned */}
           {/* Counter: 20k in Roman numeral style (X̄X̄ = 20,000) */}
           <div className="flex items-end">
             <div className="flex items-end gap-4">

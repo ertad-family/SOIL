@@ -51,7 +51,7 @@ function CameraControls({ speed = 0.5 }: { speed?: number }) {
 
     const moveVector = new THREE.Vector3();
 
-    // Вперёд/назад (W/S или Up/Down) — по оси Z
+    // Вперёд/назад (W/S или Up/Down) - по оси Z
     if (keys.has("KeyW") || keys.has("ArrowUp")) {
       moveVector.z -= speed;
     }
@@ -59,7 +59,7 @@ function CameraControls({ speed = 0.5 }: { speed?: number }) {
       moveVector.z += speed;
     }
 
-    // Влево/вправо (A/D или Left/Right) — по оси X
+    // Влево/вправо (A/D или Left/Right) - по оси X
     if (keys.has("KeyA") || keys.has("ArrowLeft")) {
       moveVector.x -= speed;
     }
@@ -67,7 +67,7 @@ function CameraControls({ speed = 0.5 }: { speed?: number }) {
       moveVector.x += speed;
     }
 
-    // Вверх/вниз (Q/E) — по оси Y
+    // Вверх/вниз (Q/E) - по оси Y
     if (keys.has("KeyQ")) {
       moveVector.y -= speed;
     }

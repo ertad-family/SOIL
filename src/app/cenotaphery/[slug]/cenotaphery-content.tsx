@@ -218,42 +218,42 @@ export function CenotapheryContent({ slug }: { slug: string }) {
                         <li className="flex items-start gap-3 text-slate-400">
                           <Crown className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
                           <span>
-                            <span className="text-marble-200">Exclusivity</span> — Limited to the
+                            <span className="text-marble-200">Exclusivity</span> - Limited to the
                             first 100 founders only
                           </span>
                         </li>
                         <li className="flex items-start gap-3 text-slate-400">
                           <Star className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
                           <span>
-                            <span className="text-marble-200">Premier Placement</span> — Forever
+                            <span className="text-marble-200">Premier Placement</span> - Forever
                             first on the platform
                           </span>
                         </li>
                         <li className="flex items-start gap-3 text-slate-400">
                           <Vote className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
                           <span>
-                            <span className="text-marble-200">Governance Rights</span> — Vote on
+                            <span className="text-marble-200">Governance Rights</span> - Vote on
                             project roadmap
                           </span>
                         </li>
                         <li className="flex items-start gap-3 text-slate-400">
                           <Trophy className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
                           <span>
-                            <span className="text-marble-200">Awards Recognition</span> — Day of the
+                            <span className="text-marble-200">Awards Recognition</span> - Day of the
                             Dead Venture & Cenotavr Awards
                           </span>
                         </li>
                         <li className="flex items-start gap-3 text-slate-400">
                           <Award className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
                           <span>
-                            <span className="text-marble-200">Founder² Title</span> — Honorary
+                            <span className="text-marble-200">Founder² Title</span> - Honorary
                             &quot;Founder Squared of SOIL&quot; status
                           </span>
                         </li>
                         <li className="flex items-start gap-3 text-slate-400">
                           <BookOpen className="w-5 h-5 text-gold-400 mt-0.5 flex-shrink-0" />
                           <span>
-                            <span className="text-marble-200">Research Citation</span> — Mentioned
+                            <span className="text-marble-200">Research Citation</span> - Mentioned
                             in first research papers
                           </span>
                         </li>

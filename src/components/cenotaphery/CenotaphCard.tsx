@@ -58,7 +58,7 @@ export function CenotaphCard({
       return new Date(date).getFullYear().toString();
     };
 
-    return `${formatYear(foundedDate)} — ${formatYear(closedDate)}`;
+    return `${formatYear(foundedDate)} - ${formatYear(closedDate)}`;
   };
 
   const dateRange = formatDateRange();

@@ -176,7 +176,7 @@ const valueProps = [
 ];
 
 const steps = [
-  "Create your cenotaph — share your organization's story",
+  "Create your cenotaph - share your organization's story",
   "Opt into the consultation network to receive relevant requests",
   "Connect with peers for support and knowledge exchange",
 ];

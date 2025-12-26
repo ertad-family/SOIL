@@ -152,7 +152,7 @@ const faqItems: FAQItem[] = [
   {
     question: "Do I need to be a founder to volunteer?",
     answer:
-      "No! While many volunteers are founders who experienced organizational closure, we welcome anyone passionate about preserving organizational knowledge. Researchers, designers, developers, community builders — all backgrounds are valuable.",
+      "No! While many volunteers are founders who experienced organizational closure, we welcome anyone passionate about preserving organizational knowledge. Researchers, designers, developers, community builders - all backgrounds are valuable.",
   },
   {
     question: "How much time do I need to commit?",
@@ -167,7 +167,7 @@ const faqItems: FAQItem[] = [
   {
     question: "What skills do I need?",
     answer:
-      "Different roles require different skills. Technical roles need programming or design experience. Keepers need community management skills and local ecosystem knowledge. But if you're passionate and willing to learn, there's likely a place for you — just reach out!",
+      "Different roles require different skills. Technical roles need programming or design experience. Keepers need community management skills and local ecosystem knowledge. But if you're passionate and willing to learn, there's likely a place for you - just reach out!",
   },
   {
     question: "How do I get started?",
@@ -193,7 +193,7 @@ function HeroSection() {
             Join the <span className="text-gradient-gold">Mission</span>
           </h1>
           <p className="text-lg lg:text-xl text-slate-400 mb-8 leading-relaxed animate-fade-in-up stagger-1">
-            SOIL is building the infrastructure for organizational medicine — and we need your help.
+            SOIL is building the infrastructure for organizational medicine - and we need your help.
             Whether you have a few hours a week or just occasional availability, there&apos;s a way
             for you to contribute to preserving organizational wisdom for future generations.
           </p>
@@ -268,7 +268,7 @@ function WhyVolunteerSection() {
             Make a Meaningful Difference
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mb-12">
-            Volunteering with SOIL isn&apos;t just about donating time — it&apos;s about being part
+            Volunteering with SOIL isn&apos;t just about donating time - it&apos;s about being part
             of something bigger. Every contribution helps preserve organizational wisdom that would
             otherwise be lost forever.
           </p>
