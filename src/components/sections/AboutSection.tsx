@@ -1,10 +1,16 @@
 import { SectionLabel } from "@/components/ui/section-label";
 
 const principles = [
-  { label: "Dignity", description: "Every organization and founder deserves respect" },
-  { label: "Truth", description: "Let data reveal patterns, not preconceptions" },
-  { label: "Service", description: "Research that serves the community first" },
-  { label: "Rigor", description: "Scientific standards in everything we do" },
+  {
+    label: "Dignity",
+    description: "Every founder and organization deserves respectful remembrance",
+  },
+  { label: "Truth", description: "Honest, systematic understanding of why organizations die" },
+  { label: "Service", description: "Data serves the ecosystem, not just profit" },
+  { label: "Beauty", description: "Excellence in design honors the effort founders invested" },
+  { label: "Community", description: "Founders supporting founders through shared vulnerability" },
+  { label: "Rigor", description: "Scientific standards for research and analysis" },
+  { label: "Transparency", description: "Clear about how data is used and how revenue flows" },
 ];
 
 export function AboutSection() {
@@ -25,9 +31,12 @@ export function AboutSection() {
           </p>
 
           {/* Principles */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8">
             {principles.map((principle, index) => (
-              <div key={index} className="text-center">
+              <div
+                key={index}
+                className="text-center w-[calc(50%-12px)] md:w-[calc(25%-24px)] lg:w-auto lg:min-w-[140px]"
+              >
                 <div className="font-serif text-xl font-medium text-gold-400 mb-2">
                   {principle.label}
                 </div>

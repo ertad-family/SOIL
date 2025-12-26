@@ -54,7 +54,7 @@ export const tabsData: Record<string, TabData> = {
         description:
           "Know potential team members, advisors, researchers, or investors? Introduce them to SOIL.",
         cta: "Make Introduction",
-        href: "/recommend",
+        href: "mailto:community@soil.rip?subject=Introduction",
       },
       {
         icon: <Mail className="w-6 h-6" />,
@@ -62,7 +62,7 @@ export const tabsData: Record<string, TabData> = {
         description:
           "Subscribe to newsletter and follow us on social media to stay connected with updates.",
         cta: "Subscribe",
-        href: "#newsletter",
+        href: "/community#newsletter",
       },
     ],
   },
@@ -112,11 +112,11 @@ export const tabsData: Record<string, TabData> = {
       },
       {
         icon: <BarChart3 className="w-6 h-6" />,
-        title: "Help with Analysis",
+        title: "Connect Research",
         description:
-          "Know competitors, similar projects, or adjacent research? Help us understand the landscape.",
-        cta: "Contribute Insights",
-        href: "/analysis",
+          "Know researchers studying organizational mortality, pathology, or health? Help us unite the field by sharing leads and connections.",
+        cta: "Share Research Leads",
+        href: "mailto:community@soil.rip?subject=Research Collaboration",
       },
       {
         icon: <GraduationCap className="w-6 h-6" />,

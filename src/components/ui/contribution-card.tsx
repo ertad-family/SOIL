@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { colorClasses, ContributionOption } from "@/lib/contribution-data";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "@/components/ui/share-button";
+import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
 
 export interface ContributionCardProps {
   option: ContributionOption;
@@ -28,6 +29,15 @@ export function ContributionCard({
 }: ContributionCardProps) {
   const colors = colorClasses[color];
   const isFab = variant === "fab";
+  const { showPrompt } = useTestimonialPrompt();
+
+  const handleFeedbackClick = () => {
+    showPrompt({
+      type: "general",
+      title: "Share Your Feedback",
+      description: "Your thoughts help us build a better platform. What's on your mind?",
+    });
+  };
 
   // FAB variant always uses compact-like sizing
   const useCompactSizing = isFab || compact;
@@ -73,6 +83,16 @@ export function ContributionCard({
             description="Help build the future of organizational research. Join the movement at soil.rip"
             className="w-full"
           />
+        ) : option.title === "Give Feedback" ? (
+          <Button
+            variant="dark-secondary"
+            size={useCompactSizing ? "sm" : "md"}
+            className="w-full"
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            onClick={handleFeedbackClick}
+          >
+            {option.cta}
+          </Button>
         ) : option.external ? (
           <a href={option.href} target="_blank" rel="noopener noreferrer">
             <Button
