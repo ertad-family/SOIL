@@ -2,6 +2,7 @@
 
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import Link from "next/link";
 import {
   Database,
@@ -31,8 +32,9 @@ function HeroSection() {
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed mb-6">
             <strong className="text-marble-100">SOIL</strong> (Social Organizational Intelligence
-            Lab) is a research-first nonprofit project devoted to collecting organizational autopsy
-            data at scale — to ignite a completely new scientific field:{" "}
+            Lab) is a research-first nonprofit project devoted to collecting{" "}
+            <GlossaryTerm term="Autopsy">organizational autopsy</GlossaryTerm> data at scale — to
+            ignite a completely new scientific field:{" "}
             <strong className="text-marble-100">
               Organizational Biology, Health, and Medicine
             </strong>
@@ -67,7 +69,8 @@ function MedicalAnalogySection() {
           From Human Autopsies to Organizational Autopsies
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          Modern medicine developed through systematic autopsy — the careful examination of deceased
+          Modern medicine developed through systematic{" "}
+          <GlossaryTerm term="Autopsy">autopsy</GlossaryTerm> — the careful examination of deceased
           bodies to understand disease processes. Before autopsy became standard practice, medicine
           relied on theory and speculation. SOIL proposes the same approach for organizations.
         </p>

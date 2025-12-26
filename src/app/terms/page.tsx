@@ -2,6 +2,7 @@
 
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import Link from "next/link";
 
 // ============================================================================
@@ -53,16 +54,17 @@ export default function TermsOfServicePage() {
               <Card variant="dark-elevated" padding="lg" className="border-gold-500/30 border">
                 <h3 className="font-display text-lg font-medium text-gold-400 mb-3">Our Mission</h3>
                 <p>
-                  SOIL is a research-first nonprofit project devoted to collecting organizational
-                  autopsy data at scale to establish a new scientific field: Organizational Biology,
-                  Health, and Medicine. We transform organizational failure from wasted potential
-                  into collective wisdom.
+                  SOIL is a research-first nonprofit project devoted to collecting{" "}
+                  <GlossaryTerm term="Autopsy">organizational autopsy</GlossaryTerm> data at scale
+                  to establish a new scientific field: Organizational Biology, Health, and Medicine.
+                  We transform organizational failure from wasted potential into collective wisdom.
                 </p>
               </Card>
               <Card variant="dark-elevated" padding="lg" className="border-gold-500/30 border">
                 <h3 className="font-display text-lg font-medium text-gold-400 mb-3">Our Promise</h3>
                 <p>
-                  A founder can create a complete, dignified cenotaph (organizational memorial)
+                  A founder can create a complete, dignified{" "}
+                  <GlossaryTerm term="Cenotaph">cenotaph</GlossaryTerm> (organizational memorial)
                   without paying anything. Paid services are separate offerings for additional needs
                   — never &quot;upgrades&quot; or &quot;premium versions&quot; of the free
                   experience.

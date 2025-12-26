@@ -4,13 +4,19 @@ import { Shield, Users, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SectionLabel } from "@/components/ui/section-label";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 
 const audiences = [
   {
     icon: <Shield className="w-8 h-8" />,
     title: "For Future Keepers",
-    description:
-      "Become a guardian of your regional cenotaphery. Curate stories, verify accounts, and build a local community that preserves organizational wisdom.",
+    description: (
+      <>
+        Become a guardian of your regional{" "}
+        <GlossaryTerm term="Cenotaphery">cenotaphery</GlossaryTerm>. Curate stories, verify
+        accounts, and build a local community that preserves organizational wisdom.
+      </>
+    ),
     cta: "Apply to Be a Keeper",
     href: "/community#keepers",
     buttonVariant: "dark-primary" as const,
@@ -27,8 +33,13 @@ const audiences = [
   {
     icon: <MapPin className="w-8 h-8" />,
     title: "For Regional Leaders",
-    description:
-      "Help us expand to new regions. Pioneer a cenotaphery where none exists yet and become the founding Keeper of your local chapter.",
+    description: (
+      <>
+        Help us expand to new regions. Pioneer a{" "}
+        <GlossaryTerm term="Cenotaphery">cenotaphery</GlossaryTerm> where none exists yet and become
+        the founding Keeper of your local chapter.
+      </>
+    ),
     cta: "Start a Chapter",
     href: "/community#keepers",
     buttonVariant: "dark-primary" as const,

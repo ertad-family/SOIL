@@ -3,6 +3,7 @@
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import { ArrowRight, Database, FlaskConical, FileText, Users } from "lucide-react";
 
 // Custom SVG illustration for Researchers
@@ -237,8 +238,9 @@ export function ResearchersRoleSection() {
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
               Organizational mortality is understudied because the data doesn&apos;t exist.
-              We&apos;re building the first systematic dataset of organizational autopsies — and we
-              need researchers to help us make sense of it.
+              We&apos;re building the first systematic dataset of{" "}
+              <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm> — and we need
+              researchers to help us make sense of it.
             </p>
 
             {/* Value propositions */}
