@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Heart, X, ArrowRight, Users, Clock, Brain, DollarSign } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { tabsData, colorClasses, ContributionOption } from "@/lib/contribution-data";
+import { Heart, X, Users, Clock, Brain, DollarSign } from "lucide-react";
+import { tabsData } from "@/lib/contribution-data";
 import { cn } from "@/lib/utils";
-import { ShareButton } from "@/components/ui/share-button";
+import { ContributionCard } from "@/components/ui/contribution-card";
 
 const menuItems = Object.entries(tabsData).map(([key, data]) => ({
   key,
@@ -22,74 +20,6 @@ const menuIcons: Record<string, React.ReactNode> = {
   knowledge: <Brain className="w-5 h-5" />,
   money: <DollarSign className="w-5 h-5" />,
 };
-
-function ContributionCard({
-  option,
-  color,
-}: {
-  option: ContributionOption;
-  color: keyof typeof colorClasses;
-}) {
-  const colors = colorClasses[color];
-
-  return (
-    <Card
-      variant="dark"
-      padding="md"
-      className="flex flex-col w-[240px] h-[280px] bg-transparent border-white/10"
-    >
-      <CardHeader className="pb-2">
-        <div
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center mb-2",
-            colors.iconBg,
-            colors.iconText
-          )}
-        >
-          {option.icon}
-        </div>
-        <CardTitle variant="dark" className="text-base">
-          {option.title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <p className="text-slate-400 text-xs leading-relaxed flex-1 mb-3 line-clamp-4">
-          {option.description}
-        </p>
-        {option.title === "Spread the Word" ? (
-          <ShareButton
-            url={option.href}
-            title="SOIL - Where founders share their stories for science"
-            description="Help build the future of organizational research. Join the movement at soil.rip"
-            className="w-full"
-          />
-        ) : option.external ? (
-          <a href={option.href} target="_blank" rel="noopener noreferrer">
-            <Button
-              variant="dark-secondary"
-              size="sm"
-              className="w-full"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              {option.cta}
-            </Button>
-          </a>
-        ) : (
-          <a href={option.href}>
-            <Button
-              variant="dark-secondary"
-              size="sm"
-              className="w-full"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              {option.cta}
-            </Button>
-          </a>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 type MenuState = "closed" | "menu" | "cards";
 
@@ -417,7 +347,7 @@ export function LiquidContributionFab() {
                           transitionDelay: isVisible ? `${optIndex * 75}ms` : "0ms",
                         }}
                       >
-                        <ContributionCard option={option} color={tab.color} />
+                        <ContributionCard option={option} color={tab.color} variant="fab" />
                       </div>
                     ))}
                   </div>
@@ -464,7 +394,7 @@ export function LiquidContributionFab() {
                         transitionDelay: `${optIndex * 50}ms`,
                       }}
                     >
-                      <ContributionCard option={option} color={item.color} />
+                      <ContributionCard option={option} color={item.color} variant="fab" />
                     </div>
                   ))}
                 </div>
