@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
@@ -18,12 +19,393 @@ import {
   Mail,
   MessageSquare,
   Search,
+  ShieldCheck,
+  Fingerprint,
+  MapPin,
+  Crown,
+  Star,
+  Network,
+  LucideIcon,
 } from "lucide-react";
+
+// ============================================================================
+// KEEPER VALUES DATA
+// ============================================================================
+interface KeeperValue {
+  id: string;
+  label: string;
+  title: string;
+  description: string;
+  category: "protects" | "receives";
+  color: string;
+  colorBg: string;
+  colorStroke: string;
+  icon: LucideIcon;
+}
+
+const keeperValues: KeeperValue[] = [
+  // What Keeper protects
+  {
+    id: "data-quality",
+    label: "DATA QUALITY",
+    title: "Data Quality",
+    description:
+      "Ensures accuracy and authenticity of organizational stories through careful review and verification.",
+    category: "protects",
+    color: "rgba(100,180,130,1)",
+    colorBg: "rgba(100,180,130,0.15)",
+    colorStroke: "rgba(100,180,130,0.5)",
+    icon: ShieldCheck,
+  },
+  {
+    id: "community-trust",
+    label: "COMMUNITY TRUST",
+    title: "Community Trust",
+    description:
+      "Maintains integrity and creates a safe space for founders to share their experiences openly.",
+    category: "protects",
+    color: "rgba(100,180,130,1)",
+    colorBg: "rgba(100,180,130,0.15)",
+    colorStroke: "rgba(100,180,130,0.5)",
+    icon: Fingerprint,
+  },
+  {
+    id: "regional-identity",
+    label: "REGIONAL IDENTITY",
+    title: "Regional Identity",
+    description:
+      "Preserves local context and cultural nuances that make each region's stories unique and valuable.",
+    category: "protects",
+    color: "rgba(100,180,130,1)",
+    colorBg: "rgba(100,180,130,0.15)",
+    colorStroke: "rgba(100,180,130,0.5)",
+    icon: MapPin,
+  },
+  // What Keeper receives
+  {
+    id: "leadership",
+    label: "LEADERSHIP",
+    title: "Leadership",
+    description: "Become a recognized voice and leader in your local startup ecosystem.",
+    category: "receives",
+    color: "rgba(196,161,90,1)",
+    colorBg: "rgba(196,161,90,0.15)",
+    colorStroke: "rgba(196,161,90,0.5)",
+    icon: Crown,
+  },
+  {
+    id: "recognition",
+    label: "RECOGNITION",
+    title: "Recognition",
+    description:
+      "Be acknowledged as a founding guardian of your regional cenotaphery and a pioneer of organizational medicine.",
+    category: "receives",
+    color: "rgba(196,161,90,1)",
+    colorBg: "rgba(196,161,90,0.15)",
+    colorStroke: "rgba(196,161,90,0.5)",
+    icon: Star,
+  },
+  {
+    id: "global-network",
+    label: "GLOBAL NETWORK",
+    title: "Global Network",
+    description: "Connect with founders, researchers, and fellow Keepers from around the world.",
+    category: "receives",
+    color: "rgba(196,161,90,1)",
+    colorBg: "rgba(196,161,90,0.15)",
+    colorStroke: "rgba(196,161,90,0.5)",
+    icon: Network,
+  },
+];
+
+// Hexagon positions (60 degrees apart, starting from top)
+const hexagonRadius = 110;
+const centerX = 200;
+const centerY = 200;
+
+function getHexagonPosition(index: number) {
+  const angle = (index * 60 - 90) * (Math.PI / 180); // Start from top (-90°)
+  return {
+    x: centerX + hexagonRadius * Math.cos(angle),
+    y: centerY + hexagonRadius * Math.sin(angle),
+  };
+}
+
+// Calculate tooltip position based on value position in the diagram
+function getTooltipPosition(index: number): { top: number; left: number; side: "left" | "right" } {
+  const pos = getHexagonPosition(index);
+  const topPercent = (pos.y / 400) * 100;
+  const leftPercent = (pos.x / 400) * 100;
+  const side = pos.x > centerX ? "right" : "left";
+  return { top: topPercent, left: leftPercent, side };
+}
+
+interface ValueNodeProps {
+  value: KeeperValue;
+  position: { x: number; y: number };
+  onHover: (valueId: string | null) => void;
+  isHovered: boolean;
+}
+
+function ValueNode({ value, position, onHover, isHovered }: ValueNodeProps) {
+  const nodeRadius = 22;
+  const innerRadius = 7;
+
+  return (
+    <g
+      className="cursor-pointer transition-transform duration-200"
+      style={{
+        transform: isHovered ? "scale(1.1)" : "scale(1)",
+        transformOrigin: `${position.x}px ${position.y}px`,
+      }}
+      onMouseEnter={() => onHover(value.id)}
+    >
+      {/* Outer glow on hover */}
+      {isHovered && (
+        <circle
+          cx={position.x}
+          cy={position.y}
+          r={nodeRadius + 8}
+          fill={value.colorBg}
+          className="animate-pulse"
+        />
+      )}
+
+      {/* Outer circle */}
+      <circle
+        cx={position.x}
+        cy={position.y}
+        r={nodeRadius}
+        fill={value.colorBg}
+        stroke={isHovered ? value.color : value.colorStroke}
+        strokeWidth={isHovered ? 3 : 2}
+      />
+
+      {/* Inner circle */}
+      <circle
+        cx={position.x}
+        cy={position.y}
+        r={innerRadius}
+        fill={isHovered ? value.color : value.colorStroke}
+      />
+
+      {/* Label */}
+      <text
+        x={position.x}
+        y={position.y + nodeRadius + 14}
+        textAnchor="middle"
+        fill={isHovered ? value.color : `${value.color.replace(",1)", ",0.7)")}`}
+        fontSize={8}
+        fontFamily="system-ui"
+        fontWeight={isHovered ? 600 : 400}
+      >
+        {value.label}
+      </text>
+    </g>
+  );
+}
+
+function KeeperValuesDiagram({
+  onHover,
+  hoveredValue,
+}: {
+  onHover: (valueId: string | null) => void;
+  hoveredValue: string | null;
+}) {
+  return (
+    <svg
+      viewBox="0 0 400 400"
+      className="w-[480px] h-[480px] md:w-[600px] md:h-[600px]"
+      fill="none"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      {/* Outer orbital rings */}
+      {[0, 1, 2].map((i) => (
+        <circle
+          key={`orbit-${i}`}
+          cx={centerX}
+          cy={centerY}
+          r={70 + i * 50}
+          fill="none"
+          stroke={`rgba(100,180,130,${0.12 - i * 0.03})`}
+          strokeWidth="1"
+          strokeDasharray={i % 2 === 0 ? "none" : "4 4"}
+        />
+      ))}
+
+      {/* Hexagon outline */}
+      <polygon
+        points={keeperValues
+          .map((_, i) => {
+            const pos = getHexagonPosition(i);
+            return `${pos.x},${pos.y}`;
+          })
+          .join(" ")}
+        fill="none"
+        stroke="rgba(100,180,130,0.15)"
+        strokeWidth="1"
+      />
+
+      {/* Connection lines from center to each value */}
+      {keeperValues.map((value, i) => {
+        const pos = getHexagonPosition(i);
+        const isHovered = hoveredValue === value.id;
+        return (
+          <line
+            key={`line-${value.id}`}
+            x1={centerX}
+            y1={centerY}
+            x2={pos.x}
+            y2={pos.y}
+            stroke={isHovered ? value.colorStroke : "rgba(100,180,130,0.2)"}
+            strokeWidth={isHovered ? 2 : 1}
+            className="transition-all duration-200"
+          />
+        );
+      })}
+
+      {/* Value nodes on hexagon vertices */}
+      {keeperValues.map((value, i) => {
+        const pos = getHexagonPosition(i);
+        return (
+          <ValueNode
+            key={value.id}
+            value={value}
+            position={pos}
+            onHover={onHover}
+            isHovered={hoveredValue === value.id}
+          />
+        );
+      })}
+
+      {/* Central shield - Keeper symbol */}
+      <g transform={`translate(${centerX}, ${centerY})`}>
+        <path
+          d="M0,-40 L35,-25 L35,15 Q35,40 0,55 Q-35,40 -35,15 L-35,-25 Z"
+          fill="rgba(100,180,130,0.15)"
+          stroke="rgba(100,180,130,0.5)"
+          strokeWidth="2"
+        />
+        <text
+          x="0"
+          y="8"
+          textAnchor="middle"
+          fill="rgba(100,180,130,0.8)"
+          fontSize="24"
+          fontFamily="system-ui"
+          fontWeight="bold"
+        >
+          K
+        </text>
+      </g>
+
+      {/* Floating particles */}
+      {[
+        { cx: 60, cy: 60, r: 2 },
+        { cx: 340, cy: 70, r: 1.5 },
+        { cx: 360, cy: 200, r: 2 },
+        { cx: 330, cy: 340, r: 1.5 },
+        { cx: 70, cy: 330, r: 2 },
+        { cx: 40, cy: 190, r: 1.5 },
+      ].map((p, i) => (
+        <circle key={`particle-${i}`} cx={p.cx} cy={p.cy} r={p.r} fill="rgba(100,180,130,0.4)" />
+      ))}
+    </svg>
+  );
+}
+
+// Tooltip component for values
+function ValueTooltip({
+  value,
+  valueIndex,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  value: KeeperValue;
+  valueIndex: number;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}) {
+  const Icon = value.icon;
+  const tooltipPos = getTooltipPosition(valueIndex);
+  const offsetX = tooltipPos.side === "right" ? 30 : -260;
+  const offsetY = -70;
+
+  return (
+    <div
+      className="absolute z-20 pointer-events-auto"
+      style={{
+        top: `${tooltipPos.top}%`,
+        left: `${tooltipPos.left}%`,
+        transform: `translate(${offsetX}px, ${offsetY}px)`,
+      }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <Card variant="dark" padding="md" className="w-56 shadow-xl animate-fade-in-up">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: value.colorBg }}
+            >
+              <Icon className="w-5 h-5" style={{ color: value.color }} />
+            </div>
+            <div>
+              <CardTitle variant="dark" className="text-base">
+                {value.title}
+              </CardTitle>
+              <span
+                className="text-xs font-medium"
+                style={{
+                  color:
+                    value.category === "protects"
+                      ? "rgba(100,180,130,0.8)"
+                      : "rgba(196,161,90,0.8)",
+                }}
+              >
+                {value.category === "protects" ? "Keeper protects" : "Keeper receives"}
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-slate-400 text-sm leading-relaxed">{value.description}</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 // ============================================================================
 // HERO SECTION
 // ============================================================================
 function HeroSection() {
+  const [hoveredValue, setHoveredValue] = useState<string | null>(null);
+  const [isTooltipHovered, setIsTooltipHovered] = useState(false);
+
+  // Find hovered value data and index
+  const hoveredValueIndex = keeperValues.findIndex((v) => v.id === hoveredValue);
+  const hoveredValueData = keeperValues.find((v) => v.id === hoveredValue);
+
+  // Only hide tooltip if neither the node nor the tooltip is hovered
+  const handleNodeHover = (valueId: string | null) => {
+    if (valueId) {
+      setHoveredValue(valueId);
+    } else if (!isTooltipHovered) {
+      setHoveredValue(null);
+    }
+  };
+
+  const handleTooltipMouseEnter = () => {
+    setIsTooltipHovered(true);
+  };
+
+  const handleTooltipMouseLeave = () => {
+    setIsTooltipHovered(false);
+    setHoveredValue(null);
+  };
+
   return (
     <section className="relative py-16 md:py-24 overflow-hidden">
       <div className="w-full px-4 lg:px-8">
@@ -63,213 +445,41 @@ function HeroSection() {
             </Card>
           </div>
 
-          {/* Right: Decorative Graphic - 2/3 width */}
+          {/* Right: Interactive Diagram - 2/3 width */}
           <div className="animate-fade-in-up stagger-1 lg:w-2/3">
             <Card
               variant="dark-elevated"
               padding="none"
-              className="h-full max-h-[70vh] relative overflow-hidden flex items-center justify-center"
+              className="h-full relative overflow-visible flex items-center justify-center p-8"
             >
               {/* Background glow */}
               <div className="absolute inset-0 bg-gradient-radial from-emerald-500/10 via-transparent to-transparent" />
 
-              {/* Decorative SVG - Regional hierarchy themed */}
-              <svg
-                viewBox="0 0 400 400"
-                className="w-auto h-full max-h-[65vh] scale-110"
-                fill="none"
-                preserveAspectRatio="xMidYMid meet"
+              {/* Values Diagram with tooltips */}
+              <div
+                className="relative"
+                onMouseLeave={() => {
+                  if (!isTooltipHovered) {
+                    setHoveredValue(null);
+                  }
+                }}
               >
-                {/* Background circular patterns - representing regional coverage */}
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="150"
-                  fill="none"
-                  stroke="rgba(100,180,130,0.1)"
-                  strokeWidth="1"
-                />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="110"
-                  fill="none"
-                  stroke="rgba(100,180,130,0.15)"
-                  strokeWidth="1"
-                />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="70"
-                  fill="none"
-                  stroke="rgba(100,180,130,0.2)"
-                  strokeWidth="1"
-                />
+                <KeeperValuesDiagram onHover={handleNodeHover} hoveredValue={hoveredValue} />
 
-                {/* Central shield - Keeper symbol */}
-                <g transform="translate(200, 200)">
-                  <path
-                    d="M0,-40 L35,-25 L35,15 Q35,40 0,55 Q-35,40 -35,15 L-35,-25 Z"
-                    fill="rgba(100,180,130,0.15)"
-                    stroke="rgba(100,180,130,0.5)"
-                    strokeWidth="2"
+                {/* Tooltip positioned next to the value */}
+                {hoveredValueData && (
+                  <ValueTooltip
+                    value={hoveredValueData}
+                    valueIndex={hoveredValueIndex}
+                    onMouseEnter={handleTooltipMouseEnter}
+                    onMouseLeave={handleTooltipMouseLeave}
                   />
-                  <text
-                    x="0"
-                    y="8"
-                    textAnchor="middle"
-                    fill="rgba(100,180,130,0.8)"
-                    fontSize="24"
-                    fontFamily="system-ui"
-                    fontWeight="bold"
-                  >
-                    K
-                  </text>
-                </g>
-
-                {/* Regional nodes around the center */}
-                {[
-                  { cx: 200, cy: 80, label: "Country", size: 20 },
-                  { cx: 300, cy: 140, label: "Region", size: 16 },
-                  { cx: 320, cy: 260, label: "City", size: 14 },
-                  { cx: 200, cy: 320, label: "City", size: 14 },
-                  { cx: 80, cy: 260, label: "City", size: 14 },
-                  { cx: 100, cy: 140, label: "Region", size: 16 },
-                ].map((node, i) => (
-                  <g key={`node-${i}`}>
-                    {/* Connection line to center */}
-                    <line
-                      x1={node.cx}
-                      y1={node.cy}
-                      x2="200"
-                      y2="200"
-                      stroke="rgba(100,180,130,0.2)"
-                      strokeWidth="1"
-                      strokeDasharray="4 4"
-                    />
-                    {/* Node */}
-                    <circle
-                      cx={node.cx}
-                      cy={node.cy}
-                      r={node.size}
-                      fill="rgba(100,180,130,0.1)"
-                      stroke="rgba(100,180,130,0.4)"
-                      strokeWidth="1.5"
-                    />
-                    <circle
-                      cx={node.cx}
-                      cy={node.cy}
-                      r={node.size * 0.4}
-                      fill="rgba(100,180,130,0.5)"
-                    />
-                  </g>
-                ))}
-
-                {/* Keeper path - ascending steps on the right */}
-                <g>
-                  {/* Level 1: Applicant */}
-                  <rect
-                    x="280"
-                    y="320"
-                    width="70"
-                    height="24"
-                    rx="4"
-                    fill="rgba(100,180,130,0.1)"
-                    stroke="rgba(100,180,130,0.3)"
-                    strokeWidth="1"
-                  />
-                  <text
-                    x="315"
-                    y="336"
-                    textAnchor="middle"
-                    fill="rgba(100,180,130,0.6)"
-                    fontSize="9"
-                    fontFamily="system-ui"
-                  >
-                    APPLICANT
-                  </text>
-
-                  {/* Level 2: Apprentice */}
-                  <rect
-                    x="300"
-                    y="280"
-                    width="70"
-                    height="24"
-                    rx="4"
-                    fill="rgba(100,180,130,0.15)"
-                    stroke="rgba(100,180,130,0.4)"
-                    strokeWidth="1"
-                  />
-                  <text
-                    x="335"
-                    y="296"
-                    textAnchor="middle"
-                    fill="rgba(100,180,130,0.7)"
-                    fontSize="9"
-                    fontFamily="system-ui"
-                  >
-                    APPRENTICE
-                  </text>
-
-                  {/* Level 3: Keeper */}
-                  <rect
-                    x="310"
-                    y="240"
-                    width="60"
-                    height="24"
-                    rx="4"
-                    fill="rgba(100,180,130,0.2)"
-                    stroke="rgba(100,180,130,0.5)"
-                    strokeWidth="1.5"
-                  />
-                  <text
-                    x="340"
-                    y="256"
-                    textAnchor="middle"
-                    fill="rgba(100,180,130,0.9)"
-                    fontSize="9"
-                    fontFamily="system-ui"
-                  >
-                    KEEPER
-                  </text>
-
-                  {/* Level 4: Senior */}
-                  <rect
-                    x="315"
-                    y="200"
-                    width="60"
-                    height="24"
-                    rx="4"
-                    fill="rgba(100,180,130,0.25)"
-                    stroke="rgba(100,180,130,0.6)"
-                    strokeWidth="2"
-                  />
-                  <text
-                    x="345"
-                    y="216"
-                    textAnchor="middle"
-                    fill="rgba(100,180,130,1)"
-                    fontSize="9"
-                    fontFamily="system-ui"
-                    fontWeight="600"
-                  >
-                    SENIOR
-                  </text>
-
-                  {/* Star for senior */}
-                  <polygon
-                    points="345,190 347,183 350,190 357,190 352,195 354,202 345,198 336,202 338,195 333,190"
-                    fill="rgba(196,161,90,0.5)"
-                  />
-                </g>
-              </svg>
-
-              {/* Floating labels */}
-              <div className="absolute top-6 right-6 text-sm text-emerald-400/60 font-mono">
-                REGIONAL NETWORK
+                )}
               </div>
-              <div className="absolute bottom-6 left-6 text-sm text-emerald-400/60 font-mono">
-                COMMUNITY GUARDIANS
+
+              {/* Floating label */}
+              <div className="absolute bottom-6 right-6 text-sm text-emerald-400/60 font-mono">
+                HOVER TO EXPLORE
               </div>
             </Card>
           </div>
