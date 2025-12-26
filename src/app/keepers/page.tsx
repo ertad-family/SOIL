@@ -737,7 +737,7 @@ function RequirementsSection() {
             <p className="text-lg text-slate-400 mb-8">
               We&apos;re looking for volunteers who are connected to their local startup ecosystem
               and committed to building something meaningful. No prior experience with SOIL is
-              required — just passion for the mission.
+              required - just passion for the mission.
             </p>
 
             <ul className="space-y-4">

@@ -38,7 +38,7 @@ function HeroSection() {
               </h1>
               <p className="text-base lg:text-lg text-slate-400 mb-8 leading-relaxed">
                 We are building an educational platform that will translate research findings into
-                practical knowledge — courses, resources, and training for anyone working to build
+                practical knowledge - courses, resources, and training for anyone working to build
                 healthier organizations.
               </p>
 
@@ -303,7 +303,7 @@ function PotentialOfferingsSection() {
       icon: <BookOpen className="w-7 h-7" />,
       title: "Online Courses",
       description:
-        "Self-paced courses on organizational health, resilience, and common failure patterns — grounded in research findings.",
+        "Self-paced courses on organizational health, resilience, and common failure patterns - grounded in research findings.",
     },
     {
       icon: <FileText className="w-7 h-7" />,
@@ -380,7 +380,7 @@ function AudienceSection() {
               Education for Every Role
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              The Learning Hub will serve diverse audiences — from founders wanting to build
+              The Learning Hub will serve diverse audiences - from founders wanting to build
               resilient organizations, to professionals pursuing careers in organizational health.
               Different tracks for different needs.
             </p>
@@ -481,7 +481,7 @@ function CurrentStatusSection() {
             </h2>
             <p className="text-lg text-slate-400">
               Educational content must be grounded in validated research. We are collecting data and
-              identifying patterns first — curriculum development follows as findings emerge and are
+              identifying patterns first - curriculum development follows as findings emerge and are
               validated.
             </p>
           </div>
@@ -596,7 +596,7 @@ function WaitlistSection() {
           </h2>
           <p className="text-lg text-slate-400 mb-8">
             Be the first to know when the Learning Hub launches. We&apos;ll send occasional updates
-            on our progress — no spam, ever.
+            on our progress - no spam, ever.
           </p>
 
           {status === "success" ? (

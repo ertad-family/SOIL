@@ -287,7 +287,7 @@ function WhyJoinSection() {
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mb-12">
             At SOIL, you&apos;ll work with passionate people on a mission that matters. We&apos;re
-            building something unprecedented — and we want you to be part of it.
+            building something unprecedented - and we want you to be part of it.
           </p>
 
           <div className="grid md:grid-cols-3 gap-6">

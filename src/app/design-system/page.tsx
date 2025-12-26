@@ -103,7 +103,7 @@ export default function DesignSystemDemo() {
               </h2>
               <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed animate-fade-in-up stagger-1">
                 Ancient elegance meets modern functionality. A dark-first design system inspired by
-                Roman aesthetics — marble textures, classical typography, and gold accents.
+                Roman aesthetics - marble textures, classical typography, and gold accents.
               </p>
               <div className="flex justify-center gap-4 mt-8 animate-fade-in-up stagger-2">
                 <Button variant="dark-primary" size="lg">

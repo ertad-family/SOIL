@@ -202,12 +202,12 @@ const contributorTypes = [
   {
     icon: <Code className="w-5 h-5" />,
     title: "Developers",
-    description: "React, Three.js, TypeScript — build the platform.",
+    description: "React, Three.js, TypeScript - build the platform.",
   },
   {
     icon: <Palette className="w-5 h-5" />,
     title: "Designers",
-    description: "UI/UX, 3D models, illustrations — shape the experience.",
+    description: "UI/UX, 3D models, illustrations - shape the experience.",
   },
   {
     icon: <Languages className="w-5 h-5" />,
@@ -264,7 +264,7 @@ export function ContributorsRoleSection() {
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
               SOIL is open source and community-driven. Whether you code, design, write, translate,
-              or organize — there&apos;s meaningful work waiting for you. Every contribution, no
+              or organize - there&apos;s meaningful work waiting for you. Every contribution, no
               matter how small, helps preserve organizational wisdom.
             </p>
 

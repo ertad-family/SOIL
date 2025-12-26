@@ -204,7 +204,7 @@ export default function StoryOverviewPage() {
   const roleLabel = story.founderRole ? FOUNDER_ROLE_LABELS[story.founderRole] : null;
   const pageTitle = (() => {
     if (roleLabel && userName) {
-      return `The story of ${orgName} told by its ${roleLabel} — ${userName}`;
+      return `The story of ${orgName} told by its ${roleLabel} - ${userName}`;
     }
     if (roleLabel) {
       return `The story of ${orgName} told by its ${roleLabel}`;
@@ -389,7 +389,7 @@ export default function StoryOverviewPage() {
                   <div className="text-center p-3 bg-slate-800/50 rounded-lg">
                     <Users className="h-5 w-5 text-gold-400 mx-auto mb-1" />
                     <p className="text-lg font-semibold text-marble-100">
-                      {story.basicInfo.peakTeamSize || "—"}
+                      {story.basicInfo.peakTeamSize || "-"}
                     </p>
                     <p className="text-xs text-slate-500">Peak team</p>
                   </div>

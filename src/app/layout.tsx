@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://soil.rip"),
   title: "SOIL - Social Organizational Intelligence Lab",
   description:
-    "Building the foundation for organizational medicine — a new scientific field that will fundamentally improve how humanity creates, maintains, and heals organizations.",
+    "Building the foundation for organizational medicine - a new scientific field that will fundamentally improve how humanity creates, maintains, and heals organizations.",
   keywords: [
     "organizational research",
     "startup failure",

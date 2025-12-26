@@ -185,7 +185,7 @@ export function GlossaryClient({
                   <a href="/about" className="text-gold-400 hover:text-gold-300 transition-colors">
                     About the Project
                   </a>{" "}
-                  — SOIL&apos;s mission and scientific foundation
+                  - SOIL&apos;s mission and scientific foundation
                 </li>
                 <li>
                   <a
@@ -194,7 +194,7 @@ export function GlossaryClient({
                   >
                     Research Center
                   </a>{" "}
-                  — Our approach to studying organizational mortality
+                  - Our approach to studying organizational mortality
                 </li>
                 <li>
                   <a
@@ -203,7 +203,7 @@ export function GlossaryClient({
                   >
                     Founder Community
                   </a>{" "}
-                  — Join others who&apos;ve experienced organizational closure
+                  - Join others who&apos;ve experienced organizational closure
                 </li>
               </ul>
             </Card>

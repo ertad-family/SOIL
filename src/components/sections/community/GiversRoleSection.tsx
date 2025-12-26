@@ -234,7 +234,7 @@ export function GiversRoleSection() {
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
               Financial support enables us to build the infrastructure for preserving organizational
-              wisdom. Whether through donations, investments, or sponsorships — your contribution
+              wisdom. Whether through donations, investments, or sponsorships - your contribution
               has lasting impact. Your name can be immortalized in the platform.
             </p>
 

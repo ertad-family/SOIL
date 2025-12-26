@@ -243,7 +243,7 @@ function ResearchGapSection() {
       icon: <Database className="w-6 h-6" />,
       title: "Fragmented Knowledge",
       description:
-        "What we know about organizational closure is scattered across anecdotes, case studies, and personal stories — never aggregated or analyzed at scale.",
+        "What we know about organizational closure is scattered across anecdotes, case studies, and personal stories - never aggregated or analyzed at scale.",
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
@@ -262,7 +262,7 @@ function ResearchGapSection() {
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
           Every year, millions of organizations die. Startups, NGOs, agencies, ventures of all kinds
-          — they close, dissolve, or simply fade away. Yet unlike medicine, which has centuries of{" "}
+          - they close, dissolve, or simply fade away. Yet unlike medicine, which has centuries of{" "}
           <GlossaryTerm term="Autopsy">autopsy</GlossaryTerm> data informing how we understand human
           health, organizational science has almost no systematic data on organizational death.
         </p>
@@ -654,7 +654,7 @@ function ComparisonSection() {
             What Makes SOIL Different
           </h2>
           <p className="text-lg text-slate-400 max-w-3xl mx-auto">
-            We&apos;re not just studying failure differently — we&apos;re building the
+            We&apos;re not just studying failure differently - we&apos;re building the
             infrastructure for an entirely new approach to organizational science.
           </p>
         </div>

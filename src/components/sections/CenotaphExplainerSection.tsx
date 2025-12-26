@@ -38,15 +38,15 @@ export function CenotaphExplainerSection() {
             </h2>
 
             <p className="text-marble-100 text-lg leading-relaxed mb-6">
-              Every organization on SOIL gets a cenotaph erected in its honor. A cenotaph — from
-              Greek meaning &ldquo;empty tomb&rdquo; — is a monument for someone whose remains are
+              Every organization on SOIL gets a cenotaph erected in its honor. A cenotaph - from
+              Greek meaning &ldquo;empty tomb&rdquo; - is a monument for someone whose remains are
               elsewhere.
             </p>
 
             <p className="text-slate-400 text-lg leading-relaxed">
               Here, your cenotaph becomes the permanent digital memorial for your venture: a place
               where its story, lessons, and legacy are preserved forever. Together, all cenotaphs
-              form the Cenotaphery — a collective memorial garden honoring organizations that shaped
+              form the Cenotaphery - a collective memorial garden honoring organizations that shaped
               their founders and taught the world.
             </p>
           </div>

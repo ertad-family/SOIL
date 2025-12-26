@@ -239,7 +239,7 @@ export function ResearchersRoleSection() {
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
               Organizational mortality is understudied because the data doesn&apos;t exist.
               We&apos;re building the first systematic dataset of{" "}
-              <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm> — and we need
+              <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm> - and we need
               researchers to help us make sense of it.
             </p>
 

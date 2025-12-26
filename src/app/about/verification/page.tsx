@@ -40,18 +40,18 @@ export default function VerificationPage() {
           <h2 className="text-2xl font-display text-marble-100 mb-6">Why Verification Matters</h2>
           <div className="space-y-4 text-slate-400">
             <p>
-              SOIL is building a repository of organizational knowledge — lessons learned from
+              SOIL is building a repository of organizational knowledge - lessons learned from
               companies that have closed their doors. For this knowledge to be valuable, it must be
               authentic.
             </p>
             <p>Verification serves two purposes:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>
-                <strong className="text-marble-200">Confirms existence</strong> — The organization
+                <strong className="text-marble-200">Confirms existence</strong> - The organization
                 actually existed and operated as described
               </li>
               <li>
-                <strong className="text-marble-200">Confirms role</strong> — The storyteller held
+                <strong className="text-marble-200">Confirms role</strong> - The storyteller held
                 the position they claim (founder, executive, team member, etc.)
               </li>
             </ul>
@@ -207,7 +207,7 @@ export default function VerificationPage() {
                 <h3 className="font-medium text-marble-100 mb-2">Privacy & Confidentiality</h3>
                 <p className="text-sm text-slate-400">
                   Verifier responses are confidential. We only share that verification was
-                  successful — never who verified or what they said. Documents are reviewed by our
+                  successful - never who verified or what they said. Documents are reviewed by our
                   team and never shared publicly. You control what information appears on your{" "}
                   <GlossaryTerm term="Cenotaph">cenotaph</GlossaryTerm>.
                 </p>

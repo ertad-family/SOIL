@@ -308,7 +308,7 @@ export default function PrivacyPolicyPage() {
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>
                     <strong className="text-marble-100">Full Anonymity (default):</strong> No
-                    identifying information displayed — organization and founder names are hidden
+                    identifying information displayed - organization and founder names are hidden
                   </li>
                   <li>
                     <strong className="text-marble-100">Organization Name Visible (opt-in):</strong>{" "}
@@ -325,7 +325,7 @@ export default function PrivacyPolicyPage() {
                   <strong className="text-marble-100">Important:</strong> Even with visibility
                   settings enabled, the narrative content and organizational details in your
                   cenotaph remain anonymized. Only the organization name and/or founder name can be
-                  revealed — never other individuals mentioned in your story (employees,
+                  revealed - never other individuals mentioned in your story (employees,
                   co-founders, investors, etc.).
                 </p>
                 <p className="mt-2">
@@ -576,11 +576,11 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>
-                    <strong className="text-marble-100">Authentication cookies</strong> (Supabase) —
+                    <strong className="text-marble-100">Authentication cookies</strong> (Supabase) -
                     Session management and secure login
                   </li>
                   <li>
-                    <strong className="text-marble-100">soil_analytics_consent</strong> — Stores
+                    <strong className="text-marble-100">soil_analytics_consent</strong> - Stores
                     your cookie preference choice (1 year)
                   </li>
                 </ul>
@@ -596,25 +596,25 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <ul className="list-disc list-inside space-y-3 ml-4">
                   <li>
-                    <strong className="text-marble-100">Google Analytics (GA4)</strong> — Collects
+                    <strong className="text-marble-100">Google Analytics (GA4)</strong> - Collects
                     anonymized data about pages visited, time spent, traffic sources, and device
                     information
                   </li>
                   <li>
-                    <strong className="text-marble-100">Vercel Analytics</strong> — Performance
+                    <strong className="text-marble-100">Vercel Analytics</strong> - Performance
                     monitoring and page view tracking provided by our hosting platform
                   </li>
                   <li>
-                    <strong className="text-marble-100">soil_visitor</strong> — Anonymous visitor
+                    <strong className="text-marble-100">soil_visitor</strong> - Anonymous visitor
                     identifier used for features like preventing duplicate &quot;Pay Respects&quot;
                     actions (1 year, HTTP-only)
                   </li>
                   <li>
-                    <strong className="text-marble-100">Internal analytics</strong> — Event tracking
+                    <strong className="text-marble-100">Internal analytics</strong> - Event tracking
                     for platform improvement (stored in Supabase)
                   </li>
                   <li>
-                    <strong className="text-marble-100">Referral tracking</strong> — Tracks ?ref=
+                    <strong className="text-marble-100">Referral tracking</strong> - Tracks ?ref=
                     parameters for measuring share link effectiveness
                   </li>
                 </ul>
@@ -827,7 +827,7 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <p className="text-marble-100 font-medium">SOIL Foundation</p>
                   <p className="text-slate-500 text-sm">
-                    (Delaware 501(c)(3) Nonprofit — In Formation)
+                    (Delaware 501(c)(3) Nonprofit - In Formation)
                   </p>
                 </div>
                 <div className="space-y-2">

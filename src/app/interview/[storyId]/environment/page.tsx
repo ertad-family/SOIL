@@ -276,7 +276,7 @@ const EVENT_CATEGORIES: Array<{
 // =============================================================================
 
 const EXTERNAL_EVENTS_GUIDANCE = {
-  why: "External events—market changes, regulatory shifts, competitive moves—often interact with internal dynamics to shape organizational outcomes. Understanding the external context helps identify which environmental factors correlate with different failure modes.",
+  why: "External events-market changes, regulatory shifts, competitive moves-often interact with internal dynamics to shape organizational outcomes. Understanding the external context helps identify which environmental factors correlate with different failure modes.",
   what: [
     "Market changes (demand shifts, new segments)",
     "Competitive moves (new entrants, pricing wars)",
@@ -1035,7 +1035,7 @@ export default function EnvironmentPage() {
               >
                 <Calendar className="h-4 w-4 text-slate-500" />
                 <span className="text-sm text-marble-100">
-                  {event.date || "No date"} — {event.subType || categoryInfo?.label || "New Event"}
+                  {event.date || "No date"} - {event.subType || categoryInfo?.label || "New Event"}
                 </span>
               </button>
               <div className="flex items-center gap-2">

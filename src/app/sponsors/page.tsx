@@ -22,7 +22,7 @@ export default function SponsorsPage() {
           </h1>
           <p className="text-lg text-slate-400 mb-8 leading-relaxed">
             We&apos;re developing our sponsorship program. Soon you&apos;ll be able to fund specific
-            features, research projects, or regional cenotapheries — with your name immortalized in
+            features, research projects, or regional cenotapheries - with your name immortalized in
             the platform.
           </p>
 
@@ -35,19 +35,19 @@ export default function SponsorsPage() {
             <ul className="space-y-3 text-slate-400">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-400 mt-1">•</span>
-                Feature sponsorship — fund specific platform capabilities
+                Feature sponsorship - fund specific platform capabilities
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-400 mt-1">•</span>
-                Research projects — support specific studies or analyses
+                Research projects - support specific studies or analyses
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-400 mt-1">•</span>
-                Regional cenotapheries — establish local memorial spaces
+                Regional cenotapheries - establish local memorial spaces
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-400 mt-1">•</span>
-                Community events — sponsor Day of the Dead Venture gatherings
+                Community events - sponsor Day of the Dead Venture gatherings
               </li>
             </ul>
           </Card>
