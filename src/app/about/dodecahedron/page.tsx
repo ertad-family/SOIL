@@ -1,6 +1,7 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import {
-  Hexagon,
+  Pentagon,
   Sparkles,
   Library,
   Lightbulb,
@@ -27,73 +28,73 @@ export const metadata: Metadata = {
 
 const disciplines = [
   {
-    face: 0,
+    face: 1,
     name: "Biology",
     description: "Organization as organism — birth, growth, metabolism, death",
     icon: Microscope,
   },
   {
-    face: 1,
+    face: 2,
     name: "Ecology",
     description: "Populations, niches, competition for resources, environmental fit",
     icon: Network,
   },
   {
-    face: 2,
+    face: 3,
     name: "Economics",
     description: "Markets, incentives, efficiency, rational choice, firm theory",
     icon: DollarSign,
   },
   {
-    face: 3,
+    face: 4,
     name: "Sociology",
     description: "Social structures, institutions, power, networks, legitimacy",
     icon: Users,
   },
   {
-    face: 4,
+    face: 5,
     name: "Psychology",
     description: "Behavior, motivation, cognitive limits, leadership, burnout",
     icon: Brain,
   },
   {
-    face: 5,
+    face: 6,
     name: "Political Science",
     description: "Power, conflict, coalitions, governance, decision-making",
     icon: Scale,
   },
   {
-    face: 6,
+    face: 7,
     name: "Anthropology",
     description: "Culture, rituals, meaning-making, symbols, identity",
     icon: Flame,
   },
   {
-    face: 7,
+    face: 8,
     name: "Cybernetics",
     description: "Feedback loops, control, self-regulation, homeostasis",
     icon: Zap,
   },
   {
-    face: 8,
+    face: 9,
     name: "Systems Theory",
     description: "Wholes and parts, emergence, boundaries, complexity",
     icon: Network,
   },
   {
-    face: 9,
+    face: 10,
     name: "Information Theory",
     description: "Communication, signals, noise, coordination, entropy",
     icon: Binary,
   },
   {
-    face: 10,
+    face: 11,
     name: "Evolutionary Theory",
     description: "Selection, variation, inheritance, adaptation, fitness",
     icon: Dna,
   },
   {
-    face: 11,
+    face: 12,
     name: "Medicine",
     description: "Diagnosis, pathology, treatment, prevention, prognosis",
     icon: Stethoscope,
@@ -107,7 +108,7 @@ export default function DodecahedronPage() {
       <section className="py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="w-16 h-16 rounded-full bg-gold-500/20 flex items-center justify-center mx-auto mb-6">
-            <Hexagon className="w-8 h-8 text-gold-400" />
+            <Pentagon className="w-8 h-8 text-gold-400" />
           </div>
           <h1 className="text-3xl md:text-4xl font-display text-marble-100 mb-4">
             The Roman Dodecahedron
@@ -133,6 +134,17 @@ export default function DodecahedronPage() {
               discovered, primarily in the northwestern provinces of the Roman Empire (Gaul,
               Britain, Germania).
             </p>
+            <div className="my-8 flex justify-center">
+              <div className="relative w-full max-w-2xl aspect-[4/3] rounded-lg overflow-hidden border border-slate-700 bg-slate-800/30">
+                <Image
+                  src="/roman-dodecahedron.webp"
+                  alt="Roman Dodecahedron - Ancient bronze artifact with 12 pentagonal faces"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 my-6">
               <h3 className="font-medium text-marble-100 mb-3">Distinctive Features</h3>
               <ul className="space-y-2 text-sm">
@@ -256,13 +268,13 @@ export default function DodecahedronPage() {
                       <Icon className="w-4 h-4 text-gold-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-xs text-slate-600 font-mono">
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-sm text-slate-600 font-mono">
                           Face {discipline.face}
                         </span>
-                        <h3 className="font-medium text-marble-100 text-sm">{discipline.name}</h3>
+                        <h3 className="font-medium text-marble-100 text-base">{discipline.name}</h3>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed">
+                      <p className="text-sm text-slate-400 leading-relaxed">
                         {discipline.description}
                       </p>
                     </div>

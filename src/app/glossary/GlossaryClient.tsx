@@ -19,165 +19,31 @@ interface GlossaryTerm {
 
 interface GlossaryClientProps {
   cenotapheryCapacity: number;
+  initialTerms: GlossaryTerm[];
+  categories: string[];
 }
 
-const categories = [
-  "Core Concepts",
-  "Places & Objects",
-  "People & Roles",
-  "Interview System",
-  "Events & Awards",
-  "Navigation & Interface",
-];
-
-export function GlossaryClient({ cenotapheryCapacity }: GlossaryClientProps) {
+export function GlossaryClient({
+  cenotapheryCapacity,
+  initialTerms,
+  categories,
+}: GlossaryClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Build glossary terms with dynamic capacity value
+  // Transform terms to include dynamic capacity in Cenotaphery definition
   const glossaryTerms = useMemo<GlossaryTerm[]>(
-    () => [
-      // Core Concepts
-      {
-        term: "SOIL",
-        definition:
-          "Social Organizational Intelligence Lab - research platform for organizational autopsy data collection. A research-first nonprofit project devoted to collecting organizational autopsy data at scale to establish a new scientific field: Organizational Biology, Health, and Medicine.",
-        category: "Core Concepts",
-      },
-      {
-        term: "Organizational Autopsy",
-        definition:
-          "Systematic analysis of why organizations die. Similar to medical autopsy, this process examines the complete lifecycle, structure, and causes of organizational closure to extract valuable lessons for future ventures.",
-        category: "Core Concepts",
-      },
-      {
-        term: "Organizational Biology/Medicine",
-        definition:
-          "The new scientific field SOIL aims to create. Just as medical science developed through systematic autopsy of human bodies, organizational medicine seeks to understand organizational health and mortality through rigorous research and data collection.",
-        category: "Core Concepts",
-      },
-      {
-        term: "Organizational Mortality",
-        definition:
-          "The death or closure of organizations. SOIL studies this phenomenon systematically to identify patterns, causes, and preventive measures.",
-        category: "Core Concepts",
-      },
-
-      // Places & Objects
-      {
-        term: "Cenotaph",
-        definition:
-          "Monument honoring an organization whose &apos;body&apos; is gone. A digital memorial created by founders to preserve the story, data, and lessons of their closed organization. Each cenotaph includes structured interview data, timeline, and narrative.",
-        category: "Places & Objects",
-      },
-      {
-        term: "Cenotaphery",
-        definition: `Virtual cemetery where cenotaphs stand, organized geographically. Each region has its own cenotaphery (country, state, city level) that can hold ${cenotapheryCapacity.toLocaleString()} cenotaphs before splitting into smaller geographic units.`,
-        category: "Places & Objects",
-      },
-      {
-        term: "Crypt",
-        definition:
-          "Secure storage for documents, code, and media from the failed organization. Preserves digital artifacts associated with the organization for future reference and research.",
-        category: "Places & Objects",
-      },
-      {
-        term: "Roman Dodecahedron",
-        definition:
-          "Ancient bronze artifact (2nd-4th century AD) that serves as SOIL&apos;s navigation interface and central symbol. Features 12 pentagonal faces with circular holes of varying diameters and 20 vertices topped with small spheres. Its unknown purpose mirrors lost organizational knowledge that SOIL seeks to preserve.",
-        category: "Places & Objects",
-        link: { text: "Discover the symbolism", url: "/about/dodecahedron" },
-      },
-
-      // People & Roles
-      {
-        term: "Keeper",
-        definition:
-          "Regional moderator and community leader who operates a cenotaphery. Keepers review cenotaphs, moderate community, organize local events including Day of the Dead Venture, and earn revenue from their region&apos;s activities.",
-        category: "People & Roles",
-      },
-      {
-        term: "Pathologist",
-        definition:
-          "Professional who conducts founder interviews. Trained interviewers who guide founders through the structured autopsy process, extracting detailed data while providing therapeutic support during the closure process.",
-        category: "People & Roles",
-      },
-      {
-        term: "Founder",
-        definition:
-          "Person who created or led the failed organization. Founders contribute their organizational stories through the interview process, creating cenotaphs and joining the community of those who have experienced closure.",
-        category: "People & Roles",
-      },
-      {
-        term: "Contributor",
-        definition:
-          "Community member who contributes code, translations, or other improvements to the SOIL platform. Contributors earn recognition and may qualify for Keeper or staff positions.",
-        category: "People & Roles",
-      },
-
-      // Interview System
-      {
-        term: "Wizard",
-        definition:
-          "Interview modules for structured data collection. Six modules: Functional Mapping, Financial Picture, Dynamic Picture, Environment Analysis, Founder Context, and Narrative. Each wizard captures different aspects of the organizational story.",
-        category: "Interview System",
-      },
-      {
-        term: "Peak Operations",
-        definition:
-          "Temporal anchor - the moment when the organization was working at its best. All functional data is collected at this point to capture maximum capabilities and minimize bias from the final crisis period.",
-        category: "Interview System",
-      },
-
-      // Events & Awards
-      {
-        term: "Day of the Dead Venture",
-        definition:
-          "Annual global celebration on October 19th honoring failed organizations. Features global virtual ceremony, local gatherings led by Keepers, founder stories, and announcement of the Cenotavr Award. Date chosen to coincide with Black Monday 1987 - the largest single-day global market crash.",
-        category: "Events & Awards",
-      },
-      {
-        term: "Cenotavr Award",
-        definition:
-          "Annual award for most impactful cenotaph, determined by community engagement metrics during the year. Announced during Day of the Dead Venture ceremony. Purely metric-based with no applications or jury - every public, verified cenotaph is automatically eligible.",
-        category: "Events & Awards",
-      },
-
-      // Navigation & Interface
-      {
-        term: "Portal",
-        definition:
-          "Circular holes in the dodecahedron&apos;s pentagonal faces that serve as navigation entry points. Users fly through these portals to access different sections of the SOIL platform. Hole diameters vary to indicate section importance.",
-        category: "Navigation & Interface",
-      },
-      {
-        term: "Vertex Sphere",
-        definition:
-          "Small spheres topping the 20 vertices of the dodecahedron (matching the original Roman artifact). Serve as secondary navigation for utility functions like profile, settings, search, and notifications. Clicking a sphere takes users inside for a 360° panoramic interface.",
-        category: "Navigation & Interface",
-      },
-
-      // Additional Terms from Documentation
-      {
-        term: "Framework-Agnostic Approach",
-        definition:
-          "SOIL&apos;s core research methodology - collecting data in neutral formats without imposing a single theoretical framework, then applying multiple analytical lenses (biology, economics, sociology, etc.) post-hoc to test which best explain organizational mortality.",
-        category: "Core Concepts",
-      },
-      {
-        term: "Verification",
-        definition:
-          "Process ensuring authenticity of cenotaphs through social verification (3+ colleague confirmations) or documentary verification (official documents). Only verified data can be used in organizational research. Allows publishing organization name publicly.",
-        category: "Interview System",
-        link: { text: "Learn more about verification", url: "/about/verification" },
-      },
-      {
-        term: "Publicity Tiers",
-        definition:
-          "Founder-controlled visibility levels: Full Anonymity (default - pattern and data only), Pseudonym + Story (industry, geography, dates without names), or Full Publicity (organization name, founder name, AI-generated summary visible).",
-        category: "Interview System",
-      },
-    ],
-    [cenotapheryCapacity]
+    () =>
+      initialTerms.map((term) => {
+        // Replace capacity placeholder in Cenotaphery definition
+        if (term.term === "Cenotaphery") {
+          return {
+            ...term,
+            definition: `Virtual cemetery where cenotaphs stand, organized geographically. Each region has its own cenotaphery (country, state, city level) that can hold ${cenotapheryCapacity.toLocaleString()} cenotaphs before splitting into smaller geographic units.`,
+          };
+        }
+        return term;
+      }),
+    [initialTerms, cenotapheryCapacity]
   );
 
   // Filter terms based on search query
@@ -207,7 +73,7 @@ export function GlossaryClient({ cenotapheryCapacity }: GlossaryClientProps) {
     });
 
     return grouped;
-  }, [filteredTerms]);
+  }, [filteredTerms, categories]);
 
   const hasResults = filteredTerms.length > 0;
 
