@@ -202,7 +202,7 @@ const givingTypes = [
   {
     icon: <Heart className="w-5 h-5" />,
     title: "Donate",
-    description: "One-time or recurring support via Patreon.",
+    description: "One-time or recurring support (coming soon).",
   },
   {
     icon: <TrendingUp className="w-5 h-5" />,
@@ -266,18 +266,18 @@ export function GiversRoleSection() {
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-3">
-              <a href="https://patreon.com/soil" target="_blank" rel="noopener noreferrer">
+              <a href="/donate">
                 <Button
                   variant="dark-primary"
                   size="lg"
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                 >
-                  Donate on Patreon
+                  Support SOIL
                 </Button>
               </a>
               <a href="/investors">
                 <Button variant="dark-secondary" size="lg">
-                  Request Pitch Deck
+                  Become an Investor
                 </Button>
               </a>
             </div>

@@ -211,8 +211,6 @@ export function TestimonialPromptModal({
               placeholder={messages.placeholder}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              showCount
-              maxLength={500}
               rows={4}
             />
           </div>

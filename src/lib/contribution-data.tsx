@@ -26,6 +26,8 @@ export interface ContributionOption {
   cta?: string;
   href: string;
   external?: boolean;
+  /** If true, the card's CTA button will be disabled */
+  disabled?: boolean;
 }
 
 export interface TabData {
@@ -137,10 +139,9 @@ export const tabsData: Record<string, TabData> = {
         icon: <Heart className="w-6 h-6" />,
         title: "Donate",
         description:
-          "Support platform development with one-time or recurring donation via Patreon or direct transfer.",
-        cta: "Donate on Patreon",
-        href: "https://patreon.com/soil",
-        external: true,
+          "Support platform development with a one-time or recurring donation. Coming soon.",
+        cta: "Learn More",
+        href: "/donate",
       },
       {
         icon: <TrendingUp className="w-6 h-6" />,

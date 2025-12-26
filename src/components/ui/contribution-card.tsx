@@ -36,6 +36,7 @@ export function ContributionCard({
       type: "general",
       title: "Share Your Feedback",
       description: "Your thoughts help us build a better platform. What's on your mind?",
+      force: true, // Always show, even if user already gave feedback
     });
   };
 
@@ -90,6 +91,15 @@ export function ContributionCard({
             className="w-full"
             rightIcon={<ArrowRight className="w-4 h-4" />}
             onClick={handleFeedbackClick}
+          >
+            {option.cta}
+          </Button>
+        ) : option.disabled ? (
+          <Button
+            variant="dark-secondary"
+            size={useCompactSizing ? "sm" : "md"}
+            className="w-full"
+            disabled
           >
             {option.cta}
           </Button>

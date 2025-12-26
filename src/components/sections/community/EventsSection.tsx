@@ -231,7 +231,7 @@ const events = [
     subtitle: "Annual Global Celebration",
     description:
       "A worldwide celebration honoring organizations that have ended their journey. Share stories, light virtual candles, and connect with the community in remembrance.",
-    date: "November annually",
+    date: "October 19th annually",
     format: "Hybrid (Virtual + Local)",
     icon: <Globe className="w-5 h-5" />,
     illustration: <DayOfDeadVentureSVG />,
@@ -260,8 +260,9 @@ const events = [
       "Networking opportunities",
       "Research presentations",
     ],
-    cta: "Find Local Events",
+    cta: "Coming Soon",
     href: "#local-events",
+    disabled: true,
   },
 ];
 
@@ -388,7 +389,11 @@ export function EventsSection() {
                   ))}
                 </div>
 
-                {event.href.startsWith("#") ? (
+                {event.disabled ? (
+                  <Button variant="dark-secondary" size="md" className="w-full" disabled>
+                    {event.cta}
+                  </Button>
+                ) : event.href.startsWith("#") ? (
                   <Button
                     variant="dark-secondary"
                     size="md"
