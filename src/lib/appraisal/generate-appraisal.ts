@@ -410,62 +410,14 @@ function extractEnvironmentEmotionalContext(story: Story): string {
 
 /**
  * Extract emotional context from functional module
+ * Sends the whole functionalMapping object as JSON for AI to interpret
  */
 function extractFunctionalEmotionalContext(story: Story): string {
-  const parts: string[] = [];
   const func = story.functionalMapping;
 
   if (!func) return "";
 
-  const activeFunctions = func.functions?.filter((f) => f.isActive) || [];
-
-  parts.push(`ORGANIZATIONAL STRUCTURE (${activeFunctions.length} functions mapped):`);
-
-  // Health issues summary
-  const healthIssues = activeFunctions.filter(
-    (f) =>
-      f.healthCheck?.turnover === "high" ||
-      f.healthCheck?.staffing === "understaffed" ||
-      f.healthCheck?.budgetPressure === "severe" ||
-      f.healthCheck?.qualityIssues === "serious" ||
-      f.healthCheck?.leadership === "vacuum"
-  );
-
-  if (healthIssues.length > 0) {
-    parts.push(`\nORGANIZATIONAL HEALTH ISSUES in ${healthIssues.length} functions:`);
-
-    const highTurnover = healthIssues.filter((f) => f.healthCheck?.turnover === "high");
-    const understaffed = healthIssues.filter((f) => f.healthCheck?.staffing === "understaffed");
-    const budgetPressure = healthIssues.filter((f) => f.healthCheck?.budgetPressure === "severe");
-    const qualityIssues = healthIssues.filter((f) => f.healthCheck?.qualityIssues === "serious");
-    const leadershipVacuum = healthIssues.filter((f) => f.healthCheck?.leadership === "vacuum");
-
-    if (highTurnover.length > 0) {
-      parts.push(`- HIGH TURNOVER in ${highTurnover.length} functions`);
-    }
-    if (understaffed.length > 0) {
-      parts.push(`- UNDERSTAFFING in ${understaffed.length} functions`);
-    }
-    if (budgetPressure.length > 0) {
-      parts.push(`- SEVERE budget pressure in ${budgetPressure.length} functions`);
-    }
-    if (qualityIssues.length > 0) {
-      parts.push(`- SERIOUS quality issues in ${qualityIssues.length} functions`);
-    }
-    if (leadershipVacuum.length > 0) {
-      parts.push(`- LEADERSHIP vacuum in ${leadershipVacuum.length} functions`);
-    }
-  }
-
-  // Satisfaction issues
-  const lowSatisfaction = activeFunctions.filter(
-    (f) => f.satisfaction !== null && f.satisfaction <= 2
-  );
-  if (lowSatisfaction.length > 0) {
-    parts.push(`\n${lowSatisfaction.length} functions had low satisfaction ratings`);
-  }
-
-  return parts.join("\n");
+  return `ORGANIZATIONAL STRUCTURE (raw data):\n${JSON.stringify(func, null, 2)}`;
 }
 
 /**
@@ -621,7 +573,7 @@ Format your response as JSON:
       contents: prompt,
       config: {
         temperature: 0.7, // Slightly higher for more warmth and variation
-        maxOutputTokens: 512,
+        maxOutputTokens: 4096, // Needs extra room for model's internal thinking tokens
       },
     });
 

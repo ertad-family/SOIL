@@ -188,6 +188,7 @@ function getEnvironmentSignals(story: Story): string[] {
 
 /**
  * Extract contextual signals from functional module data
+ * Supports both new (selectedFunctions) and legacy (functions) data structures
  */
 function getFunctionalSignals(story: Story): string[] {
   const signals: string[] = [];
@@ -195,13 +196,19 @@ function getFunctionalSignals(story: Story): string[] {
 
   if (!func) return signals;
 
-  // Count active functions
-  const activeFunctions = func.functions?.filter((f) => f.isActive) || [];
-  if (activeFunctions.length > 0) {
+  // Check for new structure (selectedFunctions)
+  const selectedCount = func.selectedFunctions?.length || 0;
+  if (selectedCount > 0) {
     signals.push("functions_mapped");
   }
 
-  // Health issues
+  // Legacy structure analysis (functions with details)
+  const activeFunctions = func.functions?.filter((f) => f.isActive) || [];
+  if (activeFunctions.length > 0 && selectedCount === 0) {
+    signals.push("functions_mapped");
+  }
+
+  // Health issues (only available in legacy structure)
   const healthIssues = activeFunctions.filter(
     (f) =>
       f.healthCheck?.turnover === "high" ||
@@ -214,13 +221,13 @@ function getFunctionalSignals(story: Story): string[] {
     signals.push("organizational_health_issues");
   }
 
-  // Turnover specifically
+  // Turnover specifically (legacy structure)
   const highTurnover = activeFunctions.filter((f) => f.healthCheck?.turnover === "high");
   if (highTurnover.length > 0) {
     signals.push("high_turnover");
   }
 
-  // Understaffing
+  // Understaffing (legacy structure)
   const understaffed = activeFunctions.filter((f) => f.healthCheck?.staffing === "understaffed");
   if (understaffed.length > 0) {
     signals.push("understaffing");

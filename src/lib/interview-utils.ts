@@ -42,8 +42,11 @@ export function isModuleDataComplete(story: Story, moduleId: ModuleId): boolean 
       return isBasicInfoValid(story.basicInfo);
 
     case "functional":
-      // At least one function should be active
-      return story.functionalMapping.functions.some((f) => f.isActive);
+      // At least one function should be selected (new structure) or active (legacy)
+      return (
+        (story.functionalMapping.selectedFunctions?.length || 0) > 0 ||
+        (story.functionalMapping.functions || []).some((f) => f.isActive)
+      );
 
     case "financial":
       // Either uploaded files OR metrics should be present
@@ -89,9 +92,15 @@ export function isModuleDataComplete(story: Story, moduleId: ModuleId): boolean 
 
 /**
  * Detect patterns from functional mapping health check data
+ * Note: This works with legacy FunctionDetail[] data structure.
+ * For new stories using selectedFunctions[], patterns won't be auto-detected.
  */
 export function detectPatterns(functions: FunctionDetail[]): DetectedPattern[] {
   const patterns: DetectedPattern[] = [];
+
+  // Safety check: return empty if no functions or empty array
+  if (!functions || functions.length === 0) return patterns;
+
   const activeFunctions = functions.filter((f) => f.isActive);
 
   if (activeFunctions.length === 0) return patterns;
@@ -262,8 +271,9 @@ export function getPatternQuestions(
 export function getContextualAffirmation(story: Story): string | null {
   const affirmations: string[] = [];
 
-  // Low satisfaction on functions
-  const lowSatisfactionFunctions = story.functionalMapping.functions.filter(
+  // Low satisfaction on functions (legacy data structure)
+  const functions = story.functionalMapping.functions || [];
+  const lowSatisfactionFunctions = functions.filter(
     (f) => f.isActive && f.satisfaction !== null && f.satisfaction <= 3
   );
   if (lowSatisfactionFunctions.length > 0) {
@@ -271,10 +281,8 @@ export function getContextualAffirmation(story: Story): string | null {
     affirmations.push(`Most founders struggle with ${functionName}. You're not alone.`);
   }
 
-  // Many functions with Founder as owner
-  const founderOwnedCount = story.functionalMapping.functions.filter(
-    (f) => f.isActive && f.ownerType === "founder"
-  ).length;
+  // Many functions with Founder as owner (legacy data structure)
+  const founderOwnedCount = functions.filter((f) => f.isActive && f.ownerType === "founder").length;
   if (founderOwnedCount >= 3) {
     affirmations.push("Running multiple functions yourself is exhausting. You carried a lot.");
   }
@@ -363,11 +371,16 @@ export function getRemainingTime(completedModules: ModuleId[]): number {
  * Calculate story statistics for summary
  */
 export function calculateStoryStats(story: Story) {
-  const activeFunctions = story.functionalMapping.functions.filter((f) => f.isActive);
+  // Use new selectedFunctions field (array of IDs) or fall back to legacy
+  const selectedCount = story.functionalMapping.selectedFunctions?.length || 0;
+  const legacyCount = (story.functionalMapping.functions || []).filter((f) => f.isActive).length;
+  const functionsCount = selectedCount > 0 ? selectedCount : legacyCount;
 
-  const totalHeadcount = activeFunctions.reduce((sum, f) => {
-    return sum + (f.headcount || 0);
-  }, 0);
+  // Headcount is only available in legacy structure
+  const legacyFunctions = story.functionalMapping.functions || [];
+  const totalHeadcount = legacyFunctions
+    .filter((f) => f.isActive)
+    .reduce((sum, f) => sum + (f.headcount || 0), 0);
 
   const totalEvents =
     (story.financialPicture.events?.length || 0) +
@@ -380,7 +393,7 @@ export function calculateStoryStats(story: Story) {
     .filter((q) => q.answer && !q.skipped).length;
 
   return {
-    functionsCount: activeFunctions.length,
+    functionsCount,
     totalHeadcount,
     totalEvents,
     answeredNarrativeQuestions,

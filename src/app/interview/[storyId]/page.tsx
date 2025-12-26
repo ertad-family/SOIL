@@ -234,7 +234,7 @@ export default function StoryOverviewPage() {
     return `${years}y ${remainingMonths}m`;
   };
 
-  const functionsCount = story.functionalMapping.functions.filter((f) => f.isActive).length;
+  const functionsCount = story.functionalMapping.selectedFunctions?.length || 0;
   const eventsCount =
     (story.financialPicture.events?.length || 0) +
     (story.dynamicPicture.events?.length || 0) +
