@@ -26,7 +26,7 @@ const SECONDARY_LINKS = [
   { href: "#", label: "For Investors", disabled: true },
   { href: "#", label: "For Patrons", disabled: true },
   { href: "#", label: "For Media", disabled: true },
-  { href: "#", label: "Careers", disabled: true },
+  { href: "/careers", label: "Careers" },
 ];
 
 // Service navigation - utility pages
