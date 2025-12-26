@@ -3,6 +3,7 @@
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import { ArrowRight, Shield, Calendar, Globe, TrendingUp } from "lucide-react";
 
 // Custom SVG illustration for Keepers - showing hierarchy/path
@@ -248,7 +249,12 @@ const valueProps = [
   {
     icon: <Shield className="w-5 h-5" />,
     title: "Regional Leadership",
-    description: "Become the guardian of a cenotaphery in your region.",
+    description: (
+      <>
+        Become the guardian of a <GlossaryTerm term="Cenotaphery">cenotaphery</GlossaryTerm> in your
+        region.
+      </>
+    ),
   },
   {
     icon: <Calendar className="w-5 h-5" />,
@@ -270,7 +276,14 @@ const valueProps = [
 const keeperPath = [
   { level: "Applicant", description: "Submit your application and demonstrate commitment" },
   { level: "Apprentice", description: "Learn under a Senior Keeper's guidance" },
-  { level: "Full Keeper", description: "Manage your regional cenotaphery" },
+  {
+    level: "Full Keeper",
+    description: (
+      <>
+        Manage your regional <GlossaryTerm term="Cenotaphery">cenotaphery</GlossaryTerm>
+      </>
+    ),
+  },
   { level: "Senior Keeper", description: "Mentor new Keepers and lead major initiatives" },
 ];
 
@@ -286,9 +299,10 @@ export function KeepersRoleSection() {
               Lead Your Regional Community
             </h2>
             <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-              Keepers are the backbone of SOIL. They moderate regional cenotapheries, organize local
-              events, verify founder stories, and build the community infrastructure that makes
-              everything else possible.
+              Keepers are the backbone of SOIL. They moderate regional{" "}
+              <GlossaryTerm term="Cenotaphery">cenotapheries</GlossaryTerm>, organize local events,
+              verify founder stories, and build the community infrastructure that makes everything
+              else possible.
             </p>
 
             {/* Value propositions */}

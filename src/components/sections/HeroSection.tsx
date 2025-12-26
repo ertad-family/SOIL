@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 
 export function HeroSection() {
   return (
@@ -24,8 +27,9 @@ export function HeroSection() {
               Share your story — find closure while helping future founders avoid the same path.
             </p>
             <p className="text-slate-400 leading-relaxed mb-8">
-              SOIL is building the world&apos;s first database of organizational autopsies. Your
-              experience becomes sniper-matched guidance for others facing similar challenges.
+              SOIL is building the world&apos;s first database of{" "}
+              <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm>. Your experience
+              becomes sniper-matched guidance for others facing similar challenges.
             </p>
 
             <div className="flex flex-col gap-4">

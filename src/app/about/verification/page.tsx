@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+"use client";
+
 import {
   Shield,
   ShieldCheck,
@@ -12,12 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-export const metadata: Metadata = {
-  title: "Verification - SOIL",
-  description:
-    "Learn how verification works on SOIL and why it matters for preserving authentic organizational stories.",
-};
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 
 export default function VerificationPage() {
   return (
@@ -142,7 +138,9 @@ export default function VerificationPage() {
                   <Globe className="w-5 h-5 text-gold-400" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-marble-100 mb-1">Public Cenotaph</h3>
+                  <h3 className="font-medium text-marble-100 mb-1">
+                    Public <GlossaryTerm term="Cenotaph">Cenotaph</GlossaryTerm>
+                  </h3>
                   <p className="text-sm text-slate-400">
                     Publish your memorial with full details. Unverified organizations can be
                     published anonymously, but only verified ones can display their name publicly.
@@ -210,8 +208,8 @@ export default function VerificationPage() {
                 <p className="text-sm text-slate-400">
                   Verifier responses are confidential. We only share that verification was
                   successful — never who verified or what they said. Documents are reviewed by our
-                  team and never shared publicly. You control what information appears on your
-                  cenotaph.
+                  team and never shared publicly. You control what information appears on your{" "}
+                  <GlossaryTerm term="Cenotaph">cenotaph</GlossaryTerm>.
                 </p>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import { ArrowRight, Heart, TrendingUp, Award, Gift } from "lucide-react";
 
 // Pre-computed radiating line endpoints (12 lines, 30 degrees apart)
@@ -258,7 +259,8 @@ export function GiversRoleSection() {
               <p className="text-gold-400/80 text-sm font-medium mb-2">Your Impact:</p>
               <p className="text-slate-400 text-sm">
                 100% of donations go directly to platform development, research initiatives, and
-                community programs. All sponsors receive recognition in the Cenotaphery.
+                community programs. All sponsors receive recognition in the{" "}
+                <GlossaryTerm term="Cenotaphery">Cenotaphery</GlossaryTerm>.
               </p>
             </Card>
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Cinzel, Sora, Manrope } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Providers } from "@/components/providers";
 import { ConsentAwareAnalytics } from "@/components/analytics/ConsentAwareAnalytics";
 import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 
@@ -60,9 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-marble-50 text-marble-950 font-sans antialiased">
-        <TooltipProvider delayDuration={300}>
+        <Providers>
           <AppShell>{children}</AppShell>
-        </TooltipProvider>
+        </Providers>
         <CookieConsentBanner />
         <ConsentAwareAnalytics />
       </body>

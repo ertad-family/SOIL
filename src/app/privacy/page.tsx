@@ -2,6 +2,7 @@
 
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 
 // ============================================================================
 // PRIVACY POLICY PAGE
@@ -41,9 +42,10 @@ export default function PrivacyPolicyPage() {
                 platform, and services (collectively, the &quot;Services&quot;).
               </p>
               <p>
-                SOIL is a research-first project devoted to collecting organizational autopsy data
-                at scale to advance the scientific understanding of organizational mortality. We are
-                committed to protecting your privacy while fulfilling our research mission.
+                SOIL is a research-first project devoted to collecting{" "}
+                <GlossaryTerm term="Autopsy">organizational autopsy</GlossaryTerm> data at scale to
+                advance the scientific understanding of organizational mortality. We are committed
+                to protecting your privacy while fulfilling our research mission.
               </p>
               <p>
                 By using our Services, you agree to the collection and use of information in

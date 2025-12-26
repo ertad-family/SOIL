@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import { Landmark, Heart, DollarSign, RefreshCw } from "lucide-react";
 
 // Custom SVG illustration for Founders
@@ -150,7 +151,12 @@ const valueProps = [
   {
     icon: <Landmark className="w-5 h-5" />,
     title: "Digital Memorial",
-    description: "Preserve your organization's story in a beautiful, permanent cenotaph.",
+    description: (
+      <>
+        Preserve your organization&apos;s story in a beautiful, permanent{" "}
+        <GlossaryTerm term="Cenotaph">cenotaph</GlossaryTerm>.
+      </>
+    ),
   },
   {
     icon: <DollarSign className="w-5 h-5" />,

@@ -3,6 +3,7 @@
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import {
   BookOpen,
   Database,
@@ -261,9 +262,9 @@ function ResearchGapSection() {
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
           Every year, millions of organizations die. Startups, NGOs, agencies, ventures of all kinds
-          — they close, dissolve, or simply fade away. Yet unlike medicine, which has centuries of
-          autopsy data informing how we understand human health, organizational science has almost
-          no systematic data on organizational death.
+          — they close, dissolve, or simply fade away. Yet unlike medicine, which has centuries of{" "}
+          <GlossaryTerm term="Autopsy">autopsy</GlossaryTerm> data informing how we understand human
+          health, organizational science has almost no systematic data on organizational death.
         </p>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -290,7 +291,11 @@ function WhatWeAreBuildingSection() {
     {
       value: "XX",
       valueStyle: "roman",
-      label: "Target: 20,000 Autopsies",
+      label: (
+        <>
+          Target: 20,000 <GlossaryTerm term="Autopsy">Autopsies</GlossaryTerm>
+        </>
+      ),
       description:
         "Comprehensive organizational autopsies to build statistical power for pattern recognition and predictive modeling.",
     },
