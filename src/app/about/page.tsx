@@ -2,6 +2,7 @@
 
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import Link from "next/link";
 import {
   Database,
@@ -15,6 +16,8 @@ import {
   Stethoscope,
   Activity,
   GraduationCap,
+  Sparkles,
+  HandHeart,
 } from "lucide-react";
 
 // ============================================================================
@@ -31,8 +34,9 @@ function HeroSection() {
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed mb-6">
             <strong className="text-marble-100">SOIL</strong> (Social Organizational Intelligence
-            Lab) is a research-first nonprofit project devoted to collecting organizational autopsy
-            data at scale — to ignite a completely new scientific field:{" "}
+            Lab) is a research-first nonprofit project devoted to collecting{" "}
+            <GlossaryTerm term="Autopsy">organizational autopsy</GlossaryTerm> data at scale — to
+            ignite a completely new scientific field:{" "}
             <strong className="text-marble-100">
               Organizational Biology, Health, and Medicine
             </strong>
@@ -67,7 +71,8 @@ function MedicalAnalogySection() {
           From Human Autopsies to Organizational Autopsies
         </h2>
         <p className="text-lg text-slate-400 max-w-3xl mb-12">
-          Modern medicine developed through systematic autopsy — the careful examination of deceased
+          Modern medicine developed through systematic{" "}
+          <GlossaryTerm term="Autopsy">autopsy</GlossaryTerm> — the careful examination of deceased
           bodies to understand disease processes. Before autopsy became standard practice, medicine
           relied on theory and speculation. SOIL proposes the same approach for organizations.
         </p>
@@ -277,26 +282,37 @@ function ValuesSection() {
     {
       icon: <Heart className="w-7 h-7" />,
       title: "Dignity",
-      description:
-        "Every founder and organization deserves respectful remembrance. Failure is human; our methodology honors rather than exploits this reality.",
+      description: "Every founder and organization deserves respectful remembrance.",
     },
     {
       icon: <Scale className="w-7 h-7" />,
       title: "Truth",
-      description:
-        "Honest, systematic understanding of why organizations die. No predetermined conclusions, no comfortable narratives — we let data reveal patterns.",
+      description: "Honest, systematic understanding of why organizations die.",
+    },
+    {
+      icon: <HandHeart className="w-7 h-7" />,
+      title: "Service",
+      description: "Data serves the ecosystem, not just profit.",
+    },
+    {
+      icon: <Sparkles className="w-7 h-7" />,
+      title: "Beauty",
+      description: "Excellence in design honors the effort founders invested.",
+    },
+    {
+      icon: <Users className="w-7 h-7" />,
+      title: "Community",
+      description: "Founders supporting founders through shared vulnerability.",
     },
     {
       icon: <Shield className="w-7 h-7" />,
       title: "Rigor",
-      description:
-        "Scientific standards for research and analysis. Peer review, transparent methodology, and honest acknowledgment of limitations.",
+      description: "Scientific standards for research and analysis.",
     },
     {
       icon: <Eye className="w-7 h-7" />,
       title: "Transparency",
-      description:
-        "Clear separation between nonprofit mission and commercial activities. Founders always know how their data is used and protected.",
+      description: "Clear about how data is used and how revenue flows.",
     },
   ];
 
@@ -308,9 +324,12 @@ function ValuesSection() {
           What We Stand For
         </h2>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
           {values.map((value, index) => (
-            <div key={index} className="space-y-4">
+            <div
+              key={index}
+              className="space-y-4 w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] min-w-[200px]"
+            >
               <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400">
                 {value.icon}
               </div>

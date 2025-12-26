@@ -11,7 +11,7 @@ const roleCTAs = [
     title: "I'm a Founder",
     description: "Share your story and create a digital memorial",
     icon: <Landmark className="w-6 h-6" />,
-    href: "/cenotaphery",
+    href: "/organization/create",
     color: "gold",
   },
   {
@@ -35,7 +35,7 @@ const roleCTAs = [
     title: "I Want to Contribute",
     description: "Help build the platform and community",
     icon: <Wrench className="w-6 h-6" />,
-    href: "/challenges",
+    href: "/volunteer",
     color: "orange",
   },
 ];
@@ -114,12 +114,14 @@ export function CommunityJoinSection() {
         </div>
 
         {/* Newsletter Signup */}
-        <NewsletterWidget
-          variant="full"
-          title="Stay Connected"
-          source="community_join"
-          className="mx-auto"
-        />
+        <div id="newsletter">
+          <NewsletterWidget
+            variant="full"
+            title="Stay Connected"
+            source="community_join"
+            className="mx-auto"
+          />
+        </div>
       </div>
     </section>
   );

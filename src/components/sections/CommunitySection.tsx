@@ -24,14 +24,14 @@ const communityFeatures = [
     title: "Keepers",
     description: "Lead regional communities and organize events.",
     steps: ["Apply as Keeper", "Train with a Senior", "Lead your region"],
-    cta: { label: "Become a Keeper", href: "/community#keepers" },
+    cta: { label: "Become a Keeper", href: "/keepers" },
   },
   {
     icon: <Code className="w-6 h-6" />,
-    title: "Contributors",
-    description: "Build the platform — code, design, write, translate.",
-    techStack: ["Next.js 15", "React Three Fiber", "TypeScript", "Tailwind"],
-    cta: { label: "View Open Tasks", href: "/challenges" },
+    title: "Volunteers",
+    description: "Help build the platform and community.",
+    steps: ["Explore open tasks", "Pick your contribution", "Join the team"],
+    cta: { label: "Volunteer", href: "/volunteer" },
   },
 ];
 
@@ -85,48 +85,31 @@ export function CommunitySection() {
                   </h3>
                   <p className="text-slate-400 text-lg mb-6">{feature.description}</p>
 
-                  {/* Steps or Tech Stack */}
-                  {"steps" in feature && feature.steps && (
-                    <div className="space-y-2 mb-6 text-left inline-block">
-                      <p className="text-sm font-medium text-gold-400/80 mb-3">
-                        How to participate:
-                      </p>
-                      {feature.steps.map((step, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-gold-500/20 text-gold-400 text-xs flex items-center justify-center">
-                            {i + 1}
-                          </span>
-                          <span className="text-slate-300 text-sm">{step}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {"techStack" in feature && feature.techStack && (
-                    <div className="mb-6">
-                      <p className="text-sm font-medium text-gold-400/80 mb-3">Tech Stack:</p>
-                      <div className="flex flex-wrap justify-center gap-2">
-                        {feature.techStack.map((tech, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 rounded text-xs font-mono bg-slate-700/50 text-slate-300"
-                          >
-                            {tech}
-                          </span>
-                        ))}
+                  {/* Steps */}
+                  <div className="space-y-2 mb-6 text-left inline-block">
+                    <p className="text-sm font-medium text-gold-400/80 mb-3">How to participate:</p>
+                    {feature.steps.map((step, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-gold-500/20 text-gold-400 text-xs flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <span className="text-slate-300 text-sm">{step}</span>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
 
                   {/* CTA */}
-                  <a href={feature.cta.href}>
-                    <Button
-                      variant="dark-secondary"
-                      size="md"
-                      rightIcon={<ArrowRight className="w-4 h-4" />}
-                    >
-                      {feature.cta.label}
-                    </Button>
-                  </a>
+                  <div className="block">
+                    <a href={feature.cta.href}>
+                      <Button
+                        variant="dark-secondary"
+                        size="md"
+                        rightIcon={<ArrowRight className="w-4 h-4" />}
+                      >
+                        {feature.cta.label}
+                      </Button>
+                    </a>
+                  </div>
                 </div>
               </div>
             );

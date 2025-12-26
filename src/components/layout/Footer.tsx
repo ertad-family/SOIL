@@ -26,13 +26,14 @@ const SECONDARY_LINKS = [
   { href: "#", label: "For Investors", disabled: true },
   { href: "#", label: "For Patrons", disabled: true },
   { href: "#", label: "For Media", disabled: true },
-  { href: "#", label: "Careers", disabled: true },
+  { href: "/careers", label: "Careers" },
 ];
 
 // Service navigation - utility pages
 const SERVICE_LINKS = [
   { href: "/account", label: "Account" },
   { href: "#", label: "Search", disabled: true },
+  { href: "/glossary", label: "Glossary" },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms of Service" },
   { href: "/sitemap.xml", label: "Sitemap" },

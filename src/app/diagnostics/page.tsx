@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import {
   Activity,
   TrendingUp,
@@ -193,8 +194,13 @@ function VisionSection() {
               icon: <Database className="w-8 h-8" />,
               step: "I",
               title: "Research Foundation",
-              description:
-                "Thousands of organizational autopsies collected through the Cenotaphery, creating the first comprehensive mortality database.",
+              description: (
+                <>
+                  Thousands of <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm>{" "}
+                  collected through the <GlossaryTerm term="Cenotaphery">Cenotaphery</GlossaryTerm>,
+                  creating the first comprehensive mortality database.
+                </>
+              ),
               status: "In Progress",
             },
             {

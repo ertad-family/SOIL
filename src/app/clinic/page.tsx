@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import {
   Users,
   Target,
@@ -481,7 +482,12 @@ function CurrentStatusSection() {
             {[
               {
                 status: "progress",
-                label: "Collecting organizational autopsy data",
+                label: (
+                  <>
+                    Collecting <GlossaryTerm term="Autopsy">organizational autopsy</GlossaryTerm>{" "}
+                    data
+                  </>
+                ),
               },
               {
                 status: "progress",

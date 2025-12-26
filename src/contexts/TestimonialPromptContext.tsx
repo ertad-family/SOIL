@@ -17,6 +17,8 @@ interface TestimonialPromptConfig {
   contextMetadata?: Record<string, unknown>;
   title?: string;
   description?: string;
+  /** Force show the modal even if feedback was already given */
+  force?: boolean;
 }
 
 interface TestimonialPromptContextType {
@@ -120,8 +122,8 @@ export function TestimonialPromptProvider({
 
   // Show prompt immediately
   const showPrompt = useCallback((config: TestimonialPromptConfig) => {
-    // Don't show if feedback already given for this type
-    if (feedbackGivenRef.current.has(config.type)) {
+    // Don't show if feedback already given for this type (unless force is true)
+    if (!config.force && feedbackGivenRef.current.has(config.type)) {
       return;
     }
     setCurrentConfig(config);

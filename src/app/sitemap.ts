@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/anon";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soil.rip";
@@ -29,6 +29,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/keepers`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/education`,
@@ -73,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let cenotapheryRoutes: MetadataRoute.Sitemap = [];
 
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
 
     // Public organizations
     const { data: orgs } = await supabase

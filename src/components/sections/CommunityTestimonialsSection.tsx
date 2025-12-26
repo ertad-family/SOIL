@@ -1,62 +1,15 @@
-import { SectionLabel } from "@/components/ui/section-label";
+"use client";
+
+import { useState, useEffect } from "react";
 
 interface Testimonial {
-  name: string;
-  quote: string;
+  id: string;
+  content: string;
+  rating: number | null;
+  display_name: string | null;
 }
 
-const testimonials: Testimonial[] = [
-  {
-    name: "alex_founder",
-    quote:
-      "Finally, a place where my experience matters. Sharing my story helped me process what happened and maybe help someone avoid the same mistakes.",
-  },
-  {
-    name: "maria_ceo",
-    quote:
-      "The interview process was surprisingly therapeutic. I expected it to be painful, but it felt more like closure. The framework really guides you through reflection.",
-  },
-  {
-    name: "david_tech",
-    quote:
-      "As a researcher, the data quality here is remarkable. Real founders, real stories, structured in a way that actually enables pattern discovery.",
-  },
-  {
-    name: "sarah_ventures",
-    quote:
-      "I wish this existed when I was starting out. Learning from others' failures is just as important as learning from successes.",
-  },
-  {
-    name: "james_serial",
-    quote:
-      "Three startups, three different endings. SOIL helped me see the common threads I was blind to. Invaluable for my next venture.",
-  },
-  {
-    name: "nina_advisor",
-    quote:
-      "The anonymization gave me confidence to be completely honest. No judgment, just contribution to collective knowledge.",
-  },
-  {
-    name: "chen_founder",
-    quote:
-      "Building something and watching it end is lonely. Here, I found a community that understands. We're not failures — we're data points for progress.",
-  },
-  {
-    name: "marcus_ops",
-    quote:
-      "Quick process, thoughtful questions. The team clearly understands what founders go through.",
-  },
-  {
-    name: "elena_startup",
-    quote:
-      "The cenotaph concept is beautiful. My company deserves to be remembered, not just forgotten. This gives it dignity.",
-  },
-  {
-    name: "tom_investor",
-    quote:
-      "I recommend SOIL to every founder in my portfolio who's winding down. It's part of a healthy closure process.",
-  },
-];
+const MIN_TESTIMONIALS_TO_SHOW = 5;
 
 function StarRating() {
   return (
@@ -73,14 +26,51 @@ function StarRating() {
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
     <div className="p-5 bg-slate-800/40 rounded-lg border border-slate-700/50 break-inside-avoid mb-4">
-      <p className="text-marble-100 font-medium mb-2">{testimonial.name}</p>
+      {testimonial.display_name && (
+        <p className="text-marble-100 font-medium mb-2">{testimonial.display_name}</p>
+      )}
       <StarRating />
-      <p className="text-slate-400 text-sm leading-relaxed">{testimonial.quote}</p>
+      <p className="text-slate-400 text-sm leading-relaxed">{testimonial.content}</p>
     </div>
   );
 }
 
 export function CommunityTestimonialsSection() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTestimonials() {
+      try {
+        // Fetch both general and story_contribution testimonials in parallel
+        const [generalRes, storyRes] = await Promise.all([
+          fetch("/api/testimonials?type=general&limit=20"),
+          fetch("/api/testimonials?type=story_contribution&limit=20"),
+        ]);
+
+        const [generalData, storyData] = await Promise.all([generalRes.json(), storyRes.json()]);
+
+        const combined: Testimonial[] = [
+          ...(generalData.success ? generalData.testimonials : []),
+          ...(storyData.success ? storyData.testimonials : []),
+        ];
+
+        setTestimonials(combined);
+      } catch (error) {
+        console.error("Failed to fetch testimonials:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchTestimonials();
+  }, []);
+
+  // Hide section if loading or less than minimum testimonials
+  if (isLoading || testimonials.length < MIN_TESTIMONIALS_TO_SHOW) {
+    return null;
+  }
+
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-content mx-auto px-6">
@@ -102,8 +92,8 @@ export function CommunityTestimonialsSection() {
 
         {/* Masonry grid */}
         <div className="columns-1 sm:columns-2 lg:columns-4 gap-4">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard key={index} testimonial={testimonial} />
+          {testimonials.map((testimonial) => (
+            <TestimonialCard key={testimonial.id} testimonial={testimonial} />
           ))}
         </div>
       </div>

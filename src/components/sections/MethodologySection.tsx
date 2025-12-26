@@ -1,5 +1,8 @@
+"use client";
+
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 
 const methodologySteps = [
   {
@@ -45,9 +48,10 @@ export function MethodologySection() {
 
           <div>
             <p className="text-marble-100 text-lg leading-relaxed mb-6">
-              SOIL is building the world&apos;s first systematic database of organizational
-              autopsies. We capture comprehensive data from founders who&apos;ve closed their
-              ventures — not to judge, but to learn.
+              SOIL is building the world&apos;s first systematic database of{" "}
+              <GlossaryTerm term="Autopsy">organizational autopsies</GlossaryTerm>. We capture
+              comprehensive data from founders who&apos;ve closed their ventures — not to judge, but
+              to learn.
             </p>
             <p className="text-slate-400 text-lg leading-relaxed">
               Our proprietary Interview Framework guides founders through a structured reflection
@@ -68,7 +72,7 @@ export function MethodologySection() {
                 XX
               </span>
               <span className="text-slate-400 text-lg pb-2 md:pb-3 lg:pb-4">
-                organization autopsies globally
+                <GlossaryTerm term="Autopsy">organization autopsies</GlossaryTerm> globally
                 <br />
                 is our minimal goal.
               </span>

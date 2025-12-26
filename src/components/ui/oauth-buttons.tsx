@@ -36,6 +36,7 @@ function getLastAuthMethod(): AuthMethod | null {
 interface OAuthButtonsProps {
   className?: string;
   redirectTo?: string;
+  disabled?: boolean;
 }
 
 const LinkedInIcon = () => (
@@ -85,7 +86,7 @@ const providers: {
   },
 ];
 
-export function OAuthButtons({ className, redirectTo }: OAuthButtonsProps) {
+export function OAuthButtons({ className, redirectTo, disabled }: OAuthButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUsed, setLastUsed] = useState<AuthMethod | null>(null);
@@ -131,7 +132,7 @@ export function OAuthButtons({ className, redirectTo }: OAuthButtonsProps) {
 
       {providers.map((provider) => {
         const isLoading = loadingProvider === provider.id;
-        const isDisabled = loadingProvider !== null;
+        const isDisabled = loadingProvider !== null || disabled;
         const isLastUsed = lastUsed === provider.id;
 
         return (

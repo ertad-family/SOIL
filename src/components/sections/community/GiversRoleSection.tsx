@@ -3,6 +3,7 @@
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 import { ArrowRight, Heart, TrendingUp, Award, Gift } from "lucide-react";
 
 // Pre-computed radiating line endpoints (12 lines, 30 degrees apart)
@@ -201,7 +202,7 @@ const givingTypes = [
   {
     icon: <Heart className="w-5 h-5" />,
     title: "Donate",
-    description: "One-time or recurring support via Patreon.",
+    description: "One-time or recurring support (coming soon).",
   },
   {
     icon: <TrendingUp className="w-5 h-5" />,
@@ -258,24 +259,25 @@ export function GiversRoleSection() {
               <p className="text-gold-400/80 text-sm font-medium mb-2">Your Impact:</p>
               <p className="text-slate-400 text-sm">
                 100% of donations go directly to platform development, research initiatives, and
-                community programs. All sponsors receive recognition in the Cenotaphery.
+                community programs. All sponsors receive recognition in the{" "}
+                <GlossaryTerm term="Cenotaphery">Cenotaphery</GlossaryTerm>.
               </p>
             </Card>
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-3">
-              <a href="https://patreon.com/soil" target="_blank" rel="noopener noreferrer">
+              <a href="/donate">
                 <Button
                   variant="dark-primary"
                   size="lg"
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                 >
-                  Donate on Patreon
+                  Support SOIL
                 </Button>
               </a>
               <a href="/investors">
                 <Button variant="dark-secondary" size="lg">
-                  Request Pitch Deck
+                  Become an Investor
                 </Button>
               </a>
             </div>
