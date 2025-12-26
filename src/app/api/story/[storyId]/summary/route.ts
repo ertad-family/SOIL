@@ -96,10 +96,26 @@ export async function POST(
       aiSummaryUpdatedAt: storyData.ai_summary_updated_at,
     };
 
+    // Generate therapeutic appraisal first (Issue #177)
+    // This uses a dedicated prompt focused on emotional acknowledgment
+    let therapeuticAppraisal = null;
+    try {
+      therapeuticAppraisal = await generateTherapeuticAppraisal(story, lastCompletedModule);
+      console.log("[Summary] Therapeutic appraisal generated successfully");
+    } catch (appraisalError) {
+      // If therapeutic appraisal fails, continue with null - fallback will be used
+      console.error("Therapeutic appraisal generation failed:", appraisalError);
+    }
+
     // Generate the research summary
     let summary: AISummary;
     try {
       summary = await generateStorySummary(story, lastCompletedModule);
+      // Add therapeutic appraisal to summary
+      summary = {
+        ...summary,
+        appraisal: therapeuticAppraisal,
+      };
     } catch (genError) {
       console.error("Summary generation failed:", genError);
       // Set status to failed when AI generation fails
@@ -109,22 +125,6 @@ export async function POST(
         { success: false, error: "AI summary generation failed", status: "failed" },
         { status: 500 }
       );
-    }
-
-    // Generate therapeutic appraisal separately (Issue #177)
-    // This uses a dedicated prompt focused on emotional acknowledgment
-    try {
-      const therapeuticAppraisal = await generateTherapeuticAppraisal(story, lastCompletedModule);
-      // Replace summary's generic appraisal with the therapeutic one
-      summary = {
-        ...summary,
-        appraisal: therapeuticAppraisal,
-      };
-      console.log("[Summary] Therapeutic appraisal generated successfully");
-    } catch (appraisalError) {
-      // If therapeutic appraisal fails, keep the summary's original appraisal (or null)
-      console.error("Therapeutic appraisal generation failed, using fallback:", appraisalError);
-      // Don't fail the whole request - the summary is still valid
     }
 
     // Save the summary to the database

@@ -66,32 +66,11 @@ function extractStoryData(story: Story): {
     parts.push(`Stage at closure: ${org.stageAtClosure}.`);
   }
 
-  // Functional mapping
-  if (
-    story.completedModules.includes("functional") &&
-    story.functionalMapping.functions.length > 0
-  ) {
-    const activeFunctions = story.functionalMapping.functions.filter((f) => f.isActive);
-    const functionSummary = activeFunctions
-      .slice(0, 5)
-      .map((f) => f.customName || f.functionId.replace(/_/g, " "))
-      .join(", ");
+  // Functional mapping - send whole object for AI to interpret
+  if (story.completedModules.includes("functional") && story.functionalMapping) {
     parts.push(
-      `Key functions: ${functionSummary}${activeFunctions.length > 5 ? ` and ${activeFunctions.length - 5} more` : ""}.`
+      `FUNCTIONAL MAPPING (raw data):\n${JSON.stringify(story.functionalMapping, null, 2)}`
     );
-
-    // Health patterns
-    const healthIssues = activeFunctions.filter(
-      (f) =>
-        f.healthCheck &&
-        (f.healthCheck.turnover === "high" ||
-          f.healthCheck.staffing === "understaffed" ||
-          f.healthCheck.budgetPressure === "severe" ||
-          f.healthCheck.qualityIssues === "serious")
-    );
-    if (healthIssues.length > 0) {
-      parts.push(`Organizational challenges were present in ${healthIssues.length} functions.`);
-    }
   }
 
   // Financial picture
@@ -449,7 +428,7 @@ export async function generateStorySummary(
 ): Promise<AISummary> {
   const extracted = extractStoryData(story);
 
-  // Determine next chapter for anticipation message
+  // Determine chapter progress context
   const currentModuleIndex = MODULES.findIndex((m) => m.id === lastCompletedModule);
   const nextModule = MODULES[currentModuleIndex + 1];
   const isLastModule = !nextModule || lastCompletedModule === "narrative";
@@ -468,7 +447,7 @@ export async function generateStorySummary(
     };
   }
 
-  // Determine chapter context for appraisal
+  // Determine chapter context for summary
   const completedModuleName =
     MODULES.find((m) => m.id === lastCompletedModule)?.name || "this chapter";
   const nextModuleName = nextModule?.name || null;
@@ -486,7 +465,7 @@ IMPORTANT PRIVACY RULES:
 DATA FROM COMPLETED INTERVIEW MODULES:
 ${extracted.context}
 
-CONTEXT FOR APPRAISAL:
+CHAPTER PROGRESS:
 - The founder just completed: "${completedModuleName}"
 - Chapters completed so far: ${chaptersCompleted}
 - ${isLastModule ? "This was the FINAL chapter! The story is now complete." : `Next chapter: "${nextModuleName}"`}
@@ -500,19 +479,11 @@ YOUR TASK:
 
 2. Extract 3-5 key facts as bullet points.
 
-3. Generate TWO motivational messages for the founder:
-   - "affirmation": A warm, encouraging message (1-2 sentences) that acknowledges what they've shared in this chapter and validates their effort. Be specific to what they documented. Use second person ("You've...").
-   - "anticipation": ${isLastModule ? "A celebratory message congratulating them on completing their story and thanking them for preserving this legacy." : `A brief message (1 sentence) building excitement for the next chapter ("${nextModuleName}"). Hint at what insights await.`}
-
 Format your response as JSON:
 {
   "summary": "Your 2-3 paragraph summary here...",
   "keyFacts": ["Fact 1", "Fact 2", "Fact 3"],
-  "closurePattern": "one of: cash_crisis, market_shift, team_breakdown, external_shock, strategic_pivot, founder_burnout, or null if unclear",
-  "appraisal": {
-    "affirmation": "Your affirmation message here...",
-    "anticipation": "Your anticipation message here..."
-  }
+  "closurePattern": "one of: cash_crisis, market_shift, team_breakdown, external_shock, strategic_pivot, founder_burnout, or null if unclear"
 }`;
 
   try {
@@ -523,12 +494,25 @@ Format your response as JSON:
       contents: prompt,
       config: {
         temperature: 0.3, // Lower temperature for more consistent, factual output
-        maxOutputTokens: 1024,
+        maxOutputTokens: 4096, // Needs extra room for model's internal thinking tokens
       },
     });
 
     const text = response.text || "";
+    console.log("Raw AI response length:", text.length);
     console.log("Raw AI response:", text.substring(0, 500));
+    console.log(
+      "Response metadata:",
+      JSON.stringify(
+        {
+          finishReason: response.candidates?.[0]?.finishReason,
+          safetyRatings: response.candidates?.[0]?.safetyRatings,
+          tokenCount: response.usageMetadata,
+        },
+        null,
+        2
+      )
+    );
 
     // Parse the JSON response - handle markdown code blocks
     let jsonStr = text;
@@ -572,7 +556,7 @@ Format your response as JSON:
       lifespanMonths: extracted.lifespanMonths,
       peakTeamSize: extracted.peakTeamSize,
       closurePattern: parsed.closurePattern || null,
-      appraisal: parsed.appraisal || null,
+      appraisal: null, // Generated separately by generateTherapeuticAppraisal
     };
   } catch (error) {
     console.error("Error generating summary:", error);
