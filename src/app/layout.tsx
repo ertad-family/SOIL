@@ -41,6 +41,12 @@ export const metadata: Metadata = {
     "organizational biology",
     "business research",
   ],
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "32x32" }],
+    apple: "/apple-icon.png",
+    other: [{ rel: "icon", url: "/favicon.ico" }],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
     siteName: "SOIL - Social Organizational Intelligence Lab",
