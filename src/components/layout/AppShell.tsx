@@ -49,13 +49,14 @@ function VisitorParticles() {
   // This eliminates a separate WebGL context that competes for GPU resources
   if (isMobile) return null;
 
-  // Static check: always private routes (focused flows, dashboards)
+  // Static check: always private routes (focused flows, dashboards, dev tools)
   const staticPrivate =
     pathname.startsWith("/interview") ||
     pathname.startsWith("/account") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/organization/create") ||
-    pathname.startsWith("/cenotaph/create");
+    pathname.startsWith("/cenotaph/create") ||
+    pathname.startsWith("/cenotaph-preview");
 
   // Show particles only if not static private AND page declares itself public
   const showParticles = !staticPrivate && isPagePublic;
@@ -137,6 +138,11 @@ function GeneralVisitorFeedback() {
  * - GlobalParticles (floating visitor particles, controlled by page privacy)
  */
 export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname();
+
+  // Routes that should hide the footer (performance-critical 3D pages)
+  const hideFooter = pathname.startsWith("/cenotaph-preview");
+
   return (
     <PagePrivacyProvider>
       <MenuProvider>
@@ -160,11 +166,13 @@ export function AppShell({ children }: AppShellProps) {
               {/* Page content */}
               <main className="flex-1 relative">
                 {children}
-                {/* Auto gradient transition to footer - applies to all pages */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-marble-950 pointer-events-none z-10" />
+                {/* Auto gradient transition to footer - hidden on full-screen 3D pages */}
+                {!hideFooter && (
+                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-marble-950 pointer-events-none z-10" />
+                )}
               </main>
 
-              <Footer />
+              {!hideFooter && <Footer />}
 
               {/* Floating contribution button - hidden on mobile and in production */}
               {process.env.NODE_ENV !== "production" && (
