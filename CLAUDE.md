@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SOIL (Social Organizational Intelligence Lab) is a research platform for organizational autopsy data collection. The MVP includes a website with 3D navigation, user accounts, interview wizard, cenotaph creation, and cemetery visualization.
+SOIL (Studies of Organizational Illness and Loss) is a research platform for organizational autopsy data collection. The MVP includes a website with 3D navigation, user accounts, interview wizard, cenotaph creation, and cemetery visualization.
 
 **Call me Dima** for all communications.
 

@@ -1,4 +1,4 @@
-# SOIL — Social Organizational Intelligence Lab
+# SOIL — Studies of Organizational Illness and Loss
 
 **Building the foundation for organizational medicine.**
 

@@ -7,7 +7,7 @@ INSERT INTO public.glossary_terms (term, definition, category, link_text, link_u
 
 -- Core Concepts (sort_order 1-5)
 ('SOIL',
- 'Social Organizational Intelligence Lab - research platform for organizational autopsy data collection. A research-first nonprofit project devoted to collecting organizational autopsy data at scale to establish a new scientific field: Organizational Biology, Health, and Medicine.',
+ 'Studies of Organizational Illness and Loss - research platform for organizational autopsy data collection. A research-first nonprofit project devoted to collecting organizational autopsy data at scale to establish a new scientific field: Organizational Biology, Health, and Medicine.',
  'Core Concepts', NULL, NULL, 1),
 
 ('Organizational Autopsy',

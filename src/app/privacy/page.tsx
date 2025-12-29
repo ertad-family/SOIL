@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
             </h2>
             <div className="space-y-4 text-slate-400 leading-relaxed">
               <p>
-                Welcome to SOIL (Social Organizational Intelligence Lab). This Privacy Policy
+                Welcome to SOIL (Studies of Organizational Illness and Loss). This Privacy Policy
                 explains how SOIL Foundation, a Delaware 501(c)(3) nonprofit organization
                 (&quot;SOIL,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), collects,
                 uses, discloses, and protects your personal information when you use our website,

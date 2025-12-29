@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: CenotapheryPageProps): Promis
         },
       ],
       type: "website",
-      siteName: "SOIL - Social Organizational Intelligence Lab",
+      siteName: "SOIL - Studies of Organizational Illness and Loss",
     },
     twitter: {
       card: "summary_large_image",
