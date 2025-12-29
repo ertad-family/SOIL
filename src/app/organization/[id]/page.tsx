@@ -179,7 +179,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         description: "A story of organizational experience, preserved at SOIL.",
         images: [{ url: ogImage, width: 1200, height: 630, alt: "SOIL Memorial" }],
         type: "article",
-        siteName: "SOIL - Social Organizational Intelligence Lab",
+        siteName: "SOIL - Studies of Organizational Illness and Loss",
       },
       twitter: {
         card: "summary_large_image",
@@ -257,7 +257,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         },
       ],
       type: "article",
-      siteName: "SOIL - Social Organizational Intelligence Lab",
+      siteName: "SOIL - Studies of Organizational Illness and Loss",
     },
     twitter: {
       card: "summary_large_image",

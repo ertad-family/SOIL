@@ -39,7 +39,7 @@ export default function TermsOfServicePage() {
             </h2>
             <div className="space-y-4 text-slate-400 leading-relaxed">
               <p>
-                Welcome to SOIL (Social Organizational Intelligence Lab), operated by SOIL
+                Welcome to SOIL (Studies of Organizational Illness and Loss), operated by SOIL
                 Foundation, a Delaware nonprofit corporation organized under Section 501(c)(3) of
                 the Internal Revenue Code (&quot;SOIL Foundation,&quot; &quot;we,&quot;
                 &quot;us,&quot; or &quot;our&quot;).

@@ -178,7 +178,7 @@ export function Footer() {
               <span className="text-gold-400">&middot;</span>L
             </Link>
             <p className="font-ui text-xs uppercase tracking-widest text-marble-500">
-              Social Organizational Intelligence Lab
+              Studies of Organizational Illness and Loss
             </p>
             <p className="text-sm text-marble-500 leading-relaxed mt-2">
               Autopsy of organizations. Learning from corporate death to build healthier futures.
