@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Check, X, Star, StarOff, Trash2, MessageSquare } from "lucide-react";
 
 interface Testimonial {
@@ -24,7 +24,7 @@ export default function AdminTestimonialsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTestimonials = async () => {
+  const fetchTestimonials = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -43,11 +43,11 @@ export default function AdminTestimonialsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filter]);
 
   useEffect(() => {
     fetchTestimonials();
-  }, [filter]);
+  }, [fetchTestimonials]);
 
   const handleApprove = async (id: string, approve: boolean) => {
     try {

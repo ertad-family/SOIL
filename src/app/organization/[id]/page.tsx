@@ -89,12 +89,18 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-/** Human-readable labels for closure patterns (SEO-friendly) */
+/** Human-readable labels for closure patterns (SEO-friendly) - must match AI prompt options */
 const CLOSURE_PATTERN_SEO_LABELS: Record<string, string> = {
+  // AI prompt patterns (generate-summary.ts)
   cash_crisis: "cash flow crisis",
-  market_failure: "market fit failure",
-  team_collapse: "team breakdown",
+  market_shift: "market shift",
+  team_breakdown: "team breakdown",
+  external_shock: "external shock",
+  strategic_pivot: "strategic pivot",
   founder_burnout: "founder burnout",
+  // Legacy patterns (for backward compatibility)
+  market_failure: "market fit failure",
+  team_collapse: "team collapse",
   competition: "competitive pressure",
   pivot_failure: "failed pivot",
   regulatory: "regulatory issues",

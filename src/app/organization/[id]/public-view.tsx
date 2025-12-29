@@ -439,12 +439,18 @@ function SectionDivider() {
 // STORY INSIGHTS SECTION - AI refined data only
 // =============================================================================
 
-/** Closure pattern labels for display */
+/** Closure pattern labels for display - must match AI prompt options */
 const CLOSURE_PATTERN_LABELS: Record<string, string> = {
+  // AI prompt patterns (generate-summary.ts)
   cash_crisis: "Cash Flow Crisis",
+  market_shift: "Market Shift",
+  team_breakdown: "Team Breakdown",
+  external_shock: "External Shock",
+  strategic_pivot: "Strategic Pivot",
+  founder_burnout: "Founder Burnout",
+  // Legacy patterns (for backward compatibility)
   market_failure: "Market Failure",
   team_collapse: "Team Collapse",
-  founder_burnout: "Founder Burnout",
   competition: "Competitive Pressure",
   pivot_failure: "Failed Pivot",
   regulatory: "Regulatory Issues",
@@ -463,9 +469,10 @@ function StoryInsightsSection({ summary }: { summary: PublicSummaryData }) {
   const leftColumn = paragraphs.slice(0, midPoint);
   const rightColumn = paragraphs.slice(midPoint);
 
-  // Get human-readable closure pattern label
+  // Get human-readable closure pattern label with fallback formatting
   const patternLabel = closurePattern
-    ? CLOSURE_PATTERN_LABELS[closurePattern] || closurePattern
+    ? CLOSURE_PATTERN_LABELS[closurePattern] ||
+      closurePattern.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
 
   return (

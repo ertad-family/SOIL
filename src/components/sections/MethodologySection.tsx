@@ -80,7 +80,7 @@ export function MethodologySection() {
           </div>
 
           <div className="flex items-end pb-2 md:pb-3 lg:pb-4">
-            <a href="#whitepaper" className="inline-block">
+            <a href="/whitepaper" className="inline-block">
               <Button
                 variant="dark-primary"
                 size="lg"
