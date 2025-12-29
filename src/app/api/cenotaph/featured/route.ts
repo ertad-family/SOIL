@@ -1,23 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getPrivacyDisplayName, type PrivacyDisplayStyle } from "@/lib/privacy";
-
-// Industry color mapping
-const INDUSTRY_COLORS: Record<string, string> = {
-  Tech: "#5B7C99", // info-500
-  Technology: "#5B7C99",
-  "E-commerce": "#B85450", // error-500
-  Media: "#C9943D", // gold-500
-  Finance: "#4A7C59", // success-600
-  "Real Estate": "#8B6914", // terra-600
-  Healthcare: "#5B7C99",
-  Other: "#64748B", // slate-500
-};
-
-function getIndustryColor(industry: string | null): string {
-  if (!industry) return INDUSTRY_COLORS.Other;
-  return INDUSTRY_COLORS[industry] || INDUSTRY_COLORS.Other;
-}
+import { getIndustryColor } from "@/lib/constants";
 
 function formatYears(foundedDate: string | null, closedDate: string | null): string {
   const founded = foundedDate ? new Date(foundedDate).getFullYear() : null;
