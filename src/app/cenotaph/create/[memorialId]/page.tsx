@@ -317,6 +317,8 @@ export default function CenotaphWizardPage() {
         clearInterval(pollInterval);
       }
     };
+    // Note: memorial.design_metadata.generation_progress intentionally read once for initial value
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memorial?.design_status, isGenerating, memorialId, supabase]);
 
   // Fetch memorial data

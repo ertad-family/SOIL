@@ -113,8 +113,8 @@ function SubHeading({ children }: { children: React.ReactNode }) {
   return <h3 className="font-display text-xl font-medium text-marble-100 mt-8 mb-4">{children}</h3>;
 }
 
-function Paragraph({ children }: { children: React.ReactNode }) {
-  return <p className="text-slate-400 leading-relaxed mb-4">{children}</p>;
+function Paragraph({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <p className={`text-slate-400 leading-relaxed mb-4 ${className || ""}`}>{children}</p>;
 }
 
 function BulletList({ items }: { items: React.ReactNode[] }) {
@@ -221,21 +221,21 @@ function AbstractSection() {
         <p className="text-marble-100 leading-relaxed mb-4">
           This white paper presents the methodological foundation for SOIL (Social Organizational
           Intelligence Lab), a research initiative establishing the systematic study of
-          organizational mortality as a scientific discipline. We propose a methodology that
-          combines discipline-agnostic data collection with cross-disciplinary analysis, integrating
-          insights from ecology, psychology, systems theory, medicine, and sociology. The
-          methodology addresses fundamental challenges in organizational research: survivor bias,
-          self-report validity, temporal reconstruction accuracy, and multi-stakeholder perspective
-          integration. By combining structured data collection with therapeutic interview
-          techniques, computational text analysis, and cross-disciplinary analytical approaches,
-          SOIL aims to build the empirical foundation for what we term &ldquo;Organizational
-          Medicine&rdquo; — the systematic understanding, prediction, and prevention of
-          organizational death.
+          organizational mortality as a scientific discipline. We propose a methodology built on two
+          principles: (1) comprehensive, theory-neutral data collection that captures the full
+          organizational trajectory without pre-committing to any causal explanation, and (2)
+          multi-disciplinary analysis that interprets collected data through complementary
+          scientific lenses. The methodology addresses fundamental challenges in organizational
+          research: survivor bias, self-report validity, temporal reconstruction accuracy, and
+          multi-stakeholder perspective integration. By combining structured autopsy protocols with
+          therapeutic interview techniques and computational text analysis, SOIL aims to build the
+          empirical foundation for what we term &ldquo;Organizational Medicine&rdquo; — the
+          systematic understanding, prediction, and prevention of organizational death.
         </p>
         <p className="text-slate-400 leading-relaxed italic">
-          The methodology explicitly draws on multiple scientific disciplines — not merely
-          organizational theories — recognizing that organizational mortality is a phenomenon too
-          complex for any single disciplinary lens.
+          Drawing on medical pathology for data collection methodology and on ecology, psychology,
+          systems theory, and sociology for analytical frameworks, SOIL recognizes that
+          organizational mortality is a phenomenon too complex for any single disciplinary lens.
         </p>
       </Card>
     </section>
@@ -340,50 +340,57 @@ function TheoreticalFoundationsSection() {
     <section>
       <SectionHeading id="theoretical-foundations">2. Theoretical Foundations</SectionHeading>
 
-      <SubHeading>2.1 Cross-Disciplinary Integration as Methodological Principle</SubHeading>
+      <SubHeading>2.1 Methodological Separation: Collection vs. Analysis</SubHeading>
       <Paragraph>
-        A critical methodological decision shapes SOIL&apos;s approach: we deliberately integrate
-        multiple scientific disciplines rather than relying on any single theoretical tradition.
+        SOIL&apos;s approach rests on a fundamental methodological distinction between{" "}
+        <strong className="text-marble-100">data collection</strong> and{" "}
+        <strong className="text-marble-100">data analysis</strong>.
       </Paragraph>
       <Paragraph>
-        <strong className="text-marble-100">The Problem of Disciplinary Silos:</strong>{" "}
-        Organizational mortality has been studied in fragments — economists examine market failures,
-        psychologists study founder grief, sociologists analyze institutional pressures, ecologists
-        model population dynamics. Each discipline sees part of the phenomenon but remains blind to
-        aspects visible only through other lenses.
+        <strong className="text-marble-100">Data Collection: Theory-Neutral, Comprehensive</strong>
+        <br />
+        Like a medical autopsy, organizational autopsy must collect comprehensive data without
+        pre-committing to any particular diagnosis. A pathologist does not examine only the heart
+        because they suspect cardiac failure — they examine the entire body systematically.
+        Similarly, SOIL&apos;s interview protocols capture the complete organizational trajectory
+        across all functions, allowing the data to reveal patterns rather than confirming
+        pre-existing theories.
       </Paragraph>
-      <Paragraph>Reliance on any single discipline risks:</Paragraph>
       <BulletList
         items={[
-          <span key="1">
-            <strong className="text-marble-100">Confirmation bias:</strong> Collecting data that
-            supports the chosen discipline&apos;s assumptions while missing contradictory evidence
-          </span>,
-          <span key="2">
-            <strong className="text-marble-100">Construct validity threats:</strong> Imposing
-            categories that may not reflect organizational reality
-          </span>,
-          <span key="3">
-            <strong className="text-marble-100">Analytical lock-in:</strong> Preventing comparison
-            of explanatory power across disciplines
-          </span>,
-          <span key="4">
-            <strong className="text-marble-100">Knowledge fragmentation:</strong> Contributing to
-            disciplinary silos rather than cumulative understanding
-          </span>,
+          "Prevents confirmation bias (collecting only what supports a favored explanation)",
+          "Preserves information that any single theory might overlook",
+          "Enables retrospective analysis using frameworks not yet developed",
+          "Allows comparison of explanatory power across different theoretical approaches",
         ]}
       />
       <Paragraph>
-        <strong className="text-marble-100">Our Solution:</strong> Integrate five scientific
-        disciplines — ecology, psychology, systems theory, medicine, and sociology — each
-        contributing unique methodological tools, theoretical insights, and validity standards.
+        <strong className="text-marble-100">
+          Data Analysis: Multi-Disciplinary Interpretation
+        </strong>
+        <br />
+        Once data is collected, analysis proceeds through multiple disciplinary lenses.
+        Organizational mortality has been studied in fragments — economists examine market failures,
+        psychologists study founder grief, sociologists analyze institutional pressures, ecologists
+        model population dynamics. Each discipline illuminates aspects invisible to others.
       </Paragraph>
+      <BulletList
+        items={[
+          "Reveals patterns invisible to any single discipline",
+          "Enables comparison of explanatory power across frameworks",
+          "Produces richer understanding through disciplinary triangulation",
+          "Builds cumulative knowledge rather than fragmented disciplinary silos",
+        ]}
+      />
 
       <SubHeading>2.2 The Five Disciplinary Lenses</SubHeading>
       <Paragraph>
-        Organizational mortality cannot be understood through a single disciplinary lens.
-        SOIL&apos;s methodology integrates five scientific disciplines, each revealing aspects
-        invisible to the others:
+        SOIL&apos;s Phase 1 methodology integrates five scientific disciplines.{" "}
+        <strong className="text-marble-100">Medicine</strong> occupies a special role — providing
+        both the <em>data collection methodology</em> (systematic autopsy protocols) and an{" "}
+        <em>analytical lens</em> (diagnostic frameworks). The other four disciplines — Ecology,
+        Psychology, Systems Theory, and Sociology — primarily contribute{" "}
+        <em>analytical frameworks</em> for interpreting collected data.
       </Paragraph>
 
       <div className="grid gap-4 my-6">
@@ -446,13 +453,22 @@ function TheoreticalFoundationsSection() {
         ))}
       </div>
 
-      <SubHeading>2.3 The Twelve Lenses: Complete Framework</SubHeading>
+      <SubHeading>2.3 The Twelve Lenses: Extended Analytical Framework</SubHeading>
       <Paragraph>
         The five lenses above represent Phase 1 priorities. The complete framework encompasses
-        twelve disciplines, symbolized by SOIL&apos;s navigational symbol — the Roman Dodecahedron:
+        twelve perspectives, symbolized by SOIL&apos;s navigational symbol — the Roman Dodecahedron,
+        an ancient artifact whose purpose remains unknown, much as organizations often die without
+        understanding why.
+      </Paragraph>
+      <Paragraph className="text-slate-400 italic text-sm">
+        <strong className="text-slate-300">A note on terminology:</strong> This list includes both
+        established scientific disciplines (Biology, Psychology, Economics) and theoretical
+        approaches that draw on multiple disciplines (Systems Theory, Cybernetics). We use
+        &ldquo;lenses&rdquo; rather than &ldquo;disciplines&rdquo; to acknowledge this diversity —
+        what unites them is their capacity to reveal different aspects of organizational mortality.
       </Paragraph>
       <DataTable
-        headers={["#", "Discipline", "What It Reveals"]}
+        headers={["#", "Lens", "What It Reveals"]}
         rows={[
           ["0", "Biology", "Organization as organism — birth, growth, metabolism, death"],
           ["1", "Ecology", "Populations, niches, competition, environmental fit"],
@@ -802,10 +818,10 @@ function AnalyticalApproachesSection() {
 
       <SubHeading>6.3 Cross-Disciplinary Comparison</SubHeading>
       <Paragraph>
-        The discipline-agnostic data collection enables systematic cross-disciplinary comparison of
-        explanatory power through deriving predictions from each discipline, operationalizing
-        predictions using collected data, assessing empirical support, and developing integrative
-        synthesis where warranted.
+        The theory-neutral data collection enables systematic comparison of explanatory power
+        through deriving predictions from each discipline, operationalizing predictions using
+        collected data, assessing empirical support, and developing integrative synthesis where
+        warranted.
       </Paragraph>
 
       <SubHeading>6.4 Predictive Modeling</SubHeading>
@@ -1167,12 +1183,11 @@ function ConclusionSection() {
         Organizational Medicine.
       </Paragraph>
       <Paragraph>
-        <strong className="text-marble-100">Methodological Contributions:</strong>{" "}
-        Discipline-agnostic data collection enabling cross-disciplinary analysis across five
-        scientific disciplines, multi-stakeholder verification addressing self-report validity,
-        integration of therapeutic and research objectives, temporal modeling distinguishing
-        genesis, peak, and decline phases, and comprehensive coverage across organizational
-        functions and dynamics.
+        <strong className="text-marble-100">Methodological Contributions:</strong> Theory-neutral
+        data collection enabling multi-disciplinary analysis through five scientific lenses,
+        multi-stakeholder verification addressing self-report validity, integration of therapeutic
+        and research objectives, temporal modeling distinguishing genesis, peak, and decline phases,
+        and comprehensive coverage across organizational functions and dynamics.
       </Paragraph>
       <Paragraph>
         <strong className="text-marble-100">Substantive Contributions:</strong> First large-scale,
