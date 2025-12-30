@@ -175,6 +175,19 @@ export const RESOURCE_MATRIX: Record<OrganizationType, ResourceStatusMatrix> = {
     technology: "active",
     community: "active",
   },
+  other: {
+    // Generic defaults for "Other" org type - all resources dimmed for user customization
+    customers: "dimmed",
+    talent: "dimmed",
+    suppliers: "dimmed",
+    capital: "dimmed",
+    donors: "dimmed",
+    volunteers: "dimmed",
+    grants: "dimmed",
+    partners: "dimmed",
+    technology: "dimmed",
+    community: "dimmed",
+  },
 };
 
 // =============================================================================

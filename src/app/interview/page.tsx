@@ -11,7 +11,7 @@ import { Plus, FileText, ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StoryListItem, ModuleId, OrganizationType, StoryStatus } from "@/types/interview";
 import { MODULES, calculateProgress } from "@/types/interview";
-import { ORG_TYPE_LABELS } from "@/data/function-matrix";
+import { useReferenceData } from "@/hooks/useReferenceData";
 
 /**
  * Interview Dashboard - Lists user's stories and allows creating new ones (Dark Theme)
@@ -19,6 +19,7 @@ import { ORG_TYPE_LABELS } from "@/data/function-matrix";
 export default function InterviewPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { getOrgTypeShortLabel } = useReferenceData();
 
   const [stories, setStories] = React.useState<StoryListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -184,7 +185,7 @@ export default function InterviewPage() {
             {stories.map((story) => {
               const progress = calculateProgress(story.completedModules as ModuleId[]);
               const orgTypeLabel = story.organizationType
-                ? ORG_TYPE_LABELS[story.organizationType]
+                ? getOrgTypeShortLabel(story.organizationType)
                 : null;
 
               return (

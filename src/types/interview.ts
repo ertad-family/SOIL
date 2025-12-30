@@ -9,21 +9,18 @@
 // ENUMS & LITERAL TYPES
 // =============================================================================
 
-/** Organization types supported by the interview framework */
-export type OrganizationType =
-  | "tech_product"
-  | "services"
-  | "ecommerce"
-  | "manufacturing"
-  | "ngo"
-  | "media";
+/**
+ * Import and re-export generated types from database.
+ * These types are auto-generated from the organization_types and lifecycle_stages tables.
+ * To regenerate: npm run generate:types
+ */
+import type {
+  OrganizationType as GeneratedOrganizationType,
+  LifecycleStage as GeneratedLifecycleStage,
+} from "./generated/reference-types";
 
-/** Organization lifecycle stages */
-export type LifecycleStage =
-  | "formation" // <10 people, operations started
-  | "establishment" // 10-30 people, stable operations
-  | "growth" // 30-100 people, scaling
-  | "maturity"; // 100+ people, established structure
+export type OrganizationType = GeneratedOrganizationType;
+export type LifecycleStage = GeneratedLifecycleStage;
 
 /** Story completion status */
 export type StoryStatus =

@@ -622,6 +622,7 @@ export const ORG_SPECIFIC_CATEGORIES: Record<OrganizationType, FunctionCategoryD
       ],
     },
   ],
+  other: [],
 };
 
 // =============================================================================
@@ -1222,102 +1223,4 @@ export const getVisibleFunctionsForCategory = (
       status: getFunctionStatus(orgType, func.id, stage),
     }))
     .filter((func) => func.status !== "hidden");
-};
-
-// =============================================================================
-// BUSINESS MODEL OPTIONS BY ORG TYPE
-// =============================================================================
-
-export const BUSINESS_MODELS: Record<OrganizationType, Array<{ value: string; label: string }>> = {
-  tech_product: [
-    { value: "subscription_saas", label: "Subscription (SaaS)" },
-    { value: "transactional", label: "Transactional (per use)" },
-    { value: "freemium", label: "Freemium" },
-    { value: "marketplace_platform", label: "Marketplace / Platform" },
-    { value: "licensing", label: "Licensing" },
-    { value: "hardware_software", label: "Hardware + Software" },
-  ],
-  services: [
-    { value: "hourly_time_materials", label: "Hourly / Time & Materials" },
-    { value: "fixed_price", label: "Fixed price projects" },
-    { value: "retainer", label: "Retainer" },
-    { value: "performance_based", label: "Performance-based" },
-    { value: "productized_service", label: "Productized service" },
-  ],
-  ecommerce: [
-    { value: "direct_sales", label: "Direct sales (own inventory)" },
-    { value: "dropshipping", label: "Dropshipping" },
-    { value: "marketplace", label: "Marketplace" },
-    { value: "subscription_box", label: "Subscription box" },
-    { value: "wholesale_retail", label: "Wholesale + Retail" },
-  ],
-  manufacturing: [
-    { value: "b2b_oem", label: "B2B (OEM / components)" },
-    { value: "b2c", label: "B2C (finished goods)" },
-    { value: "contract_manufacturing", label: "Contract manufacturing" },
-    { value: "white_label", label: "White label" },
-    { value: "direct_distribution", label: "Direct + Distribution" },
-  ],
-  ngo: [
-    { value: "grant_funded", label: "Grant-funded" },
-    { value: "donation_based", label: "Donation-based" },
-    { value: "membership", label: "Membership" },
-    { value: "earned_revenue", label: "Earned revenue hybrid" },
-    { value: "government_contracts", label: "Government contracts" },
-  ],
-  media: [
-    { value: "advertising", label: "Advertising" },
-    { value: "subscription", label: "Subscription" },
-    { value: "sponsored_content", label: "Sponsored content" },
-    { value: "events", label: "Events" },
-    { value: "licensing_syndication", label: "Licensing / Syndication" },
-    { value: "hybrid", label: "Hybrid" },
-  ],
-};
-
-/**
- * Get business model options for an organization type
- */
-export const getBusinessModelsForOrgType = (orgType: OrganizationType) => {
-  return BUSINESS_MODELS[orgType] || [];
-};
-
-// =============================================================================
-// ORG TYPE DISPLAY NAMES
-// =============================================================================
-
-export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: "Tech Product",
-  services: "Services",
-  ecommerce: "E-commerce / Retail",
-  manufacturing: "Manufacturing",
-  ngo: "NGO / Non-profit",
-  media: "Media / Content",
-};
-
-export const ORG_TYPE_DESCRIPTIONS: Record<OrganizationType, string> = {
-  tech_product: "SaaS, apps, platforms, digital products",
-  services: "Agencies, consulting, outsourcing, professional services",
-  ecommerce: "Online stores, D2C brands, marketplaces",
-  manufacturing: "Physical goods production, hardware",
-  ngo: "Foundations, social enterprises, charitable organizations",
-  media: "Publishers, studios, creators, content platforms",
-};
-
-// =============================================================================
-// LIFECYCLE STAGE LABELS
-// =============================================================================
-
-export const LIFECYCLE_STAGE_LABELS: Record<LifecycleStage, string> = {
-  formation: "Formation",
-  establishment: "Establishment",
-  growth: "Growth",
-  maturity: "Maturity",
-};
-
-export const LIFECYCLE_STAGE_DESCRIPTIONS: Record<LifecycleStage, string> = {
-  formation: "Registered, operations started, <10 people",
-  establishment: "Stable operations, growing team, 10-30 people",
-  growth: "Scaling, formalizing processes, 30-100 people",
-  maturity: "Established structure, 100+ people",
 };

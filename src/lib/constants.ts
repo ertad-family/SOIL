@@ -47,9 +47,4 @@ export function getIndustryColor(industry: string | null): string {
 // =============================================================================
 // Re-export commonly used label maps for convenience
 
-export {
-  ORG_TYPE_LABELS,
-  STAGE_LABELS,
-  RELATIONSHIP_LABELS,
-  DOCUMENT_TYPE_LABELS,
-} from "@/components/organization/constants";
+export { RELATIONSHIP_LABELS, DOCUMENT_TYPE_LABELS } from "@/components/organization/constants";
