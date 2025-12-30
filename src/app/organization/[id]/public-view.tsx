@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
@@ -27,7 +28,14 @@ import {
   Eye,
   Calendar,
   TrendingUp,
+  Box,
 } from "lucide-react";
+
+// Lazy load the 3D viewer to avoid loading Three.js on initial page load
+const Cenotaph3DViewerModal = dynamic(
+  () => import("@/components/three/Cenotaph3DViewer").then((mod) => mod.Cenotaph3DViewerModal),
+  { ssr: false }
+);
 import type {
   OrganizationType,
   LifecycleStage,
@@ -84,6 +92,7 @@ interface MemorialData {
   views_count: number;
   respects_count: number;
   cenotaph_image_url: string | null;
+  cenotaph_model_url: string | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
 }
@@ -249,6 +258,10 @@ function HeroSection({
   const { orgName } = getDisplayName(organization, null, null);
   const romanDateRange = formatDateRangeRoman(organization.founded_date, organization.closed_date);
 
+  // 3D viewer state
+  const [show3DViewer, setShow3DViewer] = useState(false);
+  const has3DModel = !!memorial?.cenotaph_model_url;
+
   // Calculate organization age
   const organizationAge = calculateAge(organization.founded_date, organization.closed_date);
 
@@ -285,6 +298,18 @@ function HeroSection({
                   <p className="text-marble-500 font-medium">Cenotaph design in progress</p>
                 </div>
               </div>
+            )}
+
+            {/* View 3D button - positioned at top-left of cenotaph image */}
+            {has3DModel && memorial?.cenotaph_image_url && (
+              <button
+                type="button"
+                onClick={() => setShow3DViewer(true)}
+                className="absolute top-4 left-4 z-20 flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800/80 backdrop-blur-sm text-marble-200 text-sm font-medium hover:bg-slate-700/80 transition-colors border border-slate-700/50"
+              >
+                <Box className="w-4 h-4" />
+                View 3D
+              </button>
             )}
 
             {/* Respects counter - positioned at bottom center of cenotaph */}
@@ -421,6 +446,15 @@ function HeroSection({
           {romanDateRange || "✦"}
         </span>
       </div>
+
+      {/* 3D Viewer Modal */}
+      {has3DModel && memorial?.cenotaph_model_url && (
+        <Cenotaph3DViewerModal
+          modelUrl={memorial.cenotaph_model_url}
+          isOpen={show3DViewer}
+          onClose={() => setShow3DViewer(false)}
+        />
+      )}
     </>
   );
 }

@@ -66,6 +66,7 @@ interface MemorialData {
   views_count: number;
   respects_count: number;
   cenotaph_image_url: string | null;
+  cenotaph_model_url: string | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
 }
@@ -346,7 +347,7 @@ export default async function OrganizationPage({ params }: PageProps) {
   const { data: memorialRaw } = await supabase
     .from("memorials")
     .select(
-      `id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, design_status, cenotaphery_id,
+      `id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, cenotaph_model_url, design_status, cenotaphery_id,
       cenotapheries!memorials_cenotaphery_id_fkey(slug)`
     )
     .eq("organization_id", id)
@@ -363,6 +364,7 @@ export default async function OrganizationPage({ params }: PageProps) {
         views_count: memorialRaw.views_count,
         respects_count: memorialRaw.respects_count,
         cenotaph_image_url: memorialRaw.cenotaph_image_url,
+        cenotaph_model_url: memorialRaw.cenotaph_model_url,
         design_status: memorialRaw.design_status,
         cenotaphery_slug: (() => {
           const cenotapheries = memorialRaw.cenotapheries;

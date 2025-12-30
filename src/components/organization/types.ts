@@ -60,6 +60,7 @@ export interface MemorialData {
   views_count: number;
   respects_count: number;
   cenotaph_image_url: string | null;
+  cenotaph_model_url: string | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
 }
