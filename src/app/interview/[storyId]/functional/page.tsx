@@ -29,8 +29,9 @@ import {
   Info,
   ArrowLeft,
 } from "lucide-react";
-import type { CustomFunction, FunctionalCategoryAnswer } from "@/types/interview";
-import { useFunctions, useFunctionCatalog, ORG_TYPE_LABELS } from "@/hooks/useFunctions";
+import type { CustomFunction, FunctionalCategoryAnswer, OrganizationType } from "@/types/interview";
+import { useFunctions, useFunctionCatalog } from "@/hooks/useFunctions";
+import { useReferenceData } from "@/hooks/useReferenceData";
 import { CATEGORY_QUESTIONS, getCategoryHeader } from "@/data/functional-questions";
 
 // =============================================================================
@@ -142,6 +143,7 @@ function AddFunctionDialog({
 
   // Fetch all functions from API
   const { allCategories, isLoading: catalogLoading } = useFunctionCatalog();
+  const { getOrgTypeLabel: getOrgTypeLabelFromRef } = useReferenceData();
 
   // Get common categories for custom function dropdown
   const commonCategories = React.useMemo(() => {
@@ -247,9 +249,9 @@ function AddFunctionDialog({
   }, [open]);
 
   // Get org type label for display
-  const getOrgTypeLabel = (orgType: string | null): string => {
+  const getOrgTypeLabelLocal = (orgType: string | null): string => {
     if (!orgType) return "Common";
-    return ORG_TYPE_LABELS[orgType as keyof typeof ORG_TYPE_LABELS] || orgType;
+    return getOrgTypeLabelFromRef(orgType as OrganizationType);
   };
 
   return (
@@ -302,7 +304,7 @@ function AddFunctionDialog({
                           {func.functionName}
                         </span>
                         <span className="text-xs text-slate-500">
-                          {getOrgTypeLabel(func.orgType)}
+                          {getOrgTypeLabelLocal(func.orgType)}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">{func.categoryName}</div>
@@ -318,7 +320,7 @@ function AddFunctionDialog({
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-marble-100">{selectedFunction.functionName}</h4>
                   <span className="text-xs px-2 py-0.5 rounded bg-slate-600 text-slate-300">
-                    {getOrgTypeLabel(selectedFunction.orgType)}
+                    {getOrgTypeLabelLocal(selectedFunction.orgType)}
                   </span>
                 </div>
                 <div className="text-sm text-gold-400">
@@ -412,6 +414,7 @@ function AddFunctionDialog({
 export default function FunctionalPage() {
   const router = useRouter();
   const { story, isLoading, updateFunctionalMapping, completeModule } = useInterview();
+  const { getOrgTypeLabel } = useReferenceData();
 
   const [currentStep, setCurrentStep] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -774,7 +777,7 @@ export default function FunctionalPage() {
         </p>
         <p className="text-sm text-slate-400 mt-2">
           We&apos;ve organized functions typical for{" "}
-          <span className="font-medium text-gold-400">{ORG_TYPE_LABELS[orgType]}</span>{" "}
+          <span className="font-medium text-gold-400">{getOrgTypeLabel(orgType!)}</span>{" "}
           organizations.
         </p>
       </div>

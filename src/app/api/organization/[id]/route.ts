@@ -44,7 +44,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       name,
       description,
       organization_type,
+      organization_type_other,
       business_model,
+      business_model_other,
       industry,
       location_country,
       location_region,
@@ -66,8 +68,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (typeof name === "string") updates.name = name;
     if (typeof description === "string") updates.description = description;
     if (typeof organization_type === "string") updates.organization_type = organization_type;
+    if (typeof organization_type_other === "string" || organization_type_other === null)
+      updates.organization_type_other = organization_type_other;
     if (typeof business_model === "string" || business_model === null)
       updates.business_model = business_model;
+    if (typeof business_model_other === "string" || business_model_other === null)
+      updates.business_model_other = business_model_other;
     if (typeof industry === "string" || industry === null) updates.industry = industry;
     if (typeof location_country === "string" || location_country === null)
       updates.location_country = location_country;

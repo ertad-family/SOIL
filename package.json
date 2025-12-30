@@ -13,7 +13,8 @@
     "prepare": "husky",
     "test:e2e": "playwright test",
     "test:e2e:mobile": "playwright test tests/mobile-audit.spec.ts",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "generate:types": "tsx scripts/generate-reference-types.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
@@ -65,6 +66,7 @@
     "postcss": "^8.4.47",
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.14",
+    "tsx": "^4.19.0",
     "typescript": "^5.6.3"
   }
 }

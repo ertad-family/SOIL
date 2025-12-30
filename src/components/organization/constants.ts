@@ -1,4 +1,3 @@
-import type { OrganizationType, LifecycleStage } from "@/types/interview";
 import type { VerificationRelationship, DocumentType } from "./types";
 
 export const RELATIONSHIP_LABELS: Record<VerificationRelationship, string> = {
@@ -16,22 +15,6 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   charter: "Company Charter",
   shareholder_list: "Shareholder List",
   other: "Other Document",
-};
-
-export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: "Tech Product",
-  services: "Services",
-  ecommerce: "E-commerce",
-  manufacturing: "Manufacturing",
-  ngo: "NGO",
-  media: "Media",
-};
-
-export const STAGE_LABELS: Record<LifecycleStage, string> = {
-  formation: "Formation",
-  establishment: "Establishment",
-  growth: "Growth",
-  maturity: "Maturity",
 };
 
 // Roman marble frame styles for CenotaphAvatar

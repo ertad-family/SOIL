@@ -27,13 +27,7 @@ import type {
 } from "@/types/interview";
 import { createEmptyGeoLocation } from "@/types/interview";
 import { LocationPicker } from "@/components/ui/location-picker";
-import {
-  ORG_TYPE_LABELS,
-  ORG_TYPE_DESCRIPTIONS,
-  getBusinessModelsForOrgType,
-  LIFECYCLE_STAGE_LABELS,
-  LIFECYCLE_STAGE_DESCRIPTIONS,
-} from "@/data/function-matrix";
+import { useReferenceData } from "@/hooks/useReferenceData";
 
 // Wizard steps for Organization creation (full flow)
 const FULL_STEPS = [
@@ -53,7 +47,9 @@ interface OrganizationFormData {
   name: string;
   description: string;
   organizationType: OrganizationType | null;
+  organizationTypeOther: string;
   businessModel: string | null;
+  businessModelOther: string;
   industry: string | null;
   location: GeoLocation;
 
@@ -72,7 +68,9 @@ const createEmptyFormData = (): OrganizationFormData => ({
   name: "",
   description: "",
   organizationType: null,
+  organizationTypeOther: "",
   businessModel: null,
+  businessModelOther: "",
   industry: null,
   location: createEmptyGeoLocation(),
   foundedDate: null,
@@ -100,6 +98,15 @@ function OrganizationCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const {
+    orgTypes,
+    stages,
+    getOrgTypeLabel,
+    getOrgTypeDescription,
+    getStageLabel,
+    getStageDescription,
+    getBusinessModelsForOrgType,
+  } = useReferenceData();
 
   const returnTo = searchParams.get("returnTo"); // e.g., "interview"
   const existingOrgId = searchParams.get("org"); // Existing org ID for adding story
@@ -170,6 +177,12 @@ function OrganizationCreateContent() {
       }
       if (!formData.organizationType) {
         errors.organizationType = "Please select an organization type";
+      }
+      if (formData.organizationType === "other" && !formData.organizationTypeOther?.trim()) {
+        errors.organizationTypeOther = "Please specify the organization type";
+      }
+      if (formData.businessModel === "other" && !formData.businessModelOther?.trim()) {
+        errors.businessModelOther = "Please specify the business model";
       }
     }
 
@@ -244,7 +257,11 @@ function OrganizationCreateContent() {
             name: formData.name,
             description: formData.description,
             organization_type: formData.organizationType,
+            organization_type_other:
+              formData.organizationType === "other" ? formData.organizationTypeOther : null,
             business_model: formData.businessModel,
+            business_model_other:
+              formData.businessModel === "other" ? formData.businessModelOther : null,
             industry: formData.industry,
             location_country: formData.location.country,
             location_city: formData.location.city,
@@ -301,7 +318,7 @@ function OrganizationCreateContent() {
           organization_id: organizationId,
           user_id: user.id,
           status: "in_progress",
-          current_module: "functional",
+          current_module: "founder",
           completed_modules: ["basic_info"],
           founder_role: formData.founderRole,
           public_naming: formData.publicNaming,
@@ -351,12 +368,30 @@ function OrganizationCreateContent() {
     setFormData((prev) => ({
       ...prev,
       organizationType: value as OrganizationType,
+      organizationTypeOther: "", // Reset custom value when type changes
       businessModel: null, // Reset business model when org type changes
+      businessModelOther: "", // Reset custom business model
     }));
-    if (validationErrors.organizationType) {
+    if (validationErrors.organizationType || validationErrors.organizationTypeOther) {
       setValidationErrors((prev) => {
         const next = { ...prev };
         delete next.organizationType;
+        delete next.organizationTypeOther;
+        return next;
+      });
+    }
+  };
+
+  const handleBusinessModelChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      businessModel: value,
+      businessModelOther: "", // Reset custom value when model changes
+    }));
+    if (validationErrors.businessModelOther) {
+      setValidationErrors((prev) => {
+        const next = { ...prev };
+        delete next.businessModelOther;
         return next;
       });
     }
@@ -468,26 +503,49 @@ function OrganizationCreateContent() {
               onValueChange={handleOrgTypeChange}
               className="grid gap-3 sm:grid-cols-2"
             >
-              {(Object.keys(ORG_TYPE_LABELS) as OrganizationType[]).map((type) => (
-                <div key={type} className="relative">
-                  <RadioGroupItem value={type} id={type} className="peer sr-only" />
+              {orgTypes.map((orgType) => (
+                <div key={orgType.value} className="relative">
+                  <RadioGroupItem
+                    value={orgType.value}
+                    id={orgType.value}
+                    className="peer sr-only"
+                  />
                   <Label
-                    htmlFor={type}
+                    htmlFor={orgType.value}
                     className="flex flex-col p-4 border rounded-lg cursor-pointer border-slate-600 hover:border-gold-500/50 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-500/10 transition-colors"
                   >
-                    <span className="font-medium text-marble-100">{ORG_TYPE_LABELS[type]}</span>
-                    <span className="text-sm text-slate-400">{ORG_TYPE_DESCRIPTIONS[type]}</span>
+                    <span className="font-medium text-marble-100">{orgType.label}</span>
+                    <span className="text-sm text-slate-400">{orgType.description}</span>
                   </Label>
                 </div>
               ))}
             </RadioGroup>
           </FormField>
 
+          {formData.organizationType === "other" && (
+            <FormField
+              variant="dark"
+              label="Please specify organization type"
+              htmlFor="organizationTypeOther"
+              required
+              error={validationErrors.organizationTypeOther}
+            >
+              <Input
+                variant="dark"
+                id="organizationTypeOther"
+                value={formData.organizationTypeOther}
+                onChange={handleTextChange("organizationTypeOther")}
+                placeholder="What type of organization was it?"
+                error={!!validationErrors.organizationTypeOther}
+              />
+            </FormField>
+          )}
+
           {formData.organizationType && businessModels.length > 0 && (
             <FormField variant="dark" label="Business Model" htmlFor="businessModel">
               <Select
                 value={formData.businessModel || ""}
-                onValueChange={handleSelectChange("businessModel")}
+                onValueChange={handleBusinessModelChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select business model" />
@@ -500,6 +558,25 @@ function OrganizationCreateContent() {
                   ))}
                 </SelectContent>
               </Select>
+            </FormField>
+          )}
+
+          {formData.businessModel === "other" && (
+            <FormField
+              variant="dark"
+              label="Please specify business model"
+              htmlFor="businessModelOther"
+              required
+              error={validationErrors.businessModelOther}
+            >
+              <Input
+                variant="dark"
+                id="businessModelOther"
+                value={formData.businessModelOther}
+                onChange={handleTextChange("businessModelOther")}
+                placeholder="What was the business model?"
+                error={!!validationErrors.businessModelOther}
+              />
             </FormField>
           )}
 
@@ -569,19 +646,19 @@ function OrganizationCreateContent() {
               }
               className="grid gap-3 sm:grid-cols-2"
             >
-              {(Object.keys(LIFECYCLE_STAGE_LABELS) as LifecycleStage[]).map((stage) => (
-                <div key={stage} className="relative">
-                  <RadioGroupItem value={stage} id={`stage-${stage}`} className="peer sr-only" />
+              {stages.map((stage) => (
+                <div key={stage.value} className="relative">
+                  <RadioGroupItem
+                    value={stage.value}
+                    id={`stage-${stage.value}`}
+                    className="peer sr-only"
+                  />
                   <Label
-                    htmlFor={`stage-${stage}`}
+                    htmlFor={`stage-${stage.value}`}
                     className="flex flex-col p-4 border rounded-lg cursor-pointer border-slate-600 hover:border-gold-500/50 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-500/10 transition-colors"
                   >
-                    <span className="font-medium text-marble-100">
-                      {LIFECYCLE_STAGE_LABELS[stage]}
-                    </span>
-                    <span className="text-sm text-slate-400">
-                      {LIFECYCLE_STAGE_DESCRIPTIONS[stage]}
-                    </span>
+                    <span className="font-medium text-marble-100">{stage.label}</span>
+                    <span className="text-sm text-slate-400">{stage.description}</span>
                   </Label>
                 </div>
               ))}

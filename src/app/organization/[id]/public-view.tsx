@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
 import { useRefTracking } from "@/hooks/useRefTracking";
+import { useReferenceData } from "@/hooks/useReferenceData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -51,7 +52,9 @@ interface OrganizationData {
   slug: string;
   name: string;
   organization_type: OrganizationType | null;
+  organization_type_other: string | null;
   business_model: string | null;
+  business_model_other: string | null;
   industry: string | null;
   description: string | null;
   location_country: string | null;
@@ -116,15 +119,6 @@ interface PublicViewProps {
 // =============================================================================
 // CONSTANTS
 // =============================================================================
-
-const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: "Tech Product",
-  services: "Services",
-  ecommerce: "E-commerce",
-  manufacturing: "Manufacturing",
-  ngo: "NGO",
-  media: "Media",
-};
 
 const FOUNDER_ROLE_LABELS: Record<FounderRole, string> = {
   founder: "Founder",
@@ -251,6 +245,7 @@ function HeroSection({
   isOwnCenotaph: boolean;
   peakRevenueUSD: number | null;
 }) {
+  const { getOrgTypeShortLabel } = useReferenceData();
   const { orgName } = getDisplayName(organization, null, null);
   const romanDateRange = formatDateRangeRoman(organization.founded_date, organization.closed_date);
 
@@ -352,7 +347,11 @@ function HeroSection({
                 {organization.organization_type && (
                   <div className="flex items-center gap-3 text-slate-400">
                     <Building2 className="w-4 h-4 text-slate-500" />
-                    <span>{ORG_TYPE_LABELS[organization.organization_type]}</span>
+                    <span>
+                      {organization.organization_type === "other"
+                        ? organization.organization_type_other || "Other"
+                        : getOrgTypeShortLabel(organization.organization_type)}
+                    </span>
                     {organization.industry && (
                       <>
                         <span className="text-slate-600">·</span>
@@ -776,6 +775,7 @@ export function PublicView({
   isOwnerPreview = false,
   onExitPreview,
 }: PublicViewProps) {
+  const { getOrgTypeShortLabel } = useReferenceData();
   const dateRange = formatDateRange(organization.founded_date, organization.closed_date);
   const location = [organization.location_city, organization.location_country]
     .filter(Boolean)
