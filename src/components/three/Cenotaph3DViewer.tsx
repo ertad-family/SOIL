@@ -8,10 +8,29 @@ import { useIsMobile } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Loader2, X, Maximize2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { CenotaphRenderSettings } from "@/components/organization/types";
+
+/** Default render settings for cenotaph models */
+const DEFAULT_RENDER_SETTINGS: Required<CenotaphRenderSettings> = {
+  material: {
+    metalness: 0.9,
+    roughness: 0.25,
+    envMapIntensity: 1.5,
+  },
+  environment: "sunset",
+  lighting: {
+    keyLight: { intensity: 2.5, color: "#ff9050" },
+    fillLight: { intensity: 1.0, color: "#ffffff" },
+    rimLight: { intensity: 1.2, color: "#ffaa70" },
+  },
+  exposure: 1.5,
+};
 
 interface Cenotaph3DViewerProps {
   /** URL to the 3D GLB model */
   modelUrl: string;
+  /** Render settings for materials, lighting, environment */
+  renderSettings?: CenotaphRenderSettings | null;
   /** Whether the viewer is in fullscreen modal mode */
   isFullscreen?: boolean;
   /** Callback when fullscreen is requested */
@@ -66,29 +85,30 @@ function WebGLFallback() {
   );
 }
 
+interface CenotaphModelProps {
+  modelUrl: string;
+  materialSettings: NonNullable<CenotaphRenderSettings["material"]>;
+}
+
 /**
  * The actual 3D model component
  */
-function CenotaphModel({ modelUrl }: { modelUrl: string }) {
+function CenotaphModel({ modelUrl, materialSettings }: CenotaphModelProps) {
   const { scene } = useGLTF(modelUrl);
 
-  // Apply transformations and material modifications
+  // Apply transformations with configurable materials
   const preparedScene = useMemo(() => {
     scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
+        child.receiveShadow = true;
 
+        // Apply material settings from render config
         if (child.material instanceof THREE.MeshStandardMaterial) {
-          const oldMat = child.material;
-          // Keep original textures, adjust material properties for better display
-          const newMat = new THREE.MeshStandardMaterial({
-            map: oldMat.map,
-            normalMap: oldMat.normalMap,
-            metalness: 0.0,
-            roughness: 0.9,
-            envMapIntensity: 0.15,
-          });
-          child.material = newMat;
+          child.material.metalness = materialSettings.metalness ?? 0.9;
+          child.material.roughness = materialSettings.roughness ?? 0.25;
+          child.material.envMapIntensity = materialSettings.envMapIntensity ?? 1.5;
+          child.material.needsUpdate = true;
         }
       }
     });
@@ -104,7 +124,7 @@ function CenotaphModel({ modelUrl }: { modelUrl: string }) {
     scene.scale.setScalar(scale);
 
     return scene;
-  }, [scene]);
+  }, [scene, materialSettings]);
 
   return <primitive object={preparedScene} />;
 }
@@ -122,6 +142,7 @@ function CenotaphModel({ modelUrl }: { modelUrl: string }) {
  */
 export function Cenotaph3DViewer({
   modelUrl,
+  renderSettings,
   isFullscreen = false,
   onFullscreenRequest,
   onClose,
@@ -130,6 +151,30 @@ export function Cenotaph3DViewer({
   const isMobile = useIsMobile();
   const [hasWebGL, setHasWebGL] = useState(true);
   const [controlsRef, setControlsRef] = useState<{ reset: () => void } | null>(null);
+
+  // Merge with defaults
+  const settings = useMemo(
+    () => ({
+      material: { ...DEFAULT_RENDER_SETTINGS.material, ...renderSettings?.material },
+      environment: renderSettings?.environment ?? DEFAULT_RENDER_SETTINGS.environment,
+      lighting: {
+        keyLight: {
+          ...DEFAULT_RENDER_SETTINGS.lighting.keyLight,
+          ...renderSettings?.lighting?.keyLight,
+        },
+        fillLight: {
+          ...DEFAULT_RENDER_SETTINGS.lighting.fillLight,
+          ...renderSettings?.lighting?.fillLight,
+        },
+        rimLight: {
+          ...DEFAULT_RENDER_SETTINGS.lighting.rimLight,
+          ...renderSettings?.lighting?.rimLight,
+        },
+      },
+      exposure: renderSettings?.exposure ?? DEFAULT_RENDER_SETTINGS.exposure,
+    }),
+    [renderSettings]
+  );
 
   // Check WebGL support on mount
   const checkWebGL = useCallback(() => {
@@ -225,26 +270,27 @@ export function Cenotaph3DViewer({
             far: 100,
           }}
           gl={{
-            antialias: !isMobile, // Disable antialiasing on mobile for performance
+            antialias: !isMobile,
             powerPreference: "high-performance",
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.2,
+            toneMappingExposure: settings.exposure,
           }}
-          shadows={!isMobile} // Disable shadows on mobile for performance
+          shadows={!isMobile}
+          style={{ touchAction: "none" }}
         >
           <color attach="background" args={["#1a1410"]} />
 
-          {/* Neutral studio lighting */}
+          {/* Lighting setup for metallic PBR materials */}
           <ambientLight intensity={0.4} color="#ffffff" />
 
-          {/* Key light - neutral white from upper right */}
+          {/* Key light - configurable */}
           <directionalLight
-            position={[4, 6, 3]}
-            intensity={2.0}
-            color="#ffffff"
+            position={[0, 5, -3]}
+            intensity={settings.lighting.keyLight.intensity ?? 2.5}
+            color={settings.lighting.keyLight.color ?? "#ff9050"}
             castShadow={!isMobile}
-            shadow-mapSize-width={isMobile ? 512 : 1024}
-            shadow-mapSize-height={isMobile ? 512 : 1024}
+            shadow-mapSize-width={isMobile ? 512 : 2048}
+            shadow-mapSize-height={isMobile ? 512 : 2048}
             shadow-camera-far={20}
             shadow-camera-left={-5}
             shadow-camera-right={5}
@@ -252,14 +298,22 @@ export function Cenotaph3DViewer({
             shadow-camera-bottom={-5}
           />
 
-          {/* Fill light - softer from left */}
-          <directionalLight position={[-4, 3, 2]} intensity={0.8} color="#ffffff" />
+          {/* Fill light - configurable */}
+          <directionalLight
+            position={[-3, 2, 4]}
+            intensity={settings.lighting.fillLight.intensity ?? 1.0}
+            color={settings.lighting.fillLight.color ?? "#ffffff"}
+          />
 
-          {/* Rim light - from behind */}
-          <directionalLight position={[0, 2, -4]} intensity={1.0} color="#ffffff" />
+          {/* Rim light - configurable */}
+          <directionalLight
+            position={[4, 3, 0]}
+            intensity={settings.lighting.rimLight.intensity ?? 1.2}
+            color={settings.lighting.rimLight.color ?? "#ffaa70"}
+          />
 
-          {/* Environment for subtle ambient lighting */}
-          <Environment preset="night" />
+          {/* Environment map for realistic reflections */}
+          <Environment preset={settings.environment} />
 
           {/* OrbitControls with touch support */}
           <OrbitControls
@@ -268,16 +322,18 @@ export function Cenotaph3DViewer({
             dampingFactor={0.05}
             minDistance={1}
             maxDistance={10}
-            enablePan={!isMobile} // Disable pan on mobile for simpler UX
+            enableZoom={true}
+            enablePan={!isMobile}
+            enableRotate={true}
             touches={{
               ONE: THREE.TOUCH.ROTATE,
-              TWO: THREE.TOUCH.DOLLY_ROTATE,
+              TWO: THREE.TOUCH.DOLLY_PAN,
             }}
           />
 
           {/* Model */}
           <Suspense fallback={<LoadingIndicator />}>
-            <CenotaphModel modelUrl={modelUrl} />
+            <CenotaphModel modelUrl={modelUrl} materialSettings={settings.material} />
           </Suspense>
 
           {/* Ground plane */}
@@ -296,10 +352,12 @@ export function Cenotaph3DViewer({
  */
 export function Cenotaph3DViewerModal({
   modelUrl,
+  renderSettings,
   isOpen,
   onClose,
 }: {
   modelUrl: string;
+  renderSettings?: CenotaphRenderSettings | null;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -317,6 +375,7 @@ export function Cenotaph3DViewerModal({
     >
       <Cenotaph3DViewer
         modelUrl={modelUrl}
+        renderSettings={renderSettings}
         isFullscreen
         onClose={onClose}
         className="w-full h-full"

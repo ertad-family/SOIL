@@ -31,8 +31,8 @@ import { VerificationRequiredModal } from "./VerificationRequiredModal";
 import type { MemorialData, StoryData, OrganizationData } from "./types";
 
 // Lazy load the 3D viewer to avoid loading Three.js on initial page load
-const Cenotaph3DViewerModal = dynamic(
-  () => import("@/components/three/Cenotaph3DViewer").then((mod) => mod.Cenotaph3DViewerModal),
+const Cenotaph3DViewer = dynamic(
+  () => import("@/components/three/Cenotaph3DViewer").then((mod) => mod.Cenotaph3DViewer),
   { ssr: false }
 );
 
@@ -54,8 +54,8 @@ export function CenotaphAvatar({
   myStory,
 }: CenotaphAvatarProps) {
   const router = useRouter();
-  const [showImagePopup, setShowImagePopup] = useState(false);
-  const [show3DViewer, setShow3DViewer] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupViewMode, setPopupViewMode] = useState<"2d" | "3d">("2d");
   const [isCreating, setIsCreating] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showStoryModal, setShowStoryModal] = useState(false);
@@ -121,7 +121,12 @@ export function CenotaphAvatar({
       <div className="relative">
         <button
           type="button"
-          onClick={() => hasDesign && setShowImagePopup(true)}
+          onClick={() => {
+            if (hasDesign) {
+              setPopupViewMode("2d");
+              setShowPopup(true);
+            }
+          }}
           className="block group w-full text-left cursor-pointer"
           disabled={!hasDesign}
         >
@@ -215,7 +220,10 @@ export function CenotaphAvatar({
                 variant="dark-ghost"
                 size="sm"
                 leftIcon={<Box className="w-4 h-4" />}
-                onClick={() => setShow3DViewer(true)}
+                onClick={() => {
+                  setPopupViewMode("3d");
+                  setShowPopup(true);
+                }}
               >
                 View 3D
               </Button>
@@ -223,39 +231,49 @@ export function CenotaphAvatar({
           </div>
         )}
 
-        {/* Image Popup Modal with 2D/3D Toggle */}
-        {showImagePopup && memorial.cenotaph_image_url && (
+        {/* Cenotaph Popup Modal with 2D/3D Toggle */}
+        {showPopup && (memorial.cenotaph_image_url || memorial.cenotaph_model_url) && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-            onClick={() => setShowImagePopup(false)}
+            onClick={() => setShowPopup(false)}
           >
             {/* Close button */}
             <button
               type="button"
               className="absolute top-4 right-4 text-marble-300 hover:text-marble-100 transition-colors z-10"
-              onClick={() => setShowImagePopup(false)}
+              onClick={() => setShowPopup(false)}
             >
               <XCircle className="w-8 h-8" />
             </button>
 
-            {/* 2D/3D Toggle (shown when 3D model available) */}
-            {has3DModel && (
+            {/* 2D/3D Toggle (shown when both 2D image and 3D model available) */}
+            {has3DModel && hasDesign && (
               <div className="absolute top-4 left-4 z-10 flex gap-2 bg-slate-800/80 backdrop-blur-sm rounded-lg p-1">
                 <button
                   type="button"
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-gold-500 text-slate-900"
-                  onClick={(e) => e.stopPropagation()}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    popupViewMode === "2d"
+                      ? "bg-gold-500 text-slate-900"
+                      : "text-marble-300 hover:bg-slate-700/50"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPopupViewMode("2d");
+                  }}
                 >
                   <ImageIcon className="w-4 h-4" />
                   2D
                 </button>
                 <button
                   type="button"
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-marble-300 hover:bg-slate-700/50 transition-colors"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    popupViewMode === "3d"
+                      ? "bg-gold-500 text-slate-900"
+                      : "text-marble-300 hover:bg-slate-700/50"
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowImagePopup(false);
-                    setShow3DViewer(true);
+                    setPopupViewMode("3d");
                   }}
                 >
                   <Box className="w-4 h-4" />
@@ -264,28 +282,40 @@ export function CenotaphAvatar({
               </div>
             )}
 
+            {/* Content container */}
             <div
-              className="relative max-w-full max-h-[90vh] w-[90vw] h-[90vh]"
+              className="relative max-w-full max-h-[90vh] w-[90vw] h-[90vh] rounded-lg overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={memorial.cenotaph_image_url}
-                alt="Cenotaph design"
-                fill
-                sizes="90vw"
-                className="object-contain rounded-lg shadow-2xl"
-              />
+              {/* 2D Image View */}
+              {popupViewMode === "2d" && memorial.cenotaph_image_url && (
+                <Image
+                  src={memorial.cenotaph_image_url}
+                  alt="Cenotaph design"
+                  fill
+                  sizes="90vw"
+                  className="object-contain rounded-lg shadow-2xl"
+                />
+              )}
+
+              {/* 3D Model View */}
+              {popupViewMode === "3d" && memorial.cenotaph_model_url && (
+                <Suspense
+                  fallback={
+                    <div className="w-full h-full flex items-center justify-center bg-slate-900">
+                      <div className="text-marble-300">Loading 3D viewer...</div>
+                    </div>
+                  }
+                >
+                  <Cenotaph3DViewer
+                    modelUrl={memorial.cenotaph_model_url}
+                    renderSettings={memorial.cenotaph_render_settings}
+                    className="w-full h-full"
+                  />
+                </Suspense>
+              )}
             </div>
           </div>
-        )}
-
-        {/* 3D Viewer Modal */}
-        {has3DModel && memorial.cenotaph_model_url && (
-          <Cenotaph3DViewerModal
-            modelUrl={memorial.cenotaph_model_url}
-            isOpen={show3DViewer}
-            onClose={() => setShow3DViewer(false)}
-          />
         )}
 
         {/* Design Cenotaph button (shown when no AI design yet) */}

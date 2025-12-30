@@ -51,6 +51,22 @@ export interface StoryData {
   } | null;
 }
 
+/** 3D render settings for cenotaph model */
+export interface CenotaphRenderSettings {
+  material?: {
+    metalness?: number;
+    roughness?: number;
+    envMapIntensity?: number;
+  };
+  environment?: "sunset" | "studio" | "city" | "night" | "warehouse" | "forest";
+  lighting?: {
+    keyLight?: { intensity?: number; color?: string };
+    fillLight?: { intensity?: number; color?: string };
+    rimLight?: { intensity?: number; color?: string };
+  };
+  exposure?: number;
+}
+
 export interface MemorialData {
   id: string;
   slug: string;
@@ -61,6 +77,7 @@ export interface MemorialData {
   respects_count: number;
   cenotaph_image_url: string | null;
   cenotaph_model_url: string | null;
+  cenotaph_render_settings: CenotaphRenderSettings | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
 }

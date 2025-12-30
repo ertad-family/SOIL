@@ -93,6 +93,7 @@ interface MemorialData {
   respects_count: number;
   cenotaph_image_url: string | null;
   cenotaph_model_url: string | null;
+  cenotaph_render_settings: import("@/components/organization/types").CenotaphRenderSettings | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
 }
@@ -451,6 +452,7 @@ function HeroSection({
       {has3DModel && memorial?.cenotaph_model_url && (
         <Cenotaph3DViewerModal
           modelUrl={memorial.cenotaph_model_url}
+          renderSettings={memorial.cenotaph_render_settings}
           isOpen={show3DViewer}
           onClose={() => setShow3DViewer(false)}
         />
