@@ -13,6 +13,25 @@ const nextConfig = {
       },
     ],
   },
+
+  // External packages for server-side (native Node.js dependencies)
+  serverExternalPackages: ["draco3dgltf", "sharp"],
+
+  // Webpack config for WASM support
+  webpack: (config, { isServer }) => {
+    // Enable WASM support
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+    };
+
+    // For server-side, handle WASM files
+    if (isServer) {
+      config.output.webassemblyModuleFilename = "chunks/[id].wasm";
+    }
+
+    return config;
+  },
 };
 
 module.exports = nextConfig;
