@@ -80,6 +80,11 @@ export interface MemorialData {
   cenotaph_render_settings: CenotaphRenderSettings | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
+  /** 3D model generation status (Issue #254) */
+  model_generation_status: "pending" | "processing" | "success" | "failed" | null;
+  model_generation_task_id: string | null;
+  model_generation_provider: string | null;
+  model_generated_at: string | null;
 }
 
 export type VerificationRelationship =

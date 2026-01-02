@@ -10,20 +10,20 @@ import { Loader2, X, Maximize2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CenotaphRenderSettings } from "@/components/organization/types";
 
-/** Default render settings for cenotaph models */
+/** Default render settings for cenotaph models - tuned for stone/marble textures */
 const DEFAULT_RENDER_SETTINGS: Required<CenotaphRenderSettings> = {
   material: {
-    metalness: 0.9,
-    roughness: 0.25,
-    envMapIntensity: 1.5,
+    metalness: 0.1, // Stone is not metallic
+    roughness: 0.75, // Stone is matte/rough
+    envMapIntensity: 0.8, // Subtle reflections
   },
-  environment: "sunset",
+  environment: "studio", // Neutral studio lighting
   lighting: {
-    keyLight: { intensity: 2.5, color: "#ff9050" },
-    fillLight: { intensity: 1.0, color: "#ffffff" },
-    rimLight: { intensity: 1.2, color: "#ffaa70" },
+    keyLight: { intensity: 1.8, color: "#e8e8f0" }, // Cool white key light
+    fillLight: { intensity: 0.6, color: "#d0d5e0" }, // Soft cool fill
+    rimLight: { intensity: 0.8, color: "#f0f0ff" }, // Subtle cool rim
   },
-  exposure: 1.5,
+  exposure: 1.1, // Slightly reduced exposure
 };
 
 interface Cenotaph3DViewerProps {
@@ -278,11 +278,9 @@ export function Cenotaph3DViewer({
           shadows={!isMobile}
           style={{ touchAction: "none" }}
         >
-          <color attach="background" args={["#1a1410"]} />
-
-          {/* Lighting setup for metallic PBR materials */}
-          <ambientLight intensity={0.4} color="#ffffff" />
-
+          <color attach="background" args={["#1a1a1f"]} /> {/* Dark neutral gray */}
+          {/* Lighting setup for stone/marble PBR materials */}
+          <ambientLight intensity={0.25} color="#e0e0e8" />
           {/* Key light - configurable */}
           <directionalLight
             position={[0, 5, -3]}
@@ -297,24 +295,20 @@ export function Cenotaph3DViewer({
             shadow-camera-top={5}
             shadow-camera-bottom={-5}
           />
-
           {/* Fill light - configurable */}
           <directionalLight
             position={[-3, 2, 4]}
             intensity={settings.lighting.fillLight.intensity ?? 1.0}
             color={settings.lighting.fillLight.color ?? "#ffffff"}
           />
-
           {/* Rim light - configurable */}
           <directionalLight
             position={[4, 3, 0]}
             intensity={settings.lighting.rimLight.intensity ?? 1.2}
             color={settings.lighting.rimLight.color ?? "#ffaa70"}
           />
-
           {/* Environment map for realistic reflections */}
           <Environment preset={settings.environment} />
-
           {/* OrbitControls with touch support */}
           <OrbitControls
             ref={(ref) => setControlsRef(ref)}
@@ -330,16 +324,14 @@ export function Cenotaph3DViewer({
               TWO: THREE.TOUCH.DOLLY_PAN,
             }}
           />
-
           {/* Model */}
           <Suspense fallback={<LoadingIndicator />}>
             <CenotaphModel modelUrl={modelUrl} materialSettings={settings.material} />
           </Suspense>
-
-          {/* Ground plane */}
+          {/* Ground plane - dark neutral to match 2D renders */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, 0]} receiveShadow={!isMobile}>
             <planeGeometry args={[10, 10]} />
-            <meshStandardMaterial color="#2a2218" roughness={0.8} />
+            <meshStandardMaterial color="#252530" roughness={0.9} metalness={0.0} />
           </mesh>
         </Canvas>
       </Suspense>

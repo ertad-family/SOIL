@@ -70,6 +70,11 @@ interface MemorialData {
   cenotaph_render_settings: import("@/components/organization/types").CenotaphRenderSettings | null;
   design_status: string | null;
   cenotaphery_slug: string | null;
+  /** 3D model generation status (Issue #254) */
+  model_generation_status: "pending" | "processing" | "success" | "failed" | null;
+  model_generation_task_id: string | null;
+  model_generation_provider: string | null;
+  model_generated_at: string | null;
 }
 
 /** Summary data extracted from story for public display */
@@ -348,7 +353,7 @@ export default async function OrganizationPage({ params }: PageProps) {
   const { data: memorialRaw } = await supabase
     .from("memorials")
     .select(
-      `id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, cenotaph_model_url, cenotaph_render_settings, design_status, cenotaphery_id,
+      `id, slug, epitaph, tombstone_style, tombstone_color, views_count, respects_count, cenotaph_image_url, cenotaph_model_url, cenotaph_render_settings, design_status, cenotaphery_id, model_generation_status, model_generation_task_id, model_generation_provider, model_generated_at,
       cenotapheries!memorials_cenotaphery_id_fkey(slug)`
     )
     .eq("organization_id", id)
@@ -377,6 +382,16 @@ export default async function OrganizationPage({ params }: PageProps) {
           const cenotaphery = Array.isArray(cenotapheries) ? cenotapheries[0] : cenotapheries;
           return (cenotaphery as { slug: string } | null)?.slug || null;
         })(),
+        // 3D model generation fields (Issue #254)
+        model_generation_status: memorialRaw.model_generation_status as
+          | "pending"
+          | "processing"
+          | "success"
+          | "failed"
+          | null,
+        model_generation_task_id: memorialRaw.model_generation_task_id,
+        model_generation_provider: memorialRaw.model_generation_provider,
+        model_generated_at: memorialRaw.model_generated_at,
       }
     : null;
 
