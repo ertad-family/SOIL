@@ -11,6 +11,10 @@ export interface ResearcherPublic {
   website_url: string | null;
   publication_count: number;
   zotero_creator_name: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  openalex_works_count: number;
+  openalex_cited_by_count: number;
 }
 
 // Connection type for graph edges
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("researchers")
       .select(
-        "id, name, institution, discipline, bio, website_url, publication_count, zotero_creator_name"
+        "id, name, institution, discipline, bio, website_url, publication_count, zotero_creator_name, birth_year, death_year, openalex_works_count, openalex_cited_by_count"
       )
       .order("publication_count", { ascending: false, nullsFirst: false })
       .order("name", { ascending: true });
@@ -101,6 +105,8 @@ export async function GET(request: NextRequest) {
       researchers: (researchers || []).map((r) => ({
         ...r,
         publication_count: r.publication_count || 0,
+        openalex_works_count: r.openalex_works_count || 0,
+        openalex_cited_by_count: r.openalex_cited_by_count || 0,
       })),
       total: researchers?.length || 0,
       disciplines,

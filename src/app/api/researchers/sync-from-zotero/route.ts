@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const ZOTERO_API_KEY = process.env.ZOTERO_API_KEY;
 const ZOTERO_GROUP_ID = process.env.ZOTERO_GROUP_ID || "6367540";
@@ -31,6 +31,37 @@ interface AuthorInfo {
   displayName: string;
   normalizedName: string;
   publications: { key: string; title: string; coauthors: string[] }[];
+}
+
+// Retry helper for transient errors
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const isRetryable =
+        lastError.message.includes("fetch failed") ||
+        lastError.message.includes("timeout") ||
+        lastError.message.includes("ETIMEDOUT") ||
+        lastError.message.includes("ECONNRESET");
+
+      if (!isRetryable || attempt === maxRetries - 1) {
+        throw lastError;
+      }
+
+      console.log(`Retry ${attempt + 1}/${maxRetries} after error: ${lastError.message}`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs * (attempt + 1)));
+    }
+  }
+
+  throw lastError;
 }
 
 // Normalize author name for consistent matching
@@ -146,72 +177,117 @@ export async function POST() {
 
     console.log(`Found ${authorMap.size} unique authors`);
 
-    // Step 3: Filter to authors with 2+ publications
-    const significantAuthors = Array.from(authorMap.values()).filter(
-      (a) => a.publications.length >= 2
-    );
-    console.log(`${significantAuthors.length} authors have 2+ publications`);
+    // Step 3: Include all authors (no minimum publication filter)
+    const allAuthors = Array.from(authorMap.values());
+    console.log(`Including all ${allAuthors.length} authors`);
 
-    // Step 4: Get existing researchers
-    const { data: existingResearchers } = await supabase
-      .from("researchers")
-      .select("id, name, zotero_creator_name");
+    // Step 4: Get existing researchers (with retry)
+    const { data: existingResearchers } = await withRetry(async () => {
+      const result = await supabase.from("researchers").select("id, name, zotero_creator_name");
+      return result;
+    });
 
     const existingByZoteroName = new Map(
       (existingResearchers || [])
-        .filter((r) => r.zotero_creator_name)
-        .map((r) => [r.zotero_creator_name, r])
+        .filter((r: { zotero_creator_name: string | null }) => r.zotero_creator_name)
+        .map((r: { id: string; name: string; zotero_creator_name: string }) => [
+          r.zotero_creator_name,
+          r,
+        ])
     );
 
-    // Step 5: Upsert researchers
+    // Step 5: Upsert researchers (with retry)
     let newCount = 0;
     let updatedCount = 0;
+    let errorCount = 0;
 
-    for (const author of significantAuthors) {
+    for (const author of allAuthors) {
       const existing = existingByZoteroName.get(author.normalizedName);
 
-      if (existing) {
-        // Update publication count
-        await supabase
-          .from("researchers")
-          .update({ publication_count: author.publications.length })
-          .eq("id", existing.id);
-        updatedCount++;
-      } else {
-        // Create new researcher with minimal info
-        const { error } = await supabase.from("researchers").insert({
-          name: author.displayName,
-          institution: "Unknown", // To be filled manually
-          discipline: "ecology", // Default, to be updated
-          zotero_creator_name: author.normalizedName,
-          publication_count: author.publications.length,
-          tier: 3, // Default tier
-        });
-
-        if (!error) {
-          newCount++;
+      try {
+        if (existing) {
+          // Update publication count
+          await withRetry(async () => {
+            await supabase
+              .from("researchers")
+              .update({ publication_count: author.publications.length })
+              .eq("id", existing.id);
+          });
+          updatedCount++;
         } else {
-          console.error(`Error creating researcher ${author.displayName}:`, error);
+          // Create new researcher with minimal info
+          const { error } = await withRetry(async () => {
+            const result = await supabase.from("researchers").insert({
+              name: author.displayName,
+              institution: "Unknown", // To be filled manually
+              discipline: "ecology", // Default, to be updated
+              zotero_creator_name: author.normalizedName,
+              publication_count: author.publications.length,
+              tier: 3, // Default tier
+            });
+            return result;
+          });
+
+          if (!error) {
+            newCount++;
+          } else {
+            console.error(`Error creating researcher ${author.displayName}:`, error);
+            errorCount++;
+          }
+        }
+      } catch (error) {
+        console.error(`Failed after retries for ${author.displayName}:`, error);
+        errorCount++;
+      }
+    }
+
+    // Step 6: Delete researchers with 0 publications (no longer in Zotero)
+    let deletedCount = 0;
+    const activeZoteroNames = new Set(allAuthors.map((a) => a.normalizedName));
+
+    for (const [zoteroName, existing] of existingByZoteroName.entries()) {
+      if (!activeZoteroNames.has(zoteroName)) {
+        try {
+          // Delete connections first
+          await withRetry(async () => {
+            await supabase
+              .from("researcher_connections")
+              .delete()
+              .or(`researcher_a_id.eq.${existing.id},researcher_b_id.eq.${existing.id}`);
+          });
+
+          // Delete researcher
+          await withRetry(async () => {
+            await supabase.from("researchers").delete().eq("id", existing.id);
+          });
+
+          console.log(`Deleted researcher no longer in Zotero: ${existing.name}`);
+          deletedCount++;
+        } catch (error) {
+          console.error(`Failed to delete researcher ${existing.name}:`, error);
+          errorCount++;
         }
       }
     }
 
-    // Step 6: Refresh researcher list for connection creation
-    const { data: allResearchers } = await supabase
-      .from("researchers")
-      .select("id, zotero_creator_name");
+    // Step 7: Refresh researcher list for connection creation (with retry)
+    const { data: allResearchers } = await withRetry(async () => {
+      const result = await supabase.from("researchers").select("id, zotero_creator_name");
+      return result;
+    });
 
     const researcherByZoteroName = new Map(
       (allResearchers || [])
-        .filter((r) => r.zotero_creator_name)
-        .map((r) => [r.zotero_creator_name, r.id])
+        .filter((r: { zotero_creator_name: string | null }) => r.zotero_creator_name)
+        .map((r: { id: string; zotero_creator_name: string }) => [r.zotero_creator_name, r.id])
     );
 
-    // Step 7: Create co-authorship connections
+    // Step 8: Create co-authorship connections (with retry)
     let connectionCount = 0;
+    let connectionErrors = 0;
     const processedPairs = new Set<string>();
 
-    for (const author of significantAuthors) {
+    for (const author of allAuthors) {
       const authorId = researcherByZoteroName.get(author.normalizedName);
       if (!authorId) continue;
 
@@ -226,24 +302,33 @@ export async function POST() {
           processedPairs.add(pairKey);
 
           // Find all shared publications
-          const coauthorInfo = authorMap.get(coauthorName);
           const sharedPubs = author.publications
             .filter((p) => p.coauthors.includes(coauthorName))
             .map((p) => p.key);
 
           if (sharedPubs.length > 0) {
-            // Use the helper function to upsert connection
-            const { error } = await supabase.rpc("upsert_researcher_connection", {
-              p_researcher_a_id: authorId,
-              p_researcher_b_id: coauthorId,
-              p_connection_type: "coauthor",
-              p_label: `${sharedPubs.length} shared publication${sharedPubs.length > 1 ? "s" : ""}`,
-              p_shared_publication_keys: sharedPubs,
-              p_is_auto_detected: true,
-            });
+            try {
+              // Use the helper function to upsert connection
+              const { error } = await withRetry(async () => {
+                const result = await supabase.rpc("upsert_researcher_connection", {
+                  p_researcher_a_id: authorId,
+                  p_researcher_b_id: coauthorId,
+                  p_connection_type: "coauthor",
+                  p_label: `${sharedPubs.length} shared publication${sharedPubs.length > 1 ? "s" : ""}`,
+                  p_shared_publication_keys: sharedPubs,
+                  p_is_auto_detected: true,
+                });
+                return result;
+              });
 
-            if (!error) {
-              connectionCount++;
+              if (!error) {
+                connectionCount++;
+              } else {
+                connectionErrors++;
+              }
+            } catch (error) {
+              console.error(`Failed to create connection after retries:`, error);
+              connectionErrors++;
             }
           }
         }
@@ -255,10 +340,11 @@ export async function POST() {
       summary: {
         totalItems: items.length,
         uniqueAuthors: authorMap.size,
-        authorsWithMultiplePublications: significantAuthors.length,
         newResearchers: newCount,
         updatedResearchers: updatedCount,
+        deletedResearchers: deletedCount,
         coauthorConnections: connectionCount,
+        errors: errorCount + connectionErrors,
       },
     });
   } catch (error) {

@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { X, ExternalLink, BookOpen, Users, Loader2, GraduationCap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  X,
+  ExternalLink,
+  BookOpen,
+  Users,
+  Loader2,
+  GraduationCap,
+  Quote,
+  Award,
+} from "lucide-react";
 
 // Types
 interface Researcher {
@@ -14,6 +21,8 @@ interface Researcher {
   bio: string | null;
   website_url: string | null;
   publication_count: number;
+  birth_year?: number | null;
+  death_year?: number | null;
 }
 
 interface Connection {
@@ -33,6 +42,16 @@ interface Publication {
   doi: string | null;
   url: string | null;
   publicationTitle: string | null;
+}
+
+interface OpenAlexData {
+  openalex_id: string | null;
+  works_count: number;
+  cited_by_count: number;
+  h_index: number | null;
+  i10_index: number | null;
+  top_concepts: string[];
+  profile_url: string | null;
 }
 
 interface ResearcherDetailPanelProps {
@@ -79,6 +98,8 @@ export function ResearcherDetailPanel({
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loadingPubs, setLoadingPubs] = useState(false);
   const [showAllPubs, setShowAllPubs] = useState(false);
+  const [openAlexData, setOpenAlexData] = useState<OpenAlexData | null>(null);
+  const [loadingOpenAlex, setLoadingOpenAlex] = useState(false);
 
   const config = DISCIPLINE_CONFIG[researcher.discipline] || {
     label: researcher.discipline,
@@ -95,7 +116,7 @@ export function ResearcherDetailPanel({
     })
     .filter(Boolean) as (Connection & { researcher: Researcher })[];
 
-  // Fetch publications when researcher changes
+  // Fetch publications and OpenAlex data when researcher changes
   useEffect(() => {
     async function fetchPublications() {
       setLoadingPubs(true);
@@ -112,7 +133,27 @@ export function ResearcherDetailPanel({
       }
     }
 
+    async function fetchOpenAlexData() {
+      setLoadingOpenAlex(true);
+      try {
+        const response = await fetch(`/api/researchers/${researcher.id}/openalex`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.matched) {
+            setOpenAlexData(result.data);
+          } else {
+            setOpenAlexData(null);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch OpenAlex data:", error);
+      } finally {
+        setLoadingOpenAlex(false);
+      }
+    }
+
     fetchPublications();
+    fetchOpenAlexData();
   }, [researcher.id]);
 
   const displayedPubs = showAllPubs ? publications : publications.slice(0, 5);
@@ -129,6 +170,11 @@ export function ResearcherDetailPanel({
             <div className="min-w-0">
               <h2 className="font-display text-lg font-medium text-marble-100 truncate">
                 {researcher.name}
+                {researcher.death_year && (
+                  <span className="text-slate-500 font-normal ml-1.5">
+                    ({researcher.birth_year || "?"}–{researcher.death_year})
+                  </span>
+                )}
               </h2>
               <p className="text-slate-400 text-sm truncate">{researcher.institution}</p>
             </div>
@@ -166,7 +212,7 @@ export function ResearcherDetailPanel({
             <div className="text-2xl font-display font-semibold text-gold-400">
               {researcher.publication_count}
             </div>
-            <div className="text-xs text-slate-500">Publications</div>
+            <div className="text-xs text-slate-500">In Bibliography</div>
           </div>
           <div className="bg-slate-800/50 rounded-lg p-3">
             <div className="text-2xl font-display font-semibold text-gold-400">
@@ -175,6 +221,54 @@ export function ResearcherDetailPanel({
             <div className="text-xs text-slate-500">Connections</div>
           </div>
         </div>
+
+        {/* OpenAlex Academic Metrics */}
+        {loadingOpenAlex ? (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-5 h-5 text-slate-500 animate-spin" />
+            <span className="ml-2 text-slate-500 text-sm">Loading academic metrics...</span>
+          </div>
+        ) : openAlexData && openAlexData.cited_by_count > 0 ? (
+          <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              Academic Impact (OpenAlex)
+            </h3>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-lg font-display font-semibold text-gold-400">
+                  {openAlexData.cited_by_count.toLocaleString()}
+                </div>
+                <div className="text-xs text-slate-500">Citations</div>
+              </div>
+              {openAlexData.h_index !== null && (
+                <div>
+                  <div className="text-lg font-display font-semibold text-gold-400">
+                    {openAlexData.h_index}
+                  </div>
+                  <div className="text-xs text-slate-500">h-index</div>
+                </div>
+              )}
+              <div>
+                <div className="text-lg font-display font-semibold text-gold-400">
+                  {openAlexData.works_count.toLocaleString()}
+                </div>
+                <div className="text-xs text-slate-500">Total Works</div>
+              </div>
+            </div>
+            {openAlexData.profile_url && (
+              <a
+                href={openAlexData.profile_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-gold-400 hover:text-gold-300 mt-3"
+              >
+                View on OpenAlex
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+        ) : null}
 
         {/* Publications */}
         <div>
@@ -197,7 +291,8 @@ export function ResearcherDetailPanel({
                   href={
                     pub.doi
                       ? `https://doi.org/${pub.doi}`
-                      : pub.url || `/research/bibliography?q=${encodeURIComponent(pub.title)}`
+                      : pub.url ||
+                        `https://www.zotero.org/groups/studies_of_organizational_illness_and_loss/items/${pub.key}`
                   }
                   target="_blank"
                   rel="noopener noreferrer"
@@ -232,13 +327,15 @@ export function ResearcherDetailPanel({
           )}
 
           {publications.length > 0 && (
-            <Link
-              href={`/research/bibliography?q=${encodeURIComponent(researcher.name)}`}
+            <a
+              href={`https://www.zotero.org/groups/studies_of_organizational_illness_and_loss/items?q=${encodeURIComponent(researcher.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm text-gold-400 hover:text-gold-300 mt-3"
             >
-              View in Bibliography
+              View in Zotero Library
               <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
+            </a>
           )}
         </div>
 

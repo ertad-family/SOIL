@@ -5,7 +5,8 @@ import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ExternalLink, Search, Users, Filter, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Search, Users, Filter, Loader2, RefreshCw } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import {
   ResearcherNetworkGraph,
   GraphLegend,
@@ -24,6 +25,10 @@ interface Researcher {
   website_url: string | null;
   publication_count: number;
   zotero_creator_name: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  openalex_works_count: number;
+  openalex_cited_by_count: number;
 }
 
 interface Connection {
@@ -106,6 +111,21 @@ function DisciplineFilter({
   );
 }
 
+// Sync result type
+interface SyncResult {
+  success: boolean;
+  summary?: {
+    totalItems: number;
+    uniqueAuthors: number;
+    newResearchers: number;
+    updatedResearchers: number;
+    deletedResearchers: number;
+    coauthorConnections: number;
+    errors: number;
+  };
+  error?: string;
+}
+
 // Main Atlas Page
 export default function AtlasPage() {
   const [researchers, setResearchers] = useState<Researcher[]>([]);
@@ -118,6 +138,11 @@ export default function AtlasPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
+  // Admin sync state
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
 
   // Fetch researchers with connections
   const fetchResearchers = useCallback(async () => {
@@ -144,6 +169,55 @@ export default function AtlasPage() {
     fetchResearchers();
   }, [fetchResearchers]);
 
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdminRole() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        setIsAdmin(profile?.role === "admin");
+      }
+    }
+
+    checkAdminRole();
+  }, []);
+
+  // Sync from Zotero
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+
+    try {
+      const response = await fetch("/api/researchers/sync-from-zotero", {
+        method: "POST",
+      });
+
+      const result: SyncResult = await response.json();
+      setSyncResult(result);
+
+      // Refresh data if sync was successful
+      if (result.success) {
+        await fetchResearchers();
+      }
+    } catch (err) {
+      setSyncResult({
+        success: false,
+        error: err instanceof Error ? err.message : "Sync failed",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   // Convert to graph nodes (filter by search)
   const graphNodes: GraphNode[] = useMemo(() => {
     let filtered = researchers;
@@ -162,6 +236,7 @@ export default function AtlasPage() {
       institution: r.institution,
       discipline: r.discipline,
       publicationCount: r.publication_count,
+      citedByCount: r.openalex_cited_by_count,
       x: 0, // Will be calculated by the component
       y: 0,
     }));
@@ -200,7 +275,7 @@ export default function AtlasPage() {
   }, [disciplines]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)]">
+    <div className="flex flex-col min-h-[calc(100vh-80px)]">
       {/* Header Section */}
       <section className="py-6 px-6 border-b border-slate-800">
         <div className="max-w-content mx-auto">
@@ -252,6 +327,18 @@ export default function AtlasPage() {
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
+
+              {/* Admin Sync Button */}
+              {isAdmin && (
+                <Button variant="dark-secondary" size="sm" onClick={handleSync} disabled={syncing}>
+                  {syncing ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  Sync
+                </Button>
+              )}
             </div>
           </div>
 
@@ -263,6 +350,48 @@ export default function AtlasPage() {
                 selected={selectedDiscipline}
                 onChange={setSelectedDiscipline}
               />
+            </div>
+          )}
+
+          {/* Sync Result Notification */}
+          {syncResult && (
+            <div
+              className={`mt-4 p-3 rounded-lg border ${
+                syncResult.success
+                  ? "bg-green-900/20 border-green-700/50 text-green-400"
+                  : "bg-red-900/20 border-red-700/50 text-red-400"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  {syncResult.success && syncResult.summary ? (
+                    <p className="text-sm">
+                      Synced: {syncResult.summary.totalItems} items | +
+                      {syncResult.summary.newResearchers} new |{" "}
+                      {syncResult.summary.updatedResearchers} updated |{" "}
+                      {syncResult.summary.deletedResearchers > 0 && (
+                        <span className="text-red-400">
+                          -{syncResult.summary.deletedResearchers} deleted |{" "}
+                        </span>
+                      )}
+                      {syncResult.summary.coauthorConnections} connections
+                      {syncResult.summary.errors > 0 && (
+                        <span className="text-amber-400 ml-2">
+                          ({syncResult.summary.errors} errors)
+                        </span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-sm">Sync failed: {syncResult.error}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSyncResult(null)}
+                  className="text-slate-400 hover:text-slate-200 text-sm"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -284,7 +413,7 @@ export default function AtlasPage() {
       </div>
 
       {/* Main Content: Graph + Detail Panel */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex h-[600px] lg:h-[700px] overflow-hidden">
         {/* Graph Container */}
         <div className="flex-1 relative bg-slate-900/50">
           {loading ? (
@@ -355,6 +484,69 @@ export default function AtlasPage() {
           />
         )}
       </div>
+
+      {/* Roman Divider */}
+      <div className="divider-roman py-12 md:py-16">
+        <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">✦</span>
+      </div>
+
+      {/* About Section */}
+      <section className="py-12 md:py-16 px-6">
+        <div className="max-w-content mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-medium text-marble-100 mb-4">
+                About the Research Atlas
+              </h2>
+              <p className="text-slate-400 leading-relaxed mb-4">
+                The Research Atlas visualizes the network of scholars working on organizational
+                mortality. Each node represents a researcher whose work appears in our bibliography,
+                with connections based on co-authorship and thematic relationships.
+              </p>
+              <p className="text-slate-400 leading-relaxed">
+                This is an opt-in directory. If you&apos;re a researcher in this field and would
+                like to be included or update your information, please contact us.
+              </p>
+            </div>
+            <div className="space-y-6">
+              <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                <h3 className="font-display text-lg font-medium text-marble-100 mb-2">
+                  Data Sources
+                </h3>
+                <ul className="space-y-2 text-slate-400 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold-400 mt-1">•</span>
+                    <span>Publication data from SOIL Bibliography (Zotero)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold-400 mt-1">•</span>
+                    <span>Citation metrics from OpenAlex</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold-400 mt-1">•</span>
+                    <span>Biographical data from Wikidata</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                <h3 className="font-display text-lg font-medium text-marble-100 mb-2">
+                  Request Updates
+                </h3>
+                <p className="text-slate-400 text-sm mb-3">
+                  To add, update, or remove your profile from the Atlas:
+                </p>
+                <a
+                  href="mailto:research@soil.rip?subject=Research Atlas Update Request"
+                  className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 transition-colors text-sm"
+                >
+                  research@soil.rip
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
