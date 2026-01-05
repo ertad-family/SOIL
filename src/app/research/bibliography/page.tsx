@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -34,6 +34,8 @@ import {
   Loader2,
   PlusCircle,
   Check,
+  ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 
 // Types
@@ -328,6 +330,17 @@ function FilterSidebar({
   );
 }
 
+// CrossRef metadata type
+interface CrossRefMetadata {
+  title: string;
+  authors: string;
+  date: string;
+  publicationTitle: string;
+  publisher: string;
+  itemType: string;
+  url: string;
+}
+
 // Propose Publication Dialog Component
 function ProposePublicationDialog({
   open,
@@ -340,6 +353,16 @@ function ProposePublicationDialog({
   collections: ZoteroCollection[];
   onSuccess: () => void;
 }) {
+  // DOI fetch state
+  const [doiInput, setDoiInput] = useState("");
+  const [fetchingDoi, setFetchingDoi] = useState(false);
+  const [doiError, setDoiError] = useState<string | null>(null);
+  const [metadataFetched, setMetadataFetched] = useState(false);
+
+  // Manual entry toggle
+  const [showManualEntry, setShowManualEntry] = useState(false);
+
+  // Form data
   const [formData, setFormData] = useState({
     itemType: "journalArticle",
     title: "",
@@ -351,9 +374,104 @@ function ProposePublicationDialog({
     url: "",
     collection: "",
   });
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Clean DOI input (remove URL prefix if present)
+  const cleanDoi = (input: string): string => {
+    const trimmed = input.trim();
+    // Handle full URLs like https://doi.org/10.1234/...
+    if (trimmed.includes("doi.org/")) {
+      return trimmed.split("doi.org/")[1];
+    }
+    // Handle dx.doi.org URLs
+    if (trimmed.includes("dx.doi.org/")) {
+      return trimmed.split("dx.doi.org/")[1];
+    }
+    return trimmed;
+  };
+
+  // Fetch metadata from CrossRef
+  const fetchFromDoi = async () => {
+    const doi = cleanDoi(doiInput);
+    if (!doi) {
+      setDoiError("Please enter a DOI");
+      return;
+    }
+
+    setFetchingDoi(true);
+    setDoiError(null);
+
+    try {
+      const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("DOI not found. Please check the DOI or enter details manually.");
+        }
+        throw new Error("Failed to fetch metadata from CrossRef");
+      }
+
+      const data = await response.json();
+      const work = data.message;
+
+      // Parse authors
+      const authors =
+        work.author
+          ?.map((a: { family?: string; given?: string; name?: string }) => {
+            if (a.family && a.given) {
+              return `${a.family}, ${a.given}`;
+            }
+            return a.name || a.family || "";
+          })
+          .filter(Boolean)
+          .join("; ") || "";
+
+      // Determine item type
+      let itemType = "journalArticle";
+      if (work.type === "book" || work.type === "monograph") {
+        itemType = "book";
+      } else if (work.type === "book-chapter") {
+        itemType = "bookSection";
+      } else if (work.type === "proceedings-article") {
+        itemType = "conferencePaper";
+      } else if (work.type === "report") {
+        itemType = "report";
+      } else if (work.type === "dissertation") {
+        itemType = "thesis";
+      }
+
+      // Extract year
+      const datePublished =
+        work.published?.["date-parts"]?.[0]?.[0] ||
+        work["published-print"]?.["date-parts"]?.[0]?.[0] ||
+        work["published-online"]?.["date-parts"]?.[0]?.[0] ||
+        "";
+
+      const metadata: CrossRefMetadata = {
+        title: work.title?.[0] || "",
+        authors,
+        date: datePublished?.toString() || "",
+        publicationTitle: work["container-title"]?.[0] || "",
+        publisher: work.publisher || "",
+        itemType,
+        url: work.URL || `https://doi.org/${doi}`,
+      };
+
+      setFormData({
+        ...metadata,
+        doi,
+        collection: "",
+      });
+      setMetadataFetched(true);
+    } catch (err) {
+      setDoiError(err instanceof Error ? err.message : "Failed to fetch metadata");
+    } finally {
+      setFetchingDoi(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,19 +499,8 @@ function ProposePublicationDialog({
       setTimeout(() => {
         onSuccess();
         onOpenChange(false);
-        // Reset form
-        setFormData({
-          itemType: "journalArticle",
-          title: "",
-          authors: "",
-          date: "",
-          publicationTitle: "",
-          publisher: "",
-          doi: "",
-          url: "",
-          collection: "",
-        });
-        setSubmitSuccess(false);
+        // Reset all state
+        resetForm();
       }, 1500);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "An error occurred");
@@ -402,18 +509,46 @@ function ProposePublicationDialog({
     }
   };
 
+  const resetForm = () => {
+    setDoiInput("");
+    setDoiError(null);
+    setMetadataFetched(false);
+    setShowManualEntry(false);
+    setFormData({
+      itemType: "journalArticle",
+      title: "",
+      authors: "",
+      date: "",
+      publicationTitle: "",
+      publisher: "",
+      doi: "",
+      url: "",
+      collection: "",
+    });
+    setSubmitSuccess(false);
+    setSubmitError(null);
+  };
+
   const updateField = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Check if form has required fields
+  const canSubmit = formData.title.trim() && formData.authors.trim();
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) resetForm();
+        onOpenChange(isOpen);
+      }}
+    >
       <DialogContent variant="dark" size="lg">
         <DialogHeader>
           <DialogTitle variant="dark">Propose a Publication</DialogTitle>
           <DialogDescription variant="dark">
-            Suggest a publication to add to our curated bibliography. All submissions are reviewed
-            before being added.
+            Enter a DOI to auto-fill publication details, or enter them manually.
           </DialogDescription>
         </DialogHeader>
 
@@ -428,171 +563,270 @@ function ProposePublicationDialog({
             <p className="text-slate-400">Thank you for your contribution to the bibliography.</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            {/* Item Type */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Publication Type *
-              </label>
-              <Select
-                value={formData.itemType}
-                onValueChange={(value) => updateField("itemType", value)}
-              >
-                <SelectTrigger variant="dark">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent variant="dark">
-                  <SelectItem value="journalArticle">Journal Article</SelectItem>
-                  <SelectItem value="book">Book</SelectItem>
-                  <SelectItem value="bookSection">Book Chapter</SelectItem>
-                  <SelectItem value="thesis">Thesis</SelectItem>
-                  <SelectItem value="report">Report</SelectItem>
-                  <SelectItem value="conferencePaper">Conference Paper</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-4 mt-4">
+            {/* DOI Fetch Section */}
+            {!metadataFetched && !showManualEntry && (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                    DOI (Digital Object Identifier)
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      variant="dark"
+                      value={doiInput}
+                      onChange={(e) => {
+                        setDoiInput(e.target.value);
+                        setDoiError(null);
+                      }}
+                      placeholder="10.1234/example or https://doi.org/10.1234/example"
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          fetchFromDoi();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="dark-primary"
+                      onClick={fetchFromDoi}
+                      disabled={fetchingDoi || !doiInput.trim()}
+                    >
+                      {fetchingDoi ? <Loader2 className="w-4 h-4 animate-spin" /> : "Fetch"}
+                    </Button>
+                  </div>
+                  {doiError && (
+                    <div className="flex items-center gap-2 mt-2 text-red-400 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      {doiError}
+                    </div>
+                  )}
+                </div>
 
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Title *</label>
-              <Input
-                variant="dark"
-                value={formData.title}
-                onChange={(e) => updateField("title", e.target.value)}
-                placeholder="Full title of the publication"
-                required
-              />
-            </div>
-
-            {/* Authors */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Authors *</label>
-              <Input
-                variant="dark"
-                value={formData.authors}
-                onChange={(e) => updateField("authors", e.target.value)}
-                placeholder="LastName, FirstName; LastName2, FirstName2"
-                required
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Separate multiple authors with semicolons
-              </p>
-            </div>
-
-            {/* Year */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Year</label>
-              <Input
-                variant="dark"
-                value={formData.date}
-                onChange={(e) => updateField("date", e.target.value)}
-                placeholder="2024"
-                maxLength={4}
-              />
-            </div>
-
-            {/* Journal/Publisher (conditional) */}
-            {formData.itemType === "journalArticle" && (
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Journal Name
-                </label>
-                <Input
-                  variant="dark"
-                  value={formData.publicationTitle}
-                  onChange={(e) => updateField("publicationTitle", e.target.value)}
-                  placeholder="e.g., Academy of Management Review"
-                />
+                {/* Manual Entry Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowManualEntry(true)}
+                  className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  No DOI? Enter details manually
+                </button>
               </div>
             )}
 
-            {formData.itemType === "book" && (
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Publisher</label>
-                <Input
-                  variant="dark"
-                  value={formData.publisher}
-                  onChange={(e) => updateField("publisher", e.target.value)}
-                  placeholder="e.g., Oxford University Press"
-                />
-              </div>
-            )}
-
-            {/* DOI */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">DOI</label>
-              <Input
-                variant="dark"
-                value={formData.doi}
-                onChange={(e) => updateField("doi", e.target.value)}
-                placeholder="10.1234/example.doi"
-              />
-            </div>
-
-            {/* URL */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">URL</label>
-              <Input
-                variant="dark"
-                value={formData.url}
-                onChange={(e) => updateField("url", e.target.value)}
-                placeholder="https://..."
-                type="url"
-              />
-            </div>
-
-            {/* Collection */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Collection</label>
-              <Select
-                value={formData.collection}
-                onValueChange={(value) => updateField("collection", value)}
-              >
-                <SelectTrigger variant="dark">
-                  <SelectValue placeholder="Select a collection (optional)" />
-                </SelectTrigger>
-                <SelectContent variant="dark">
-                  <SelectItem value="none">No collection</SelectItem>
-                  {collections.map((c) => (
-                    <SelectItem key={c.key} value={c.key}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Error Message */}
-            {submitError && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-                <p className="text-red-400 text-sm">{submitError}</p>
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="dark-secondary"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="dark-primary" disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Add Publication
-                  </>
+            {/* Form Fields (shown after DOI fetch or manual entry) */}
+            {(metadataFetched || showManualEntry) && (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {metadataFetched && (
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 mb-4">
+                    <p className="text-green-400 text-sm flex items-center gap-2">
+                      <Check className="w-4 h-4" />
+                      Metadata fetched from DOI. You can edit the fields below if needed.
+                    </p>
+                  </div>
                 )}
-              </Button>
-            </DialogFooter>
-          </form>
+
+                {/* Item Type */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                    Publication Type *
+                  </label>
+                  <Select
+                    value={formData.itemType}
+                    onValueChange={(value) => updateField("itemType", value)}
+                  >
+                    <SelectTrigger variant="dark">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent variant="dark">
+                      <SelectItem value="journalArticle">Journal Article</SelectItem>
+                      <SelectItem value="book">Book</SelectItem>
+                      <SelectItem value="bookSection">Book Chapter</SelectItem>
+                      <SelectItem value="thesis">Thesis</SelectItem>
+                      <SelectItem value="report">Report</SelectItem>
+                      <SelectItem value="conferencePaper">Conference Paper</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Title *</label>
+                  <Input
+                    variant="dark"
+                    value={formData.title}
+                    onChange={(e) => updateField("title", e.target.value)}
+                    placeholder="Full title of the publication"
+                    required
+                  />
+                </div>
+
+                {/* Authors */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                    Authors *
+                  </label>
+                  <Input
+                    variant="dark"
+                    value={formData.authors}
+                    onChange={(e) => updateField("authors", e.target.value)}
+                    placeholder="LastName, FirstName; LastName2, FirstName2"
+                    required
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Separate multiple authors with semicolons
+                  </p>
+                </div>
+
+                {/* Year */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Year</label>
+                  <Input
+                    variant="dark"
+                    value={formData.date}
+                    onChange={(e) => updateField("date", e.target.value)}
+                    placeholder="2024"
+                    maxLength={4}
+                  />
+                </div>
+
+                {/* Journal/Publisher (conditional) */}
+                {(formData.itemType === "journalArticle" ||
+                  formData.itemType === "conferencePaper") && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      {formData.itemType === "conferencePaper"
+                        ? "Conference/Proceedings"
+                        : "Journal Name"}
+                    </label>
+                    <Input
+                      variant="dark"
+                      value={formData.publicationTitle}
+                      onChange={(e) => updateField("publicationTitle", e.target.value)}
+                      placeholder={
+                        formData.itemType === "conferencePaper"
+                          ? "e.g., Academy of Management Proceedings"
+                          : "e.g., Academy of Management Review"
+                      }
+                    />
+                  </div>
+                )}
+
+                {(formData.itemType === "book" || formData.itemType === "bookSection") && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Publisher
+                    </label>
+                    <Input
+                      variant="dark"
+                      value={formData.publisher}
+                      onChange={(e) => updateField("publisher", e.target.value)}
+                      placeholder="e.g., Oxford University Press"
+                    />
+                  </div>
+                )}
+
+                {/* DOI (if manual entry) */}
+                {showManualEntry && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">DOI</label>
+                    <Input
+                      variant="dark"
+                      value={formData.doi}
+                      onChange={(e) => updateField("doi", e.target.value)}
+                      placeholder="10.1234/example.doi"
+                    />
+                  </div>
+                )}
+
+                {/* URL */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">URL</label>
+                  <Input
+                    variant="dark"
+                    value={formData.url}
+                    onChange={(e) => updateField("url", e.target.value)}
+                    placeholder="https://..."
+                    type="url"
+                  />
+                </div>
+
+                {/* Collection */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                    Collection
+                  </label>
+                  <Select
+                    value={formData.collection}
+                    onValueChange={(value) => updateField("collection", value)}
+                  >
+                    <SelectTrigger variant="dark">
+                      <SelectValue placeholder="Select a collection (optional)" />
+                    </SelectTrigger>
+                    <SelectContent variant="dark">
+                      <SelectItem value="none">No collection</SelectItem>
+                      {collections.map((c) => (
+                        <SelectItem key={c.key} value={c.key}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Error Message */}
+                {submitError && (
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                    <p className="text-red-400 text-sm">{submitError}</p>
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="dark-secondary"
+                    onClick={() => {
+                      if (metadataFetched) {
+                        setMetadataFetched(false);
+                        setFormData({
+                          itemType: "journalArticle",
+                          title: "",
+                          authors: "",
+                          date: "",
+                          publicationTitle: "",
+                          publisher: "",
+                          doi: "",
+                          url: "",
+                          collection: "",
+                        });
+                      } else {
+                        setShowManualEntry(false);
+                      }
+                    }}
+                    disabled={submitting}
+                  >
+                    Back
+                  </Button>
+                  <Button type="submit" variant="dark-primary" disabled={submitting || !canSubmit}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircle className="w-4 h-4 mr-2" />
+                        Add Publication
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            )}
+          </div>
         )}
       </DialogContent>
     </Dialog>
