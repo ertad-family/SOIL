@@ -7,6 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowLeft,
   ExternalLink,
   Search,
@@ -17,6 +32,8 @@ import {
   Filter,
   X,
   Loader2,
+  PlusCircle,
+  Check,
 } from "lucide-react";
 
 // Types
@@ -311,6 +328,272 @@ function FilterSidebar({
   );
 }
 
+// Propose Publication Dialog Component
+function ProposePublicationDialog({
+  open,
+  onOpenChange,
+  collections,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  collections: ZoteroCollection[];
+  onSuccess: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    itemType: "journalArticle",
+    title: "",
+    authors: "",
+    date: "",
+    publicationTitle: "",
+    publisher: "",
+    doi: "",
+    url: "",
+    collection: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch("/api/zotero", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to add publication");
+      }
+
+      setSubmitSuccess(true);
+      setTimeout(() => {
+        onSuccess();
+        onOpenChange(false);
+        // Reset form
+        setFormData({
+          itemType: "journalArticle",
+          title: "",
+          authors: "",
+          date: "",
+          publicationTitle: "",
+          publisher: "",
+          doi: "",
+          url: "",
+          collection: "",
+        });
+        setSubmitSuccess(false);
+      }, 1500);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const updateField = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent variant="dark" size="lg">
+        <DialogHeader>
+          <DialogTitle variant="dark">Propose a Publication</DialogTitle>
+          <DialogDescription variant="dark">
+            Suggest a publication to add to our curated bibliography. All submissions are reviewed
+            before being added.
+          </DialogDescription>
+        </DialogHeader>
+
+        {submitSuccess ? (
+          <div className="py-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-green-400" />
+            </div>
+            <h3 className="font-display text-xl font-medium text-marble-100 mb-2">
+              Publication Added!
+            </h3>
+            <p className="text-slate-400">Thank you for your contribution to the bibliography.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            {/* Item Type */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                Publication Type *
+              </label>
+              <Select
+                value={formData.itemType}
+                onValueChange={(value) => updateField("itemType", value)}
+              >
+                <SelectTrigger variant="dark">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent variant="dark">
+                  <SelectItem value="journalArticle">Journal Article</SelectItem>
+                  <SelectItem value="book">Book</SelectItem>
+                  <SelectItem value="bookSection">Book Chapter</SelectItem>
+                  <SelectItem value="thesis">Thesis</SelectItem>
+                  <SelectItem value="report">Report</SelectItem>
+                  <SelectItem value="conferencePaper">Conference Paper</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Title *</label>
+              <Input
+                variant="dark"
+                value={formData.title}
+                onChange={(e) => updateField("title", e.target.value)}
+                placeholder="Full title of the publication"
+                required
+              />
+            </div>
+
+            {/* Authors */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Authors *</label>
+              <Input
+                variant="dark"
+                value={formData.authors}
+                onChange={(e) => updateField("authors", e.target.value)}
+                placeholder="LastName, FirstName; LastName2, FirstName2"
+                required
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Separate multiple authors with semicolons
+              </p>
+            </div>
+
+            {/* Year */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Year</label>
+              <Input
+                variant="dark"
+                value={formData.date}
+                onChange={(e) => updateField("date", e.target.value)}
+                placeholder="2024"
+                maxLength={4}
+              />
+            </div>
+
+            {/* Journal/Publisher (conditional) */}
+            {formData.itemType === "journalArticle" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                  Journal Name
+                </label>
+                <Input
+                  variant="dark"
+                  value={formData.publicationTitle}
+                  onChange={(e) => updateField("publicationTitle", e.target.value)}
+                  placeholder="e.g., Academy of Management Review"
+                />
+              </div>
+            )}
+
+            {formData.itemType === "book" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Publisher</label>
+                <Input
+                  variant="dark"
+                  value={formData.publisher}
+                  onChange={(e) => updateField("publisher", e.target.value)}
+                  placeholder="e.g., Oxford University Press"
+                />
+              </div>
+            )}
+
+            {/* DOI */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">DOI</label>
+              <Input
+                variant="dark"
+                value={formData.doi}
+                onChange={(e) => updateField("doi", e.target.value)}
+                placeholder="10.1234/example.doi"
+              />
+            </div>
+
+            {/* URL */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">URL</label>
+              <Input
+                variant="dark"
+                value={formData.url}
+                onChange={(e) => updateField("url", e.target.value)}
+                placeholder="https://..."
+                type="url"
+              />
+            </div>
+
+            {/* Collection */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Collection</label>
+              <Select
+                value={formData.collection}
+                onValueChange={(value) => updateField("collection", value)}
+              >
+                <SelectTrigger variant="dark">
+                  <SelectValue placeholder="Select a collection (optional)" />
+                </SelectTrigger>
+                <SelectContent variant="dark">
+                  <SelectItem value="">No collection</SelectItem>
+                  {collections.map((c) => (
+                    <SelectItem key={c.key} value={c.key}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Error Message */}
+            {submitError && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                <p className="text-red-400 text-sm">{submitError}</p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="dark-secondary"
+                onClick={() => onOpenChange(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="dark-primary" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    Add Publication
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Main Bibliography Page
 export default function BibliographyPage() {
   const [stats, setStats] = useState<ZoteroStats | null>(null);
@@ -324,6 +607,7 @@ export default function BibliographyPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentStart, setCurrentStart] = useState(0);
+  const [showProposeDialog, setShowProposeDialog] = useState(false);
 
   const ITEMS_PER_PAGE = 20;
 
@@ -409,6 +693,21 @@ export default function BibliographyPage() {
     setSearchQuery("");
   };
 
+  const refreshData = async () => {
+    // Refresh stats
+    try {
+      const response = await fetch("/api/zotero?action=stats");
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error("Error refreshing stats:", err);
+    }
+    // Refresh items
+    fetchItems(0);
+  };
+
   const hasActiveFilters = selectedCollection || selectedTag || searchQuery;
 
   return (
@@ -436,7 +735,11 @@ export default function BibliographyPage() {
               </p>
             </div>
 
-            <div className="flex-shrink-0 animate-fade-in-up stagger-1">
+            <div className="flex-shrink-0 animate-fade-in-up stagger-1 flex flex-col sm:flex-row gap-3">
+              <Button variant="dark-secondary" size="lg" onClick={() => setShowProposeDialog(true)}>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Propose Publication
+              </Button>
               <a href={ZOTERO_GROUP_URL} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="dark-primary"
@@ -635,6 +938,14 @@ export default function BibliographyPage() {
           </a>
         </div>
       </section>
+
+      {/* Propose Publication Dialog */}
+      <ProposePublicationDialog
+        open={showProposeDialog}
+        onOpenChange={setShowProposeDialog}
+        collections={stats?.collections || []}
+        onSuccess={refreshData}
+      />
     </>
   );
 }
