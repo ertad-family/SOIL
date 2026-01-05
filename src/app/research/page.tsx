@@ -242,11 +242,13 @@ function HeroSection() {
 interface ResearchHubNavigationSectionProps {
   publicationsCount: number | null;
   researchersCount: number | null;
+  datasetsCount: number | null;
 }
 
 function ResearchHubNavigationSection({
   publicationsCount,
   researchersCount,
+  datasetsCount,
 }: ResearchHubNavigationSectionProps) {
   const resources = [
     {
@@ -267,6 +269,15 @@ function ResearchHubNavigationSection({
       stats: researchersCount !== null ? `${researchersCount} researchers` : "Loading...",
     },
     {
+      icon: <HardDrive className="w-7 h-7" />,
+      title: "Dataset Registry",
+      description:
+        "Catalog of existing data sources on organizational mortality from government registries to academic datasets.",
+      href: "/research/datasets",
+      available: true,
+      stats: datasetsCount !== null ? `${datasetsCount} datasets` : "Loading...",
+    },
+    {
       icon: <BookMarked className="w-7 h-7" />,
       title: "Lexicon",
       description:
@@ -281,15 +292,6 @@ function ResearchHubNavigationSection({
       description:
         "Systematic classification of organizational diseases — ICD analog for organizations. SOIL-PC v0.1.",
       href: "/research/pathology",
-      available: false,
-      stats: "Coming Q1 2026",
-    },
-    {
-      icon: <HardDrive className="w-7 h-7" />,
-      title: "Dataset Registry",
-      description:
-        "Catalog of existing data sources on organizational mortality from government registries to academic datasets.",
-      href: "/research/datasets",
       available: false,
       stats: "Coming Q1 2026",
     },
@@ -1153,6 +1155,7 @@ function AdvisoryBoardSection() {
 export default function ResearchPage() {
   const [publicationsCount, setPublicationsCount] = useState<number | null>(null);
   const [researchersCount, setResearchersCount] = useState<number | null>(null);
+  const [datasetsCount, setDatasetsCount] = useState<number | null>(null);
 
   useEffect(() => {
     // Fetch publications count from Zotero API
@@ -1174,6 +1177,16 @@ export default function ResearchPage() {
         }
       })
       .catch(console.error);
+
+    // Fetch datasets count
+    fetch("/api/datasets?action=stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.total === "number") {
+          setDatasetsCount(data.total);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   return (
@@ -1182,6 +1195,7 @@ export default function ResearchPage() {
       <ResearchHubNavigationSection
         publicationsCount={publicationsCount}
         researchersCount={researchersCount}
+        datasetsCount={datasetsCount}
       />
       <ResearchGapSection />
       <WhatWeAreBuildingSection />
