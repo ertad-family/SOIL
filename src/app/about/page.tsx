@@ -33,8 +33,8 @@ function HeroSection() {
             What is <span className="text-gradient-gold">SOIL</span>?
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed mb-6">
-            <strong className="text-marble-100">SOIL</strong> (Social Organizational Intelligence
-            Lab) is a research-first nonprofit project devoted to collecting{" "}
+            <strong className="text-marble-100">SOIL</strong> (Studies of Organizational Illness and
+            Loss) is a research-first nonprofit project devoted to collecting{" "}
             <GlossaryTerm term="Autopsy">organizational autopsy</GlossaryTerm> data at scale - to
             ignite a completely new scientific field:{" "}
             <strong className="text-marble-100">

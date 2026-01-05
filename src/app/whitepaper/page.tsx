@@ -219,10 +219,10 @@ function AbstractSection() {
       <Card variant="dark-elevated" padding="lg" className="mb-12">
         <h2 className="font-display text-xl font-medium text-gold-400 mb-4">Abstract</h2>
         <p className="text-marble-100 leading-relaxed mb-4">
-          This white paper presents the methodological foundation for SOIL (Social Organizational
-          Intelligence Lab), a research initiative establishing the systematic study of
-          organizational mortality as a scientific discipline. We propose a methodology built on two
-          principles: (1) comprehensive, theory-neutral data collection that captures the full
+          This white paper presents the methodological foundation for SOIL (Studies of
+          Organizational Illness and Loss), a research initiative establishing the systematic study
+          of organizational mortality as a scientific discipline. We propose a methodology built on
+          two principles: (1) comprehensive, theory-neutral data collection that captures the full
           organizational trajectory without pre-committing to any causal explanation, and (2)
           multi-disciplinary analysis that interprets collected data through complementary
           scientific lenses. The methodology addresses fundamental challenges in organizational
