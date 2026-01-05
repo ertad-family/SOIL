@@ -149,7 +149,7 @@ INSERT INTO research_datasets (name, slug, url, description, category, access, c
 (
   'Eurostat Business Demography',
   'eurostat-business-demography',
-  'https://ec.europa.eu/eurostat/web/structural-business-statistics/business-demography',
+  'https://ec.europa.eu/eurostat/web/business-demography',
   'Harmonized statistics on business births, deaths, and survival rates across EU member states. Part of Structural Business Statistics framework.',
   'government',
   'open',
@@ -306,7 +306,7 @@ INSERT INTO research_datasets (name, slug, url, description, category, access, c
 (
   'Harvard Business School Cases',
   'hbs-cases',
-  'https://www.hbs.edu/faculty/pages/cases.aspx',
+  'https://hbsp.harvard.edu/cases/',
   'Extensive collection of business cases including numerous failure and turnaround cases. Used globally for business education. Rich qualitative data on organizational dynamics.',
   'qualitative',
   'restricted',
