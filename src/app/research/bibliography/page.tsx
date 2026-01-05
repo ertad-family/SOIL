@@ -361,10 +361,15 @@ function ProposePublicationDialog({
     setSubmitError(null);
 
     try {
+      // Convert "none" to empty string for collection
+      const submissionData = {
+        ...formData,
+        collection: formData.collection === "none" ? "" : formData.collection,
+      };
       const response = await fetch("/api/zotero", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       if (!response.ok) {
@@ -547,7 +552,7 @@ function ProposePublicationDialog({
                   <SelectValue placeholder="Select a collection (optional)" />
                 </SelectTrigger>
                 <SelectContent variant="dark">
-                  <SelectItem value="">No collection</SelectItem>
+                  <SelectItem value="none">No collection</SelectItem>
                   {collections.map((c) => (
                     <SelectItem key={c.key} value={c.key}>
                       {c.name}
