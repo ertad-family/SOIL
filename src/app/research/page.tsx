@@ -292,8 +292,8 @@ function ResearchHubNavigationSection() {
       description:
         "Interactive visualization of scholars working on organizational mortality. Opt-in researcher profiles.",
       href: "/research/atlas",
-      available: false,
-      stats: "Coming Q2 2026",
+      available: true,
+      stats: "14 researchers",
     },
   ];
 
