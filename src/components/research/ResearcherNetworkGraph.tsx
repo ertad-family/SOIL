@@ -57,12 +57,65 @@ const EDGE_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArr
   advisor: { stroke: "#F59E0B", strokeWidth: 2, dashArray: "none" },
 };
 
-// Calculate node positions using discipline-based clustering
+// Calculate node radius based on publication count
+function getNodeRadiusForLayout(publicationCount: number): number {
+  const minRadius = 12;
+  const maxRadius = 28;
+  const minPubs = 1;
+  const maxPubs = 20;
+  const normalized = Math.min(1, Math.max(0, (publicationCount - minPubs) / (maxPubs - minPubs)));
+  return minRadius + normalized * (maxRadius - minRadius);
+}
+
+// Simple collision detection and resolution
+function resolveCollisions(nodes: GraphNode[], iterations: number = 50): GraphNode[] {
+  const result = nodes.map((n) => ({ ...n }));
+  const padding = 8; // Minimum gap between nodes
+
+  for (let iter = 0; iter < iterations; iter++) {
+    let hasCollision = false;
+
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const nodeA = result[i];
+        const nodeB = result[j];
+
+        const dx = nodeB.x - nodeA.x;
+        const dy = nodeB.y - nodeA.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const radiusA = getNodeRadiusForLayout(nodeA.publicationCount);
+        const radiusB = getNodeRadiusForLayout(nodeB.publicationCount);
+        const minDistance = radiusA + radiusB + padding;
+
+        if (distance < minDistance && distance > 0) {
+          hasCollision = true;
+          const overlap = minDistance - distance;
+          const moveX = (dx / distance) * (overlap / 2);
+          const moveY = (dy / distance) * (overlap / 2);
+
+          result[i].x -= moveX;
+          result[i].y -= moveY;
+          result[j].x += moveX;
+          result[j].y += moveY;
+        }
+      }
+    }
+
+    if (!hasCollision) break;
+  }
+
+  return result;
+}
+
+// Calculate node positions using discipline-based clustering with collision resolution
 function calculateNodePositions(
   nodes: Omit<GraphNode, "x" | "y">[],
   width: number,
   height: number
 ): GraphNode[] {
+  if (nodes.length === 0) return [];
+
   // Group nodes by discipline
   const disciplineGroups: Record<string, Omit<GraphNode, "x" | "y">[]> = {};
 
@@ -76,39 +129,62 @@ function calculateNodePositions(
   const disciplines = Object.keys(disciplineGroups);
   const centerX = width / 2;
   const centerY = height / 2;
-  const baseRadius = Math.min(width, height) * 0.35;
+  const baseRadius = Math.min(width, height) * 0.32;
 
   const positionedNodes: GraphNode[] = [];
 
+  // Use deterministic seed based on node id for consistent positioning
+  const seededRandom = (seed: string) => {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash % 1000) / 1000;
+  };
+
   disciplines.forEach((discipline, dIndex) => {
     const group = disciplineGroups[discipline];
-    const angleOffset = (2 * Math.PI * dIndex) / disciplines.length;
+    const sectorAngle = (2 * Math.PI) / disciplines.length;
+    const sectorStart = sectorAngle * dIndex - Math.PI / 2; // Start from top
 
     // Sort by publication count (higher = closer to center)
     const sorted = [...group].sort((a, b) => b.publicationCount - a.publicationCount);
 
     sorted.forEach((node, nIndex) => {
-      // Higher publication count = smaller radius (closer to center)
-      const radiusFactor = 0.3 + (nIndex / Math.max(sorted.length, 1)) * 0.7;
+      // Calculate radius: more publications = closer to center
+      const maxInGroup = Math.max(sorted.length, 1);
+      const radiusFactor = 0.25 + (nIndex / maxInGroup) * 0.75;
       const radius = baseRadius * radiusFactor;
 
-      // Add some spread within the discipline sector
-      const angleSpread = (Math.PI / disciplines.length) * 0.8;
-      const angle = angleOffset + (Math.random() - 0.5) * angleSpread;
+      // Spread nodes within the discipline sector
+      const angleRange = sectorAngle * 0.7; // Use 70% of sector
+      const angleOffset = seededRandom(node.id) * angleRange - angleRange / 2;
+      const angle = sectorStart + sectorAngle / 2 + angleOffset;
 
-      // Add some randomness to prevent overlap
-      const jitterX = (Math.random() - 0.5) * 40;
-      const jitterY = (Math.random() - 0.5) * 40;
+      // Small deterministic offset based on node id
+      const offsetX = (seededRandom(node.id + "x") - 0.5) * 30;
+      const offsetY = (seededRandom(node.id + "y") - 0.5) * 30;
 
       positionedNodes.push({
         ...node,
-        x: centerX + Math.cos(angle) * radius + jitterX,
-        y: centerY + Math.sin(angle) * radius + jitterY,
+        x: centerX + Math.cos(angle) * radius + offsetX,
+        y: centerY + Math.sin(angle) * radius + offsetY,
       });
     });
   });
 
-  return positionedNodes;
+  // Apply collision resolution
+  const resolvedNodes = resolveCollisions(positionedNodes);
+
+  // Ensure nodes stay within bounds
+  const margin = 50;
+  return resolvedNodes.map((node) => ({
+    ...node,
+    x: Math.max(margin, Math.min(width - margin, node.x)),
+    y: Math.max(margin, Math.min(height - margin, node.y)),
+  }));
 }
 
 export function ResearcherNetworkGraph({

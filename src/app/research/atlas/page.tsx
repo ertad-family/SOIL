@@ -273,11 +273,12 @@ export default function AtlasPage() {
         <div className="max-w-content mx-auto flex items-center gap-3 text-sm">
           <Users className="w-4 h-4 text-gold-400 flex-shrink-0" />
           <p className="text-slate-400">
-            The Research Atlas includes profiles only with researcher consent. Interested in being
-            featured?{" "}
-            <a href="mailto:research@soil.rip" className="text-gold-400 hover:text-gold-300">
-              Contact us
-            </a>
+            The Research Atlas displays publicly available information about researchers in the
+            organizational mortality field extracted from our{" "}
+            <Link href="/research/bibliography" className="text-gold-400 hover:text-gold-300">
+              bibliography
+            </Link>
+            .
           </p>
         </div>
       </div>
