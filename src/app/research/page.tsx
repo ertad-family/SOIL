@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -18,7 +19,6 @@ import {
   Mail,
   ArrowRight,
   Library,
-  Map,
   BookMarked,
   Microscope,
   HardDrive,
@@ -239,16 +239,32 @@ function HeroSection() {
 // ============================================================================
 // RESEARCH HUB NAVIGATION SECTION
 // ============================================================================
-function ResearchHubNavigationSection() {
+interface ResearchHubNavigationSectionProps {
+  publicationsCount: number | null;
+  researchersCount: number | null;
+}
+
+function ResearchHubNavigationSection({
+  publicationsCount,
+  researchersCount,
+}: ResearchHubNavigationSectionProps) {
   const resources = [
     {
       icon: <Library className="w-7 h-7" />,
       title: "Bibliography",
       description:
-        "108+ curated publications on organizational mortality. Searchable, filterable, and integrated with Zotero.",
+        "Curated publications on organizational mortality. Searchable, filterable, and integrated with Zotero.",
       href: "/research/bibliography",
       available: true,
-      stats: "108+ publications",
+      stats: publicationsCount !== null ? `${publicationsCount} publications` : "Loading...",
+    },
+    {
+      icon: <Network className="w-7 h-7" />,
+      title: "Research Atlas",
+      description: "Interactive visualization of scholars working on organizational mortality.",
+      href: "/research/atlas",
+      available: true,
+      stats: researchersCount !== null ? `${researchersCount} researchers` : "Loading...",
     },
     {
       icon: <BookMarked className="w-7 h-7" />,
@@ -285,15 +301,6 @@ function ResearchHubNavigationSection() {
       href: "/research/gaps",
       available: false,
       stats: "Coming Q1 2026",
-    },
-    {
-      icon: <Network className="w-7 h-7" />,
-      title: "Research Atlas",
-      description:
-        "Interactive visualization of scholars working on organizational mortality. Opt-in researcher profiles.",
-      href: "/research/atlas",
-      available: true,
-      stats: "14 researchers",
     },
   ];
 
@@ -1144,10 +1151,38 @@ function AdvisoryBoardSection() {
 // Header, Footer, MenuTransition, and GlobalParticles are provided by AppShell.
 // ============================================================================
 export default function ResearchPage() {
+  const [publicationsCount, setPublicationsCount] = useState<number | null>(null);
+  const [researchersCount, setResearchersCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Fetch publications count from Zotero API
+    fetch("/api/zotero?action=stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.totalItems) {
+          setPublicationsCount(data.totalItems);
+        }
+      })
+      .catch(console.error);
+
+    // Fetch researchers count
+    fetch("/api/researchers")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.total === "number") {
+          setResearchersCount(data.total);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <>
       <HeroSection />
-      <ResearchHubNavigationSection />
+      <ResearchHubNavigationSection
+        publicationsCount={publicationsCount}
+        researchersCount={researchersCount}
+      />
       <ResearchGapSection />
       <WhatWeAreBuildingSection />
       <ResearchQuestionsSection />
