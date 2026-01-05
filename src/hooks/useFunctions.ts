@@ -6,16 +6,6 @@ import type {
   FunctionCategoryDefinition,
 } from "@/types/interview";
 
-// Static fallback data for org type labels (these don't need to be in DB)
-export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: "Tech Product",
-  services: "Services",
-  ecommerce: "E-commerce / Retail",
-  manufacturing: "Manufacturing",
-  ngo: "NGO / Non-profit",
-  media: "Media / Content",
-};
-
 interface FunctionFromAPI {
   id: string;
   name: string;

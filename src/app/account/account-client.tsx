@@ -27,6 +27,7 @@ import type {
   VerificationStatus,
 } from "@/types/interview";
 import { MODULES } from "@/types/interview";
+import { useReferenceData } from "@/hooks/useReferenceData";
 
 interface AccountUser {
   id: string;
@@ -72,16 +73,8 @@ interface AccountClientProps {
   memorials: MemorialData[];
 }
 
-const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
-  tech_product: "Tech Product",
-  services: "Services",
-  ecommerce: "E-commerce",
-  manufacturing: "Manufacturing",
-  ngo: "NGO",
-  media: "Media",
-};
-
 export function AccountClient({ user, stories, memorials }: AccountClientProps) {
+  const { getOrgTypeShortLabel } = useReferenceData();
   const [notifications, setNotifications] = useState({
     newRespects: true,
     newCondolences: true,
@@ -263,10 +256,11 @@ function EmptyState({
 
 // Story card for in-progress stories
 function StoryCard({ story }: { story: StoryData }) {
+  const { getOrgTypeShortLabel } = useReferenceData();
   const progress = Math.round((story.completed_modules.length / MODULES.length) * 100);
   const org = story.organization;
   const orgName = org?.name || "Untitled Organization";
-  const orgType = org?.organization_type ? ORG_TYPE_LABELS[org.organization_type] : null;
+  const orgType = org?.organization_type ? getOrgTypeShortLabel(org.organization_type) : null;
   const isVerified = org?.verification_status === "verified";
 
   return (
@@ -336,9 +330,10 @@ function StoryCard({ story }: { story: StoryData }) {
 
 // Coined story card with cenotaph status
 function CoinedStoryCard({ story, memorial }: { story: StoryData; memorial?: MemorialData }) {
+  const { getOrgTypeShortLabel } = useReferenceData();
   const org = story.organization;
   const orgName = org?.name || "Untitled Organization";
-  const orgType = org?.organization_type ? ORG_TYPE_LABELS[org.organization_type] : null;
+  const orgType = org?.organization_type ? getOrgTypeShortLabel(org.organization_type) : null;
   const hasCenotaph = !!memorial;
   const isVerified = org?.verification_status === "verified";
 

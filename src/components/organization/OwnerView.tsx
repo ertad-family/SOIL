@@ -53,7 +53,7 @@ import { VerificationFormModal } from "./modals/VerificationFormModal";
 import { DocumentUploadModal } from "./modals/DocumentUploadModal";
 import { EditOrganizationModal } from "./modals/EditOrganizationModal";
 import { VerificationRequiredModal } from "./VerificationRequiredModal";
-import { ORG_TYPE_LABELS, STAGE_LABELS } from "./constants";
+import { useReferenceData } from "@/hooks/useReferenceData";
 import type { OrganizationData, StoryData, MemorialData, CurrentUserData } from "./types";
 
 interface OwnerViewProps {
@@ -75,6 +75,8 @@ export function OwnerView({
   isOwner,
   onViewAsVisitor,
 }: OwnerViewProps) {
+  const { getOrgTypeLabel, getStageLabel } = useReferenceData();
+
   // Edit organization modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [orgData, setOrgData] = useState(organization);
@@ -288,7 +290,11 @@ export function OwnerView({
                 {orgData.organization_type && (
                   <div className="flex items-center gap-2 text-slate-400">
                     <Building2 className="w-4 h-4" />
-                    <span>{ORG_TYPE_LABELS[orgData.organization_type]}</span>
+                    <span>
+                      {orgData.organization_type === "other"
+                        ? orgData.organization_type_other || "Other"
+                        : getOrgTypeLabel(orgData.organization_type)}
+                    </span>
                   </div>
                 )}
                 {lifespan && (
@@ -318,7 +324,7 @@ export function OwnerView({
                 {orgData.stage_at_closure && (
                   <div className="flex items-center gap-2 text-slate-400">
                     <span className="text-slate-500">Stage at closure:</span>
-                    <span>{STAGE_LABELS[orgData.stage_at_closure]}</span>
+                    <span>{getStageLabel(orgData.stage_at_closure)}</span>
                   </div>
                 )}
               </div>

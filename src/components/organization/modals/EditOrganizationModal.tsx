@@ -4,12 +4,7 @@ import { useState } from "react";
 import { XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LocationPicker } from "@/components/ui/location-picker";
-import {
-  getBusinessModelsForOrgType,
-  LIFECYCLE_STAGE_LABELS as LIFECYCLE_LABELS,
-  LIFECYCLE_STAGE_DESCRIPTIONS,
-} from "@/data/function-matrix";
-import { ORG_TYPE_LABELS } from "../constants";
+import { useReferenceData } from "@/hooks/useReferenceData";
 import type { OrganizationData } from "../types";
 import type { OrganizationType, LifecycleStage, GeoLocation } from "@/types/interview";
 
@@ -24,11 +19,14 @@ export function EditOrganizationModal({
   onClose,
   onSuccess,
 }: EditOrganizationModalProps) {
+  const { orgTypes, stages, getBusinessModelsForOrgType } = useReferenceData();
   const [formData, setFormData] = useState({
     name: organization.name,
     description: organization.description || "",
     organization_type: organization.organization_type,
+    organization_type_other: organization.organization_type_other || "",
     business_model: organization.business_model || "",
+    business_model_other: organization.business_model_other || "",
     industry: organization.industry || "",
     location: {
       country: organization.location_country,
@@ -60,6 +58,14 @@ export function EditOrganizationModal({
       setError("Organization name is required");
       return;
     }
+    if (formData.organization_type === "other" && !formData.organization_type_other?.trim()) {
+      setError("Please specify the organization type");
+      return;
+    }
+    if (formData.business_model === "other" && !formData.business_model_other?.trim()) {
+      setError("Please specify the business model");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -70,7 +76,11 @@ export function EditOrganizationModal({
           name: formData.name,
           description: formData.description || null,
           organization_type: formData.organization_type,
+          organization_type_other:
+            formData.organization_type === "other" ? formData.organization_type_other : null,
           business_model: formData.business_model || null,
+          business_model_other:
+            formData.business_model === "other" ? formData.business_model_other : null,
           industry: formData.industry || null,
           location_country: formData.location.country || null,
           location_region: formData.location.region || null,
@@ -159,19 +169,39 @@ export function EditOrganizationModal({
                   setFormData({
                     ...formData,
                     organization_type: (e.target.value as OrganizationType) || null,
+                    organization_type_other: "", // Reset custom value
                     business_model: "", // Reset business model when org type changes
+                    business_model_other: "", // Reset custom business model
                   })
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
               >
                 <option value="">Select type...</option>
-                {(Object.keys(ORG_TYPE_LABELS) as OrganizationType[]).map((type) => (
-                  <option key={type} value={type}>
-                    {ORG_TYPE_LABELS[type]}
+                {orgTypes.map((orgType) => (
+                  <option key={orgType.value} value={orgType.value}>
+                    {orgType.label}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Organization Type Other - show when "other" is selected */}
+            {formData.organization_type === "other" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Please specify organization type *
+                </label>
+                <input
+                  type="text"
+                  value={formData.organization_type_other}
+                  onChange={(e) =>
+                    setFormData({ ...formData, organization_type_other: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
+                  placeholder="What type of organization was it?"
+                />
+              </div>
+            )}
 
             {/* Business Model - only show if org type is selected */}
             {formData.organization_type && businessModels.length > 0 && (
@@ -181,7 +211,13 @@ export function EditOrganizationModal({
                 </label>
                 <select
                   value={formData.business_model}
-                  onChange={(e) => setFormData({ ...formData, business_model: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      business_model: e.target.value,
+                      business_model_other: "", // Reset custom value
+                    })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
                 >
                   <option value="">Select business model...</option>
@@ -191,6 +227,24 @@ export function EditOrganizationModal({
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Business Model Other - show when "other" is selected */}
+            {formData.business_model === "other" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Please specify business model *
+                </label>
+                <input
+                  type="text"
+                  value={formData.business_model_other}
+                  onChange={(e) =>
+                    setFormData({ ...formData, business_model_other: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500"
+                  placeholder="What was the business model?"
+                />
               </div>
             )}
 
@@ -258,9 +312,9 @@ export function EditOrganizationModal({
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-marble-100 focus:outline-none focus:border-gold-500"
               >
                 <option value="">Select stage...</option>
-                {(Object.keys(LIFECYCLE_LABELS) as LifecycleStage[]).map((stage) => (
-                  <option key={stage} value={stage}>
-                    {LIFECYCLE_LABELS[stage]} - {LIFECYCLE_STAGE_DESCRIPTIONS[stage]}
+                {stages.map((stage) => (
+                  <option key={stage.value} value={stage.value}>
+                    {stage.label} - {stage.description}
                   </option>
                 ))}
               </select>

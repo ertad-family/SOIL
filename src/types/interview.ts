@@ -9,21 +9,18 @@
 // ENUMS & LITERAL TYPES
 // =============================================================================
 
-/** Organization types supported by the interview framework */
-export type OrganizationType =
-  | "tech_product"
-  | "services"
-  | "ecommerce"
-  | "manufacturing"
-  | "ngo"
-  | "media";
+/**
+ * Import and re-export generated types from database.
+ * These types are auto-generated from the organization_types and lifecycle_stages tables.
+ * To regenerate: npm run generate:types
+ */
+import type {
+  OrganizationType as GeneratedOrganizationType,
+  LifecycleStage as GeneratedLifecycleStage,
+} from "./generated/reference-types";
 
-/** Organization lifecycle stages */
-export type LifecycleStage =
-  | "formation" // <10 people, operations started
-  | "establishment" // 10-30 people, stable operations
-  | "growth" // 30-100 people, scaling
-  | "maturity"; // 100+ people, established structure
+export type OrganizationType = GeneratedOrganizationType;
+export type LifecycleStage = GeneratedLifecycleStage;
 
 /** Story completion status */
 export type StoryStatus =
@@ -126,14 +123,8 @@ export interface GeoLocation {
   geoId?: number;
 }
 
-/** Creates an empty GeoLocation object */
-export const createEmptyGeoLocation = (): GeoLocation => ({
-  country: null,
-  region: null,
-  city: null,
-  latitude: null,
-  longitude: null,
-});
+// createEmptyGeoLocation moved to @/lib/interview/factories
+// Re-exported below for backwards compatibility
 
 // =============================================================================
 // MODULE 0: BASIC INFO
@@ -932,318 +923,30 @@ export interface UpdateStoryResponse {
 }
 
 // =============================================================================
-// DEFAULTS & FACTORIES
+// RE-EXPORTS: FACTORIES & METADATA
 // =============================================================================
+// Factory functions and module metadata have been extracted to separate files
+// for better code organization. Re-exported here for backwards compatibility.
 
-export const createEmptyBasicInfo = (): BasicInfoData => ({
-  organizationName: "",
-  description: "",
-  organizationType: null,
-  businessModel: null,
-  industry: null,
-  location: createEmptyGeoLocation(),
-  foundedDate: null,
-  closedDate: null,
-  stageAtClosure: null,
-  peakTeamSize: null,
-  founderRole: null,
-  publicNaming: null,
-});
+export {
+  createEmptyGeoLocation,
+  createEmptyBasicInfo,
+  createEmptyFunctionalMapping,
+  createEmptyFinancialPicture,
+  createEmptyEssentialMetrics,
+  createEmptyDynamicPicture,
+  createEmptyEnvironment,
+  createEmptyFounderContext,
+  createEmptyNarrative,
+  createEmptyOrganization,
+  createEmptyStory,
+} from "@/lib/interview/factories";
 
-export const createEmptyFunctionalMapping = (): FunctionalMappingData => ({
-  functions: [],
-  customCategories: [],
-  selectedFunctions: [],
-  customFunctions: [],
-  categoryAnswers: {},
-});
-
-export const createEmptyFinancialPicture = (): FinancialPictureData => ({
-  uploadedFiles: [],
-  currency: null,
-  essentialMetrics: null,
-  metrics: null,
-  dynamics: [],
-  events: [],
-});
-
-export const createEmptyEssentialMetrics = (): EssentialMetrics => ({
-  revenue: null,
-  margins: null,
-  profitability: null,
-  cashPosition: null,
-  funding: null,
-  customerBase: null,
-});
-
-export const createEmptyDynamicPicture = (): DynamicPictureData => ({
-  detectedPatterns: [],
-  patternQuestions: [],
-  events: [],
-});
-
-export const createEmptyEnvironment = (): EnvironmentData => ({
-  marketResources: [],
-  operatingConditions: [],
-  events: [],
-});
-
-export const createEmptyFounderContext = (): FounderContextData => ({
-  background: {
-    priorExperience: null,
-    domainKnowledge: null,
-    lifeSituation: null,
-    commitment: null,
-    startedWith: null,
-    howFoundCoFounders: null,
-    roleClarity: null,
-    // Co-founder dynamics
-    cofounderSkillsComplementary: null,
-    decisionMakingStyle: null,
-    conflictResolution: null,
-    visionAlignment: null,
-    // Along the way
-    motivationEvolution: null,
-    fadingNoticedAt: null,
-    cofounderRelationship: null,
-    investmentLevel: null,
-    healthImpact: null,
-    relationshipImpact: null,
-    financeImpact: null,
-    recoveryTime: null,
-    timeSinceEnd: null,
-    currentFeeling: null,
-    whatHelpedProcess: null,
-    wouldDoAgain: null,
-  },
-  events: [],
-});
-
-export const createEmptyNarrative = (): NarrativeData => ({
-  sections: {
-    understanding: [
-      {
-        questionId: "cause_of_death",
-        question: "What do you believe was the primary cause of death?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "point_of_no_return",
-        question: "Was there a point of no return? When?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "prevention",
-        question: "Could it have been prevented? What would it have taken?",
-        answer: null,
-        skipped: false,
-      },
-    ],
-    hindsight: [
-      {
-        questionId: "do_differently",
-        question: "What would you do differently if you could go back?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "do_same",
-        question: "What would you do exactly the same?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "blind_spots",
-        question: "What did you not see that you wish you had?",
-        answer: null,
-        skipped: false,
-      },
-    ],
-    lessons: [
-      {
-        questionId: "about_organizations",
-        question: "What did you learn about building organizations?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "about_yourself",
-        question: "What did you learn about yourself?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "most_surprising",
-        question: "What surprised you most about the whole experience?",
-        answer: null,
-        skipped: false,
-      },
-    ],
-    advice: [
-      {
-        questionId: "tell_beginner",
-        question: "What would you tell someone standing where you stood at the beginning?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "question_to_ask",
-        question: "What question should they ask themselves that you didn't?",
-        answer: null,
-        skipped: false,
-      },
-    ],
-    legacy: [
-      {
-        questionId: "most_proud",
-        question: "What are you most proud of about [Organization Name]?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "remember",
-        question: "What do you want people to remember about it?",
-        answer: null,
-        skipped: false,
-      },
-      {
-        questionId: "anything_else",
-        question: "Is there anything else you want to say?",
-        answer: null,
-        skipped: false,
-      },
-    ],
-  },
-});
-
-export const createEmptyOrganization = (
-  createdBy: string,
-  name: string = ""
-): Omit<Organization, "id" | "slug" | "createdAt" | "updatedAt"> => ({
-  name,
-  organizationType: null,
-  businessModel: null,
-  industry: null,
-  description: null,
-  location: createEmptyGeoLocation(),
-  foundedDate: null,
-  closedDate: null,
-  stageAtClosure: null,
-  peakTeamSize: null,
-  verificationStatus: "unverified",
-  verificationCount: 0,
-  isPublic: false,
-  createdBy,
-});
-
-export const createEmptyStory = (
-  userId: string,
-  organizationId: string
-): Omit<Story, "id" | "createdAt" | "updatedAt"> => ({
-  organizationId,
-  userId,
-  status: "draft",
-  currentModule: "founder", // Start at founder/Your Story (basic_info handled by org wizard)
-  completedModules: [],
-  founderRole: null,
-  publicNaming: null,
-  basicInfo: createEmptyBasicInfo(), // Keep for backward compatibility
-  functionalMapping: createEmptyFunctionalMapping(),
-  financialPicture: createEmptyFinancialPicture(),
-  dynamicPicture: createEmptyDynamicPicture(),
-  environment: createEmptyEnvironment(),
-  founderContext: createEmptyFounderContext(),
-  narrative: createEmptyNarrative(),
-  coinedAt: null,
-  // AI summary fields
-  aiSummary: null,
-  aiSummaryStatus: "idle",
-  aiSummaryUpdatedAt: null,
-});
-
-// =============================================================================
-// MODULE METADATA
-// =============================================================================
-
-export interface ModuleMetadata {
-  id: ModuleId;
-  name: string;
-  description: string;
-  estimatedMinutes: number;
-  order: number;
-}
-
-export const MODULES: ModuleMetadata[] = [
-  {
-    id: "basic_info",
-    name: "Basic Info",
-    description: "Organization basics, timeline, your role",
-    estimatedMinutes: 5,
-    order: 0,
-  },
-  {
-    id: "founder",
-    name: "Your Story",
-    description: "Background, journey, personal impact",
-    estimatedMinutes: 18,
-    order: 1,
-  },
-  {
-    id: "financial",
-    name: "Financial Picture",
-    description: "Metrics, dynamics, financial events",
-    estimatedMinutes: 18,
-    order: 2,
-  },
-  {
-    id: "dynamic",
-    name: "Dynamic Picture",
-    description: "Internal events from peak to closure",
-    estimatedMinutes: 25,
-    order: 3,
-  },
-  {
-    id: "environment",
-    name: "Environment",
-    description: "External conditions and events",
-    estimatedMinutes: 18,
-    order: 4,
-  },
-  {
-    id: "functional",
-    name: "Functional Mapping",
-    description: "Organization structure at peak",
-    estimatedMinutes: 20,
-    order: 5,
-  },
-  {
-    id: "narrative",
-    name: "Meaning & Lessons",
-    description: "Reflection, lessons, legacy",
-    estimatedMinutes: 25,
-    order: 6,
-  },
-];
-
-export const getModuleById = (id: ModuleId): ModuleMetadata | undefined =>
-  MODULES.find((m) => m.id === id);
-
-export const getNextModule = (currentId: ModuleId): ModuleMetadata | undefined => {
-  const current = MODULES.find((m) => m.id === currentId);
-  if (!current) return undefined;
-  return MODULES.find((m) => m.order === current.order + 1);
-};
-
-export const getPreviousModule = (currentId: ModuleId): ModuleMetadata | undefined => {
-  const current = MODULES.find((m) => m.id === currentId);
-  if (!current || current.order === 0) return undefined;
-  return MODULES.find((m) => m.order === current.order - 1);
-};
-
-export const calculateProgress = (completedModules: ModuleId[]): number => {
-  const storyModules = MODULES.filter((m) => m.id !== "basic_info");
-  const completedStoryModules = completedModules.filter((m) => m !== "basic_info");
-  return Math.round((completedStoryModules.length / storyModules.length) * 100);
-};
+export {
+  type ModuleMetadata,
+  MODULES,
+  getModuleById,
+  getNextModule,
+  getPreviousModule,
+  calculateProgress,
+} from "@/lib/interview/metadata";

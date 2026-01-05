@@ -18,7 +18,9 @@ interface OrganizationData {
   slug: string;
   name: string;
   organization_type: OrganizationType | null;
+  organization_type_other: string | null;
   business_model: string | null;
+  business_model_other: string | null;
   industry: string | null;
   description: string | null;
   location_country: string | null;

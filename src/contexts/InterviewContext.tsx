@@ -16,7 +16,9 @@ import type {
   NarrativeData,
   AISummary,
   AISummaryStatus,
+  FounderRole,
 } from "@/types/interview";
+import { AUTHOR_ROLE_MAP } from "@/lib/constants";
 import {
   createEmptyStory,
   createEmptyOrganization,
@@ -274,13 +276,9 @@ export function InterviewProvider({ children, storyId }: InterviewProviderProps)
     setIsSaving(true);
 
     // Map founder_role to author_role for verification
-    const authorRoleMap: Record<string, string> = {
-      founder: "founder",
-      cofounder: "co_founder",
-      ceo_non_founder: "executive",
-      other: "other",
-    };
-    const authorRole = story.founderRole ? authorRoleMap[story.founderRole] || null : null;
+    const authorRole = story.founderRole
+      ? AUTHOR_ROLE_MAP[story.founderRole as FounderRole] || null
+      : null;
 
     try {
       const { error: updateError } = await supabase

@@ -17,7 +17,15 @@ import {
   Globe,
   Mail,
   ArrowRight,
+  Library,
+  Map,
+  BookMarked,
+  Microscope,
+  HardDrive,
+  FileQuestion,
+  Network,
 } from "lucide-react";
+import Link from "next/link";
 
 // ============================================================================
 // HERO SECTION
@@ -223,6 +231,143 @@ function HeroSection() {
       {/* Decorative divider */}
       <div className="divider-roman mt-16 md:mt-20 animate-fade-in-up stagger-2">
         <span className="text-gold-400 font-serif text-sm tracking-[0.3em] px-6">MMXXV</span>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// RESEARCH HUB NAVIGATION SECTION
+// ============================================================================
+function ResearchHubNavigationSection() {
+  const resources = [
+    {
+      icon: <Library className="w-7 h-7" />,
+      title: "Bibliography",
+      description:
+        "108+ curated publications on organizational mortality. Searchable, filterable, and integrated with Zotero.",
+      href: "/research/bibliography",
+      available: true,
+      stats: "108+ publications",
+    },
+    {
+      icon: <BookMarked className="w-7 h-7" />,
+      title: "Lexicon",
+      description:
+        "Encyclopedia of terms and concepts in organizational mortality research. A unified language for the emerging field.",
+      href: "/research/lexicon",
+      available: false,
+      stats: "Coming Q1 2026",
+    },
+    {
+      icon: <Microscope className="w-7 h-7" />,
+      title: "Pathology Classification",
+      description:
+        "Systematic classification of organizational diseases — ICD analog for organizations. SOIL-PC v0.1.",
+      href: "/research/pathology",
+      available: false,
+      stats: "Coming Q1 2026",
+    },
+    {
+      icon: <HardDrive className="w-7 h-7" />,
+      title: "Dataset Registry",
+      description:
+        "Catalog of existing data sources on organizational mortality from government registries to academic datasets.",
+      href: "/research/datasets",
+      available: false,
+      stats: "Coming Q1 2026",
+    },
+    {
+      icon: <FileQuestion className="w-7 h-7" />,
+      title: "Research Gaps",
+      description:
+        "Map of unexplored research territories in organizational mortality. Opportunities for collaboration.",
+      href: "/research/gaps",
+      available: false,
+      stats: "Coming Q1 2026",
+    },
+    {
+      icon: <Network className="w-7 h-7" />,
+      title: "Research Atlas",
+      description:
+        "Interactive visualization of scholars working on organizational mortality. Opt-in researcher profiles.",
+      href: "/research/atlas",
+      available: true,
+      stats: "14 researchers",
+    },
+  ];
+
+  return (
+    <section className="py-16 md:py-24 animate-fade-in-up">
+      <div className="max-w-content mx-auto px-6">
+        <SectionLabel>research infrastructure</SectionLabel>
+        <h2 className="font-display text-3xl md:text-4xl font-medium mt-4 mb-6 text-marble-100">
+          Explore Our Resources
+        </h2>
+        <p className="text-lg text-slate-400 max-w-3xl mb-12">
+          We&apos;re building a comprehensive research infrastructure for the study of
+          organizational mortality. These resources are designed to support researchers, educators,
+          and practitioners.
+        </p>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {resources.map((resource, index) => {
+            const cardContent = (
+              <Card
+                variant="dark-elevated"
+                padding="lg"
+                className={`h-full transition-all duration-300 ${
+                  resource.available
+                    ? "hover:border-gold-500/50 cursor-pointer group"
+                    : "opacity-70"
+                }`}
+              >
+                <CardHeader>
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                      resource.available
+                        ? "bg-gold-500/20 text-gold-400 group-hover:bg-gold-500/30"
+                        : "bg-slate-700/50 text-slate-500"
+                    }`}
+                  >
+                    {resource.icon}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CardTitle variant="dark">{resource.title}</CardTitle>
+                    {!resource.available && (
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-700/50 text-slate-400">
+                        Coming Soon
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-400 leading-relaxed mb-4">{resource.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-sm font-medium ${
+                        resource.available ? "text-gold-400" : "text-slate-500"
+                      }`}
+                    >
+                      {resource.stats}
+                    </span>
+                    {resource.available && (
+                      <ArrowRight className="w-5 h-5 text-gold-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            return resource.available ? (
+              <Link key={index} href={resource.href} className="block">
+                {cardContent}
+              </Link>
+            ) : (
+              <div key={index}>{cardContent}</div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -1002,6 +1147,7 @@ export default function ResearchPage() {
   return (
     <>
       <HeroSection />
+      <ResearchHubNavigationSection />
       <ResearchGapSection />
       <WhatWeAreBuildingSection />
       <ResearchQuestionsSection />
