@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { JobListing } from "./page";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 // ============================================================================
 // JOB CARD COMPONENT
@@ -391,7 +392,7 @@ function CTASection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:careers@soil.rip?subject=General Interest">
+            <a href={mailtoLink("careers", "General Interest")}>
               <Button variant="dark-primary" size="lg" rightIcon={<Mail className="w-5 h-5" />}>
                 Send Your Resume
               </Button>

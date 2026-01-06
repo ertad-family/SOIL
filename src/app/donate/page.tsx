@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Construction, ArrowRight, Mail, Heart } from "lucide-react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 export default function DonatePage() {
   return (
@@ -53,7 +54,7 @@ export default function DonatePage() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:donate@soil.rip?subject=Donation Inquiry">
+            <a href={mailtoLink("donate", "Donation Inquiry")}>
               <Button variant="dark-primary" size="lg" rightIcon={<Mail className="w-5 h-5" />}>
                 Get Notified When Ready
               </Button>

@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Construction, ArrowRight, Mail, Lightbulb } from "lucide-react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 export default function ChallengesPage() {
   return (
@@ -53,7 +54,7 @@ export default function ChallengesPage() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:community@soil.rip?subject=Challenge Idea">
+            <a href={mailtoLink("community", "Challenge Idea")}>
               <Button variant="dark-primary" size="lg" rightIcon={<Mail className="w-5 h-5" />}>
                 Submit an Idea via Email
               </Button>

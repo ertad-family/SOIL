@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { siteConfig } from "@/lib/site-config";
 
 const WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php";
 
@@ -48,7 +49,7 @@ async function searchWikidata(name: string): Promise<WikidataSearchResult | null
   try {
     const response = await fetch(`${WIKIDATA_API_URL}?${params}`, {
       headers: {
-        "User-Agent": "SOIL Research Platform (research@soil.rip)",
+        "User-Agent": siteConfig.userAgent,
       },
     });
 
@@ -119,7 +120,7 @@ async function getEntityDetails(entityId: string): Promise<{
   try {
     const response = await fetch(`${WIKIDATA_API_URL}?${params}`, {
       headers: {
-        "User-Agent": "SOIL Research Platform (research@soil.rip)",
+        "User-Agent": siteConfig.userAgent,
       },
     });
 

@@ -13,6 +13,7 @@ import Link from "next/link";
 import { ShareButton } from "@/components/ui/share-button";
 import { BackButton } from "@/components/ui/back-button";
 import { trackEvent } from "@/lib/analytics";
+import { siteConfig, buildSiteUrl } from "@/lib/site-config";
 
 interface Cenotaph {
   id: string;
@@ -432,7 +433,7 @@ export function CenotapheryContent({ slug }: { slug: string }) {
                 </Link>
 
                 <ShareButton
-                  url={`https://soil.rip/cenotaphery/${slug}`}
+                  url={buildSiteUrl(`/cenotaphery/${slug}`)}
                   title={`Visit ${cenotapheryInfo?.name || "this cenotaphery"} on SOIL`}
                   description="A digital memorial for organizations that have ended their journey. Honor their legacy."
                 />

@@ -7,6 +7,7 @@ import { colorClasses, ContributionOption } from "@/lib/contribution-data";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "@/components/ui/share-button";
 import { useTestimonialPrompt } from "@/contexts/TestimonialPromptContext";
+import { siteConfig } from "@/lib/site-config";
 
 export interface ContributionCardProps {
   option: ContributionOption;
@@ -81,7 +82,7 @@ export function ContributionCard({
           <ShareButton
             url={option.href}
             title="SOIL - Where founders share their stories for science"
-            description="Help build the future of organizational research. Join the movement at soil.rip"
+            description={`Help build the future of organizational research. Join the movement at ${siteConfig.emailDomain}`}
             className="w-full"
           />
         ) : option.title === "Give Feedback" ? (

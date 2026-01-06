@@ -25,6 +25,7 @@ import { RomanNumeral, type RomanNumeralValue } from "@/components/ui/roman-nume
 import { SummaryCard } from "@/components/interview/SummaryCard";
 import { AppraisalCard } from "@/components/interview/AppraisalCard";
 import { ShareButton } from "@/components/ui/share-button";
+import { siteConfig } from "@/lib/site-config";
 
 /** Human-readable labels for founder roles */
 const FOUNDER_ROLE_LABELS: Record<FounderRole, string> = {
@@ -345,10 +346,10 @@ export default function StoryOverviewPage() {
             <p className="mt-2 text-center text-sm text-slate-500">
               Need help? Contact us at{" "}
               <a
-                href="mailto:support@soil.rip"
+                href={`mailto:${siteConfig.emails.support}`}
                 className="text-gold-400 hover:text-gold-300 transition-colors"
               >
-                support@soil.rip
+                {siteConfig.emails.support}
               </a>
             </p>
           </div>
@@ -419,9 +420,9 @@ export default function StoryOverviewPage() {
                   </p>
                   <div className="flex justify-center">
                     <ShareButton
-                      url="https://soil.rip"
+                      url={siteConfig.url}
                       title="I just contributed my startup's story to science at SOIL"
-                      description="Helping founders learn from real organizational experiences. Join the movement at soil.rip"
+                      description={`Helping founders learn from real organizational experiences. Join the movement at ${siteConfig.emailDomain}`}
                     />
                   </div>
                 </div>
