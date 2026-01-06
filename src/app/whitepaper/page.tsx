@@ -29,14 +29,6 @@ const REFERENCES: Record<string, Reference> = {
     source: "American Journal of Sociology, 82(5), 929-964",
     doi: "10.1086/226424",
   },
-  hannan1984: {
-    id: "hannan1984",
-    authors: "Hannan, M. T., & Freeman, J.",
-    year: "1984",
-    title: "Structural Inertia and Organizational Change",
-    source: "American Sociological Review, 49(2), 149-164",
-    doi: "10.2307/2095567",
-  },
   hannan1989: {
     id: "hannan1989",
     authors: "Hannan, M. T., & Freeman, J.",
@@ -142,22 +134,6 @@ const REFERENCES: Record<string, Reference> = {
     title: "Institutional Linkages and Organizational Mortality",
     source: "Administrative Science Quarterly, 36(2), 187-218",
     doi: "10.2307/2393353",
-  },
-  samuel2010: {
-    id: "samuel2010",
-    authors: "Samuel, Y.",
-    year: "2010",
-    title: "Organizational Pathology: Life and Death of Organizations",
-    source: "Transaction Publishers",
-    url: "https://www.routledge.com/Organizational-Pathology-Life-and-Death-of-Organizations/Samuel/p/book/9781412811064",
-  },
-  aldrich1999: {
-    id: "aldrich1999",
-    authors: "Aldrich, H. E.",
-    year: "1999",
-    title: "Organizations Evolving",
-    source: "Sage Publications",
-    url: "https://us.sagepub.com/en-us/nam/organizations-evolving/book230705",
   },
   harris1986: {
     id: "harris1986",
@@ -521,7 +497,7 @@ function IntroductionSection() {
         bodies to understand disease processes. Before autopsy became standard practice, medicine
         relied on theory, speculation, and case reports. The shift to systematic post-mortem
         examination created the empirical foundation for pathology, which in turn enabled diagnosis,
-        prognosis, and treatment <Cite refs={["samuel2010"]} />.
+        prognosis, and treatment.
       </Paragraph>
       <Paragraph>
         Organizational science currently resembles pre-autopsy medicine. We possess abundant theory
@@ -621,9 +597,9 @@ function TheoreticalFoundationsSection() {
         SOIL&apos;s Phase 1 methodology integrates five scientific disciplines.{" "}
         <strong className="text-marble-100">Medicine</strong> occupies a special role — providing
         both the <em>data collection methodology</em> (systematic autopsy protocols) and an{" "}
-        <em>analytical lens</em> (diagnostic frameworks) <Cite refs={["samuel2010"]} />. The other
-        four disciplines — Ecology <Cite refs={["hannan1977", "hannan1989", "carroll2000"]} />,
-        Psychology <Cite refs={["shepherd2003", "shepherd2009", "ucbasaran2013"]} />, Systems Theory{" "}
+        <em>analytical lens</em> (diagnostic frameworks). The other four disciplines — Ecology{" "}
+        <Cite refs={["hannan1977", "hannan1989", "carroll2000"]} />, Psychology{" "}
+        <Cite refs={["shepherd2003", "shepherd2009", "ucbasaran2013"]} />, Systems Theory{" "}
         <Cite refs={["perrow1984", "weick1993"]} />, and Sociology <Cite refs={["baum1991"]} /> —
         primarily contribute <em>analytical frameworks</em> for interpreting collected data.
       </Paragraph>
