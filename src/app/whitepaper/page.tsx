@@ -289,7 +289,7 @@ function TableOfContents({
 
           {/* Download link */}
           <div className="mt-8 pt-6 border-t border-slate-700/50">
-            <p className="text-xs text-slate-500 mb-3">Version 1.1 | December 2025</p>
+            <p className="text-xs text-slate-500 mb-3">Version 1.2 | January 2026</p>
             <a href="/documents/SOIL_Research_Methodology_White_Paper.pdf" download>
               <Button variant="dark-secondary" size="sm" className="w-full">
                 <Download className="w-4 h-4 mr-2" />
@@ -390,7 +390,7 @@ function HeroSection() {
           A Framework for Systematic Study of Organizational Mortality
         </p>
         <p className="text-slate-500">
-          Studies of Organizational Illness and Loss | Version 1.1 | December 2025
+          Studies of Organizational Illness and Loss | Version 1.2 | January 2026
         </p>
       </div>
 
@@ -1476,7 +1476,7 @@ function ConclusionSection() {
       <Card variant="dark" padding="lg" className="mt-8">
         <p className="text-slate-500 text-sm mb-2">Citation:</p>
         <p className="text-slate-400 text-sm">
-          SOIL Research Team. (2025). SOIL Research Methodology White Paper: A Framework for
+          SOIL Research Team. (2026). SOIL Research Methodology White Paper: A Framework for
           Systematic Study of Organizational Mortality. Studies of Organizational Illness and Loss.
         </p>
       </Card>
