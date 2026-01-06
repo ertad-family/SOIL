@@ -64,7 +64,7 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Normalize author name for consistent matching
+// Normalize author name for consistent matching (used as zotero_creator_name key)
 function normalizeCreatorName(creator: ZoteroCreator): string | null {
   if (creator.creatorType !== "author") return null;
 
@@ -76,6 +76,15 @@ function normalizeCreatorName(creator: ZoteroCreator): string | null {
     return creator.name.toLowerCase().trim();
   }
   return null;
+}
+
+// Normalize name for deduplication matching (removes punctuation, extra spaces)
+function normalizeNameForMatching(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "") // Remove punctuation (periods, commas, etc.)
+    .replace(/\s+/g, " ") // Normalize whitespace
+    .trim();
 }
 
 // Format display name nicely
@@ -187,6 +196,7 @@ export async function POST() {
       return result;
     });
 
+    // Map by zotero_creator_name (exact match)
     const existingByZoteroName = new Map(
       (existingResearchers || [])
         .filter((r: { zotero_creator_name: string | null }) => r.zotero_creator_name)
@@ -196,22 +206,51 @@ export async function POST() {
         ])
     );
 
+    // Map by normalized display name (for deduplication - catches "Glenn R. Carroll" vs "Glenn R Carroll")
+    const existingByNormalizedName = new Map(
+      (existingResearchers || []).map(
+        (r: { id: string; name: string; zotero_creator_name: string | null }) => [
+          normalizeNameForMatching(r.name),
+          r,
+        ]
+      )
+    );
+
     // Step 5: Upsert researchers (with retry)
     let newCount = 0;
     let updatedCount = 0;
     let errorCount = 0;
 
     for (const author of allAuthors) {
-      const existing = existingByZoteroName.get(author.normalizedName);
+      // First try exact match by zotero_creator_name
+      let existing: { id: string; name: string; zotero_creator_name: string | null } | undefined =
+        existingByZoteroName.get(author.normalizedName);
+
+      // If no exact match, try normalized display name (catches "Glenn R. Carroll" vs "Glenn R Carroll")
+      if (!existing) {
+        const normalizedDisplayName = normalizeNameForMatching(author.displayName);
+        existing = existingByNormalizedName.get(normalizedDisplayName);
+        if (existing) {
+          console.log(`Matched by normalized name: "${author.displayName}" -> "${existing.name}"`);
+        }
+      }
 
       try {
         if (existing) {
-          // Update publication count
+          // Capture values for closure
+          const existingId = existing.id;
+          const needsZoteroName = !existing.zotero_creator_name;
+
+          // Update publication count and set zotero_creator_name if missing
           await withRetry(async () => {
-            await supabase
-              .from("researchers")
-              .update({ publication_count: author.publications.length })
-              .eq("id", existing.id);
+            const updateData: { publication_count: number; zotero_creator_name?: string } = {
+              publication_count: author.publications.length,
+            };
+            // Link zotero_creator_name if not already set (for seed data researchers)
+            if (needsZoteroName) {
+              updateData.zotero_creator_name = author.normalizedName;
+            }
+            await supabase.from("researchers").update(updateData).eq("id", existingId);
           });
           updatedCount++;
         } else {
