@@ -14,6 +14,7 @@ import {
   GraphEdge,
 } from "@/components/research/ResearcherNetworkGraph";
 import { ResearcherDetailPanel } from "@/components/research/ResearcherDetailPanel";
+import { UniversityDetailPanel } from "@/components/research/UniversityDetailPanel";
 import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 // Types from API
@@ -30,6 +31,8 @@ interface Researcher {
   death_year: number | null;
   openalex_works_count: number;
   openalex_cited_by_count: number;
+  university_id: string | null;
+  parent_university_name: string | null; // For clustering sub-units with parent
 }
 
 interface Connection {
@@ -139,6 +142,7 @@ export default function AtlasPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
 
   // Multi-select disciplines for legend filtering
   const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(new Set());
@@ -240,6 +244,7 @@ export default function AtlasPage() {
       id: r.id,
       name: r.name,
       institution: r.institution,
+      parentUniversityName: r.parent_university_name, // For clustering sub-units with parent
       discipline: r.discipline,
       publicationCount: r.publication_count,
       citedByCount: r.openalex_cited_by_count,
@@ -299,6 +304,22 @@ export default function AtlasPage() {
 
   const handleSelectNoneDisciplines = useCallback(() => {
     setSelectedDisciplines(new Set());
+  }, []);
+
+  // Handle researcher selection (clears university selection)
+  const handleResearcherSelect = useCallback((nodeId: string | null) => {
+    setSelectedNodeId(nodeId);
+    if (nodeId) {
+      setSelectedUniversity(null); // Clear university when researcher selected
+    }
+  }, []);
+
+  // Handle university selection (clears researcher selection)
+  const handleUniversitySelect = useCallback((name: string | null) => {
+    setSelectedUniversity(name);
+    if (name) {
+      setSelectedNodeId(null); // Clear researcher when university selected
+    }
   }, []);
 
   return (
@@ -467,10 +488,12 @@ export default function AtlasPage() {
                 edges={graphEdges}
                 selectedNodeId={selectedNodeId}
                 hoveredNodeId={hoveredNodeId}
+                selectedUniversity={selectedUniversity}
                 filter={selectedDiscipline}
                 selectedDisciplines={selectedDisciplines}
-                onNodeSelect={setSelectedNodeId}
+                onNodeSelect={handleResearcherSelect}
                 onNodeHover={setHoveredNodeId}
+                onUniversitySelect={handleUniversitySelect}
               />
               <GraphLegend
                 disciplines={legendDisciplines}
@@ -507,14 +530,22 @@ export default function AtlasPage() {
           )}
         </div>
 
-        {/* Detail Panel (shows when researcher selected) */}
+        {/* Detail Panel (shows when researcher or university selected) */}
         {selectedResearcher && (
           <ResearcherDetailPanel
             researcher={selectedResearcher}
             connections={selectedConnections}
             allResearchers={researchers}
-            onClose={() => setSelectedNodeId(null)}
-            onSelectResearcher={setSelectedNodeId}
+            onClose={() => handleResearcherSelect(null)}
+            onSelectResearcher={handleResearcherSelect}
+          />
+        )}
+        {selectedUniversity && !selectedResearcher && (
+          <UniversityDetailPanel
+            universityName={selectedUniversity}
+            researchers={researchers}
+            onClose={() => handleUniversitySelect(null)}
+            onSelectResearcher={handleResearcherSelect}
           />
         )}
       </div>
