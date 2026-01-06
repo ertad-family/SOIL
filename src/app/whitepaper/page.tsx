@@ -167,6 +167,14 @@ const REFERENCES: Record<string, Reference> = {
     source: "International Small Business Journal, 34(2), 176-188",
     doi: "10.1177/0266242615574011",
   },
+  amankwah2016: {
+    id: "amankwah2016",
+    authors: "Amankwah-Amoah, J.",
+    year: "2016",
+    title: "An Integrative Process Model of Organisational Failure",
+    source: "Journal of Business Research, 69(9), 3388-3397",
+    doi: "10.1016/j.jbusres.2016.02.005",
+  },
 };
 
 // Citation component - links to DOI or URL with tooltip showing full title
@@ -581,7 +589,8 @@ function TheoreticalFoundationsSection() {
         Once data is collected, analysis proceeds through multiple disciplinary lenses.
         Organizational mortality has been studied in fragments — economists examine market failures,
         psychologists study founder grief, sociologists analyze institutional pressures, ecologists
-        model population dynamics. Each discipline illuminates aspects invisible to others.
+        model population dynamics <Cite refs={["amankwah2016"]} />. Each discipline illuminates
+        aspects invisible to others.
       </Paragraph>
       <BulletList
         items={[
@@ -699,8 +708,8 @@ function TheoreticalFoundationsSection() {
       <SubHeading>2.4 Temporal Dynamics Model</SubHeading>
       <Paragraph>
         Organizational mortality is not an event but a process{" "}
-        <Cite refs={["weitzel1989", "hambrick1988"]} />. Our theoretical model posits three distinct
-        phases requiring different data collection approaches:
+        <Cite refs={["weitzel1989", "hambrick1988", "amankwah2016"]} />. Our theoretical model
+        posits three distinct phases requiring different data collection approaches:
       </Paragraph>
       <BulletList
         items={[
