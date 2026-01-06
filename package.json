@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test:e2e:mobile": "playwright test tests/mobile-audit.spec.ts",
     "test:e2e:ui": "playwright test --ui",
-    "generate:types": "tsx scripts/generate-reference-types.ts"
+    "generate:types": "tsx scripts/generate-reference-types.ts",
+    "generate:pdf": "tsx scripts/generate-whitepaper-pdf.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
