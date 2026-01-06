@@ -428,8 +428,10 @@ export function GlobeSection({ markers, globalStats }: GlobeSectionProps) {
   const tooltipMarker = selectedMarker;
 
   // Lock body scroll when mobile bottom sheet is open (#225)
+  // Only lock on mobile/tablet where bottom sheet is shown, not on desktop (#265)
   useEffect(() => {
-    if (tooltipMarker) {
+    const isMobile = window.innerWidth < 1024; // lg breakpoint
+    if (tooltipMarker && isMobile) {
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
