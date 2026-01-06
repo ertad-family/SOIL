@@ -8,6 +8,246 @@ import { Download, Menu, X } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
 // ============================================================================
+// ACADEMIC REFERENCES DATA
+// ============================================================================
+interface Reference {
+  id: string;
+  authors: string;
+  year: string;
+  title: string;
+  source: string;
+  doi?: string;
+  url?: string;
+}
+
+const REFERENCES: Record<string, Reference> = {
+  hannan1977: {
+    id: "hannan1977",
+    authors: "Hannan, M. T., & Freeman, J.",
+    year: "1977",
+    title: "The Population Ecology of Organizations",
+    source: "American Journal of Sociology, 82(5), 929-964",
+    doi: "10.1086/226424",
+  },
+  hannan1984: {
+    id: "hannan1984",
+    authors: "Hannan, M. T., & Freeman, J.",
+    year: "1984",
+    title: "Structural Inertia and Organizational Change",
+    source: "American Sociological Review, 49(2), 149-164",
+    doi: "10.2307/2095567",
+  },
+  hannan1989: {
+    id: "hannan1989",
+    authors: "Hannan, M. T., & Freeman, J.",
+    year: "1989",
+    title: "Organizational Ecology",
+    source: "Harvard University Press",
+    url: "https://www.hup.harvard.edu/books/9780674643499",
+  },
+  carroll2000: {
+    id: "carroll2000",
+    authors: "Carroll, G. R., & Hannan, M. T.",
+    year: "2000",
+    title: "The Demography of Corporations and Industries",
+    source: "Princeton University Press",
+    url: "https://press.princeton.edu/books/paperback/9780691120157/the-demography-of-corporations-and-industries",
+  },
+  shepherd2003: {
+    id: "shepherd2003",
+    authors: "Shepherd, D. A.",
+    year: "2003",
+    title: "Learning from Business Failure: Propositions of Grief Recovery for the Self-Employed",
+    source: "Academy of Management Review, 28(2), 318-328",
+    doi: "10.5465/amr.2003.9416377",
+  },
+  shepherd2009: {
+    id: "shepherd2009",
+    authors: "Shepherd, D. A.",
+    year: "2009",
+    title: "Grief and the Self-Employment Decision: A Dual-Process Model",
+    source: "Academy of Management Review, 34(1), 102-125",
+    doi: "10.5465/amr.2009.35713281",
+  },
+  ucbasaran2013: {
+    id: "ucbasaran2013",
+    authors: "Ucbasaran, D., Shepherd, D. A., Lockett, A., & Lyon, S. J.",
+    year: "2013",
+    title:
+      "Life After Business Failure: The Process and Consequences of Business Failure for Entrepreneurs",
+    source: "Journal of Management, 39(1), 163-202",
+    doi: "10.1177/0149206312457823",
+  },
+  perrow1984: {
+    id: "perrow1984",
+    authors: "Perrow, C.",
+    year: "1984",
+    title: "Normal Accidents: Living with High-Risk Technologies",
+    source: "Basic Books",
+    url: "https://press.princeton.edu/books/paperback/9780691004129/normal-accidents",
+  },
+  weick1993: {
+    id: "weick1993",
+    authors: "Weick, K. E.",
+    year: "1993",
+    title: "The Collapse of Sensemaking in Organizations: The Mann Gulch Disaster",
+    source: "Administrative Science Quarterly, 38(4), 628-652",
+    doi: "10.2307/2393339",
+  },
+  stinchcombe1965: {
+    id: "stinchcombe1965",
+    authors: "Stinchcombe, A. L.",
+    year: "1965",
+    title: "Social Structure and Organizations",
+    source: "Handbook of Organizations, 7, 142-193",
+    doi: "10.1016/S0742-3322(00)17019-6",
+  },
+  weitzel1989: {
+    id: "weitzel1989",
+    authors: "Weitzel, W., & Jonsson, E.",
+    year: "1989",
+    title: "Decline in Organizations: A Literature Integration and Extension",
+    source: "Administrative Science Quarterly, 34(1), 91-109",
+    doi: "10.2307/2392987",
+  },
+  hambrick1988: {
+    id: "hambrick1988",
+    authors: "Hambrick, D. C., & D'Aveni, R. A.",
+    year: "1988",
+    title: "Large Corporate Failures as Downward Spirals",
+    source: "Administrative Science Quarterly, 33(1), 1-23",
+    doi: "10.2307/2392853",
+  },
+  levinthal1991: {
+    id: "levinthal1991",
+    authors: "Levinthal, D. A.",
+    year: "1991",
+    title: "Random Walks and Organizational Mortality",
+    source: "Administrative Science Quarterly, 36(3), 397-420",
+    doi: "10.2307/2393202",
+  },
+  barron1994: {
+    id: "barron1994",
+    authors: "Barron, D. N., West, E., & Hannan, M. T.",
+    year: "1994",
+    title:
+      "A Time to Grow and a Time to Die: Growth and Mortality of Credit Unions in New York City, 1914-1990",
+    source: "American Journal of Sociology, 100(2), 381-421",
+    doi: "10.1086/230541",
+  },
+  baum1991: {
+    id: "baum1991",
+    authors: "Baum, J. A. C., & Oliver, C.",
+    year: "1991",
+    title: "Institutional Linkages and Organizational Mortality",
+    source: "Administrative Science Quarterly, 36(2), 187-218",
+    doi: "10.2307/2393353",
+  },
+  samuel2010: {
+    id: "samuel2010",
+    authors: "Samuel, Y.",
+    year: "2010",
+    title: "Organizational Pathology: Life and Death of Organizations",
+    source: "Transaction Publishers",
+    url: "https://www.routledge.com/Organizational-Pathology-Life-and-Death-of-Organizations/Samuel/p/book/9781412811064",
+  },
+  aldrich1999: {
+    id: "aldrich1999",
+    authors: "Aldrich, H. E.",
+    year: "1999",
+    title: "Organizations Evolving",
+    source: "Sage Publications",
+    url: "https://us.sagepub.com/en-us/nam/organizations-evolving/book230705",
+  },
+  harris1986: {
+    id: "harris1986",
+    authors: "Harris, S. G., & Sutton, R. I.",
+    year: "1986",
+    title: "Functions of Parting Ceremonies in Dying Organizations",
+    source: "Academy of Management Journal, 29(1), 5-30",
+    doi: "10.2307/255857",
+  },
+  lafontaine2019: {
+    id: "lafontaine2019",
+    authors: "LaFontaine, F., & Shaw, K.",
+    year: "2019",
+    title: "Serial Entrepreneurship: Learning by Doing?",
+    source: "Journal of Labor Economics, 34(S2), S217-S254",
+    doi: "10.1086/683820",
+  },
+  mantere2013: {
+    id: "mantere2013",
+    authors: "Mantere, S., & Ketokivi, M.",
+    year: "2013",
+    title: "Reasoning in Organization Science",
+    source: "Academy of Management Review, 38(1), 70-89",
+    doi: "10.5465/amr.2011.0188",
+  },
+  edmondson1999: {
+    id: "edmondson1999",
+    authors: "Edmondson, A. C.",
+    year: "1999",
+    title: "Psychological Safety and Learning Behavior in Work Teams",
+    source: "Administrative Science Quarterly, 44(2), 350-383",
+    doi: "10.2307/2666999",
+  },
+  cope2011: {
+    id: "cope2011",
+    authors: "Cope, J.",
+    year: "2011",
+    title: "Entrepreneurial Learning from Failure: An Interpretative Phenomenological Analysis",
+    source: "Journal of Business Venturing, 26(6), 604-623",
+    doi: "10.1016/j.jbusvent.2010.06.002",
+  },
+  jenkins2016: {
+    id: "jenkins2016",
+    authors: "Jenkins, A., & McKelvie, A.",
+    year: "2016",
+    title: "What is Entrepreneurial Failure? Implications for Future Research",
+    source: "International Small Business Journal, 34(2), 176-188",
+    doi: "10.1177/0266242615574011",
+  },
+};
+
+// Citation component - links to DOI or URL
+function Cite({ refs }: { refs: string[] }) {
+  const citations = refs
+    .map((refId) => REFERENCES[refId])
+    .filter(Boolean)
+    .map((ref) => {
+      const label = `${ref.authors.split(",")[0].split(" ").pop()}, ${ref.year}`;
+      const href = ref.doi ? `https://doi.org/${ref.doi}` : ref.url;
+      return { label, href, id: ref.id };
+    });
+
+  if (citations.length === 0) return null;
+
+  return (
+    <span className="text-slate-500">
+      (
+      {citations.map((c, i) => (
+        <span key={c.id}>
+          {i > 0 && "; "}
+          {c.href ? (
+            <a
+              href={c.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold-400/70 hover:text-gold-400 transition-colors"
+            >
+              {c.label}
+            </a>
+          ) : (
+            c.label
+          )}
+        </span>
+      ))}
+      )
+    </span>
+  );
+}
+
+// ============================================================================
 // TABLE OF CONTENTS DATA
 // ============================================================================
 const tableOfContents = [
@@ -23,6 +263,7 @@ const tableOfContents = [
   { id: "research-agenda", title: "9. Research Agenda", level: 1 },
   { id: "collaboration", title: "10. Invitation to Collaboration", level: 1 },
   { id: "conclusion", title: "11. Conclusion", level: 1 },
+  { id: "references", title: "References", level: 1 },
 ];
 
 // ============================================================================
@@ -254,17 +495,18 @@ function IntroductionSection() {
       <SubHeading>1.1 The Knowledge Gap</SubHeading>
       <Paragraph>
         Organizational mortality represents one of the most consequential yet understudied phenomena
-        in social science. While estimates suggest that 90% of startups fail and organizational
-        death affects millions of individuals annually, our systematic understanding of why
-        organizations die remains remarkably primitive.
+        in social science <Cite refs={["jenkins2016", "ucbasaran2013"]} />. While estimates suggest
+        that the majority of new ventures fail and organizational death affects millions of
+        individuals annually, our systematic understanding of why organizations die remains
+        remarkably primitive.
       </Paragraph>
       <Paragraph>Current knowledge suffers from several critical deficiencies:</Paragraph>
       <Paragraph>
         <strong className="text-marble-100">Survivor Bias Dominance.</strong> The vast majority of
         organizational research examines successful organizations, extrapolating &ldquo;success
-        factors&rdquo; from survivors. This approach fundamentally cannot distinguish between
-        factors that contribute to success and factors that are merely common among both survivors
-        and casualties.
+        factors&rdquo; from survivors <Cite refs={["lafontaine2019"]} />. This approach
+        fundamentally cannot distinguish between factors that contribute to success and factors that
+        are merely common among both survivors and casualties.
       </Paragraph>
       <Paragraph>
         <strong className="text-marble-100">Anecdotal Evidence Base.</strong> Existing failure
@@ -289,7 +531,7 @@ function IntroductionSection() {
         bodies to understand disease processes. Before autopsy became standard practice, medicine
         relied on theory, speculation, and case reports. The shift to systematic post-mortem
         examination created the empirical foundation for pathology, which in turn enabled diagnosis,
-        prognosis, and treatment.
+        prognosis, and treatment <Cite refs={["samuel2010"]} />.
       </Paragraph>
       <Paragraph>
         Organizational science currently resembles pre-autopsy medicine. We possess abundant theory
@@ -389,9 +631,11 @@ function TheoreticalFoundationsSection() {
         SOIL&apos;s Phase 1 methodology integrates five scientific disciplines.{" "}
         <strong className="text-marble-100">Medicine</strong> occupies a special role — providing
         both the <em>data collection methodology</em> (systematic autopsy protocols) and an{" "}
-        <em>analytical lens</em> (diagnostic frameworks). The other four disciplines — Ecology,
-        Psychology, Systems Theory, and Sociology — primarily contribute{" "}
-        <em>analytical frameworks</em> for interpreting collected data.
+        <em>analytical lens</em> (diagnostic frameworks) <Cite refs={["samuel2010"]} />. The other
+        four disciplines — Ecology <Cite refs={["hannan1977", "hannan1989", "carroll2000"]} />,
+        Psychology <Cite refs={["shepherd2003", "shepherd2009", "ucbasaran2013"]} />, Systems Theory{" "}
+        <Cite refs={["perrow1984", "weick1993"]} />, and Sociology <Cite refs={["baum1991"]} /> —
+        primarily contribute <em>analytical frameworks</em> for interpreting collected data.
       </Paragraph>
 
       <div className="grid gap-4 my-6">
@@ -488,8 +732,9 @@ function TheoreticalFoundationsSection() {
 
       <SubHeading>2.4 Temporal Dynamics Model</SubHeading>
       <Paragraph>
-        Organizational mortality is not an event but a process. Our theoretical model posits three
-        distinct phases requiring different data collection approaches:
+        Organizational mortality is not an event but a process{" "}
+        <Cite refs={["weitzel1989", "hambrick1988"]} />. Our theoretical model posits three distinct
+        phases requiring different data collection approaches:
       </Paragraph>
       <BulletList
         items={[
@@ -497,7 +742,7 @@ function TheoreticalFoundationsSection() {
             <strong className="text-marble-100">Phase 1: Genesis and Early Development.</strong> The
             period from founding through initial operations. Data collection focuses on founder
             characteristics, founding conditions, initial resource endowments, and early strategic
-            choices.
+            choices <Cite refs={["stinchcombe1965"]} />.
           </span>,
           <span key="2">
             <strong className="text-marble-100">Phase 2: Peak Operations.</strong> The period when
@@ -508,7 +753,8 @@ function TheoreticalFoundationsSection() {
           <span key="3">
             <strong className="text-marble-100">Phase 3: Decline and Termination.</strong> The
             period from peak through closure. Data collection focuses on degradation dynamics,
-            crisis events, response patterns, and terminal processes.
+            crisis events, response patterns, and terminal processes{" "}
+            <Cite refs={["hambrick1988", "weitzel1989"]} />.
           </span>,
         ]}
       />
@@ -796,6 +1042,9 @@ function AnalyticalApproachesSection() {
       <SectionHeading id="analytical-approaches">6. Analytical Approaches</SectionHeading>
 
       <SubHeading>6.1 Descriptive Analytics</SubHeading>
+      <Paragraph>
+        Building on organizational demography methods <Cite refs={["carroll2000"]} />, we employ:
+      </Paragraph>
       <BulletList
         items={[
           "Mortality demographics: Distribution of deaths by organization type, region, stage, sector",
@@ -807,14 +1056,14 @@ function AnalyticalApproachesSection() {
       <SubHeading>6.2 Pattern Recognition</SubHeading>
       <Paragraph>
         <strong className="text-marble-100">Failure Archetype Identification:</strong> Using cluster
-        analysis and latent class methods to identify recurring mortality patterns. What
-        combinations of dysfunctions commonly co-occur? What temporal sequences characterize
-        different mortality pathways?
+        analysis and latent class methods to identify recurring mortality patterns{" "}
+        <Cite refs={["weitzel1989"]} />. What combinations of dysfunctions commonly co-occur? What
+        temporal sequences characterize different mortality pathways?
       </Paragraph>
       <Paragraph>
         <strong className="text-marble-100">Early Warning Signal Detection:</strong> Using sequence
-        analysis and survival modeling. What observable indicators precede mortality? How much lead
-        time do different indicators provide?
+        analysis and survival modeling <Cite refs={["levinthal1991", "barron1994"]} />. What
+        observable indicators precede mortality? How much lead time do different indicators provide?
       </Paragraph>
 
       <SubHeading>6.3 Cross-Disciplinary Comparison</SubHeading>
@@ -900,17 +1149,18 @@ function EthicalFrameworkSection() {
 
       <SubHeading>7.3 Therapeutic Benefit</SubHeading>
       <Paragraph>
-        SOIL explicitly designs for therapeutic benefit, not merely harm minimization:
+        SOIL explicitly designs for therapeutic benefit, not merely harm minimization{" "}
+        <Cite refs={["shepherd2003", "shepherd2009"]} />:
       </Paragraph>
       <BulletList
         items={[
           <span key="1">
             <strong className="text-marble-100">Closure:</strong> The structured reflection process
-            facilitates psychological closure on failure experience.
+            facilitates psychological closure on failure experience <Cite refs={["cope2011"]} />.
           </span>,
           <span key="2">
             <strong className="text-marble-100">Meaning-Making:</strong> Narrative modules support
-            constructive interpretation of experience.
+            constructive interpretation of experience <Cite refs={["ucbasaran2013"]} />.
           </span>,
           <span key="3">
             <strong className="text-marble-100">Contribution:</strong> Framing participation as
@@ -918,11 +1168,11 @@ function EthicalFrameworkSection() {
           </span>,
           <span key="4">
             <strong className="text-marble-100">Community:</strong> Connection with others who share
-            similar experiences reduces isolation.
+            similar experiences reduces isolation <Cite refs={["edmondson1999"]} />.
           </span>,
           <span key="5">
             <strong className="text-marble-100">Recognition:</strong> Beautiful memorialization
-            validates the effort invested.
+            validates the effort invested <Cite refs={["harris1986"]} />.
           </span>,
         ]}
       />
@@ -938,12 +1188,17 @@ function LimitationsSection() {
     <section>
       <SectionHeading id="limitations">8. Limitations and Mitigation Strategies</SectionHeading>
 
+      <Paragraph>
+        We acknowledge several methodological challenges inherent in studying organizational
+        mortality <Cite refs={["mantere2013", "jenkins2016"]} />:
+      </Paragraph>
+
       <div className="space-y-6">
         {[
           {
             title: "Selection Bias",
             limitation:
-              "Organizations whose founders are willing and able to participate may differ systematically from those whose founders are not.",
+              "Organizations whose founders are willing and able to participate may differ systematically from those whose founders are not (LaFontaine & Shaw, 2019).",
             mitigation:
               "Multiple recruitment channels, non-response analysis, comparison with external data sources, sensitivity analysis, transparent reporting, propensity weighting.",
           },
@@ -1264,6 +1519,62 @@ function ConclusionSection() {
 }
 
 // ============================================================================
+// REFERENCES SECTION
+// ============================================================================
+function ReferencesSection() {
+  // Get unique references used in the document, sorted alphabetically by authors
+  const usedRefs = Object.values(REFERENCES).sort((a, b) => a.authors.localeCompare(b.authors));
+
+  return (
+    <section>
+      <SectionHeading id="references">References</SectionHeading>
+
+      <Paragraph>
+        The following works are cited throughout this white paper. Click on any reference to access
+        the original publication.
+      </Paragraph>
+
+      <div className="space-y-4 mt-6">
+        {usedRefs.map((ref) => {
+          const href = ref.doi ? `https://doi.org/${ref.doi}` : ref.url;
+          return (
+            <div key={ref.id} className="text-slate-400 text-sm leading-relaxed">
+              {href ? (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gold-400 transition-colors"
+                >
+                  {ref.authors} ({ref.year}). <em>{ref.title}</em>. {ref.source}.
+                </a>
+              ) : (
+                <span>
+                  {ref.authors} ({ref.year}). <em>{ref.title}</em>. {ref.source}.
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <Card variant="dark" padding="md" className="mt-8">
+        <p className="text-slate-500 text-sm">
+          For a comprehensive bibliography on organizational mortality research, visit our{" "}
+          <a
+            href="/research/bibliography"
+            className="text-gold-400 hover:text-gold-300 transition-colors"
+          >
+            Research Bibliography
+          </a>{" "}
+          page, which includes 120+ curated publications with live Zotero integration.
+        </p>
+      </Card>
+    </section>
+  );
+}
+
+// ============================================================================
 // MAIN WHITE PAPER PAGE
 // ============================================================================
 export default function WhitePaperPage() {
@@ -1339,6 +1650,7 @@ export default function WhitePaperPage() {
             <ResearchAgendaSection />
             <CollaborationSection />
             <ConclusionSection />
+            <ReferencesSection />
           </main>
         </div>
       </div>
