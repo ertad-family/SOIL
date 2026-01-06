@@ -27,6 +27,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 // ============================================================================
 // VOLUNTEER ROLES DATA
@@ -84,7 +85,7 @@ const volunteerRoles: VolunteerRole[] = [
     color: "rgba(236,72,153,1)",
     colorBg: "rgba(236,72,153,0.15)",
     cta: "Contact Us",
-    ctaLink: "mailto:community@soil.rip?subject=Design Contribution",
+    ctaLink: mailtoLink("community", "Design Contribution"),
   },
   {
     id: "content",
@@ -97,7 +98,7 @@ const volunteerRoles: VolunteerRole[] = [
     color: "rgba(59,130,246,1)",
     colorBg: "rgba(59,130,246,0.15)",
     cta: "Contact Us",
-    ctaLink: "mailto:community@soil.rip?subject=Content Contribution",
+    ctaLink: mailtoLink("community", "Content Contribution"),
   },
   {
     id: "research",
@@ -110,7 +111,7 @@ const volunteerRoles: VolunteerRole[] = [
     color: "rgba(234,179,8,1)",
     colorBg: "rgba(234,179,8,0.15)",
     cta: "Contact Us",
-    ctaLink: "mailto:research@soil.rip?subject=Research Contribution",
+    ctaLink: mailtoLink("research", "Research Contribution"),
   },
   {
     id: "events",
@@ -123,7 +124,7 @@ const volunteerRoles: VolunteerRole[] = [
     color: "rgba(249,115,22,1)",
     colorBg: "rgba(249,115,22,0.15)",
     cta: "Contact Us",
-    ctaLink: "mailto:community@soil.rip?subject=Event Volunteering",
+    ctaLink: mailtoLink("community", "Event Volunteering"),
   },
   {
     id: "general",
@@ -136,7 +137,7 @@ const volunteerRoles: VolunteerRole[] = [
     color: "rgba(100,180,130,1)",
     colorBg: "rgba(100,180,130,0.15)",
     cta: "Get in Touch",
-    ctaLink: "mailto:community@soil.rip?subject=I Want to Help",
+    ctaLink: mailtoLink("community", "I Want to Help"),
   },
 ];
 
@@ -208,7 +209,7 @@ function HeroSection() {
                 Explore Volunteer Roles
               </Button>
             </a>
-            <a href="mailto:community@soil.rip?subject=I Want to Help">
+            <a href={mailtoLink("community", "I Want to Help")}>
               <Button variant="dark-secondary" size="lg">
                 Contact Us Directly
               </Button>
@@ -478,11 +479,11 @@ function HowToStartSection() {
                 <span className="text-marble-100 text-sm">Contributing Guide</span>
               </a>
               <a
-                href="mailto:community@soil.rip"
+                href={`mailto:${siteConfig.emails.community}`}
                 className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
               >
                 <Mail className="w-5 h-5 text-slate-400" />
-                <span className="text-marble-100 text-sm">community@soil.rip</span>
+                <span className="text-marble-100 text-sm">{siteConfig.emails.community}</span>
               </a>
             </div>
           </Card>
@@ -545,7 +546,10 @@ function FAQSection() {
             <p className="text-lg text-slate-400">
               Have questions about volunteering? Here are answers to the most common ones. If you
               don&apos;t find what you&apos;re looking for, feel free to{" "}
-              <a href="mailto:community@soil.rip" className="text-emerald-400 hover:underline">
+              <a
+                href={`mailto:${siteConfig.emails.community}`}
+                className="text-emerald-400 hover:underline"
+              >
                 reach out directly
               </a>
               .
@@ -612,7 +616,7 @@ function CTASection() {
                   Learn About the Community
                 </Button>
               </Link>
-              <a href="mailto:community@soil.rip?subject=I Want to Help">
+              <a href={mailtoLink("community", "I Want to Help")}>
                 <Button variant="dark-ghost" size="md" rightIcon={<Mail className="w-4 h-4" />}>
                   Just Say Hello
                 </Button>

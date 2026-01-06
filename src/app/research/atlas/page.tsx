@@ -14,6 +14,7 @@ import {
   GraphEdge,
 } from "@/components/research/ResearcherNetworkGraph";
 import { ResearcherDetailPanel } from "@/components/research/ResearcherDetailPanel";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 // Types from API
 interface Researcher {
@@ -295,7 +296,7 @@ export default function AtlasPage() {
                     Academic Network
                   </h1>
                 </div>
-                <a href="mailto:research@soil.rip">
+                <a href={`mailto:${siteConfig.emails.research}`}>
                   <Button
                     variant="dark-secondary"
                     size="sm"
@@ -536,10 +537,10 @@ export default function AtlasPage() {
                   To add, update, or remove your profile from the Atlas:
                 </p>
                 <a
-                  href="mailto:research@soil.rip?subject=Research Atlas Update Request"
+                  href={mailtoLink("research", "Research Atlas Update Request")}
                   className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 transition-colors text-sm"
                 >
-                  research@soil.rip
+                  {siteConfig.emails.research}
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>

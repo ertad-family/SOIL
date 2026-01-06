@@ -1,8 +1,9 @@
 import { MetadataRoute } from "next";
 import { createAnonClient } from "@/lib/supabase/anon";
+import { siteConfig } from "@/lib/site-config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://soil.rip";
+  const baseUrl = siteConfig.url;
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [

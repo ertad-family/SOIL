@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { siteConfig } from "@/lib/site-config";
 
 const OPENALEX_BASE_URL = "https://api.openalex.org";
 
@@ -37,7 +38,7 @@ function delay(ms: number): Promise<void> {
 // Fetch author from OpenAlex by ID (direct lookup)
 async function fetchAuthorById(openalexId: string): Promise<OpenAlexAuthor | null> {
   try {
-    const url = `${OPENALEX_BASE_URL}/authors/${openalexId}?mailto=research@soil.rip`;
+    const url = `${OPENALEX_BASE_URL}/authors/${openalexId}?mailto=${siteConfig.emails.research}`;
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
     });
@@ -58,7 +59,7 @@ async function fetchAuthorById(openalexId: string): Promise<OpenAlexAuthor | nul
 async function searchAuthorByName(name: string): Promise<OpenAlexAuthor | null> {
   try {
     const searchQuery = encodeURIComponent(name);
-    const url = `${OPENALEX_BASE_URL}/authors?search=${searchQuery}&per_page=5&mailto=research@soil.rip`;
+    const url = `${OPENALEX_BASE_URL}/authors?search=${searchQuery}&per_page=5&mailto=${siteConfig.emails.research}`;
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
     });

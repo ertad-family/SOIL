@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Construction, ArrowRight, Mail, Award } from "lucide-react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 export default function SponsorsPage() {
   return (
@@ -54,7 +55,7 @@ export default function SponsorsPage() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:sponsors@soil.rip?subject=Sponsorship Inquiry">
+            <a href={mailtoLink("sponsors", "Sponsorship Inquiry")}>
               <Button variant="dark-primary" size="lg" rightIcon={<Mail className="w-5 h-5" />}>
                 Discuss Sponsorship
               </Button>

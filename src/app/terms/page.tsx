@@ -4,6 +4,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
 import { GlossaryTerm } from "@/components/ui/glossary-term";
 import Link from "next/link";
+import { siteConfig } from "@/lib/site-config";
 
 // ============================================================================
 // TERMS OF SERVICE PAGE
@@ -46,10 +47,10 @@ export default function TermsOfServicePage() {
               </p>
               <p>
                 These Terms of Service (&quot;Terms&quot;) govern your access to and use of the SOIL
-                platform, including our website at soil.rip, mobile applications, and all related
-                services (collectively, the &quot;Service&quot;). By accessing or using the Service,
-                you agree to be bound by these Terms. If you do not agree to these Terms, you may
-                not access or use the Service.
+                platform, including our website at {siteConfig.emailDomain}, mobile applications,
+                and all related services (collectively, the &quot;Service&quot;). By accessing or
+                using the Service, you agree to be bound by these Terms. If you do not agree to
+                these Terms, you may not access or use the Service.
               </p>
               <Card variant="dark-elevated" padding="lg" className="border-gold-500/30 border">
                 <h3 className="font-display text-lg font-medium text-gold-400 mb-3">Our Mission</h3>
@@ -661,10 +662,10 @@ export default function TermsOfServicePage() {
                 <p className="mt-4">
                   To request deletion, contact{" "}
                   <a
-                    href="mailto:privacy@soil.rip"
+                    href={`mailto:${siteConfig.emails.privacy}`}
                     className="text-gold-400 hover:text-gold-300 underline"
                   >
-                    privacy@soil.rip
+                    {siteConfig.emails.privacy}
                   </a>
                   .
                 </p>
@@ -794,28 +795,28 @@ export default function TermsOfServicePage() {
                   <p>
                     <strong className="text-marble-100">General Inquiries:</strong>{" "}
                     <a
-                      href="mailto:hello@soil.rip"
+                      href={`mailto:${siteConfig.emails.hello}`}
                       className="text-gold-400 hover:text-gold-300 underline"
                     >
-                      hello@soil.rip
+                      {siteConfig.emails.hello}
                     </a>
                   </p>
                   <p>
                     <strong className="text-marble-100">Privacy Concerns:</strong>{" "}
                     <a
-                      href="mailto:privacy@soil.rip"
+                      href={`mailto:${siteConfig.emails.privacy}`}
                       className="text-gold-400 hover:text-gold-300 underline"
                     >
-                      privacy@soil.rip
+                      {siteConfig.emails.privacy}
                     </a>
                   </p>
                   <p>
                     <strong className="text-marble-100">Legal Matters:</strong>{" "}
                     <a
-                      href="mailto:legal@soil.rip"
+                      href={`mailto:${siteConfig.emails.legal}`}
                       className="text-gold-400 hover:text-gold-300 underline"
                     >
-                      legal@soil.rip
+                      {siteConfig.emails.legal}
                     </a>
                   </p>
                 </div>

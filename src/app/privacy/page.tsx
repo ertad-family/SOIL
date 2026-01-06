@@ -3,6 +3,7 @@
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
 import { GlossaryTerm } from "@/components/ui/glossary-term";
+import { siteConfig } from "@/lib/site-config";
 
 // ============================================================================
 // PRIVACY POLICY PAGE
@@ -681,10 +682,10 @@ export default function PrivacyPolicyPage() {
                 guardian and believe your child has provided us with personal information, please
                 contact us at{" "}
                 <a
-                  href="mailto:privacy@soil.rip"
+                  href={`mailto:${siteConfig.emails.privacy}`}
                   className="text-gold-400 hover:text-gold-300 underline"
                 >
-                  privacy@soil.rip
+                  {siteConfig.emails.privacy}
                 </a>
                 , and we will take steps to delete such information.
               </p>
@@ -764,10 +765,10 @@ export default function PrivacyPolicyPage() {
               <p>
                 To exercise any of these rights, please contact us at{" "}
                 <a
-                  href="mailto:privacy@soil.rip"
+                  href={`mailto:${siteConfig.emails.privacy}`}
                   className="text-gold-400 hover:text-gold-300 underline"
                 >
-                  privacy@soil.rip
+                  {siteConfig.emails.privacy}
                 </a>
                 . We will respond to your request within 30 days.
               </p>
@@ -834,19 +835,19 @@ export default function PrivacyPolicyPage() {
                   <p>
                     <strong className="text-marble-100">Email:</strong>{" "}
                     <a
-                      href="mailto:privacy@soil.rip"
+                      href={`mailto:${siteConfig.emails.privacy}`}
                       className="text-gold-400 hover:text-gold-300 underline"
                     >
-                      privacy@soil.rip
+                      {siteConfig.emails.privacy}
                     </a>
                   </p>
                   <p>
                     <strong className="text-marble-100">General Inquiries:</strong>{" "}
                     <a
-                      href="mailto:hello@soil.rip"
+                      href={`mailto:${siteConfig.emails.hello}`}
                       className="text-gold-400 hover:text-gold-300 underline"
                     >
-                      hello@soil.rip
+                      {siteConfig.emails.hello}
                     </a>
                   </p>
                 </div>

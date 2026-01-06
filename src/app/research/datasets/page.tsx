@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { siteConfig } from "@/lib/site-config";
 
 // Types
 type DatasetCategory = "government" | "academic" | "industry" | "qualitative";
@@ -615,7 +616,7 @@ export default function DatasetsPage() {
             Help us build the most comprehensive registry of organizational mortality data sources.
             Contact us to suggest a dataset for inclusion.
           </p>
-          <a href="mailto:research@soil.rip">
+          <a href={`mailto:${siteConfig.emails.research}`}>
             <Button variant="dark-primary" size="lg">
               Suggest a Dataset
             </Button>

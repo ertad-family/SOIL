@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Award,
 } from "lucide-react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 export interface ContributionOption {
   icon: React.ReactNode;
@@ -48,7 +49,7 @@ export const tabsData: Record<string, TabData> = {
         title: "Spread the Word",
         description:
           "Share SOIL with your professional network. Help founders discover a community that understands.",
-        href: "https://soil.rip",
+        href: siteConfig.url,
       },
       {
         icon: <UserPlus className="w-6 h-6" />,
@@ -56,7 +57,7 @@ export const tabsData: Record<string, TabData> = {
         description:
           "Know potential team members, advisors, researchers, or investors? Introduce them to SOIL.",
         cta: "Make Introduction",
-        href: "mailto:community@soil.rip?subject=Introduction",
+        href: mailtoLink("community", "Introduction"),
       },
       {
         icon: <Mail className="w-6 h-6" />,
@@ -118,7 +119,7 @@ export const tabsData: Record<string, TabData> = {
         description:
           "Know researchers studying organizational mortality, pathology, or health? Help us unite the field by sharing leads and connections.",
         cta: "Share Research Leads",
-        href: "mailto:community@soil.rip?subject=Research Collaboration",
+        href: mailtoLink("community", "Research Collaboration"),
       },
       {
         icon: <GraduationCap className="w-6 h-6" />,

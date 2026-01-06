@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout";
 import { Providers } from "@/components/providers";
 import { ConsentAwareAnalytics } from "@/components/analytics/ConsentAwareAnalytics";
 import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
+import { siteConfig } from "@/lib/site-config";
 
 // Sora - geometric sans-serif for headings (clean, modern)
 const sora = Sora({
@@ -31,7 +32,7 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://soil.rip"),
+  metadataBase: new URL(siteConfig.url),
   title: "SOIL - Studies of Organizational Illness and Loss",
   description:
     "Building the foundation for organizational medicine - a new scientific field that will fundamentally improve how humanity creates, maintains, and heals organizations.",

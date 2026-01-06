@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Menu, X } from "lucide-react";
+import { siteConfig } from "@/lib/site-config";
 
 // ============================================================================
 // TABLE OF CONTENTS DATA
@@ -1145,20 +1146,29 @@ function CollaborationSection() {
         items={[
           <span key="1">
             Academic partnership inquiries:{" "}
-            <a href="mailto:research@soil.rip" className="text-gold-400 hover:text-gold-300">
-              research@soil.rip
+            <a
+              href={`mailto:${siteConfig.emails.research}`}
+              className="text-gold-400 hover:text-gold-300"
+            >
+              {siteConfig.emails.research}
             </a>
           </span>,
           <span key="2">
             Methodological feedback:{" "}
-            <a href="mailto:methodology@soil.rip" className="text-gold-400 hover:text-gold-300">
-              methodology@soil.rip
+            <a
+              href={`mailto:${siteConfig.emails.methodology}`}
+              className="text-gold-400 hover:text-gold-300"
+            >
+              {siteConfig.emails.methodology}
             </a>
           </span>,
           <span key="3">
             General inquiries:{" "}
-            <a href="mailto:hello@soil.rip" className="text-gold-400 hover:text-gold-300">
-              hello@soil.rip
+            <a
+              href={`mailto:${siteConfig.emails.hello}`}
+              className="text-gold-400 hover:text-gold-300"
+            >
+              {siteConfig.emails.hello}
             </a>
           </span>,
         ]}

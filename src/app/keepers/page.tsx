@@ -27,6 +27,7 @@ import {
   Network,
   LucideIcon,
 } from "lucide-react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 // ============================================================================
 // KEEPER VALUES DATA
@@ -906,14 +907,14 @@ function ApplicationSection() {
                 </ul>
               </div>
 
-              <a href="mailto:community@soil.rip?subject=Keeper Application">
+              <a href={mailtoLink("community", "Keeper Application")}>
                 <Button
                   variant="dark-primary"
                   size="lg"
                   className="w-full"
                   rightIcon={<Mail className="w-5 h-5" />}
                 >
-                  community@soil.rip
+                  {siteConfig.emails.community}
                 </Button>
               </a>
 

@@ -26,6 +26,7 @@ import {
   Network,
 } from "lucide-react";
 import Link from "next/link";
+import { siteConfig } from "@/lib/site-config";
 
 // ============================================================================
 // HERO SECTION
@@ -65,10 +66,10 @@ function HeroSection() {
             <Card variant="dark" padding="lg" className="mt-8 flex items-center justify-between">
               <span className="text-slate-400 text-lg">Contact us:</span>
               <a
-                href="mailto:research@soil.rip"
+                href={`mailto:${siteConfig.emails.research}`}
                 className="text-gold-400 text-xl font-medium hover:text-gold-300 transition-colors"
               >
-                research@soil.rip
+                {siteConfig.emails.research}
               </a>
             </Card>
           </div>
@@ -972,21 +973,21 @@ function GetInvolvedSection() {
       title: "For Academic Researchers",
       description:
         "Email us with your research interests and how they connect to organizational mortality, your institutional affiliation, and what form of collaboration interests you.",
-      email: "research@soil.rip",
+      email: siteConfig.emails.research,
     },
     {
       icon: <GraduationCap className="w-7 h-7" />,
       title: "For PhD Students",
       description:
         "We welcome dissertation projects using SOIL data and methodology. Contact us to discuss possibilities for your research.",
-      email: "research@soil.rip",
+      email: siteConfig.emails.research,
     },
     {
       icon: <Handshake className="w-7 h-7" />,
       title: "For Institutional Partners",
       description:
         "Universities and research institutes interested in formal partnerships are welcome to reach out.",
-      email: "partnerships@soil.rip",
+      email: siteConfig.emails.partnerships,
     },
   ];
 

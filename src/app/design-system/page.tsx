@@ -44,6 +44,7 @@ import { RomanNumeral, PositionedRomanNumeral } from "@/components/ui/roman-nume
 import { FeatureCard, FeatureCardGrid } from "@/components/ui/feature-card";
 import { Search, Mail, ArrowRight, Layers, Zap, Shield, Globe, Share2 } from "lucide-react";
 import { ShareButton } from "@/components/ui/share-button";
+import { siteConfig } from "@/lib/site-config";
 
 // Sample data for combobox
 const countries = [
@@ -301,7 +302,7 @@ export default function DesignSystemDemo() {
                     With Icon
                   </Button>
                   <ShareButton
-                    url="https://soil.rip"
+                    url={siteConfig.url}
                     title="SOIL - Where founders share their stories for science"
                     description="Help build the future of organizational research"
                   />

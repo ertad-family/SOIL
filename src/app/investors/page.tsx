@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Construction, ArrowRight, Mail, TrendingUp } from "lucide-react";
+import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 export default function InvestorsPage() {
   return (
@@ -54,7 +55,7 @@ export default function InvestorsPage() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:investors@soil.rip?subject=Investment Inquiry">
+            <a href={mailtoLink("investors", "Investment Inquiry")}>
               <Button variant="dark-primary" size="lg" rightIcon={<Mail className="w-5 h-5" />}>
                 Contact Us
               </Button>

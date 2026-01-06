@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAnonClient } from "@/lib/supabase/anon";
+import { siteConfig } from "@/lib/site-config";
 
 const OPENALEX_BASE_URL = "https://api.openalex.org";
 
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // If we have a stored OpenAlex ID, use direct lookup (most reliable)
     if (researcher.openalex_id) {
-      const directUrl = `${OPENALEX_BASE_URL}/authors/${researcher.openalex_id}?mailto=research@soil.rip`;
+      const directUrl = `${OPENALEX_BASE_URL}/authors/${researcher.openalex_id}?mailto=${siteConfig.emails.research}`;
       const response = await fetch(directUrl, {
         headers: { Accept: "application/json" },
       });
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Fall back to name search if direct lookup failed or no stored ID
     if (!author) {
       const searchQuery = encodeURIComponent(researcher.name);
-      const searchUrl = `${OPENALEX_BASE_URL}/authors?search=${searchQuery}&per_page=5&mailto=research@soil.rip`;
+      const searchUrl = `${OPENALEX_BASE_URL}/authors?search=${searchQuery}&per_page=5&mailto=${siteConfig.emails.research}`;
 
       const response = await fetch(searchUrl, {
         headers: { Accept: "application/json" },
