@@ -167,14 +167,6 @@ const REFERENCES: Record<string, Reference> = {
     source: "Academy of Management Journal, 29(1), 5-30",
     doi: "10.2307/255857",
   },
-  lafontaine2019: {
-    id: "lafontaine2019",
-    authors: "LaFontaine, F., & Shaw, K.",
-    year: "2019",
-    title: "Serial Entrepreneurship: Learning by Doing?",
-    source: "Journal of Labor Economics, 34(S2), S217-S254",
-    doi: "10.1086/683820",
-  },
   mantere2013: {
     id: "mantere2013",
     authors: "Mantere, S., & Ketokivi, M.",
@@ -182,14 +174,6 @@ const REFERENCES: Record<string, Reference> = {
     title: "Reasoning in Organization Science",
     source: "Academy of Management Review, 38(1), 70-89",
     doi: "10.5465/amr.2011.0188",
-  },
-  edmondson1999: {
-    id: "edmondson1999",
-    authors: "Edmondson, A. C.",
-    year: "1999",
-    title: "Psychological Safety and Learning Behavior in Work Teams",
-    source: "Administrative Science Quarterly, 44(2), 350-383",
-    doi: "10.2307/2666999",
   },
   cope2011: {
     id: "cope2011",
@@ -209,15 +193,18 @@ const REFERENCES: Record<string, Reference> = {
   },
 };
 
-// Citation component - links to DOI or URL
+// Citation component - links to DOI or URL with tooltip showing full title
 function Cite({ refs }: { refs: string[] }) {
   const citations = refs
     .map((refId) => REFERENCES[refId])
     .filter(Boolean)
     .map((ref) => {
-      const label = `${ref.authors.split(",")[0].split(" ").pop()}, ${ref.year}`;
+      // Extract last name from first author
+      const lastName = ref.authors.split(",")[0].trim();
+      const label = `${lastName}, ${ref.year}`;
       const href = ref.doi ? `https://doi.org/${ref.doi}` : ref.url;
-      return { label, href, id: ref.id };
+      const tooltip = `${ref.authors} (${ref.year}). ${ref.title}. ${ref.source}`;
+      return { label, href, id: ref.id, tooltip };
     });
 
   if (citations.length === 0) return null;
@@ -233,12 +220,15 @@ function Cite({ refs }: { refs: string[] }) {
               href={c.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gold-400/70 hover:text-gold-400 transition-colors"
+              title={c.tooltip}
+              className="text-gold-400/70 hover:text-gold-400 transition-colors underline decoration-dotted underline-offset-2"
             >
               {c.label}
             </a>
           ) : (
-            c.label
+            <span title={c.tooltip} className="cursor-help">
+              {c.label}
+            </span>
           )}
         </span>
       ))}
@@ -504,9 +494,9 @@ function IntroductionSection() {
       <Paragraph>
         <strong className="text-marble-100">Survivor Bias Dominance.</strong> The vast majority of
         organizational research examines successful organizations, extrapolating &ldquo;success
-        factors&rdquo; from survivors <Cite refs={["lafontaine2019"]} />. This approach
-        fundamentally cannot distinguish between factors that contribute to success and factors that
-        are merely common among both survivors and casualties.
+        factors&rdquo; from survivors. This approach fundamentally cannot distinguish between
+        factors that contribute to success and factors that are merely common among both survivors
+        and casualties.
       </Paragraph>
       <Paragraph>
         <strong className="text-marble-100">Anecdotal Evidence Base.</strong> Existing failure
@@ -1168,7 +1158,7 @@ function EthicalFrameworkSection() {
           </span>,
           <span key="4">
             <strong className="text-marble-100">Community:</strong> Connection with others who share
-            similar experiences reduces isolation <Cite refs={["edmondson1999"]} />.
+            similar experiences reduces isolation.
           </span>,
           <span key="5">
             <strong className="text-marble-100">Recognition:</strong> Beautiful memorialization
@@ -1198,7 +1188,7 @@ function LimitationsSection() {
           {
             title: "Selection Bias",
             limitation:
-              "Organizations whose founders are willing and able to participate may differ systematically from those whose founders are not (LaFontaine & Shaw, 2019).",
+              "Organizations whose founders are willing and able to participate may differ systematically from those whose founders are not.",
             mitigation:
               "Multiple recruitment channels, non-response analysis, comparison with external data sources, sensitivity analysis, transparent reporting, propensity weighting.",
           },
