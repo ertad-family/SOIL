@@ -579,8 +579,25 @@ export function ResearcherNetworkGraph({
   onNodeHover,
   onUniversitySelect,
 }: ResearcherNetworkGraphProps) {
-  const viewBoxWidth = 1200; // Increased for more space
-  const viewBoxHeight = 900; // Increased for more space
+  // Calculate dynamic viewBox based on number of clusters
+  // More clusters = more space needed
+  const significantUniversitiesCount = useMemo(() => {
+    const universityMap = new Map<string, number>();
+    nodes.forEach((node) => {
+      const uni = node.parentUniversityName || node.institution;
+      if (uni && uni !== "Unknown") {
+        universityMap.set(uni, (universityMap.get(uni) || 0) + 1);
+      }
+    });
+    return Array.from(universityMap.values()).filter(
+      (count) => count >= MIN_RESEARCHERS_FOR_CLUSTER
+    ).length;
+  }, [nodes]);
+
+  // Scale viewBox based on cluster count: base 1200x900, add 150px per cluster beyond 5
+  const extraClusters = Math.max(0, significantUniversitiesCount - 5);
+  const viewBoxWidth = 1200 + extraClusters * 120;
+  const viewBoxHeight = 900 + extraClusters * 80;
 
   // Ref for attaching non-passive wheel listener
   const svgRef = useRef<SVGSVGElement>(null);
@@ -674,7 +691,7 @@ export function ResearcherNetworkGraph({
   // Calculate positions: radial by discipline/citations + connection adjustment
   const positionedNodes = useMemo(() => {
     return calculateNodePositions(nodes, edges, viewBoxWidth, viewBoxHeight);
-  }, [nodes, edges]);
+  }, [nodes, edges, viewBoxWidth, viewBoxHeight]);
 
   // Create node map for edge lookups
   const nodeMap = useMemo(() => {
