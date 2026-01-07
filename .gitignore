@@ -57,6 +57,9 @@ PLAN.md
 # Strategy docs (symlink to private SOIL-strategy repo)
 docs
 
+# Research data (symlink to private SOIL-research repo)
+research-data
+
 # Previous iteration of the SOIL project - Orgsoleum
 orgsoleum
 supabase/.temp/

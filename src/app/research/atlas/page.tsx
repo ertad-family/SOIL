@@ -14,6 +14,7 @@ import {
   GraphEdge,
 } from "@/components/research/ResearcherNetworkGraph";
 import { ResearcherDetailPanel } from "@/components/research/ResearcherDetailPanel";
+import { UniversityDetailPanel } from "@/components/research/UniversityDetailPanel";
 import { siteConfig, mailtoLink } from "@/lib/site-config";
 
 // Types from API
@@ -30,6 +31,8 @@ interface Researcher {
   death_year: number | null;
   openalex_works_count: number;
   openalex_cited_by_count: number;
+  university_id: string | null;
+  parent_university_name: string | null; // For clustering sub-units with parent
 }
 
 interface Connection {
@@ -139,6 +142,10 @@ export default function AtlasPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
+
+  // Multi-select disciplines for legend filtering
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(new Set());
 
   // Admin sync state
   const [isAdmin, setIsAdmin] = useState(false);
@@ -158,6 +165,8 @@ export default function AtlasPage() {
       setResearchers(data.researchers);
       setConnections(data.connections || []);
       setDisciplines(data.disciplines);
+      // Initialize all disciplines as selected
+      setSelectedDisciplines(new Set(data.disciplines.map((d) => d.discipline)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -235,6 +244,7 @@ export default function AtlasPage() {
       id: r.id,
       name: r.name,
       institution: r.institution,
+      parentUniversityName: r.parent_university_name, // For clustering sub-units with parent
       discipline: r.discipline,
       publicationCount: r.publication_count,
       citedByCount: r.openalex_cited_by_count,
@@ -274,6 +284,60 @@ export default function AtlasPage() {
       label: DISCIPLINE_CONFIG[d.discipline]?.label || d.label,
     }));
   }, [disciplines]);
+
+  // Discipline legend handlers - smart multi-select
+  const handleDisciplineToggle = useCallback(
+    (discipline: string) => {
+      setSelectedDisciplines((prev) => {
+        const allDisciplines = disciplines.map((d) => d.discipline);
+        const allSelected = prev.size === allDisciplines.length;
+
+        // If all are selected, clicking one shows ONLY that one (start filtering)
+        if (allSelected) {
+          return new Set([discipline]);
+        }
+
+        // If this discipline is already the only one selected, show all
+        if (prev.size === 1 && prev.has(discipline)) {
+          return new Set(allDisciplines);
+        }
+
+        // Otherwise toggle: add if not selected, remove if selected
+        const next = new Set(prev);
+        if (next.has(discipline)) {
+          next.delete(discipline);
+        } else {
+          next.add(discipline);
+        }
+        return next;
+      });
+    },
+    [disciplines]
+  );
+
+  const handleSelectAllDisciplines = useCallback(() => {
+    setSelectedDisciplines(new Set(disciplines.map((d) => d.discipline)));
+  }, [disciplines]);
+
+  const handleSelectNoneDisciplines = useCallback(() => {
+    setSelectedDisciplines(new Set());
+  }, []);
+
+  // Handle researcher selection (clears university selection)
+  const handleResearcherSelect = useCallback((nodeId: string | null) => {
+    setSelectedNodeId(nodeId);
+    if (nodeId) {
+      setSelectedUniversity(null); // Clear university when researcher selected
+    }
+  }, []);
+
+  // Handle university selection (clears researcher selection)
+  const handleUniversitySelect = useCallback((name: string | null) => {
+    setSelectedUniversity(name);
+    if (name) {
+      setSelectedNodeId(null); // Clear researcher when university selected
+    }
+  }, []);
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-80px)]">
@@ -441,11 +505,20 @@ export default function AtlasPage() {
                 edges={graphEdges}
                 selectedNodeId={selectedNodeId}
                 hoveredNodeId={hoveredNodeId}
+                selectedUniversity={selectedUniversity}
                 filter={selectedDiscipline}
-                onNodeSelect={setSelectedNodeId}
+                selectedDisciplines={selectedDisciplines}
+                onNodeSelect={handleResearcherSelect}
                 onNodeHover={setHoveredNodeId}
+                onUniversitySelect={handleUniversitySelect}
               />
-              <GraphLegend disciplines={legendDisciplines} />
+              <GraphLegend
+                disciplines={legendDisciplines}
+                selectedDisciplines={selectedDisciplines}
+                onDisciplineToggle={handleDisciplineToggle}
+                onSelectAll={handleSelectAllDisciplines}
+                onSelectNone={handleSelectNoneDisciplines}
+              />
 
               {/* Stats overlay */}
               <div className="absolute top-4 right-4 bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-xs border border-slate-700">
@@ -474,14 +547,22 @@ export default function AtlasPage() {
           )}
         </div>
 
-        {/* Detail Panel (shows when researcher selected) */}
+        {/* Detail Panel (shows when researcher or university selected) */}
         {selectedResearcher && (
           <ResearcherDetailPanel
             researcher={selectedResearcher}
             connections={selectedConnections}
             allResearchers={researchers}
-            onClose={() => setSelectedNodeId(null)}
-            onSelectResearcher={setSelectedNodeId}
+            onClose={() => handleResearcherSelect(null)}
+            onSelectResearcher={handleResearcherSelect}
+          />
+        )}
+        {selectedUniversity && !selectedResearcher && (
+          <UniversityDetailPanel
+            universityName={selectedUniversity}
+            researchers={researchers}
+            onClose={() => handleUniversitySelect(null)}
+            onSelectResearcher={handleResearcherSelect}
           />
         )}
       </div>
