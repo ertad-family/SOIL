@@ -17,6 +17,7 @@ export interface ResearcherPublic {
   openalex_cited_by_count: number;
   university_id: string | null;
   parent_university_name: string | null; // For clustering sub-units with parent
+  mortality_activity_score: number | null; // 0-100, null if not analyzed
 }
 
 // Connection type for graph edges
@@ -60,12 +61,13 @@ export async function GET(request: NextRequest) {
     const discipline = searchParams.get("discipline");
     const search = searchParams.get("search");
     const includeConnections = searchParams.get("include") === "connections";
+    const showInactive = searchParams.get("showInactive") === "true";
 
     // Build query - select only public fields (exclude tier, soil_relevance, consent_status, email)
     let query = supabase
       .from("researchers")
       .select(
-        `id, name, institution, discipline, bio, website_url, publication_count, zotero_creator_name, birth_year, death_year, openalex_works_count, openalex_cited_by_count, university_id`
+        `id, name, institution, discipline, bio, website_url, publication_count, zotero_creator_name, birth_year, death_year, openalex_works_count, openalex_cited_by_count, university_id, mortality_activity_score`
       )
       .order("publication_count", { ascending: false, nullsFirst: false })
       .order("name", { ascending: true });
@@ -78,6 +80,12 @@ export async function GET(request: NextRequest) {
     // Search by name if provided
     if (search) {
       query = query.ilike("name", `%${search}%`);
+    }
+
+    // Filter out inactive researchers by default (score = 0 means pivoted away)
+    // Show all if showInactive=true or if score is null (not yet analyzed)
+    if (!showInactive) {
+      query = query.or("mortality_activity_score.gt.0,mortality_activity_score.is.null");
     }
 
     const { data: researchers, error } = await query;
@@ -147,6 +155,7 @@ export async function GET(request: NextRequest) {
           openalex_cited_by_count: r.openalex_cited_by_count || 0,
           university_id: r.university_id,
           parent_university_name: parentUniversityName,
+          mortality_activity_score: r.mortality_activity_score,
         };
       }),
       total: researchers?.length || 0,
