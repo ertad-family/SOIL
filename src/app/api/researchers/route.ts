@@ -15,6 +15,8 @@ export interface ResearcherPublic {
   death_year: number | null;
   openalex_works_count: number;
   openalex_cited_by_count: number;
+  university_id: string | null;
+  parent_university_name: string | null; // For clustering sub-units with parent
 }
 
 // Connection type for graph edges
@@ -63,7 +65,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("researchers")
       .select(
-        "id, name, institution, discipline, bio, website_url, publication_count, zotero_creator_name, birth_year, death_year, openalex_works_count, openalex_cited_by_count"
+        `id, name, institution, discipline, bio, website_url, publication_count, zotero_creator_name, birth_year, death_year, openalex_works_count, openalex_cited_by_count, university_id`
       )
       .order("publication_count", { ascending: false, nullsFirst: false })
       .order("name", { ascending: true });
@@ -101,13 +103,52 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.count - a.count);
 
+    // Fetch universities with parent info for clustering
+    const { data: universities } = await supabase
+      .from("universities")
+      .select("id, name, parent_id");
+
+    // Create lookup maps for university -> parent name
+    const universityNameMap = new Map<string, string>();
+    const universityParentMap = new Map<string, string | null>();
+
+    universities?.forEach((u) => {
+      universityNameMap.set(u.id, u.name);
+      universityParentMap.set(u.id, u.parent_id);
+    });
+
+    // Helper to get parent university name (or own name if no parent)
+    const getParentUniversityName = (universityId: string | null): string | null => {
+      if (!universityId) return null;
+      const parentId = universityParentMap.get(universityId);
+      if (parentId) {
+        return universityNameMap.get(parentId) || null;
+      }
+      return universityNameMap.get(universityId) || null;
+    };
+
     const response: ResearchersResponse = {
-      researchers: (researchers || []).map((r) => ({
-        ...r,
-        publication_count: r.publication_count || 0,
-        openalex_works_count: r.openalex_works_count || 0,
-        openalex_cited_by_count: r.openalex_cited_by_count || 0,
-      })),
+      researchers: (researchers || []).map((r) => {
+        // Get parent university name for clustering
+        const parentUniversityName = getParentUniversityName(r.university_id);
+
+        return {
+          id: r.id,
+          name: r.name,
+          institution: r.institution,
+          discipline: r.discipline,
+          bio: r.bio,
+          website_url: r.website_url,
+          publication_count: r.publication_count || 0,
+          zotero_creator_name: r.zotero_creator_name,
+          birth_year: r.birth_year,
+          death_year: r.death_year,
+          openalex_works_count: r.openalex_works_count || 0,
+          openalex_cited_by_count: r.openalex_cited_by_count || 0,
+          university_id: r.university_id,
+          parent_university_name: parentUniversityName,
+        };
+      }),
       total: researchers?.length || 0,
       disciplines,
     };

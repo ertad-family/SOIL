@@ -8,6 +8,7 @@ export interface GraphNode {
   id: string;
   name: string;
   institution: string;
+  parentUniversityName: string | null; // For clustering sub-units with parent
   discipline: string;
   publicationCount: number;
   citedByCount: number;
@@ -38,10 +39,12 @@ interface ResearcherNetworkGraphProps {
   edges: GraphEdge[];
   selectedNodeId: string | null;
   hoveredNodeId: string | null;
+  selectedUniversity: string | null;
   filter: string;
   selectedDisciplines: Set<string>;
   onNodeSelect: (nodeId: string | null) => void;
   onNodeHover: (nodeId: string | null) => void;
+  onUniversitySelect: (name: string | null) => void;
 }
 
 // Discipline colors matching the app's design system
@@ -60,18 +63,21 @@ const DISCIPLINE_COLORS: Record<string, string> = {
   medicine: "#EC4899", // pink
 };
 
-// Edge styles by connection type
-const EDGE_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArray: string }> = {
-  coauthor: { stroke: "#4B5563", strokeWidth: 2, dashArray: "none" },
-  cofounder: { stroke: "#1F2937", strokeWidth: 3, dashArray: "none" },
-  colleague: { stroke: "#9CA3AF", strokeWidth: 1.5, dashArray: "5,5" },
-  influence: { stroke: "#D1D5DB", strokeWidth: 1, dashArray: "3,3" },
-  thematic: { stroke: "#E5E7EB", strokeWidth: 1, dashArray: "8,4" },
-  advisor: { stroke: "#F59E0B", strokeWidth: 2, dashArray: "none" },
+// Edge styles by connection type - subtle, thin lines that don't dominate
+const EDGE_STYLES: Record<
+  string,
+  { stroke: string; strokeWidth: number; dashArray: string; opacity: number }
+> = {
+  coauthor: { stroke: "#64748B", strokeWidth: 1, dashArray: "none", opacity: 0.3 },
+  cofounder: { stroke: "#475569", strokeWidth: 1.5, dashArray: "none", opacity: 0.4 },
+  colleague: { stroke: "#94A3B8", strokeWidth: 0.75, dashArray: "4,4", opacity: 0.25 },
+  influence: { stroke: "#94A3B8", strokeWidth: 0.5, dashArray: "2,2", opacity: 0.2 },
+  thematic: { stroke: "#94A3B8", strokeWidth: 0.5, dashArray: "6,3", opacity: 0.15 },
+  advisor: { stroke: "#F59E0B", strokeWidth: 1, dashArray: "none", opacity: 0.35 },
 };
 
 // Minimum researchers for a university to get its own cluster
-const MIN_RESEARCHERS_FOR_CLUSTER = 3;
+const MIN_RESEARCHERS_FOR_CLUSTER = 2;
 
 // Calculate node radius based on citation count (using sqrt scale for better visual differentiation)
 // Distribution: min=0, median=5740, p75=14743, max=114008
@@ -87,11 +93,13 @@ function getNodeRadiusForLayout(citedByCount: number): number {
 }
 
 // Identify significant universities (3+ researchers)
+// Uses parentUniversityName for clustering (aggregates sub-units with parent)
 function getSignificantUniversities(nodes: Omit<GraphNode, "x" | "y">[]): Map<string, string[]> {
   const universityMap = new Map<string, string[]>();
 
   nodes.forEach((node) => {
-    const uni = node.institution;
+    // Use parent university name for clustering, fall back to institution
+    const uni = node.parentUniversityName || node.institution;
     if (uni && uni !== "Unknown") {
       if (!universityMap.has(uni)) {
         universityMap.set(uni, []);
@@ -190,71 +198,78 @@ function calculateNodePositions(
   const unclusteredNodes = nodes.filter((n) => !clusteredNodeIds.has(n.id));
   const universityList = Array.from(significantUniversities.entries());
 
-  // Calculate layout regions
-  // Universities get dedicated rectangular regions, unclustered nodes fill remaining space
+  // Calculate COMPACT grid layout for clusters
+  // Instead of large regions, use small cells (~180px) that clusters fit into tightly
+  // Collision detection will separate them if needed
   const numClusters = universityList.length;
-  const clusterRows = Math.ceil(Math.sqrt(numClusters + 1)); // +1 for unclustered
-  const clusterCols = Math.ceil((numClusters + 1) / clusterRows);
-  const regionWidth = usableWidth / clusterCols;
-  const regionHeight = usableHeight / clusterRows;
+  const clusterCellSize = 180; // Small cell - slightly larger than typical cluster (~150px)
+  const clusterGap = 20; // Small gap between cluster cells
+
+  // Calculate grid dimensions based on available space
+  // Guard against division by zero when there are no clusters
+  const clusterCols =
+    numClusters > 0 ? Math.ceil(Math.sqrt(numClusters * (usableWidth / usableHeight))) : 1;
+  const clusterRows = numClusters > 0 ? Math.ceil(numClusters / clusterCols) : 0;
 
   const result: GraphNode[] = [];
 
-  // Position clustered nodes within their university regions
+  // Position clustered nodes in COMPACT grid - no large regions, no centering
   universityList.forEach(([, nodeIds], clusterIdx) => {
     const row = Math.floor(clusterIdx / clusterCols);
     const col = clusterIdx % clusterCols;
-    const regionX = padding + col * regionWidth;
-    const regionY = padding + row * regionHeight;
-    const innerPadding = 30;
+
+    // Start position for this cluster cell
+    const cellX = padding + col * (clusterCellSize + clusterGap);
+    const cellY = padding + row * (clusterCellSize + clusterGap);
 
     // Get cluster nodes and sort by citations
     const clusterNodes = nodes
       .filter((n) => nodeIds.includes(n.id))
       .sort((a, b) => b.citedByCount - a.citedByCount);
 
-    // Position within region
+    // Position nodes in compact grid within the cell
     const clusterCount = clusterNodes.length;
     const localCols = Math.ceil(Math.sqrt(clusterCount));
     const localRows = Math.ceil(clusterCount / localCols);
-    const cellW = (regionWidth - 2 * innerPadding) / Math.max(1, localCols);
-    const cellH = (regionHeight - 2 * innerPadding - 20) / Math.max(1, localRows); // 20 for label
+    const cellW = 80; // Fixed compact cell size for nodes
+    const cellH = 80;
 
     clusterNodes.forEach((node, idx) => {
       const localRow = Math.floor(idx / localCols);
       const localCol = idx % localCols;
-      const jitterX = (seededRandom(node.id) - 0.5) * cellW * 0.4;
-      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellH * 0.4;
+      // Small jitter for visual interest
+      const jitterX = (seededRandom(node.id) - 0.5) * 20;
+      const jitterY = (seededRandom(node.id + "y") - 0.5) * 20;
+
+      // Position directly in cell, with small offset for label
+      const x = cellX + (localCol + 0.5) * cellW + jitterX;
+      const y = cellY + 20 + (localRow + 0.5) * cellH + jitterY; // +20 for label
 
       result.push({
         ...node,
-        x: regionX + innerPadding + (localCol + 0.5) * cellW + jitterX,
-        y: regionY + innerPadding + 20 + (localRow + 0.5) * cellH + jitterY, // +20 for label space
+        x,
+        y,
       });
     });
   });
 
-  // Position unclustered nodes in remaining region(s)
+  // Position unclustered nodes below/around the cluster grid
   if (unclusteredNodes.length > 0) {
-    const unclusteredRegionIdx = numClusters;
-    const row = Math.floor(unclusteredRegionIdx / clusterCols);
-    const col = unclusteredRegionIdx % clusterCols;
+    // Calculate where clusters end vertically
+    const clustersEndY = padding + clusterRows * (clusterCellSize + clusterGap);
 
-    // If there's remaining space, use it; otherwise spread in remaining cells
-    const startX = padding + col * regionWidth;
-    const startY = padding + row * regionHeight;
-
-    // Calculate how much width/height is available
-    const availableWidth = col < clusterCols - 1 ? (clusterCols - col) * regionWidth : regionWidth;
-    const availableHeight =
-      row < clusterRows - 1 ? (clusterRows - row) * regionHeight : regionHeight;
+    // Use remaining space below clusters, or spread across full width if not enough vertical space
+    const startX = padding;
+    const startY = Math.min(clustersEndY, height - 300); // Leave at least 300px for unclustered
+    const availableWidth = usableWidth;
+    const availableHeight = height - startY - padding;
 
     const n = unclusteredNodes.length;
-    const aspectRatio = availableWidth / availableHeight;
+    const aspectRatio = availableWidth / Math.max(availableHeight, 200);
     const localCols = Math.ceil(Math.sqrt(n * aspectRatio));
     const localRows = Math.ceil(n / localCols);
     const cellWidth = availableWidth / localCols;
-    const cellHeight = availableHeight / localRows;
+    const cellHeight = Math.max(availableHeight, 200) / localRows;
 
     // Sort unclustered by connections
     const sortedUnclustered = [...unclusteredNodes].sort((a, b) => {
@@ -266,8 +281,8 @@ function calculateNodePositions(
     sortedUnclustered.forEach((node, idx) => {
       const localRow = Math.floor(idx / localCols);
       const localCol = idx % localCols;
-      const jitterX = (seededRandom(node.id) - 0.5) * cellWidth * 0.5;
-      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellHeight * 0.5;
+      const jitterX = (seededRandom(node.id) - 0.5) * cellWidth * 0.4;
+      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellHeight * 0.4;
 
       result.push({
         ...node,
@@ -319,7 +334,298 @@ function calculateNodePositions(
     if (!hasOverlap) break;
   }
 
+  // Intra-cluster attraction: pull nodes towards their cluster center to make compact clusters
+  const intraClusterIterations = 30;
+  const intraClusterStrength = 0.15; // Strong attraction to compact clusters
+
+  for (let iter = 0; iter < intraClusterIterations; iter++) {
+    // For each cluster, calculate center and pull nodes towards it
+    universityList.forEach(([, nodeIds]) => {
+      // Get indices of nodes in this cluster (using indices to modify result directly)
+      const clusterIndices: number[] = [];
+      result.forEach((node, idx) => {
+        if (nodeIds.includes(node.id)) {
+          clusterIndices.push(idx);
+        }
+      });
+      if (clusterIndices.length < 2) return;
+
+      // Calculate cluster center
+      let sumX = 0,
+        sumY = 0;
+      clusterIndices.forEach((idx) => {
+        sumX += result[idx].x;
+        sumY += result[idx].y;
+      });
+      const centerX = sumX / clusterIndices.length;
+      const centerY = sumY / clusterIndices.length;
+
+      // Pull each node towards center
+      clusterIndices.forEach((idx) => {
+        const dx = centerX - result[idx].x;
+        const dy = centerY - result[idx].y;
+        result[idx].x += dx * intraClusterStrength;
+        result[idx].y += dy * intraClusterStrength;
+      });
+    });
+
+    // Re-run collision resolution to prevent overlaps from attraction
+    for (let collisionIter = 0; collisionIter < 5; collisionIter++) {
+      let hasOverlap = false;
+      for (let i = 0; i < result.length; i++) {
+        for (let j = i + 1; j < result.length; j++) {
+          const dx = result[j].x - result[i].x;
+          const dy = result[j].y - result[i].y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.1;
+          const ri = getNodeRadiusForLayout(result[i].citedByCount);
+          const rj = getNodeRadiusForLayout(result[j].citedByCount);
+          const minDist = ri + rj + minSeparation;
+
+          if (dist < minDist) {
+            hasOverlap = true;
+            const overlap = minDist - dist;
+            const pushX = (dx / dist) * overlap * 0.5;
+            const pushY = (dy / dist) * overlap * 0.5;
+            result[i].x -= pushX;
+            result[i].y -= pushY;
+            result[j].x += pushX;
+            result[j].y += pushY;
+          }
+        }
+      }
+      if (!hasOverlap) break;
+    }
+  }
+
+  // Cluster-aware collision: push unclustered nodes away from cluster boxes
+  const clusterPadding = 40; // Extra padding around cluster boxes
+  const clusterBounds: Array<{
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    centerX: number;
+    centerY: number;
+  }> = [];
+
+  // Calculate cluster bounding boxes with extra padding
+  significantUniversities.forEach((nodeIds) => {
+    const clusterNodes = result.filter((n) => nodeIds.includes(n.id));
+    if (clusterNodes.length === 0) return;
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+
+    clusterNodes.forEach((node) => {
+      const radius = getNodeRadiusForLayout(node.citedByCount);
+      minX = Math.min(minX, node.x - radius);
+      minY = Math.min(minY, node.y - radius);
+      maxX = Math.max(maxX, node.x + radius);
+      maxY = Math.max(maxY, node.y + radius);
+    });
+
+    clusterBounds.push({
+      minX: minX - clusterPadding,
+      maxX: maxX + clusterPadding,
+      minY: minY - clusterPadding - 20, // Extra for label
+      maxY: maxY + clusterPadding,
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2,
+    });
+  });
+
+  // Map cluster index to node indices in result array for efficient updates
+  const clusterNodeIndices: number[][] = [];
+  universityList.forEach(([, nodeIds]) => {
+    const indices: number[] = [];
+    result.forEach((node, idx) => {
+      if (nodeIds.includes(node.id)) {
+        indices.push(idx);
+      }
+    });
+    clusterNodeIndices.push(indices);
+  });
+
+  // Cluster-to-cluster collision: push entire clusters apart when their bounding boxes overlap
+  const clusterSeparation = 30; // Minimum gap between cluster boxes
+  for (let clusterIter = 0; clusterIter < 50; clusterIter++) {
+    let hasPush = false;
+
+    // Recalculate cluster bounds after any movements
+    for (let ci = 0; ci < clusterNodeIndices.length; ci++) {
+      const indices = clusterNodeIndices[ci];
+      if (indices.length === 0) continue;
+
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+
+      indices.forEach((idx) => {
+        const node = result[idx];
+        const radius = getNodeRadiusForLayout(node.citedByCount);
+        minX = Math.min(minX, node.x - radius);
+        minY = Math.min(minY, node.y - radius);
+        maxX = Math.max(maxX, node.x + radius);
+        maxY = Math.max(maxY, node.y + radius);
+      });
+
+      clusterBounds[ci] = {
+        minX: minX - clusterPadding,
+        maxX: maxX + clusterPadding,
+        minY: minY - clusterPadding - 20,
+        maxY: maxY + clusterPadding,
+        centerX: (minX + maxX) / 2,
+        centerY: (minY + maxY) / 2,
+      };
+    }
+
+    // Check all pairs of clusters for overlap
+    for (let ci = 0; ci < clusterBounds.length; ci++) {
+      for (let cj = ci + 1; cj < clusterBounds.length; cj++) {
+        const a = clusterBounds[ci];
+        const b = clusterBounds[cj];
+
+        // Check if clusters overlap (with separation buffer)
+        const overlapX = a.maxX + clusterSeparation > b.minX && a.minX - clusterSeparation < b.maxX;
+        const overlapY = a.maxY + clusterSeparation > b.minY && a.minY - clusterSeparation < b.maxY;
+
+        if (overlapX && overlapY) {
+          hasPush = true;
+
+          // Calculate push direction
+          const dx = b.centerX - a.centerX;
+          const dy = b.centerY - a.centerY;
+
+          // Calculate overlap amounts
+          const overlapAmountX =
+            Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX) + clusterSeparation;
+          const overlapAmountY =
+            Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY) + clusterSeparation;
+
+          // Push in the direction of less overlap (easier to separate)
+          let pushX = 0,
+            pushY = 0;
+          if (overlapAmountX < overlapAmountY) {
+            pushX = (dx > 0 ? 1 : -1) * (overlapAmountX / 2 + 5);
+          } else {
+            pushY = (dy > 0 ? 1 : -1) * (overlapAmountY / 2 + 5);
+          }
+
+          // Move cluster A nodes in negative direction
+          clusterNodeIndices[ci].forEach((idx) => {
+            result[idx].x -= pushX;
+            result[idx].y -= pushY;
+            // Keep within bounds
+            const r = getNodeRadiusForLayout(result[idx].citedByCount);
+            result[idx].x = Math.max(padding + r, Math.min(width - padding - r, result[idx].x));
+            result[idx].y = Math.max(padding + r, Math.min(height - padding - r, result[idx].y));
+          });
+
+          // Move cluster B nodes in positive direction
+          clusterNodeIndices[cj].forEach((idx) => {
+            result[idx].x += pushX;
+            result[idx].y += pushY;
+            // Keep within bounds
+            const r = getNodeRadiusForLayout(result[idx].citedByCount);
+            result[idx].x = Math.max(padding + r, Math.min(width - padding - r, result[idx].x));
+            result[idx].y = Math.max(padding + r, Math.min(height - padding - r, result[idx].y));
+          });
+        }
+      }
+    }
+
+    if (!hasPush) break;
+  }
+
+  // Update cluster bounds one final time after cluster separation
+  for (let ci = 0; ci < clusterNodeIndices.length; ci++) {
+    const indices = clusterNodeIndices[ci];
+    if (indices.length === 0) continue;
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+
+    indices.forEach((idx) => {
+      const node = result[idx];
+      const radius = getNodeRadiusForLayout(node.citedByCount);
+      minX = Math.min(minX, node.x - radius);
+      minY = Math.min(minY, node.y - radius);
+      maxX = Math.max(maxX, node.x + radius);
+      maxY = Math.max(maxY, node.y + radius);
+    });
+
+    clusterBounds[ci] = {
+      minX: minX - clusterPadding,
+      maxX: maxX + clusterPadding,
+      minY: minY - clusterPadding - 20,
+      maxY: maxY + clusterPadding,
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2,
+    };
+  }
+
+  // Push unclustered nodes away from cluster boxes
+  for (let iter = 0; iter < 30; iter++) {
+    let hasPush = false;
+
+    for (let i = 0; i < result.length; i++) {
+      // Skip nodes that belong to a cluster
+      if (clusteredNodeIds.has(result[i].id)) continue;
+
+      const nodeRadius = getNodeRadiusForLayout(result[i].citedByCount);
+
+      for (const bounds of clusterBounds) {
+        // Check if node overlaps with cluster box
+        const nodeLeft = result[i].x - nodeRadius;
+        const nodeRight = result[i].x + nodeRadius;
+        const nodeTop = result[i].y - nodeRadius;
+        const nodeBottom = result[i].y + nodeRadius;
+
+        const overlapsX = nodeRight > bounds.minX && nodeLeft < bounds.maxX;
+        const overlapsY = nodeBottom > bounds.minY && nodeTop < bounds.maxY;
+
+        if (overlapsX && overlapsY) {
+          hasPush = true;
+
+          // Push away from cluster center
+          const dx = result[i].x - bounds.centerX;
+          const dy = result[i].y - bounds.centerY;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.1;
+
+          // Calculate minimum distance to escape the box
+          const escapeX = dx > 0 ? bounds.maxX - nodeLeft + 5 : bounds.minX - nodeRight - 5;
+          const escapeY = dy > 0 ? bounds.maxY - nodeTop + 5 : bounds.minY - nodeBottom - 5;
+
+          // Push in the direction that requires less movement
+          if (Math.abs(escapeX) < Math.abs(escapeY)) {
+            result[i].x += escapeX;
+          } else {
+            result[i].y += escapeY;
+          }
+
+          // Keep within bounds
+          result[i].x = Math.max(
+            padding + nodeRadius,
+            Math.min(width - padding - nodeRadius, result[i].x)
+          );
+          result[i].y = Math.max(
+            padding + nodeRadius,
+            Math.min(height - padding - nodeRadius, result[i].y)
+          );
+        }
+      }
+    }
+
+    if (!hasPush) break;
+  }
+
   // Light attraction for connected nodes (after collision resolution)
+  // SKIP clustered nodes - they should stay in their compact clusters
   const attractionIterations = 15;
   const attractionStrength = 0.01;
 
@@ -327,6 +633,9 @@ function calculateNodePositions(
     const forces = result.map(() => ({ fx: 0, fy: 0 }));
 
     for (let i = 0; i < result.length; i++) {
+      // Skip nodes in clusters - they should stay compact
+      if (clusteredNodeIds.has(result[i].id)) continue;
+
       const nodeConnections = connections.get(result[i].id);
       if (nodeConnections) {
         for (let j = 0; j < result.length; j++) {
@@ -340,7 +649,7 @@ function calculateNodePositions(
       }
     }
 
-    // Apply attraction
+    // Apply attraction (only to unclustered nodes since clustered have zero forces)
     for (let i = 0; i < result.length; i++) {
       result[i].x += forces[i].fx;
       result[i].y += forces[i].fy;
@@ -376,6 +685,169 @@ function calculateNodePositions(
       }
       if (!hasOverlap) break;
     }
+
+    // CRITICAL: Re-run cluster-aware collision after attraction pulled nodes around
+    // This prevents nodes from being pulled back into cluster boxes
+    for (let i = 0; i < result.length; i++) {
+      if (clusteredNodeIds.has(result[i].id)) continue;
+
+      const nodeRadius = getNodeRadiusForLayout(result[i].citedByCount);
+
+      for (const bounds of clusterBounds) {
+        const nodeLeft = result[i].x - nodeRadius;
+        const nodeRight = result[i].x + nodeRadius;
+        const nodeTop = result[i].y - nodeRadius;
+        const nodeBottom = result[i].y + nodeRadius;
+
+        const overlapsX = nodeRight > bounds.minX && nodeLeft < bounds.maxX;
+        const overlapsY = nodeBottom > bounds.minY && nodeTop < bounds.maxY;
+
+        if (overlapsX && overlapsY) {
+          const dx = result[i].x - bounds.centerX;
+          const dy = result[i].y - bounds.centerY;
+          const escapeX = dx > 0 ? bounds.maxX - nodeLeft + 5 : bounds.minX - nodeRight - 5;
+          const escapeY = dy > 0 ? bounds.maxY - nodeTop + 5 : bounds.minY - nodeBottom - 5;
+
+          if (Math.abs(escapeX) < Math.abs(escapeY)) {
+            result[i].x += escapeX;
+          } else {
+            result[i].y += escapeY;
+          }
+
+          result[i].x = Math.max(
+            padding + nodeRadius,
+            Math.min(width - padding - nodeRadius, result[i].x)
+          );
+          result[i].y = Math.max(
+            padding + nodeRadius,
+            Math.min(height - padding - nodeRadius, result[i].y)
+          );
+        }
+      }
+    }
+  }
+
+  // FINAL PASS: Ensure no unclustered nodes remain inside cluster boxes
+  // This is critical because attraction and node-to-node collision can push nodes back in
+  for (let finalIter = 0; finalIter < 50; finalIter++) {
+    let anyPushed = false;
+
+    for (let i = 0; i < result.length; i++) {
+      if (clusteredNodeIds.has(result[i].id)) continue;
+
+      const nodeRadius = getNodeRadiusForLayout(result[i].citedByCount);
+
+      for (const bounds of clusterBounds) {
+        const nodeLeft = result[i].x - nodeRadius;
+        const nodeRight = result[i].x + nodeRadius;
+        const nodeTop = result[i].y - nodeRadius;
+        const nodeBottom = result[i].y + nodeRadius;
+
+        const overlapsX = nodeRight > bounds.minX && nodeLeft < bounds.maxX;
+        const overlapsY = nodeBottom > bounds.minY && nodeTop < bounds.maxY;
+
+        if (overlapsX && overlapsY) {
+          anyPushed = true;
+          const dx = result[i].x - bounds.centerX;
+          const dy = result[i].y - bounds.centerY;
+          const escapeX = dx > 0 ? bounds.maxX - nodeLeft + 10 : bounds.minX - nodeRight - 10;
+          const escapeY = dy > 0 ? bounds.maxY - nodeTop + 10 : bounds.minY - nodeBottom - 10;
+
+          if (Math.abs(escapeX) < Math.abs(escapeY)) {
+            result[i].x += escapeX;
+          } else {
+            result[i].y += escapeY;
+          }
+
+          result[i].x = Math.max(
+            padding + nodeRadius,
+            Math.min(width - padding - nodeRadius, result[i].x)
+          );
+          result[i].y = Math.max(
+            padding + nodeRadius,
+            Math.min(height - padding - nodeRadius, result[i].y)
+          );
+        }
+      }
+    }
+
+    if (!anyPushed) break;
+  }
+
+  // FINAL cluster-to-cluster collision after attraction may have moved clusters closer
+  for (let finalClusterIter = 0; finalClusterIter < 30; finalClusterIter++) {
+    let hasPush = false;
+
+    // Recalculate cluster bounds
+    for (let ci = 0; ci < clusterNodeIndices.length; ci++) {
+      const indices = clusterNodeIndices[ci];
+      if (indices.length === 0) continue;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      indices.forEach((idx) => {
+        const node = result[idx];
+        const radius = getNodeRadiusForLayout(node.citedByCount);
+        minX = Math.min(minX, node.x - radius);
+        minY = Math.min(minY, node.y - radius);
+        maxX = Math.max(maxX, node.x + radius);
+        maxY = Math.max(maxY, node.y + radius);
+      });
+      clusterBounds[ci] = {
+        minX: minX - clusterPadding,
+        maxX: maxX + clusterPadding,
+        minY: minY - clusterPadding - 20,
+        maxY: maxY + clusterPadding,
+        centerX: (minX + maxX) / 2,
+        centerY: (minY + maxY) / 2,
+      };
+    }
+
+    // Check all pairs of clusters for overlap
+    for (let ci = 0; ci < clusterBounds.length; ci++) {
+      for (let cj = ci + 1; cj < clusterBounds.length; cj++) {
+        const a = clusterBounds[ci];
+        const b = clusterBounds[cj];
+        const overlapX = a.maxX + clusterSeparation > b.minX && a.minX - clusterSeparation < b.maxX;
+        const overlapY = a.maxY + clusterSeparation > b.minY && a.minY - clusterSeparation < b.maxY;
+
+        if (overlapX && overlapY) {
+          hasPush = true;
+          const dx = b.centerX - a.centerX;
+          const dy = b.centerY - a.centerY;
+          const overlapAmountX =
+            Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX) + clusterSeparation;
+          const overlapAmountY =
+            Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY) + clusterSeparation;
+
+          let pushX = 0,
+            pushY = 0;
+          if (overlapAmountX < overlapAmountY) {
+            pushX = (dx > 0 ? 1 : -1) * (overlapAmountX / 2 + 5);
+          } else {
+            pushY = (dy > 0 ? 1 : -1) * (overlapAmountY / 2 + 5);
+          }
+
+          clusterNodeIndices[ci].forEach((idx) => {
+            result[idx].x -= pushX;
+            result[idx].y -= pushY;
+            const r = getNodeRadiusForLayout(result[idx].citedByCount);
+            result[idx].x = Math.max(padding + r, Math.min(width - padding - r, result[idx].x));
+            result[idx].y = Math.max(padding + r, Math.min(height - padding - r, result[idx].y));
+          });
+
+          clusterNodeIndices[cj].forEach((idx) => {
+            result[idx].x += pushX;
+            result[idx].y += pushY;
+            const r = getNodeRadiusForLayout(result[idx].citedByCount);
+            result[idx].x = Math.max(padding + r, Math.min(width - padding - r, result[idx].x));
+            result[idx].y = Math.max(padding + r, Math.min(height - padding - r, result[idx].y));
+          });
+        }
+      }
+    }
+    if (!hasPush) break;
   }
 
   return result;
@@ -386,19 +858,39 @@ export function ResearcherNetworkGraph({
   edges,
   selectedNodeId,
   hoveredNodeId,
+  selectedUniversity,
   filter,
   selectedDisciplines,
   onNodeSelect,
   onNodeHover,
+  onUniversitySelect,
 }: ResearcherNetworkGraphProps) {
-  const viewBoxWidth = 1200; // Increased for more space
-  const viewBoxHeight = 900; // Increased for more space
+  // Calculate dynamic viewBox based on number of clusters
+  // More clusters = more space needed
+  const significantUniversitiesCount = useMemo(() => {
+    const universityMap = new Map<string, number>();
+    nodes.forEach((node) => {
+      const uni = node.parentUniversityName || node.institution;
+      if (uni && uni !== "Unknown") {
+        universityMap.set(uni, (universityMap.get(uni) || 0) + 1);
+      }
+    });
+    return Array.from(universityMap.values()).filter(
+      (count) => count >= MIN_RESEARCHERS_FOR_CLUSTER
+    ).length;
+  }, [nodes]);
+
+  // Scale viewBox based on cluster count: base 1400x1000, minimal extra space
+  // Clusters are compact (~150x120), keep them close together
+  const extraClusters = Math.max(0, significantUniversitiesCount - 5);
+  const viewBoxWidth = 1400 + extraClusters * 20;
+  const viewBoxHeight = 1000 + extraClusters * 15;
 
   // Ref for attaching non-passive wheel listener
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Zoom state
-  const [zoom, setZoom] = useState(1);
+  // Zoom state - start at 200% for better initial view
+  const [zoom, setZoom] = useState(2);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -417,7 +909,7 @@ export function ResearcherNetworkGraph({
   }, []);
 
   const handleReset = useCallback(() => {
-    setZoom(1);
+    setZoom(2); // Reset to default 200% zoom
     setPan({ x: 0, y: 0 });
   }, []);
 
@@ -438,34 +930,48 @@ export function ResearcherNetworkGraph({
     return () => svg.removeEventListener("wheel", handleWheel);
   }, []);
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button === 0) {
-        // Prevent text selection during drag
-        e.preventDefault();
-        if ((e.target as SVGElement).tagName === "rect") {
-          setIsDragging(true);
-          setHasDragged(false);
-          setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-        }
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 0) {
+      // Prevent text selection during drag
+      e.preventDefault();
+      if ((e.target as SVGElement).tagName === "rect") {
+        setIsDragging(true);
+        setHasDragged(false);
+        setDragStart({ x: e.clientX, y: e.clientY });
       }
-    },
-    [pan]
-  );
+    }
+  }, []);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (isDragging) {
-        const newX = e.clientX - dragStart.x;
-        const newY = e.clientY - dragStart.y;
-        // Mark as dragged if moved more than 5 pixels
-        if (!hasDragged && (Math.abs(newX - pan.x) > 5 || Math.abs(newY - pan.y) > 5)) {
+      if (isDragging && svgRef.current) {
+        // Get the viewBox-to-screen scale ratio
+        const svgRect = svgRef.current.getBoundingClientRect();
+        const scaleX = viewBoxWidth / svgRect.width;
+        const scaleY = viewBoxHeight / svgRect.height;
+
+        // Calculate delta in screen pixels, then convert to viewBox units
+        const deltaX = (e.clientX - dragStart.x) * scaleX;
+        const deltaY = (e.clientY - dragStart.y) * scaleY;
+
+        // Mark as dragged if moved more than 5 screen pixels
+        if (
+          !hasDragged &&
+          (Math.abs(e.clientX - dragStart.x) > 5 || Math.abs(e.clientY - dragStart.y) > 5)
+        ) {
           setHasDragged(true);
         }
-        setPan({ x: newX, y: newY });
+
+        // Update pan (cumulative from drag start)
+        setPan((prevPan) => ({
+          x: prevPan.x + deltaX,
+          y: prevPan.y + deltaY,
+        }));
+        // Update drag start for next delta
+        setDragStart({ x: e.clientX, y: e.clientY });
       }
     },
-    [isDragging, dragStart, hasDragged, pan]
+    [isDragging, dragStart, hasDragged, viewBoxWidth, viewBoxHeight]
   );
 
   const handleMouseUp = useCallback(
@@ -486,7 +992,7 @@ export function ResearcherNetworkGraph({
   // Calculate positions: radial by discipline/citations + connection adjustment
   const positionedNodes = useMemo(() => {
     return calculateNodePositions(nodes, edges, viewBoxWidth, viewBoxHeight);
-  }, [nodes, edges]);
+  }, [nodes, edges, viewBoxWidth, viewBoxHeight]);
 
   // Create node map for edge lookups
   const nodeMap = useMemo(() => {
@@ -510,7 +1016,8 @@ export function ResearcherNetworkGraph({
   // Calculate university clusters for visible nodes
   const universityClusters = useMemo(() => {
     const significantUniversities = getSignificantUniversities(filteredNodes);
-    return calculateClusterBounds(filteredNodes, significantUniversities);
+    const clusters = calculateClusterBounds(filteredNodes, significantUniversities);
+    return clusters;
   }, [filteredNodes]);
 
   const filteredNodeIds = useMemo(() => {
@@ -609,38 +1116,7 @@ export function ResearcherNetworkGraph({
         <g
           transform={`translate(${viewBoxWidth / 2 + pan.x / zoom}, ${viewBoxHeight / 2 + pan.y / zoom}) scale(${zoom}) translate(${-viewBoxWidth / 2}, ${-viewBoxHeight / 2})`}
         >
-          {/* University cluster boxes */}
-          <g className="clusters">
-            {universityClusters.map((cluster) => (
-              <g key={cluster.name}>
-                {/* Dashed border rectangle */}
-                <rect
-                  x={cluster.x}
-                  y={cluster.y}
-                  width={cluster.width}
-                  height={cluster.height}
-                  fill="rgba(59, 130, 246, 0.03)"
-                  stroke="#3B82F6"
-                  strokeWidth={1}
-                  strokeDasharray="6,4"
-                  rx={8}
-                  ry={8}
-                  opacity={0.6}
-                />
-                {/* University name label */}
-                <text
-                  x={cluster.x + 8}
-                  y={cluster.y + 14}
-                  className="fill-blue-400/70 pointer-events-none"
-                  style={{ fontSize: "10px", fontWeight: 500 }}
-                >
-                  {cluster.name.length > 35 ? cluster.name.slice(0, 32) + "..." : cluster.name}
-                </text>
-              </g>
-            ))}
-          </g>
-
-          {/* Edges */}
+          {/* Edges - rendered FIRST so they appear under everything else */}
           <g className="edges">
             {filteredEdges.map((edge) => {
               const source = nodeMap.get(edge.source);
@@ -660,9 +1136,50 @@ export function ResearcherNetworkGraph({
                   stroke={style.stroke}
                   strokeWidth={style.strokeWidth}
                   strokeDasharray={style.dashArray}
-                  opacity={connected ? 0.8 : 0.1}
+                  opacity={connected ? style.opacity : style.opacity * 0.3}
                   className="transition-opacity duration-200"
                 />
+              );
+            })}
+          </g>
+
+          {/* University cluster boxes */}
+          <g className="clusters">
+            {universityClusters.map((cluster) => {
+              const isSelected = selectedUniversity === cluster.name;
+              return (
+                <g key={cluster.name}>
+                  {/* Dashed border rectangle - clickable */}
+                  <rect
+                    x={cluster.x}
+                    y={cluster.y}
+                    width={cluster.width}
+                    height={cluster.height}
+                    fill={isSelected ? "rgba(59, 130, 246, 0.08)" : "rgba(59, 130, 246, 0.03)"}
+                    stroke={isSelected ? "#60A5FA" : "#3B82F6"}
+                    strokeWidth={isSelected ? 2 : 1}
+                    strokeDasharray={isSelected ? "none" : "6,4"}
+                    rx={8}
+                    ry={8}
+                    opacity={isSelected ? 0.9 : 0.6}
+                    className="cursor-pointer hover:fill-blue-500/10 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUniversitySelect(isSelected ? null : cluster.name);
+                    }}
+                  />
+                  {/* University name label */}
+                  <text
+                    x={cluster.x + 8}
+                    y={cluster.y + 14}
+                    className={`pointer-events-none transition-colors ${
+                      isSelected ? "fill-blue-300" : "fill-blue-400/70"
+                    }`}
+                    style={{ fontSize: "10px", fontWeight: isSelected ? 600 : 500 }}
+                  >
+                    {cluster.name.length > 35 ? cluster.name.slice(0, 32) + "..." : cluster.name}
+                  </text>
+                </g>
               );
             })}
           </g>
