@@ -74,7 +74,7 @@ const EDGE_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArr
 };
 
 // Minimum researchers for a university to get its own cluster
-const MIN_RESEARCHERS_FOR_CLUSTER = 3;
+const MIN_RESEARCHERS_FOR_CLUSTER = 2;
 
 // Calculate node radius based on citation count (using sqrt scale for better visual differentiation)
 // Distribution: min=0, median=5740, p75=14743, max=114008
