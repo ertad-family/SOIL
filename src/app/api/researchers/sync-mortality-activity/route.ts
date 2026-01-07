@@ -257,8 +257,12 @@ export async function POST(request: NextRequest) {
         const titles = works.map((w) => w.title);
         const { relevant, totalRelevant } = await analyzeMortalityRelevance(titles);
 
-        // Calculate score
-        const score = Math.round((totalRelevant / works.length) * 100);
+        // Calculate confidence-weighted score
+        // Penalize low publication volumes - need MIN_CONFIDENCE_THRESHOLD works for full confidence
+        const MIN_CONFIDENCE_THRESHOLD = 5;
+        const rawPercentage = totalRelevant / works.length;
+        const confidence = Math.min(1, works.length / MIN_CONFIDENCE_THRESHOLD);
+        const score = Math.round(rawPercentage * confidence * 100);
 
         // Find most recent mortality-related publication year
         let lastMortalityYear: number | null = null;
@@ -297,7 +301,7 @@ export async function POST(request: NextRequest) {
         });
 
         console.log(
-          `${researcher.name}: ${totalRelevant}/${works.length} mortality works (score: ${score})`
+          `${researcher.name}: ${totalRelevant}/${works.length} mortality works (raw: ${Math.round(rawPercentage * 100)}%, confidence: ${Math.round(confidence * 100)}%, weighted: ${score})`
         );
       } catch (error) {
         console.error(`Error processing ${researcher.name}:`, error);
