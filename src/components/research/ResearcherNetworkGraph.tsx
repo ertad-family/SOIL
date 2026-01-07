@@ -23,12 +23,23 @@ export interface GraphEdge {
   label: string | null;
 }
 
+// University cluster for grouping
+interface UniversityCluster {
+  name: string;
+  nodeIds: string[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface ResearcherNetworkGraphProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
   selectedNodeId: string | null;
   hoveredNodeId: string | null;
   filter: string;
+  selectedDisciplines: Set<string>;
   onNodeSelect: (nodeId: string | null) => void;
   onNodeHover: (nodeId: string | null) => void;
 }
@@ -59,6 +70,9 @@ const EDGE_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArr
   advisor: { stroke: "#F59E0B", strokeWidth: 2, dashArray: "none" },
 };
 
+// Minimum researchers for a university to get its own cluster
+const MIN_RESEARCHERS_FOR_CLUSTER = 3;
+
 // Calculate node radius based on citation count (using sqrt scale for better visual differentiation)
 // Distribution: min=0, median=5740, p75=14743, max=114008
 function getNodeRadiusForLayout(citedByCount: number): number {
@@ -72,7 +86,70 @@ function getNodeRadiusForLayout(citedByCount: number): number {
   return minRadius + normalized * (maxRadius - minRadius);
 }
 
-// Grid-based layout with connection adjustment
+// Identify significant universities (3+ researchers)
+function getSignificantUniversities(nodes: Omit<GraphNode, "x" | "y">[]): Map<string, string[]> {
+  const universityMap = new Map<string, string[]>();
+
+  nodes.forEach((node) => {
+    const uni = node.institution;
+    if (uni && uni !== "Unknown") {
+      if (!universityMap.has(uni)) {
+        universityMap.set(uni, []);
+      }
+      universityMap.get(uni)!.push(node.id);
+    }
+  });
+
+  // Filter to only significant universities
+  const significant = new Map<string, string[]>();
+  universityMap.forEach((nodeIds, uni) => {
+    if (nodeIds.length >= MIN_RESEARCHERS_FOR_CLUSTER) {
+      significant.set(uni, nodeIds);
+    }
+  });
+
+  return significant;
+}
+
+// Calculate bounding boxes for university clusters
+function calculateClusterBounds(
+  positionedNodes: GraphNode[],
+  significantUniversities: Map<string, string[]>
+): UniversityCluster[] {
+  const clusters: UniversityCluster[] = [];
+  const padding = 25; // Padding around cluster
+
+  significantUniversities.forEach((nodeIds, universityName) => {
+    const clusterNodes = positionedNodes.filter((n) => nodeIds.includes(n.id));
+    if (clusterNodes.length === 0) return;
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+
+    clusterNodes.forEach((node) => {
+      const radius = getNodeRadiusForLayout(node.citedByCount);
+      minX = Math.min(minX, node.x - radius);
+      minY = Math.min(minY, node.y - radius);
+      maxX = Math.max(maxX, node.x + radius);
+      maxY = Math.max(maxY, node.y + radius);
+    });
+
+    clusters.push({
+      name: universityName,
+      nodeIds,
+      x: minX - padding,
+      y: minY - padding - 18, // Extra space for label
+      width: maxX - minX + 2 * padding,
+      height: maxY - minY + 2 * padding + 18,
+    });
+  });
+
+  return clusters;
+}
+
+// Grid-based layout with university clustering
 function calculateNodePositions(
   nodes: Omit<GraphNode, "x" | "y">[],
   edges: { source: string; target: string }[],
@@ -94,14 +171,6 @@ function calculateNodePositions(
     connections.get(e.target)!.add(e.source);
   });
 
-  // Calculate grid dimensions
-  const n = nodes.length;
-  const aspectRatio = usableWidth / usableHeight;
-  const cols = Math.ceil(Math.sqrt(n * aspectRatio));
-  const rows = Math.ceil(n / cols);
-  const cellWidth = usableWidth / cols;
-  const cellHeight = usableHeight / rows;
-
   // Seeded random for jitter
   const seededRandom = (seed: string) => {
     let hash = 0;
@@ -112,28 +181,101 @@ function calculateNodePositions(
     return Math.abs(hash % 1000) / 1000;
   };
 
-  // Sort nodes by connection count (more connected = more central)
-  const sortedNodes = [...nodes].sort((a, b) => {
-    const aConns = connections.get(a.id)?.size || 0;
-    const bConns = connections.get(b.id)?.size || 0;
-    return bConns - aConns;
+  // Get significant universities
+  const significantUniversities = getSignificantUniversities(nodes);
+  const clusteredNodeIds = new Set<string>();
+  significantUniversities.forEach((ids) => ids.forEach((id) => clusteredNodeIds.add(id)));
+
+  // Separate clustered and unclustered nodes
+  const unclusteredNodes = nodes.filter((n) => !clusteredNodeIds.has(n.id));
+  const universityList = Array.from(significantUniversities.entries());
+
+  // Calculate layout regions
+  // Universities get dedicated rectangular regions, unclustered nodes fill remaining space
+  const numClusters = universityList.length;
+  const clusterRows = Math.ceil(Math.sqrt(numClusters + 1)); // +1 for unclustered
+  const clusterCols = Math.ceil((numClusters + 1) / clusterRows);
+  const regionWidth = usableWidth / clusterCols;
+  const regionHeight = usableHeight / clusterRows;
+
+  const result: GraphNode[] = [];
+
+  // Position clustered nodes within their university regions
+  universityList.forEach(([, nodeIds], clusterIdx) => {
+    const row = Math.floor(clusterIdx / clusterCols);
+    const col = clusterIdx % clusterCols;
+    const regionX = padding + col * regionWidth;
+    const regionY = padding + row * regionHeight;
+    const innerPadding = 30;
+
+    // Get cluster nodes and sort by citations
+    const clusterNodes = nodes
+      .filter((n) => nodeIds.includes(n.id))
+      .sort((a, b) => b.citedByCount - a.citedByCount);
+
+    // Position within region
+    const clusterCount = clusterNodes.length;
+    const localCols = Math.ceil(Math.sqrt(clusterCount));
+    const localRows = Math.ceil(clusterCount / localCols);
+    const cellW = (regionWidth - 2 * innerPadding) / Math.max(1, localCols);
+    const cellH = (regionHeight - 2 * innerPadding - 20) / Math.max(1, localRows); // 20 for label
+
+    clusterNodes.forEach((node, idx) => {
+      const localRow = Math.floor(idx / localCols);
+      const localCol = idx % localCols;
+      const jitterX = (seededRandom(node.id) - 0.5) * cellW * 0.4;
+      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellH * 0.4;
+
+      result.push({
+        ...node,
+        x: regionX + innerPadding + (localCol + 0.5) * cellW + jitterX,
+        y: regionY + innerPadding + 20 + (localRow + 0.5) * cellH + jitterY, // +20 for label space
+      });
+    });
   });
 
-  // Place in grid with jitter
-  const result: GraphNode[] = sortedNodes.map((node, idx) => {
-    const row = Math.floor(idx / cols);
-    const col = idx % cols;
+  // Position unclustered nodes in remaining region(s)
+  if (unclusteredNodes.length > 0) {
+    const unclusteredRegionIdx = numClusters;
+    const row = Math.floor(unclusteredRegionIdx / clusterCols);
+    const col = unclusteredRegionIdx % clusterCols;
 
-    // Center position in cell with jitter
-    const jitterX = (seededRandom(node.id) - 0.5) * cellWidth * 0.6;
-    const jitterY = (seededRandom(node.id + "y") - 0.5) * cellHeight * 0.6;
+    // If there's remaining space, use it; otherwise spread in remaining cells
+    const startX = padding + col * regionWidth;
+    const startY = padding + row * regionHeight;
 
-    return {
-      ...node,
-      x: padding + (col + 0.5) * cellWidth + jitterX,
-      y: padding + (row + 0.5) * cellHeight + jitterY,
-    };
-  });
+    // Calculate how much width/height is available
+    const availableWidth = col < clusterCols - 1 ? (clusterCols - col) * regionWidth : regionWidth;
+    const availableHeight =
+      row < clusterRows - 1 ? (clusterRows - row) * regionHeight : regionHeight;
+
+    const n = unclusteredNodes.length;
+    const aspectRatio = availableWidth / availableHeight;
+    const localCols = Math.ceil(Math.sqrt(n * aspectRatio));
+    const localRows = Math.ceil(n / localCols);
+    const cellWidth = availableWidth / localCols;
+    const cellHeight = availableHeight / localRows;
+
+    // Sort unclustered by connections
+    const sortedUnclustered = [...unclusteredNodes].sort((a, b) => {
+      const aConns = connections.get(a.id)?.size || 0;
+      const bConns = connections.get(b.id)?.size || 0;
+      return bConns - aConns;
+    });
+
+    sortedUnclustered.forEach((node, idx) => {
+      const localRow = Math.floor(idx / localCols);
+      const localCol = idx % localCols;
+      const jitterX = (seededRandom(node.id) - 0.5) * cellWidth * 0.5;
+      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellHeight * 0.5;
+
+      result.push({
+        ...node,
+        x: startX + (localCol + 0.5) * cellWidth + jitterX,
+        y: startY + (localRow + 0.5) * cellHeight + jitterY,
+      });
+    });
+  }
 
   // Collision resolution - push overlapping nodes apart until no overlaps
   const maxIterations = 100;
@@ -245,6 +387,7 @@ export function ResearcherNetworkGraph({
   selectedNodeId,
   hoveredNodeId,
   filter,
+  selectedDisciplines,
   onNodeSelect,
   onNodeHover,
 }: ResearcherNetworkGraphProps) {
@@ -350,11 +493,25 @@ export function ResearcherNetworkGraph({
     return new Map(positionedNodes.map((n) => [n.id, n]));
   }, [positionedNodes]);
 
-  // Filter nodes by discipline
+  // Filter nodes by discipline (using legend multi-select)
   const filteredNodes = useMemo(() => {
-    if (filter === "all") return positionedNodes;
-    return positionedNodes.filter((n) => n.discipline === filter);
-  }, [positionedNodes, filter]);
+    // If no disciplines selected in legend, show nothing
+    if (selectedDisciplines.size === 0) return [];
+    // Filter by both top filter bar and legend selection
+    let filtered = positionedNodes;
+    if (filter !== "all") {
+      filtered = filtered.filter((n) => n.discipline === filter);
+    }
+    // Apply legend discipline filter
+    filtered = filtered.filter((n) => selectedDisciplines.has(n.discipline));
+    return filtered;
+  }, [positionedNodes, filter, selectedDisciplines]);
+
+  // Calculate university clusters for visible nodes
+  const universityClusters = useMemo(() => {
+    const significantUniversities = getSignificantUniversities(filteredNodes);
+    return calculateClusterBounds(filteredNodes, significantUniversities);
+  }, [filteredNodes]);
 
   const filteredNodeIds = useMemo(() => {
     return new Set(filteredNodes.map((n) => n.id));
@@ -452,6 +609,37 @@ export function ResearcherNetworkGraph({
         <g
           transform={`translate(${viewBoxWidth / 2 + pan.x / zoom}, ${viewBoxHeight / 2 + pan.y / zoom}) scale(${zoom}) translate(${-viewBoxWidth / 2}, ${-viewBoxHeight / 2})`}
         >
+          {/* University cluster boxes */}
+          <g className="clusters">
+            {universityClusters.map((cluster) => (
+              <g key={cluster.name}>
+                {/* Dashed border rectangle */}
+                <rect
+                  x={cluster.x}
+                  y={cluster.y}
+                  width={cluster.width}
+                  height={cluster.height}
+                  fill="rgba(59, 130, 246, 0.03)"
+                  stroke="#3B82F6"
+                  strokeWidth={1}
+                  strokeDasharray="6,4"
+                  rx={8}
+                  ry={8}
+                  opacity={0.6}
+                />
+                {/* University name label */}
+                <text
+                  x={cluster.x + 8}
+                  y={cluster.y + 14}
+                  className="fill-blue-400/70 pointer-events-none"
+                  style={{ fontSize: "10px", fontWeight: 500 }}
+                >
+                  {cluster.name.length > 35 ? cluster.name.slice(0, 32) + "..." : cluster.name}
+                </text>
+              </g>
+            ))}
+          </g>
+
           {/* Edges */}
           <g className="edges">
             {filteredEdges.map((edge) => {
@@ -545,21 +733,72 @@ export function ResearcherNetworkGraph({
   );
 }
 
-// Legend component
-export function GraphLegend({ disciplines }: { disciplines: { key: string; label: string }[] }) {
+// Legend component with clickable discipline filters
+export function GraphLegend({
+  disciplines,
+  selectedDisciplines,
+  onDisciplineToggle,
+  onSelectAll,
+  onSelectNone,
+}: {
+  disciplines: { key: string; label: string }[];
+  selectedDisciplines: Set<string>;
+  onDisciplineToggle: (discipline: string) => void;
+  onSelectAll: () => void;
+  onSelectNone: () => void;
+}) {
+  const allSelected = disciplines.every((d) => selectedDisciplines.has(d.key));
+  const noneSelected = selectedDisciplines.size === 0;
+
   return (
     <div className="absolute bottom-4 left-4 bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-lg p-3 text-xs border border-slate-700">
-      <div className="font-semibold mb-2 text-slate-300">Disciplines</div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-slate-300">Disciplines</span>
+        <div className="flex gap-1">
+          <button
+            onClick={onSelectAll}
+            className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+              allSelected
+                ? "bg-gold-500/20 text-gold-400"
+                : "bg-slate-700 text-slate-400 hover:bg-slate-600"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={onSelectNone}
+            className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+              noneSelected
+                ? "bg-gold-500/20 text-gold-400"
+                : "bg-slate-700 text-slate-400 hover:bg-slate-600"
+            }`}
+          >
+            None
+          </button>
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-        {disciplines.slice(0, 8).map(({ key, label }) => (
-          <div key={key} className="flex items-center gap-1.5">
-            <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: DISCIPLINE_COLORS[key] || "#6B7280" }}
-            />
-            <span className="text-slate-400 truncate">{label}</span>
-          </div>
-        ))}
+        {disciplines.slice(0, 12).map(({ key, label }) => {
+          const isSelected = selectedDisciplines.has(key);
+          return (
+            <button
+              key={key}
+              onClick={() => onDisciplineToggle(key)}
+              className={`flex items-center gap-1.5 text-left transition-opacity ${
+                isSelected ? "opacity-100" : "opacity-40"
+              } hover:opacity-100`}
+            >
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0 transition-all"
+                style={{
+                  backgroundColor: DISCIPLINE_COLORS[key] || "#6B7280",
+                  boxShadow: isSelected ? `0 0 6px ${DISCIPLINE_COLORS[key] || "#6B7280"}` : "none",
+                }}
+              />
+              <span className="text-slate-400 truncate">{label}</span>
+            </button>
+          );
+        })}
       </div>
       <div className="border-t border-slate-700 mt-2 pt-2">
         <div className="font-semibold mb-1 text-slate-300">Connections</div>

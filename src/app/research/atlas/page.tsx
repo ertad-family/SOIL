@@ -140,6 +140,9 @@ export default function AtlasPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
+  // Multi-select disciplines for legend filtering
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(new Set());
+
   // Admin sync state
   const [isAdmin, setIsAdmin] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -158,6 +161,8 @@ export default function AtlasPage() {
       setResearchers(data.researchers);
       setConnections(data.connections || []);
       setDisciplines(data.disciplines);
+      // Initialize all disciplines as selected
+      setSelectedDisciplines(new Set(data.disciplines.map((d) => d.discipline)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -274,6 +279,27 @@ export default function AtlasPage() {
       label: DISCIPLINE_CONFIG[d.discipline]?.label || d.label,
     }));
   }, [disciplines]);
+
+  // Discipline legend handlers
+  const handleDisciplineToggle = useCallback((discipline: string) => {
+    setSelectedDisciplines((prev) => {
+      const next = new Set(prev);
+      if (next.has(discipline)) {
+        next.delete(discipline);
+      } else {
+        next.add(discipline);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAllDisciplines = useCallback(() => {
+    setSelectedDisciplines(new Set(disciplines.map((d) => d.discipline)));
+  }, [disciplines]);
+
+  const handleSelectNoneDisciplines = useCallback(() => {
+    setSelectedDisciplines(new Set());
+  }, []);
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-80px)]">
@@ -442,10 +468,17 @@ export default function AtlasPage() {
                 selectedNodeId={selectedNodeId}
                 hoveredNodeId={hoveredNodeId}
                 filter={selectedDiscipline}
+                selectedDisciplines={selectedDisciplines}
                 onNodeSelect={setSelectedNodeId}
                 onNodeHover={setHoveredNodeId}
               />
-              <GraphLegend disciplines={legendDisciplines} />
+              <GraphLegend
+                disciplines={legendDisciplines}
+                selectedDisciplines={selectedDisciplines}
+                onDisciplineToggle={handleDisciplineToggle}
+                onSelectAll={handleSelectAllDisciplines}
+                onSelectNone={handleSelectNoneDisciplines}
+              />
 
               {/* Stats overlay */}
               <div className="absolute top-4 right-4 bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-xs border border-slate-700">
