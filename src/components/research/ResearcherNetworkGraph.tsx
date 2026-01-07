@@ -200,8 +200,11 @@ function calculateNodePositions(
   const numClusters = universityList.length;
   const clusterRows = Math.ceil(Math.sqrt(numClusters + 1)); // +1 for unclustered
   const clusterCols = Math.ceil((numClusters + 1) / clusterRows);
-  const regionWidth = usableWidth / clusterCols;
-  const regionHeight = usableHeight / clusterRows;
+
+  // Add gap between cluster regions to prevent overlap
+  const regionGap = 60; // Gap between cluster regions
+  const regionWidth = (usableWidth - regionGap * (clusterCols - 1)) / clusterCols;
+  const regionHeight = (usableHeight - regionGap * (clusterRows - 1)) / clusterRows;
 
   const result: GraphNode[] = [];
 
@@ -209,9 +212,9 @@ function calculateNodePositions(
   universityList.forEach(([, nodeIds], clusterIdx) => {
     const row = Math.floor(clusterIdx / clusterCols);
     const col = clusterIdx % clusterCols;
-    const regionX = padding + col * regionWidth;
-    const regionY = padding + row * regionHeight;
-    const innerPadding = 30;
+    const regionX = padding + col * (regionWidth + regionGap);
+    const regionY = padding + row * (regionHeight + regionGap);
+    const innerPadding = 50; // Increased from 30 to keep nodes away from region edges
 
     // Get cluster nodes and sort by citations
     const clusterNodes = nodes
@@ -228,8 +231,9 @@ function calculateNodePositions(
     clusterNodes.forEach((node, idx) => {
       const localRow = Math.floor(idx / localCols);
       const localCol = idx % localCols;
-      const jitterX = (seededRandom(node.id) - 0.5) * cellW * 0.4;
-      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellH * 0.4;
+      // Reduced jitter to keep nodes more contained within their cluster region
+      const jitterX = (seededRandom(node.id) - 0.5) * cellW * 0.25;
+      const jitterY = (seededRandom(node.id + "y") - 0.5) * cellH * 0.25;
 
       result.push({
         ...node,
@@ -246,8 +250,8 @@ function calculateNodePositions(
     const col = unclusteredRegionIdx % clusterCols;
 
     // If there's remaining space, use it; otherwise spread in remaining cells
-    const startX = padding + col * regionWidth;
-    const startY = padding + row * regionHeight;
+    const startX = padding + col * (regionWidth + regionGap);
+    const startY = padding + row * (regionHeight + regionGap);
 
     // Calculate how much width/height is available
     const availableWidth = col < clusterCols - 1 ? (clusterCols - col) * regionWidth : regionWidth;
@@ -594,10 +598,10 @@ export function ResearcherNetworkGraph({
     ).length;
   }, [nodes]);
 
-  // Scale viewBox based on cluster count: base 1200x900, add 150px per cluster beyond 5
+  // Scale viewBox based on cluster count: base 1400x1000, add more space per cluster beyond 5
   const extraClusters = Math.max(0, significantUniversitiesCount - 5);
-  const viewBoxWidth = 1200 + extraClusters * 120;
-  const viewBoxHeight = 900 + extraClusters * 80;
+  const viewBoxWidth = 1400 + extraClusters * 180;
+  const viewBoxHeight = 1000 + extraClusters * 120;
 
   // Ref for attaching non-passive wheel listener
   const svgRef = useRef<SVGSVGElement>(null);
