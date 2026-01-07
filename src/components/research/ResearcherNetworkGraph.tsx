@@ -475,6 +475,93 @@ function calculateNodePositions(
       }
       if (!hasOverlap) break;
     }
+
+    // CRITICAL: Re-run cluster-aware collision after attraction pulled nodes around
+    // This prevents nodes from being pulled back into cluster boxes
+    for (let i = 0; i < result.length; i++) {
+      if (clusteredNodeIds.has(result[i].id)) continue;
+
+      const nodeRadius = getNodeRadiusForLayout(result[i].citedByCount);
+
+      for (const bounds of clusterBounds) {
+        const nodeLeft = result[i].x - nodeRadius;
+        const nodeRight = result[i].x + nodeRadius;
+        const nodeTop = result[i].y - nodeRadius;
+        const nodeBottom = result[i].y + nodeRadius;
+
+        const overlapsX = nodeRight > bounds.minX && nodeLeft < bounds.maxX;
+        const overlapsY = nodeBottom > bounds.minY && nodeTop < bounds.maxY;
+
+        if (overlapsX && overlapsY) {
+          const dx = result[i].x - bounds.centerX;
+          const dy = result[i].y - bounds.centerY;
+          const escapeX = dx > 0 ? bounds.maxX - nodeLeft + 5 : bounds.minX - nodeRight - 5;
+          const escapeY = dy > 0 ? bounds.maxY - nodeTop + 5 : bounds.minY - nodeBottom - 5;
+
+          if (Math.abs(escapeX) < Math.abs(escapeY)) {
+            result[i].x += escapeX;
+          } else {
+            result[i].y += escapeY;
+          }
+
+          result[i].x = Math.max(
+            padding + nodeRadius,
+            Math.min(width - padding - nodeRadius, result[i].x)
+          );
+          result[i].y = Math.max(
+            padding + nodeRadius,
+            Math.min(height - padding - nodeRadius, result[i].y)
+          );
+        }
+      }
+    }
+  }
+
+  // FINAL PASS: Ensure no unclustered nodes remain inside cluster boxes
+  // This is critical because attraction and node-to-node collision can push nodes back in
+  for (let finalIter = 0; finalIter < 50; finalIter++) {
+    let anyPushed = false;
+
+    for (let i = 0; i < result.length; i++) {
+      if (clusteredNodeIds.has(result[i].id)) continue;
+
+      const nodeRadius = getNodeRadiusForLayout(result[i].citedByCount);
+
+      for (const bounds of clusterBounds) {
+        const nodeLeft = result[i].x - nodeRadius;
+        const nodeRight = result[i].x + nodeRadius;
+        const nodeTop = result[i].y - nodeRadius;
+        const nodeBottom = result[i].y + nodeRadius;
+
+        const overlapsX = nodeRight > bounds.minX && nodeLeft < bounds.maxX;
+        const overlapsY = nodeBottom > bounds.minY && nodeTop < bounds.maxY;
+
+        if (overlapsX && overlapsY) {
+          anyPushed = true;
+          const dx = result[i].x - bounds.centerX;
+          const dy = result[i].y - bounds.centerY;
+          const escapeX = dx > 0 ? bounds.maxX - nodeLeft + 10 : bounds.minX - nodeRight - 10;
+          const escapeY = dy > 0 ? bounds.maxY - nodeTop + 10 : bounds.minY - nodeBottom - 10;
+
+          if (Math.abs(escapeX) < Math.abs(escapeY)) {
+            result[i].x += escapeX;
+          } else {
+            result[i].y += escapeY;
+          }
+
+          result[i].x = Math.max(
+            padding + nodeRadius,
+            Math.min(width - padding - nodeRadius, result[i].x)
+          );
+          result[i].y = Math.max(
+            padding + nodeRadius,
+            Math.min(height - padding - nodeRadius, result[i].y)
+          );
+        }
+      }
+    }
+
+    if (!anyPushed) break;
   }
 
   return result;
