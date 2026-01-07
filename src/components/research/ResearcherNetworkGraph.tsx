@@ -914,6 +914,7 @@ export function ResearcherNetworkGraph({
   }, []);
 
   // Attach non-passive wheel listener to prevent page scroll
+  // Zoom is centered on cursor position
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -921,14 +922,45 @@ export function ResearcherNetworkGraph({
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      setZoom((z) => Math.min(maxZoom, Math.max(minZoom, z * delta)));
+
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+
+      // Get cursor position relative to SVG element
+      const svgRect = svg.getBoundingClientRect();
+      const cursorX = e.clientX - svgRect.left;
+      const cursorY = e.clientY - svgRect.top;
+
+      // Convert screen coordinates to viewBox coordinates
+      const scaleX = viewBoxWidth / svgRect.width;
+      const scaleY = viewBoxHeight / svgRect.height;
+      const cursorViewBoxX = cursorX * scaleX;
+      const cursorViewBoxY = cursorY * scaleY;
+
+      setZoom((prevZoom) => {
+        const newZoom = Math.min(maxZoom, Math.max(minZoom, prevZoom * zoomFactor));
+        const actualFactor = newZoom / prevZoom;
+
+        // Adjust pan so the point under cursor stays in place
+        // The transform is: translate(center + pan/zoom) scale(zoom) translate(-center)
+        // Point under cursor in graph space: graphX = (cursorViewBoxX - center - pan/zoom) / zoom + center
+        // After zoom change, we want the same graphX to appear at cursorViewBoxX
+        // This requires: newPan = (cursorViewBoxX - center) * (1 - actualFactor) * newZoom + pan * actualFactor
+        const centerX = viewBoxWidth / 2;
+        const centerY = viewBoxHeight / 2;
+
+        setPan((prevPan) => ({
+          x: (cursorViewBoxX - centerX) * (1 - actualFactor) * newZoom + prevPan.x * actualFactor,
+          y: (cursorViewBoxY - centerY) * (1 - actualFactor) * newZoom + prevPan.y * actualFactor,
+        }));
+
+        return newZoom;
+      });
     };
 
     // Use { passive: false } to allow preventDefault
     svg.addEventListener("wheel", handleWheel, { passive: false });
     return () => svg.removeEventListener("wheel", handleWheel);
-  }, []);
+  }, [viewBoxWidth, viewBoxHeight]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 0) {
