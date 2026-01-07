@@ -164,11 +164,12 @@ export async function POST(request: NextRequest) {
   const forceUpdate = searchParams.get("force") === "true";
 
   try {
-    // Fetch researchers with OpenAlex IDs
+    // Fetch researchers with OpenAlex IDs (skip deceased - they're not "inactive", just deceased)
     let query = supabase
       .from("researchers")
       .select("id, name, openalex_id, mortality_activity_score, mortality_activity_updated_at")
       .not("openalex_id", "is", null)
+      .is("death_year", null) // Skip deceased researchers
       .order("name");
 
     // If not forcing, only get researchers not yet analyzed
