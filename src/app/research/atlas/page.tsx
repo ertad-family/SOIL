@@ -285,18 +285,35 @@ export default function AtlasPage() {
     }));
   }, [disciplines]);
 
-  // Discipline legend handlers
-  const handleDisciplineToggle = useCallback((discipline: string) => {
-    setSelectedDisciplines((prev) => {
-      const next = new Set(prev);
-      if (next.has(discipline)) {
-        next.delete(discipline);
-      } else {
-        next.add(discipline);
-      }
-      return next;
-    });
-  }, []);
+  // Discipline legend handlers - smart multi-select
+  const handleDisciplineToggle = useCallback(
+    (discipline: string) => {
+      setSelectedDisciplines((prev) => {
+        const allDisciplines = disciplines.map((d) => d.discipline);
+        const allSelected = prev.size === allDisciplines.length;
+
+        // If all are selected, clicking one shows ONLY that one (start filtering)
+        if (allSelected) {
+          return new Set([discipline]);
+        }
+
+        // If this discipline is already the only one selected, show all
+        if (prev.size === 1 && prev.has(discipline)) {
+          return new Set(allDisciplines);
+        }
+
+        // Otherwise toggle: add if not selected, remove if selected
+        const next = new Set(prev);
+        if (next.has(discipline)) {
+          next.delete(discipline);
+        } else {
+          next.add(discipline);
+        }
+        return next;
+      });
+    },
+    [disciplines]
+  );
 
   const handleSelectAllDisciplines = useCallback(() => {
     setSelectedDisciplines(new Set(disciplines.map((d) => d.discipline)));
