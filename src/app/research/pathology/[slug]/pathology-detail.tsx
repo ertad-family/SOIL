@@ -30,8 +30,9 @@ import { EditPathologyModal } from "./edit-pathology-modal";
 
 // Types
 type PathologyLocalization = "LP" | "SP" | "FP" | "CP" | "MP" | "OP";
-type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S";
+type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S" | "ETI-I";
 type PathologyCourse = "ACU" | "CHR" | "REL" | "LAT";
+type PathologyFunctionalImpairment = "SEN" | "PER" | "COG" | "AFF" | "EXE" | "VOL" | "MEM" | "IDE";
 
 interface Pathology {
   id: string;
@@ -43,6 +44,7 @@ interface Pathology {
   localization: PathologyLocalization;
   primary_etiology: PathologyEtiology;
   typical_course: PathologyCourse;
+  functional_impairment: PathologyFunctionalImpairment | null;
   diagnostic_criteria: string[];
   symptoms: string[];
   stages: string[];
@@ -98,6 +100,7 @@ const ETIOLOGY_LABELS: Record<PathologyEtiology, string> = {
   "ETI-R": "Regulatory-induced",
   "ETI-T": "Technology-induced",
   "ETI-S": "Stochastic (random/bad luck)",
+  "ETI-I": "Iatrogenic (success-induced)",
 };
 
 const COURSE_LABELS: Record<PathologyCourse, string> = {
@@ -105,6 +108,17 @@ const COURSE_LABELS: Record<PathologyCourse, string> = {
   CHR: "Chronic (slow decline)",
   REL: "Relapsing (crisis cycles)",
   LAT: "Latent (hidden, manifests later)",
+};
+
+const FUNCTIONAL_IMPAIRMENT_LABELS: Record<PathologyFunctionalImpairment, string> = {
+  SEN: "Sensing (signal detection)",
+  PER: "Perception (signal interpretation)",
+  COG: "Cognition (reasoning)",
+  AFF: "Affect (emotional/cultural)",
+  EXE: "Executive (planning/coordination)",
+  VOL: "Volition (will/motivation)",
+  MEM: "Memory (learning/retention)",
+  IDE: "Identity (purpose/self-understanding)",
 };
 
 // Helper functions
@@ -513,6 +527,14 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
                       <dt className="text-slate-500">Typical Course</dt>
                       <dd className="text-slate-300">{COURSE_LABELS[pathology.typical_course]}</dd>
                     </div>
+                    {pathology.functional_impairment && (
+                      <div>
+                        <dt className="text-slate-500">Functional Impairment</dt>
+                        <dd className="text-slate-300">
+                          {FUNCTIONAL_IMPAIRMENT_LABELS[pathology.functional_impairment]}
+                        </dd>
+                      </div>
+                    )}
                   </dl>
                 </Card>
 

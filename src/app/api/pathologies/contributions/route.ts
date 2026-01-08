@@ -38,6 +38,7 @@ interface ProposedPathologyData {
   localization: string;
   primary_etiology: string;
   typical_course: string;
+  functional_impairment?: string;
   alternative_names?: string[];
   diagnostic_criteria?: string[];
   symptoms?: string[];
@@ -67,7 +68,7 @@ function validateProposedData(
     }
 
     const etiology = data.primary_etiology as string;
-    const validEtiologies = ["ETI-F", "ETI-M", "ETI-C", "ETI-R", "ETI-T", "ETI-S"];
+    const validEtiologies = ["ETI-F", "ETI-M", "ETI-C", "ETI-R", "ETI-T", "ETI-S", "ETI-I"];
     const isValidEtiology = validEtiologies.includes(etiology) || etiology.startsWith("OTHER:");
     if (!isValidEtiology) {
       return `Invalid etiology. Must be one of: ${validEtiologies.join(", ")} or "OTHER: description"`;
@@ -78,6 +79,17 @@ function validateProposedData(
     const isValidCourse = validCourses.includes(course) || course.startsWith("OTHER:");
     if (!isValidCourse) {
       return `Invalid course. Must be one of: ${validCourses.join(", ")} or "OTHER: description"`;
+    }
+
+    // Validate functional impairment if provided
+    if (data.functional_impairment) {
+      const impairment = data.functional_impairment as string;
+      const validImpairments = ["SEN", "PER", "COG", "AFF", "EXE", "VOL", "MEM", "IDE"];
+      const isValidImpairment =
+        validImpairments.includes(impairment) || impairment.startsWith("OTHER:");
+      if (!isValidImpairment) {
+        return `Invalid functional impairment. Must be one of: ${validImpairments.join(", ")} or "OTHER: description"`;
+      }
     }
   }
 

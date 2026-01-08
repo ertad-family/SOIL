@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
@@ -24,12 +24,13 @@ import {
   Clock,
   RefreshCw,
   EyeOff,
+  ChevronDown,
 } from "lucide-react";
 import { ContributeModal } from "./contribute-modal";
 
 // Types
 type PathologyLocalization = "LP" | "SP" | "FP" | "CP" | "MP" | "OP";
-type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S";
+type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S" | "ETI-I";
 type PathologyCourse = "ACU" | "CHR" | "REL" | "LAT";
 
 interface Pathology {
@@ -47,17 +48,11 @@ interface Pathology {
   updated_at: string;
 }
 
-interface PathologyStats {
-  total: number;
-  byLocalization: { localization: PathologyLocalization; label: string; count: number }[];
-  byEtiology: { etiology: PathologyEtiology; label: string; count: number }[];
-  byCourse: { course: PathologyCourse; label: string; count: number }[];
-}
-
-interface PathologiesResponse {
-  pathologies: Pathology[];
-  total: number;
-  stats: PathologyStats;
+// Available filter options (for dependent filtering)
+interface AvailableFilterOptions {
+  localizations: { value: PathologyLocalization; label: string; count: number }[];
+  etiologies: { value: PathologyEtiology; label: string; count: number }[];
+  courses: { value: PathologyCourse; label: string; count: number }[];
 }
 
 // Display labels
@@ -77,6 +72,7 @@ const ETIOLOGY_LABELS: Record<PathologyEtiology, string> = {
   "ETI-R": "Regulatory-induced",
   "ETI-T": "Technology-induced",
   "ETI-S": "Stochastic",
+  "ETI-I": "Iatrogenic",
 };
 
 const COURSE_LABELS: Record<PathologyCourse, string> = {
@@ -142,50 +138,6 @@ function getCourseInfo(course: PathologyCourse) {
   }
 }
 
-// Stats Section Component
-function StatsSection({ stats }: { stats: PathologyStats | null }) {
-  if (!stats) return null;
-
-  const leadershipCount = stats.byLocalization.find((l) => l.localization === "LP")?.count || 0;
-  const structuralCount = stats.byLocalization.find((l) => l.localization === "SP")?.count || 0;
-  const financialCount = stats.byLocalization.find((l) => l.localization === "FP")?.count || 0;
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <Card variant="dark" padding="md">
-        <div className="text-center">
-          <span className="font-display text-3xl font-semibold text-gold-400">{stats.total}</span>
-          <p className="text-slate-400 text-sm mt-1">Total Pathologies</p>
-        </div>
-      </Card>
-      <Card variant="dark" padding="md">
-        <div className="text-center">
-          <span className="font-display text-3xl font-semibold text-gold-400">
-            {leadershipCount}
-          </span>
-          <p className="text-slate-400 text-sm mt-1">Leadership (LP)</p>
-        </div>
-      </Card>
-      <Card variant="dark" padding="md">
-        <div className="text-center">
-          <span className="font-display text-3xl font-semibold text-gold-400">
-            {structuralCount}
-          </span>
-          <p className="text-slate-400 text-sm mt-1">Structural (SP)</p>
-        </div>
-      </Card>
-      <Card variant="dark" padding="md">
-        <div className="text-center">
-          <span className="font-display text-3xl font-semibold text-gold-400">
-            {financialCount}
-          </span>
-          <p className="text-slate-400 text-sm mt-1">Financial (FP)</p>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
 // Pathology Card Component
 function PathologyCard({ pathology }: { pathology: Pathology }) {
   const courseInfo = getCourseInfo(pathology.typical_course);
@@ -219,7 +171,7 @@ function PathologyCard({ pathology }: { pathology: Pathology }) {
               </span>
             </div>
 
-            <p className="text-slate-400 text-sm mb-3 line-clamp-2">{pathology.definition}</p>
+            <p className="text-slate-400 text-sm mb-3 line-clamp-4">{pathology.definition}</p>
 
             {/* Classification badges */}
             <div className="flex flex-wrap gap-2 mb-3">
@@ -252,7 +204,7 @@ function PathologyCard({ pathology }: { pathology: Pathology }) {
 
 // Filter Sidebar Component
 function FilterSidebar({
-  stats,
+  availableOptions,
   selectedLocalization,
   selectedEtiology,
   selectedCourse,
@@ -260,7 +212,7 @@ function FilterSidebar({
   onEtiologyChange,
   onCourseChange,
 }: {
-  stats: PathologyStats | null;
+  availableOptions: AvailableFilterOptions;
   selectedLocalization: string;
   selectedEtiology: string;
   selectedCourse: string;
@@ -268,122 +220,254 @@ function FilterSidebar({
   onEtiologyChange: (etiology: string) => void;
   onCourseChange: (course: string) => void;
 }) {
-  if (!stats) return null;
+  // State for collapsible sections - folded by default
+  const [localizationOpen, setLocalizationOpen] = useState(false);
+  const [etiologyOpen, setEtiologyOpen] = useState(false);
+  const [courseOpen, setCourseOpen] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Localization Filter */}
       <div>
-        <h3 className="font-display text-sm font-medium text-marble-100 mb-3 flex items-center gap-2">
+        <button
+          onClick={() => setLocalizationOpen(!localizationOpen)}
+          className="w-full font-display text-sm font-medium text-marble-100 flex items-center gap-2 py-2 hover:text-gold-400 transition-colors"
+        >
           <Microscope className="w-4 h-4 text-gold-400" />
-          Localization
-        </h3>
-        <div className="space-y-1">
-          <button
-            onClick={() => onLocalizationChange("")}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              !selectedLocalization
-                ? "bg-gold-500/20 text-gold-400"
-                : "text-slate-400 hover:bg-slate-800"
-            }`}
-          >
-            All Types
-          </button>
-          {stats.byLocalization.map((loc) => (
+          <span className="flex-1 text-left">Localization</span>
+          {selectedLocalization && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400">
+              {LOCALIZATION_LABELS[selectedLocalization as PathologyLocalization]}
+            </span>
+          )}
+          <ChevronDown
+            className={`w-4 h-4 text-slate-500 transition-transform ${localizationOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {localizationOpen && (
+          <div className="space-y-1 mt-2 pl-6">
             <button
-              key={loc.localization}
-              onClick={() => onLocalizationChange(loc.localization)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
-                selectedLocalization === loc.localization
+              onClick={() => onLocalizationChange("")}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                !selectedLocalization
                   ? "bg-gold-500/20 text-gold-400"
                   : "text-slate-400 hover:bg-slate-800"
               }`}
             >
-              {getLocalizationIcon(loc.localization)}
-              <span className="flex-1">{loc.label}</span>
-              <span className="text-slate-500">({loc.count})</span>
+              All Types
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Etiology Filter */}
-      <div>
-        <h3 className="font-display text-sm font-medium text-marble-100 mb-3 flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gold-400" />
-          Etiology
-        </h3>
-        <div className="space-y-1">
-          <button
-            onClick={() => onEtiologyChange("")}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              !selectedEtiology
-                ? "bg-gold-500/20 text-gold-400"
-                : "text-slate-400 hover:bg-slate-800"
-            }`}
-          >
-            All Causes
-          </button>
-          {stats.byEtiology.map((eti) => (
-            <button
-              key={eti.etiology}
-              onClick={() => onEtiologyChange(eti.etiology)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
-                selectedEtiology === eti.etiology
-                  ? "bg-gold-500/20 text-gold-400"
-                  : "text-slate-400 hover:bg-slate-800"
-              }`}
-            >
-              <span className="flex-1">{eti.label}</span>
-              <span className="text-slate-500">({eti.count})</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Course Filter */}
-      <div>
-        <h3 className="font-display text-sm font-medium text-marble-100 mb-3 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-gold-400" />
-          Course
-        </h3>
-        <div className="space-y-1">
-          <button
-            onClick={() => onCourseChange("")}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              !selectedCourse ? "bg-gold-500/20 text-gold-400" : "text-slate-400 hover:bg-slate-800"
-            }`}
-          >
-            All Courses
-          </button>
-          {stats.byCourse.map((crs) => {
-            const courseInfo = getCourseInfo(crs.course);
-            return (
+            {availableOptions.localizations.map((loc) => (
               <button
-                key={crs.course}
-                onClick={() => onCourseChange(crs.course)}
+                key={loc.value}
+                onClick={() => onLocalizationChange(loc.value)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
-                  selectedCourse === crs.course
+                  selectedLocalization === loc.value
                     ? "bg-gold-500/20 text-gold-400"
                     : "text-slate-400 hover:bg-slate-800"
                 }`}
               >
-                {courseInfo.icon}
-                <span className="flex-1">{crs.label}</span>
-                <span className="text-slate-500">({crs.count})</span>
+                {getLocalizationIcon(loc.value)}
+                <span className="flex-1">{loc.label}</span>
+                <span className="text-slate-500">({loc.count})</span>
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Etiology Filter */}
+      <div>
+        <button
+          onClick={() => setEtiologyOpen(!etiologyOpen)}
+          className="w-full font-display text-sm font-medium text-marble-100 flex items-center gap-2 py-2 hover:text-gold-400 transition-colors"
+        >
+          <Filter className="w-4 h-4 text-gold-400" />
+          <span className="flex-1 text-left">Etiology</span>
+          {selectedEtiology && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400">
+              {ETIOLOGY_LABELS[selectedEtiology as PathologyEtiology]}
+            </span>
+          )}
+          <ChevronDown
+            className={`w-4 h-4 text-slate-500 transition-transform ${etiologyOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {etiologyOpen && (
+          <div className="space-y-1 mt-2 pl-6">
+            <button
+              onClick={() => onEtiologyChange("")}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                !selectedEtiology
+                  ? "bg-gold-500/20 text-gold-400"
+                  : "text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              All Causes
+            </button>
+            {availableOptions.etiologies.map((eti) => (
+              <button
+                key={eti.value}
+                onClick={() => onEtiologyChange(eti.value)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                  selectedEtiology === eti.value
+                    ? "bg-gold-500/20 text-gold-400"
+                    : "text-slate-400 hover:bg-slate-800"
+                }`}
+              >
+                <span className="flex-1">{eti.label}</span>
+                <span className="text-slate-500">({eti.count})</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Course Filter */}
+      <div>
+        <button
+          onClick={() => setCourseOpen(!courseOpen)}
+          className="w-full font-display text-sm font-medium text-marble-100 flex items-center gap-2 py-2 hover:text-gold-400 transition-colors"
+        >
+          <Clock className="w-4 h-4 text-gold-400" />
+          <span className="flex-1 text-left">Course</span>
+          {selectedCourse && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400">
+              {COURSE_LABELS[selectedCourse as PathologyCourse]}
+            </span>
+          )}
+          <ChevronDown
+            className={`w-4 h-4 text-slate-500 transition-transform ${courseOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {courseOpen && (
+          <div className="space-y-1 mt-2 pl-6">
+            <button
+              onClick={() => onCourseChange("")}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                !selectedCourse
+                  ? "bg-gold-500/20 text-gold-400"
+                  : "text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              All Courses
+            </button>
+            {availableOptions.courses.map((crs) => {
+              const courseInfo = getCourseInfo(crs.value);
+              return (
+                <button
+                  key={crs.value}
+                  onClick={() => onCourseChange(crs.value)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                    selectedCourse === crs.value
+                      ? "bg-gold-500/20 text-gold-400"
+                      : "text-slate-400 hover:bg-slate-800"
+                  }`}
+                >
+                  {courseInfo.icon}
+                  <span className="flex-1">{crs.label}</span>
+                  <span className="text-slate-500">({crs.count})</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+// Helper to calculate available options based on current filters
+function calculateAvailableOptions(
+  allPathologies: Pathology[],
+  selectedLocalization: string,
+  selectedEtiology: string,
+  selectedCourse: string,
+  searchQuery: string
+): AvailableFilterOptions {
+  // Helper to filter pathologies by specific criteria (excluding one filter)
+  const filterPathologies = (
+    excludeFilter: "localization" | "etiology" | "course" | "none"
+  ): Pathology[] => {
+    return allPathologies.filter((p) => {
+      // Always apply search
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!p.name.toLowerCase().includes(query) && !p.definition.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+      // Apply localization filter (unless excluded)
+      if (
+        excludeFilter !== "localization" &&
+        selectedLocalization &&
+        p.localization !== selectedLocalization
+      ) {
+        return false;
+      }
+      // Apply etiology filter (unless excluded)
+      if (
+        excludeFilter !== "etiology" &&
+        selectedEtiology &&
+        p.primary_etiology !== selectedEtiology
+      ) {
+        return false;
+      }
+      // Apply course filter (unless excluded)
+      if (excludeFilter !== "course" && selectedCourse && p.typical_course !== selectedCourse) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  // Calculate localizations available (excluding localization filter)
+  const forLocalizations = filterPathologies("localization");
+  const localizationCounts: Record<string, number> = {};
+  forLocalizations.forEach((p) => {
+    localizationCounts[p.localization] = (localizationCounts[p.localization] || 0) + 1;
+  });
+  const localizations = Object.entries(localizationCounts)
+    .map(([value, count]) => ({
+      value: value as PathologyLocalization,
+      label: LOCALIZATION_LABELS[value as PathologyLocalization],
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  // Calculate etiologies available (excluding etiology filter)
+  const forEtiologies = filterPathologies("etiology");
+  const etiologyCounts: Record<string, number> = {};
+  forEtiologies.forEach((p) => {
+    etiologyCounts[p.primary_etiology] = (etiologyCounts[p.primary_etiology] || 0) + 1;
+  });
+  const etiologies = Object.entries(etiologyCounts)
+    .map(([value, count]) => ({
+      value: value as PathologyEtiology,
+      label: ETIOLOGY_LABELS[value as PathologyEtiology],
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  // Calculate courses available (excluding course filter)
+  const forCourses = filterPathologies("course");
+  const courseCounts: Record<string, number> = {};
+  forCourses.forEach((p) => {
+    courseCounts[p.typical_course] = (courseCounts[p.typical_course] || 0) + 1;
+  });
+  const courses = Object.entries(courseCounts)
+    .map(([value, count]) => ({
+      value: value as PathologyCourse,
+      label: COURSE_LABELS[value as PathologyCourse],
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return { localizations, etiologies, courses };
+}
+
 // Main Page Component
 export default function PathologyPage() {
-  const [pathologies, setPathologies] = useState<Pathology[]>([]);
-  const [stats, setStats] = useState<PathologyStats | null>(null);
+  const [allPathologies, setAllPathologies] = useState<Pathology[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -395,44 +479,60 @@ export default function PathologyPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showContributeModal, setShowContributeModal] = useState(false);
 
-  // Fetch pathologies
-  const fetchPathologies = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-
-      if (selectedLocalization) params.set("localization", selectedLocalization);
-      if (selectedEtiology) params.set("etiology", selectedEtiology);
-      if (selectedCourse) params.set("course", selectedCourse);
-      if (searchQuery) params.set("search", searchQuery);
-
-      const response = await fetch(`/api/pathologies?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch pathologies");
-
-      const data: PathologiesResponse = await response.json();
-      setPathologies(data.pathologies);
-      setStats(data.stats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedLocalization, selectedEtiology, selectedCourse, searchQuery]);
-
-  // Initial fetch
+  // Fetch all pathologies once
   useEffect(() => {
+    const fetchPathologies = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/pathologies");
+        if (!response.ok) throw new Error("Failed to fetch pathologies");
+
+        const data = await response.json();
+        setAllPathologies(data.pathologies);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPathologies();
-  }, [fetchPathologies]);
+  }, []);
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchPathologies();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, fetchPathologies]);
+  // Filter pathologies client-side
+  const filteredPathologies = useMemo(() => {
+    return allPathologies.filter((p) => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!p.name.toLowerCase().includes(query) && !p.definition.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+      if (selectedLocalization && p.localization !== selectedLocalization) {
+        return false;
+      }
+      if (selectedEtiology && p.primary_etiology !== selectedEtiology) {
+        return false;
+      }
+      if (selectedCourse && p.typical_course !== selectedCourse) {
+        return false;
+      }
+      return true;
+    });
+  }, [allPathologies, searchQuery, selectedLocalization, selectedEtiology, selectedCourse]);
+
+  // Calculate available filter options (dependent on current selections)
+  const availableOptions = useMemo(() => {
+    return calculateAvailableOptions(
+      allPathologies,
+      selectedLocalization,
+      selectedEtiology,
+      selectedCourse,
+      searchQuery
+    );
+  }, [allPathologies, selectedLocalization, selectedEtiology, selectedCourse, searchQuery]);
 
   const clearFilters = () => {
     setSelectedLocalization("");
@@ -443,6 +543,11 @@ export default function PathologyPage() {
 
   const hasActiveFilters =
     selectedLocalization || selectedEtiology || selectedCourse || searchQuery;
+
+  // Refetch function for error retry
+  const refetch = () => {
+    window.location.reload();
+  };
 
   return (
     <>
@@ -473,13 +578,6 @@ export default function PathologyPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="pb-8">
-        <div className="max-w-content mx-auto px-6">
-          <StatsSection stats={stats} />
-        </div>
-      </section>
-
       {/* Main Content */}
       <section className="pb-16 md:pb-24">
         <div className="max-w-content mx-auto px-6">
@@ -488,7 +586,7 @@ export default function PathologyPage() {
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-24">
                 <FilterSidebar
-                  stats={stats}
+                  availableOptions={availableOptions}
                   selectedLocalization={selectedLocalization}
                   selectedEtiology={selectedEtiology}
                   selectedCourse={selectedCourse}
@@ -526,7 +624,7 @@ export default function PathologyPage() {
               {showFilters && (
                 <Card variant="dark" padding="md" className="mb-6 lg:hidden">
                   <FilterSidebar
-                    stats={stats}
+                    availableOptions={availableOptions}
                     selectedLocalization={selectedLocalization}
                     selectedEtiology={selectedEtiology}
                     selectedCourse={selectedCourse}
@@ -602,7 +700,7 @@ export default function PathologyPage() {
               {error && (
                 <Card variant="dark" padding="lg" className="text-center">
                   <p className="text-red-400 mb-4">{error}</p>
-                  <Button variant="dark-secondary" onClick={fetchPathologies}>
+                  <Button variant="dark-secondary" onClick={refetch}>
                     Try Again
                   </Button>
                 </Card>
@@ -611,13 +709,13 @@ export default function PathologyPage() {
               {/* Pathologies Grid */}
               {!loading && !error && (
                 <>
-                  <div className="grid gap-4">
-                    {pathologies.map((pathology) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredPathologies.map((pathology) => (
                       <PathologyCard key={pathology.id} pathology={pathology} />
                     ))}
                   </div>
 
-                  {pathologies.length === 0 && (
+                  {filteredPathologies.length === 0 && (
                     <Card variant="dark" padding="lg" className="text-center">
                       <p className="text-slate-400">No pathologies found matching your criteria.</p>
                     </Card>

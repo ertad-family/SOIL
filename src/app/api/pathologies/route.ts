@@ -4,8 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 
 // Types
 export type PathologyLocalization = "LP" | "SP" | "FP" | "CP" | "MP" | "OP";
-export type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S";
+export type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S" | "ETI-I";
 export type PathologyCourse = "ACU" | "CHR" | "REL" | "LAT";
+export type PathologyFunctionalImpairment =
+  | "SEN"
+  | "PER"
+  | "COG"
+  | "AFF"
+  | "EXE"
+  | "VOL"
+  | "MEM"
+  | "IDE";
 
 export interface Pathology {
   id: string;
@@ -17,6 +26,7 @@ export interface Pathology {
   localization: PathologyLocalization;
   primary_etiology: PathologyEtiology;
   typical_course: PathologyCourse;
+  functional_impairment: PathologyFunctionalImpairment | null;
   diagnostic_criteria: string[];
   symptoms: string[];
   stages: string[];
@@ -73,6 +83,7 @@ export const ETIOLOGY_LABELS: Record<PathologyEtiology, string> = {
   "ETI-R": "Regulatory-induced",
   "ETI-T": "Technology-induced",
   "ETI-S": "Stochastic",
+  "ETI-I": "Iatrogenic (success-induced)",
 };
 
 export const COURSE_LABELS: Record<PathologyCourse, string> = {
@@ -80,6 +91,17 @@ export const COURSE_LABELS: Record<PathologyCourse, string> = {
   CHR: "Chronic",
   REL: "Relapsing",
   LAT: "Latent",
+};
+
+export const FUNCTIONAL_IMPAIRMENT_LABELS: Record<PathologyFunctionalImpairment, string> = {
+  SEN: "Sensing",
+  PER: "Perception",
+  COG: "Cognition",
+  AFF: "Affect",
+  EXE: "Executive",
+  VOL: "Volition",
+  MEM: "Memory",
+  IDE: "Identity",
 };
 
 /**
@@ -223,6 +245,7 @@ export async function POST(request: NextRequest) {
         localization: body.localization,
         primary_etiology: body.primary_etiology,
         typical_course: body.typical_course,
+        functional_impairment: body.functional_impairment || null,
         diagnostic_criteria: body.diagnostic_criteria || [],
         symptoms: body.symptoms || [],
         stages: body.stages || [],
