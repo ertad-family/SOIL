@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Card } from "@/components/ui/card";
@@ -23,7 +24,9 @@ import {
   Activity,
   Shield,
   Microscope,
+  Edit3,
 } from "lucide-react";
+import { EditPathologyModal } from "./edit-pathology-modal";
 
 // Types
 type PathologyLocalization = "LP" | "SP" | "FP" | "CP" | "MP" | "OP";
@@ -208,6 +211,8 @@ function ListSection({
 }
 
 export function PathologyDetail({ pathology, prevPathology, nextPathology }: PathologyDetailProps) {
+  const [showEditModal, setShowEditModal] = useState(false);
+
   return (
     <>
       {/* Hero Section */}
@@ -236,9 +241,18 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
             </div>
 
             {/* Name */}
-            <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold mb-4 text-marble-100">
-              {pathology.name}
-            </h1>
+            <div className="flex items-start gap-3 mb-4">
+              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-marble-100">
+                {pathology.name}
+              </h1>
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="mt-2 p-2 text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 rounded-lg transition-colors"
+                title="Suggest an edit"
+              >
+                <Edit3 className="w-5 h-5" />
+              </button>
+            </div>
 
             {/* Alternative names */}
             {pathology.alternative_names && pathology.alternative_names.length > 0 && (
@@ -501,6 +515,23 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
                     </div>
                   </dl>
                 </Card>
+
+                {/* Suggest Edit */}
+                <Card variant="dark" padding="md" className="border-dashed">
+                  <h3 className="font-display text-sm font-medium text-marble-100 mb-2 flex items-center gap-2">
+                    <Edit3 className="w-4 h-4 text-gold-400" />
+                    Contribute
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-3">
+                    See an error or have additional information? Help improve this entry.
+                  </p>
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="w-full px-3 py-2 bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 text-sm rounded-lg transition-colors"
+                  >
+                    Suggest an Edit
+                  </button>
+                </Card>
               </div>
             </div>
           </div>
@@ -543,6 +574,26 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
           </div>
         </div>
       </section>
+
+      {/* Edit Modal */}
+      <EditPathologyModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        pathology={{
+          id: pathology.id,
+          code: pathology.code,
+          name: pathology.name,
+          definition: pathology.definition,
+          localization: pathology.localization,
+          primary_etiology: pathology.primary_etiology,
+          typical_course: pathology.typical_course,
+          alternative_names: pathology.alternative_names,
+          diagnostic_criteria: pathology.diagnostic_criteria,
+          symptoms: pathology.symptoms,
+          risk_factors: pathology.risk_factors,
+          known_cases: pathology.known_cases,
+        }}
+      />
     </>
   );
 }
