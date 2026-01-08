@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
 import {
   X,
   ArrowLeft,
@@ -27,8 +28,11 @@ interface FormData {
   name: string;
   definition: string;
   localization: string;
+  localization_other: string;
   primary_etiology: string;
+  etiology_other: string;
   typical_course: string;
+  course_other: string;
   alternative_names: string;
   diagnostic_criteria: string;
   symptoms: string;
@@ -45,8 +49,11 @@ const initialFormData: FormData = {
   name: "",
   definition: "",
   localization: "",
+  localization_other: "",
   primary_etiology: "",
+  etiology_other: "",
   typical_course: "",
+  course_other: "",
   alternative_names: "",
   diagnostic_criteria: "",
   symptoms: "",
@@ -56,6 +63,10 @@ const initialFormData: FormData = {
   supporting_references: "",
 };
 
+// Step labels for progress indicator
+const STEP_LABELS_AUTH = ["Details", "Evidence", "Done"];
+const STEP_LABELS_GUEST = ["About You", "Details", "Evidence", "Done"];
+
 // Classification options
 const LOCALIZATIONS = [
   { value: "LP", label: "Leadership", icon: User },
@@ -64,6 +75,7 @@ const LOCALIZATIONS = [
   { value: "CP", label: "Cultural", icon: Users },
   { value: "MP", label: "Market", icon: TrendingUp },
   { value: "OP", label: "Operational", icon: Cog },
+  { value: "OTHER", label: "Other", icon: FileText },
 ];
 
 const ETIOLOGIES = [
@@ -73,6 +85,7 @@ const ETIOLOGIES = [
   { value: "ETI-R", label: "Regulatory-induced" },
   { value: "ETI-T", label: "Technology-induced" },
   { value: "ETI-S", label: "Stochastic" },
+  { value: "OTHER", label: "Other" },
 ];
 
 const COURSES = [
@@ -80,6 +93,7 @@ const COURSES = [
   { value: "CHR", label: "Chronic" },
   { value: "REL", label: "Relapsing" },
   { value: "LAT", label: "Latent" },
+  { value: "OTHER", label: "Other" },
 ];
 
 interface ContributeModalProps {
@@ -95,6 +109,50 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
     null
   );
   const [errors, setErrors] = useState<string[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Check auth and pre-fill user data when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const checkAuth = async () => {
+      setAuthLoading(true);
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // Fetch profile for display_name
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single();
+
+        const displayName =
+          profile?.display_name ||
+          user.user_metadata?.display_name ||
+          user.email?.split("@")[0] ||
+          "";
+
+        setFormData((prev) => ({
+          ...prev,
+          contributor_name: displayName,
+          contributor_email: user.email || "",
+        }));
+        setIsAuthenticated(true);
+        setStep(2); // Skip step 1 for authenticated users
+      } else {
+        setIsAuthenticated(false);
+        setStep(1);
+      }
+      setAuthLoading(false);
+    };
+
+    checkAuth();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -121,8 +179,17 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
       if (!formData.name.trim()) newErrors.push("Pathology name is required");
       if (!formData.definition.trim()) newErrors.push("Definition is required");
       if (!formData.localization) newErrors.push("Localization is required");
+      if (formData.localization === "OTHER" && !formData.localization_other.trim()) {
+        newErrors.push("Please specify the localization type");
+      }
       if (!formData.primary_etiology) newErrors.push("Primary etiology is required");
+      if (formData.primary_etiology === "OTHER" && !formData.etiology_other.trim()) {
+        newErrors.push("Please specify the etiology type");
+      }
       if (!formData.typical_course) newErrors.push("Typical course is required");
+      if (formData.typical_course === "OTHER" && !formData.course_other.trim()) {
+        newErrors.push("Please specify the course type");
+      }
     }
 
     if (currentStep === 3) {
@@ -139,7 +206,13 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
     }
   };
 
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const minStep = isAuthenticated ? 2 : 1;
+  const prevStep = () => setStep((s) => Math.max(s - 1, minStep));
+
+  // For display: authenticated users see 3 steps (1-3), others see 4 steps (1-4)
+  const totalSteps = isAuthenticated ? 3 : 4;
+  const displayStep = isAuthenticated ? step - 1 : step;
+  const stepLabels = isAuthenticated ? STEP_LABELS_AUTH : STEP_LABELS_GUEST;
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
@@ -148,12 +221,26 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
     setSubmitResult(null);
 
     try {
+      // Handle "Other" values - use the custom text if OTHER is selected
+      const localizationValue =
+        formData.localization === "OTHER"
+          ? `OTHER: ${formData.localization_other}`
+          : formData.localization;
+      const etiologyValue =
+        formData.primary_etiology === "OTHER"
+          ? `OTHER: ${formData.etiology_other}`
+          : formData.primary_etiology;
+      const courseValue =
+        formData.typical_course === "OTHER"
+          ? `OTHER: ${formData.course_other}`
+          : formData.typical_course;
+
       const proposed_data = {
         name: formData.name,
         definition: formData.definition,
-        localization: formData.localization,
-        primary_etiology: formData.primary_etiology,
-        typical_course: formData.typical_course,
+        localization: localizationValue,
+        primary_etiology: etiologyValue,
+        typical_course: courseValue,
         alternative_names: formData.alternative_names
           .split(",")
           .map((s) => s.trim())
@@ -210,9 +297,11 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
 
   const handleClose = () => {
     setFormData(initialFormData);
-    setStep(1);
+    setStep(isAuthenticated ? 2 : 1);
     setSubmitResult(null);
     setErrors([]);
+    setIsAuthenticated(false);
+    setAuthLoading(true);
     onClose();
   };
 
@@ -229,7 +318,9 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
             <h2 className="font-display text-xl font-medium text-marble-100">
               Propose a Pathology
             </h2>
-            <p className="text-sm text-slate-400">Step {step} of 4</p>
+            <p className="text-sm text-slate-400">
+              Step {displayStep} of {totalSteps}
+            </p>
           </div>
           <button
             onClick={handleClose}
@@ -242,21 +333,30 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
         {/* Progress */}
         <div className="px-6 py-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            {[1, 2, 3, 4].map((s) => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div key={s} className="flex items-center gap-2 flex-1">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
-                    s < step
-                      ? "bg-gold-500 text-slate-900"
-                      : s === step
-                        ? "bg-gold-500/20 text-gold-400 border border-gold-500"
-                        : "bg-slate-700 text-slate-500"
-                  }`}
-                >
-                  {s < step ? <Check className="w-3 h-3" /> : s}
+                <div className="flex flex-col items-center gap-1">
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+                      s < displayStep
+                        ? "bg-gold-500 text-slate-900"
+                        : s === displayStep
+                          ? "bg-gold-500/20 text-gold-400 border border-gold-500"
+                          : "bg-slate-700 text-slate-500"
+                    }`}
+                  >
+                    {s < displayStep ? <Check className="w-3 h-3" /> : s}
+                  </div>
+                  <span
+                    className={`text-xs ${s === displayStep ? "text-gold-400" : "text-slate-500"}`}
+                  >
+                    {stepLabels[s - 1]}
+                  </span>
                 </div>
-                {s < 4 && (
-                  <div className={`flex-1 h-0.5 ${s < step ? "bg-gold-500" : "bg-slate-700"}`} />
+                {s < totalSteps && (
+                  <div
+                    className={`flex-1 h-0.5 mb-5 ${s < displayStep ? "bg-gold-500" : "bg-slate-700"}`}
+                  />
                 )}
               </div>
             ))}
@@ -265,278 +365,339 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
 
         {/* Content */}
         <div className="p-6">
-          {/* Errors */}
-          {errors.length > 0 && (
-            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  {errors.map((error, i) => (
-                    <p key={i} className="text-red-400 text-sm">
-                      {error}
+          {/* Loading state */}
+          {authLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-400" />
+            </div>
+          )}
+
+          {!authLoading && (
+            <>
+              {/* Errors */}
+              {errors.length > 0 && (
+                <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      {errors.map((error, i) => (
+                        <p key={i} className="text-red-400 text-sm">
+                          {error}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Contributor Info (only for non-authenticated users) */}
+              {step === 1 && !isAuthenticated && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="w-5 h-5 text-gold-400" />
+                    <h3 className="font-display text-lg font-medium text-marble-100">About You</h3>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Your Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contributor_name}
+                      onChange={(e) => updateField("contributor_name", e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      placeholder="Dr. Jane Smith"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Email <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.contributor_email}
+                      onChange={(e) => updateField("contributor_email", e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      placeholder="jane.smith@university.edu"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Affiliation <span className="text-slate-500">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contributor_affiliation}
+                      onChange={(e) => updateField("contributor_affiliation", e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      placeholder="Stanford Graduate School of Business"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Pathology Details */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText className="w-5 h-5 text-gold-400" />
+                    <h3 className="font-display text-lg font-medium text-marble-100">
+                      Pathology Details
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Pathology Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => updateField("name", e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      placeholder="e.g., Strategic Paralysis"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Definition <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      value={formData.definition}
+                      onChange={(e) => updateField("definition", e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
+                      placeholder="A clinical definition of the organizational pathology..."
+                    />
+                  </div>
+
+                  {/* Classification Row */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                        Localization <span className="text-red-400">*</span>
+                      </label>
+                      <select
+                        value={formData.localization}
+                        onChange={(e) => updateField("localization", e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      >
+                        <option value="">Select...</option>
+                        {LOCALIZATIONS.map((loc) => (
+                          <option key={loc.value} value={loc.value}>
+                            {loc.value === "OTHER" ? loc.label : `${loc.value} - ${loc.label}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                        Etiology <span className="text-red-400">*</span>
+                      </label>
+                      <select
+                        value={formData.primary_etiology}
+                        onChange={(e) => updateField("primary_etiology", e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      >
+                        <option value="">Select...</option>
+                        {ETIOLOGIES.map((eti) => (
+                          <option key={eti.value} value={eti.value}>
+                            {eti.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                        Course <span className="text-red-400">*</span>
+                      </label>
+                      <select
+                        value={formData.typical_course}
+                        onChange={(e) => updateField("typical_course", e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                      >
+                        <option value="">Select...</option>
+                        {COURSES.map((course) => (
+                          <option key={course.value} value={course.value}>
+                            {course.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* "Other" text inputs - shown conditionally */}
+                  {(formData.localization === "OTHER" ||
+                    formData.primary_etiology === "OTHER" ||
+                    formData.typical_course === "OTHER") && (
+                    <div className="grid grid-cols-3 gap-3">
+                      {formData.localization === "OTHER" && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                            Specify Localization <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.localization_other}
+                            onChange={(e) => updateField("localization_other", e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                            placeholder="e.g., Strategic Pathology"
+                          />
+                        </div>
+                      )}
+                      {formData.primary_etiology === "OTHER" && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                            Specify Etiology <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.etiology_other}
+                            onChange={(e) => updateField("etiology_other", e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                            placeholder="e.g., Culture-induced"
+                          />
+                        </div>
+                      )}
+                      {formData.typical_course === "OTHER" && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                            Specify Course <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.course_other}
+                            onChange={(e) => updateField("course_other", e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+                            placeholder="e.g., Progressive"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Diagnostic Criteria <span className="text-slate-500">(one per line)</span>
+                    </label>
+                    <textarea
+                      value={formData.diagnostic_criteria}
+                      onChange={(e) => updateField("diagnostic_criteria", e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
+                      placeholder="Observable indicators..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Known Cases <span className="text-slate-500">(one per line)</span>
+                    </label>
+                    <textarea
+                      value={formData.known_cases}
+                      onChange={(e) => updateField("known_cases", e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
+                      placeholder="Organizations that experienced this..."
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Evidence & Rationale */}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Lightbulb className="w-5 h-5 text-gold-400" />
+                    <h3 className="font-display text-lg font-medium text-marble-100">
+                      Evidence & Rationale
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Why should this be included? <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      value={formData.rationale}
+                      onChange={(e) => updateField("rationale", e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
+                      placeholder="Explain why this pathology is distinct and important..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Supporting References <span className="text-slate-500">(one per line)</span>
+                    </label>
+                    <textarea
+                      value={formData.supporting_references}
+                      onChange={(e) => updateField("supporting_references", e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
+                      placeholder="Author, A. (Year). Title. Journal."
+                    />
+                  </div>
+
+                  {/* Summary */}
+                  <Card variant="dark" padding="sm" className="bg-slate-800/50">
+                    <p className="text-xs text-slate-500 mb-2">Summary</p>
+                    <p className="text-sm text-marble-100">{formData.name || "(no name)"}</p>
+                    <p className="text-xs text-slate-400">
+                      {formData.localization || "?"} / {formData.primary_etiology || "?"} /{" "}
+                      {formData.typical_course || "?"}
                     </p>
-                  ))}
+                  </Card>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Step 1: Contributor Info */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-gold-400" />
-                <h3 className="font-display text-lg font-medium text-marble-100">About You</h3>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Your Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.contributor_name}
-                  onChange={(e) => updateField("contributor_name", e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
-                  placeholder="Dr. Jane Smith"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Email <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.contributor_email}
-                  onChange={(e) => updateField("contributor_email", e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
-                  placeholder="jane.smith@university.edu"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Affiliation <span className="text-slate-500">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.contributor_affiliation}
-                  onChange={(e) => updateField("contributor_affiliation", e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
-                  placeholder="Stanford Graduate School of Business"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Pathology Details */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-gold-400" />
-                <h3 className="font-display text-lg font-medium text-marble-100">
-                  Pathology Details
-                </h3>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Pathology Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => updateField("name", e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors text-sm"
-                  placeholder="e.g., Strategic Paralysis"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Definition <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  value={formData.definition}
-                  onChange={(e) => updateField("definition", e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
-                  placeholder="A clinical definition of the organizational pathology..."
-                />
-              </div>
-
-              {/* Classification Row */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    Localization <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    value={formData.localization}
-                    onChange={(e) => updateField("localization", e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 focus:outline-none focus:border-gold-500 transition-colors text-sm"
+              {/* Step 4: Success */}
+              {step === 4 && submitResult?.success && (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Check className="w-8 h-8 text-green-400" />
+                  </div>
+                  <h3 className="font-display text-xl font-medium text-marble-100 mb-2">
+                    Contribution Submitted
+                  </h3>
+                  <p className="text-slate-400 text-sm mb-6">
+                    We&apos;ll review your proposal and notify you at{" "}
+                    <strong className="text-marble-100">{formData.contributor_email}</strong>
+                  </p>
+                  <button
+                    onClick={handleClose}
+                    className="px-6 py-2 bg-gold-500/20 hover:bg-gold-500/30 text-gold-400 rounded-lg transition-colors text-sm"
                   >
-                    <option value="">Select...</option>
-                    {LOCALIZATIONS.map((loc) => (
-                      <option key={loc.value} value={loc.value}>
-                        {loc.value} - {loc.label}
-                      </option>
-                    ))}
-                  </select>
+                    Close
+                  </button>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    Etiology <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    value={formData.primary_etiology}
-                    onChange={(e) => updateField("primary_etiology", e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 focus:outline-none focus:border-gold-500 transition-colors text-sm"
-                  >
-                    <option value="">Select...</option>
-                    {ETIOLOGIES.map((eti) => (
-                      <option key={eti.value} value={eti.value}>
-                        {eti.label}
-                      </option>
-                    ))}
-                  </select>
+              {/* Error after submit */}
+              {submitResult && !submitResult.success && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm">{submitResult.message}</p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    Course <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    value={formData.typical_course}
-                    onChange={(e) => updateField("typical_course", e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 focus:outline-none focus:border-gold-500 transition-colors text-sm"
-                  >
-                    <option value="">Select...</option>
-                    {COURSES.map((course) => (
-                      <option key={course.value} value={course.value}>
-                        {course.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Diagnostic Criteria <span className="text-slate-500">(one per line)</span>
-                </label>
-                <textarea
-                  value={formData.diagnostic_criteria}
-                  onChange={(e) => updateField("diagnostic_criteria", e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
-                  placeholder="Observable indicators..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Known Cases <span className="text-slate-500">(one per line)</span>
-                </label>
-                <textarea
-                  value={formData.known_cases}
-                  onChange={(e) => updateField("known_cases", e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
-                  placeholder="Organizations that experienced this..."
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Evidence & Rationale */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="w-5 h-5 text-gold-400" />
-                <h3 className="font-display text-lg font-medium text-marble-100">
-                  Evidence & Rationale
-                </h3>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Why should this be included? <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  value={formData.rationale}
-                  onChange={(e) => updateField("rationale", e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
-                  placeholder="Explain why this pathology is distinct and important..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Supporting References <span className="text-slate-500">(one per line)</span>
-                </label>
-                <textarea
-                  value={formData.supporting_references}
-                  onChange={(e) => updateField("supporting_references", e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-marble-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 transition-colors resize-none text-sm"
-                  placeholder="Author, A. (Year). Title. Journal."
-                />
-              </div>
-
-              {/* Summary */}
-              <Card variant="dark" padding="sm" className="bg-slate-800/50">
-                <p className="text-xs text-slate-500 mb-2">Summary</p>
-                <p className="text-sm text-marble-100">{formData.name || "(no name)"}</p>
-                <p className="text-xs text-slate-400">
-                  {formData.localization || "?"} / {formData.primary_etiology || "?"} /{" "}
-                  {formData.typical_course || "?"}
-                </p>
-              </Card>
-            </div>
-          )}
-
-          {/* Step 4: Success */}
-          {step === 4 && submitResult?.success && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                <Check className="w-8 h-8 text-green-400" />
-              </div>
-              <h3 className="font-display text-xl font-medium text-marble-100 mb-2">
-                Contribution Submitted
-              </h3>
-              <p className="text-slate-400 text-sm mb-6">
-                We&apos;ll review your proposal and notify you at{" "}
-                <strong className="text-marble-100">{formData.contributor_email}</strong>
-              </p>
-              <button
-                onClick={handleClose}
-                className="px-6 py-2 bg-gold-500/20 hover:bg-gold-500/30 text-gold-400 rounded-lg transition-colors text-sm"
-              >
-                Close
-              </button>
-            </div>
-          )}
-
-          {/* Error after submit */}
-          {submitResult && !submitResult.success && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-red-400 text-sm">{submitResult.message}</p>
-            </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Footer */}
-        {step < 4 && (
+        {step < 4 && !authLoading && (
           <div className="sticky bottom-0 bg-slate-900 border-t border-slate-800 px-6 py-4 flex justify-between">
             <button
               onClick={prevStep}
-              disabled={step === 1}
+              disabled={step === minStep}
               className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
-                step === 1
+                step === minStep
                   ? "text-slate-600 cursor-not-allowed"
                   : "text-slate-400 hover:text-marble-100"
               }`}
