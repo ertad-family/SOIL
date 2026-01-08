@@ -244,12 +244,14 @@ interface ResearchHubNavigationSectionProps {
   publicationsCount: number | null;
   researchersCount: number | null;
   datasetsCount: number | null;
+  pathologyCount: number | null;
 }
 
 function ResearchHubNavigationSection({
   publicationsCount,
   researchersCount,
   datasetsCount,
+  pathologyCount,
 }: ResearchHubNavigationSectionProps) {
   const resources = [
     {
@@ -293,8 +295,8 @@ function ResearchHubNavigationSection({
       description:
         "Systematic classification of organizational diseases — ICD analog for organizations. SOIL-PC v0.1.",
       href: "/research/pathology",
-      available: false,
-      stats: "Coming Q1 2026",
+      available: true,
+      stats: pathologyCount !== null ? `${pathologyCount} pathologies` : "Loading...",
     },
     {
       icon: <FileQuestion className="w-7 h-7" />,
@@ -1157,6 +1159,7 @@ export default function ResearchPage() {
   const [publicationsCount, setPublicationsCount] = useState<number | null>(null);
   const [researchersCount, setResearchersCount] = useState<number | null>(null);
   const [datasetsCount, setDatasetsCount] = useState<number | null>(null);
+  const [pathologyCount, setPathologyCount] = useState<number | null>(null);
 
   useEffect(() => {
     // Fetch publications count from Zotero API
@@ -1188,6 +1191,16 @@ export default function ResearchPage() {
         }
       })
       .catch(console.error);
+
+    // Fetch pathology count
+    fetch("/api/pathologies?action=stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.total === "number") {
+          setPathologyCount(data.total);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   return (
@@ -1197,6 +1210,7 @@ export default function ResearchPage() {
         publicationsCount={publicationsCount}
         researchersCount={researchersCount}
         datasetsCount={datasetsCount}
+        pathologyCount={pathologyCount}
       />
       <ResearchGapSection />
       <WhatWeAreBuildingSection />
