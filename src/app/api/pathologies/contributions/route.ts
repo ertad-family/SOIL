@@ -57,18 +57,27 @@ function validateProposedData(
         return `Missing required field: ${field}`;
       }
     }
-    // Validate enums
+    // Validate enums (allow "OTHER: custom text" format for proposals)
+    const localization = data.localization as string;
     const validLocalizations = ["LP", "SP", "FP", "CP", "MP", "OP"];
-    if (!validLocalizations.includes(data.localization as string)) {
-      return `Invalid localization. Must be one of: ${validLocalizations.join(", ")}`;
+    const isValidLocalization =
+      validLocalizations.includes(localization) || localization.startsWith("OTHER:");
+    if (!isValidLocalization) {
+      return `Invalid localization. Must be one of: ${validLocalizations.join(", ")} or "OTHER: description"`;
     }
+
+    const etiology = data.primary_etiology as string;
     const validEtiologies = ["ETI-F", "ETI-M", "ETI-C", "ETI-R", "ETI-T", "ETI-S"];
-    if (!validEtiologies.includes(data.primary_etiology as string)) {
-      return `Invalid etiology. Must be one of: ${validEtiologies.join(", ")}`;
+    const isValidEtiology = validEtiologies.includes(etiology) || etiology.startsWith("OTHER:");
+    if (!isValidEtiology) {
+      return `Invalid etiology. Must be one of: ${validEtiologies.join(", ")} or "OTHER: description"`;
     }
+
+    const course = data.typical_course as string;
     const validCourses = ["ACU", "CHR", "REL", "LAT"];
-    if (!validCourses.includes(data.typical_course as string)) {
-      return `Invalid course. Must be one of: ${validCourses.join(", ")}`;
+    const isValidCourse = validCourses.includes(course) || course.startsWith("OTHER:");
+    if (!isValidCourse) {
+      return `Invalid course. Must be one of: ${validCourses.join(", ")} or "OTHER: description"`;
     }
   }
 
