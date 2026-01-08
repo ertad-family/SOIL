@@ -379,6 +379,7 @@ export async function POST() {
     console.log("Chaining OpenAlex sync for new researchers...");
     let openalexSummary = null;
     let mortalitySummary = null;
+    let pathologySummary = null;
 
     try {
       const headersList = await headers();
@@ -408,6 +409,18 @@ export async function POST() {
       } else {
         console.error("Mortality Activity sync failed:", await mortalityResponse.text());
       }
+
+      // Step 11: Chain Pathology citation sync
+      console.log("Chaining Pathology citation sync...");
+      const pathologyResponse = await fetch(`${baseUrl}/api/pathologies/sync-from-zotero`, {
+        method: "POST",
+      });
+      if (pathologyResponse.ok) {
+        pathologySummary = await pathologyResponse.json();
+        console.log("Pathology citation sync completed:", pathologySummary.summary);
+      } else {
+        console.error("Pathology citation sync failed:", await pathologyResponse.text());
+      }
     } catch (chainError) {
       console.error("Error in chained syncs:", chainError);
     }
@@ -426,6 +439,7 @@ export async function POST() {
       chainedSyncs: {
         openalex: openalexSummary?.summary || null,
         mortalityActivity: mortalitySummary?.summary || null,
+        pathologyCitations: pathologySummary?.summary || null,
       },
     });
   } catch (error) {
