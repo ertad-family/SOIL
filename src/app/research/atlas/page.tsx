@@ -5,7 +5,18 @@ import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ExternalLink, Search, Users, Filter, Loader2, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Search,
+  Users,
+  Filter,
+  Loader2,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Activity,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   ResearcherNetworkGraph,
@@ -33,6 +44,7 @@ interface Researcher {
   openalex_cited_by_count: number;
   university_id: string | null;
   parent_university_name: string | null; // For clustering sub-units with parent
+  mortality_activity_score: number | null; // 0-100, null if not analyzed
 }
 
 interface Connection {
@@ -144,6 +156,9 @@ export default function AtlasPage() {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
 
+  // Show inactive researchers toggle (those with mortality_activity_score = 0)
+  const [showInactive, setShowInactive] = useState(false);
+
   // Multi-select disciplines for legend filtering
   const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(new Set());
 
@@ -151,6 +166,7 @@ export default function AtlasPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [analyzingActivity, setAnalyzingActivity] = useState(false);
 
   // Fetch researchers with connections
   const fetchResearchers = useCallback(async () => {
@@ -158,7 +174,11 @@ export default function AtlasPage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/researchers?include=connections");
+      const params = new URLSearchParams({ include: "connections" });
+      if (showInactive) {
+        params.set("showInactive", "true");
+      }
+      const response = await fetch(`/api/researchers?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch researchers");
 
       const data: ResearchersResponse = await response.json();
@@ -172,7 +192,7 @@ export default function AtlasPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showInactive]);
 
   // Initial fetch
   useEffect(() => {
@@ -225,6 +245,47 @@ export default function AtlasPage() {
       });
     } finally {
       setSyncing(false);
+    }
+  };
+
+  // Analyze mortality activity with Gemini
+  const handleAnalyzeActivity = async () => {
+    setAnalyzingActivity(true);
+    setSyncResult(null);
+
+    try {
+      const response = await fetch("/api/researchers/sync-mortality-activity", {
+        method: "POST",
+      });
+
+      const result = await response.json();
+      setSyncResult({
+        success: result.success,
+        summary: result.summary
+          ? {
+              totalItems: result.summary.total,
+              uniqueAuthors: result.summary.analyzed,
+              newResearchers: 0,
+              updatedResearchers: result.summary.analyzed,
+              deletedResearchers: 0,
+              coauthorConnections: 0,
+              errors: result.summary.errors,
+            }
+          : undefined,
+        error: result.error,
+      });
+
+      // Refresh data if analysis was successful
+      if (result.success) {
+        await fetchResearchers();
+      }
+    } catch (err) {
+      setSyncResult({
+        success: false,
+        error: err instanceof Error ? err.message : "Activity analysis failed",
+      });
+    } finally {
+      setAnalyzingActivity(false);
     }
   };
 
@@ -393,15 +454,56 @@ export default function AtlasPage() {
                 Filter
               </Button>
 
+              {/* Show Inactive Toggle */}
+              <Button
+                variant="dark-secondary"
+                size="sm"
+                onClick={() => setShowInactive(!showInactive)}
+                title={
+                  showInactive
+                    ? "Hide inactive researchers"
+                    : "Show researchers who pivoted away from mortality research"
+                }
+              >
+                {showInactive ? (
+                  <EyeOff className="w-4 h-4 mr-2" />
+                ) : (
+                  <Eye className="w-4 h-4 mr-2" />
+                )}
+                {showInactive ? "Hide Inactive" : "Show Inactive"}
+              </Button>
+
               {/* Admin Sync Button */}
               {isAdmin && (
-                <Button variant="dark-secondary" size="sm" onClick={handleSync} disabled={syncing}>
+                <Button
+                  variant="dark-secondary"
+                  size="sm"
+                  onClick={handleSync}
+                  disabled={syncing || analyzingActivity}
+                >
                   {syncing ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <RefreshCw className="w-4 h-4 mr-2" />
                   )}
                   Sync
+                </Button>
+              )}
+
+              {/* Admin Analyze Activity Button */}
+              {isAdmin && (
+                <Button
+                  variant="dark-secondary"
+                  size="sm"
+                  onClick={handleAnalyzeActivity}
+                  disabled={syncing || analyzingActivity}
+                >
+                  {analyzingActivity ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Activity className="w-4 h-4 mr-2" />
+                  )}
+                  Analyze
                 </Button>
               )}
             </div>
