@@ -163,6 +163,16 @@ export function EditPathologyModal({ isOpen, onClose, pathology }: EditPathology
     checkAuth();
   }, [isOpen]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   // Pre-fill form with pathology data when modal opens
   useEffect(() => {
     if (isOpen && pathology) {

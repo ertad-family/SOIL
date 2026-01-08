@@ -154,6 +154,16 @@ export function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
     checkAuth();
   }, [isOpen]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const updateField = (field: keyof FormData, value: string) => {
