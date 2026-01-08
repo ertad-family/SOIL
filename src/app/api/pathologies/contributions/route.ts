@@ -137,23 +137,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: dataError }, { status: 400 });
     }
 
-    // Insert contribution
-    const { data, error } = await supabase
-      .from("pathology_contributions")
-      .insert({
-        contribution_type: body.contribution_type,
-        target_pathology_id: body.target_pathology_id || null,
-        contributor_name: body.contributor_name,
-        contributor_email: body.contributor_email,
-        contributor_affiliation: body.contributor_affiliation || null,
-        proposed_data: body.proposed_data,
-        rationale: body.rationale,
-        supporting_references: body.supporting_references || [],
-        zotero_item_keys: body.zotero_item_keys || [],
-        status: "pending",
-      })
-      .select()
-      .single();
+    // Insert contribution (don't use .select() as anon users can't read their own row due to RLS)
+    const { error } = await supabase.from("pathology_contributions").insert({
+      contribution_type: body.contribution_type,
+      target_pathology_id: body.target_pathology_id || null,
+      contributor_name: body.contributor_name,
+      contributor_email: body.contributor_email,
+      contributor_affiliation: body.contributor_affiliation || null,
+      proposed_data: body.proposed_data,
+      rationale: body.rationale,
+      supporting_references: body.supporting_references || [],
+      zotero_item_keys: body.zotero_item_keys || [],
+      status: "pending",
+    });
 
     if (error) {
       console.error("Error creating contribution:", error);
@@ -163,7 +159,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        contribution: data,
         message: "Thank you for your contribution! It will be reviewed by our maintainers.",
       },
       { status: 201 }
