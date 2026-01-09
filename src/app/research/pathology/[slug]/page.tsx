@@ -7,6 +7,92 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Zotero API config for server-side fetching
+const ZOTERO_API_KEY = process.env.ZOTERO_API_KEY;
+const ZOTERO_GROUP_ID = process.env.ZOTERO_GROUP_ID || "6367540";
+
+interface ZoteroReference {
+  key: string;
+  title: string;
+  authors: string;
+  year: string | null;
+  url: string | null;
+  doi: string | null;
+}
+
+interface ZoteroCreator {
+  creatorType: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+}
+
+interface ZoteroItemData {
+  key: string;
+  title: string;
+  creators: ZoteroCreator[];
+  date?: string;
+  DOI?: string;
+  url?: string;
+}
+
+async function fetchZoteroReferences(keys: string[]): Promise<ZoteroReference[]> {
+  if (!ZOTERO_API_KEY || keys.length === 0) {
+    return [];
+  }
+
+  const references: ZoteroReference[] = [];
+
+  // Fetch items by key - batch request
+  const itemKeys = keys.join(",");
+  try {
+    const response = await fetch(
+      `https://api.zotero.org/groups/${ZOTERO_GROUP_ID}/items?itemKey=${itemKeys}&format=json`,
+      {
+        headers: {
+          "Zotero-API-Key": ZOTERO_API_KEY,
+          "Zotero-API-Version": "3",
+        },
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Failed to fetch Zotero items:", response.status);
+      return [];
+    }
+
+    const items: { key: string; data: ZoteroItemData }[] = await response.json();
+
+    for (const item of items) {
+      const data = item.data;
+
+      // Format authors
+      const authors =
+        data.creators
+          ?.filter((c) => c.creatorType === "author")
+          .map((c) => (c.name ? c.name : `${c.lastName}, ${c.firstName || ""}`.trim()))
+          .join("; ") || "";
+
+      // Extract year from date
+      const year = data.date?.match(/\d{4}/)?.[0] || null;
+
+      references.push({
+        key: item.key,
+        title: data.title || "Untitled",
+        authors,
+        year,
+        url: data.url || null,
+        doi: data.DOI || null,
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching Zotero references:", error);
+  }
+
+  return references;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
@@ -129,12 +215,19 @@ export default async function PathologyPage({ params }: PageProps) {
     }
   }
 
+  // Fetch Zotero references for literature_zotero_keys if present
+  const literatureReferences =
+    pathology.literature_zotero_keys && pathology.literature_zotero_keys.length > 0
+      ? await fetchZoteroReferences(pathology.literature_zotero_keys)
+      : [];
+
   return (
     <PathologyDetail
       pathology={pathology}
       prevPathology={prevPathology}
       nextPathology={nextPathology}
       enumLabels={enumLabels}
+      literatureReferences={literatureReferences}
     />
   );
 }

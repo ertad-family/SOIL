@@ -63,6 +63,7 @@ interface Pathology {
   prognosis: string | null;
   known_cases: string[];
   literature_references: string[];
+  literature_zotero_keys: string[] | null;
   key_authors: string[];
   related_lexicon_terms: string[];
   // Primary source citation fields
@@ -92,11 +93,22 @@ interface EnumLabels {
   functionalImpairments: Record<string, string>;
 }
 
+// Resolved Zotero reference for literature
+interface ZoteroReference {
+  key: string;
+  title: string;
+  authors: string;
+  year: string | null;
+  url: string | null;
+  doi: string | null;
+}
+
 interface PathologyDetailProps {
   pathology: Pathology;
   prevPathology: NavPathology | null;
   nextPathology: NavPathology | null;
   enumLabels: EnumLabels;
+  literatureReferences?: ZoteroReference[];
 }
 
 // Helper functions (icons stay hardcoded - can't dynamically import React components)
@@ -207,6 +219,7 @@ export function PathologyDetail({
   prevPathology,
   nextPathology,
   enumLabels,
+  literatureReferences = [],
 }: PathologyDetailProps) {
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -443,8 +456,51 @@ export function PathologyDetail({
                       </div>
                     )}
 
-                    {/* Additional References */}
-                    {pathology.literature_references &&
+                    {/* Additional References - Zotero-linked */}
+                    {literatureReferences.length > 0 && (
+                      <div>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
+                          Additional Sources
+                        </p>
+                        <ol className="list-decimal list-inside space-y-2 text-slate-300 text-sm">
+                          {literatureReferences.map((ref) => (
+                            <li key={ref.key} className="leading-relaxed pl-2">
+                              {ref.authors && <span>{ref.authors} </span>}
+                              {ref.year && <span>({ref.year})</span>}
+                              {ref.authors || ref.year ? " - " : ""}
+                              {ref.url ? (
+                                <a
+                                  href={ref.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gold-400 hover:text-gold-300 hover:underline"
+                                >
+                                  {ref.title}
+                                </a>
+                              ) : (
+                                <span className="italic">{ref.title}</span>
+                              )}
+                              {ref.doi && (
+                                <span className="text-slate-500 ml-2">
+                                  DOI:{" "}
+                                  <a
+                                    href={`https://doi.org/${ref.doi}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-gold-400"
+                                  >
+                                    {ref.doi}
+                                  </a>
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                    {/* Fallback to plain text references if no Zotero refs */}
+                    {literatureReferences.length === 0 &&
+                      pathology.literature_references &&
                       pathology.literature_references.length > 0 && (
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
