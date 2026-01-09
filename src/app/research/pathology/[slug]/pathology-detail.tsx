@@ -63,7 +63,6 @@ interface Pathology {
   prognosis: string | null;
   known_cases: string[];
   literature_references: string[];
-  literature_zotero_keys: string[] | null;
   key_authors: string[];
   related_lexicon_terms: string[];
   // Primary source citation fields
@@ -93,12 +92,12 @@ interface EnumLabels {
   functionalImpairments: Record<string, string>;
 }
 
-// Resolved Zotero reference for literature
+// Resolved Zotero reference for literature (from zotero_items cache)
 interface ZoteroReference {
   key: string;
   title: string;
   authors: string;
-  year: string | null;
+  year: number | null;
   url: string | null;
   doi: string | null;
 }
