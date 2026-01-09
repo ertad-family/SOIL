@@ -71,26 +71,55 @@ export default async function PathologyPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: pathology, error } = await supabase
-    .from("pathology_classification")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  // Fetch pathology data and enum values in parallel
+  const [pathologyResult, enumsResult, allPathologiesResult] = await Promise.all([
+    supabase.from("pathology_classification").select("*").eq("slug", slug).single(),
+    supabase.from("pathology_enum_values").select("*").order("sort_order"),
+    supabase
+      .from("pathology_classification")
+      .select("slug, code, name")
+      .order("code", { ascending: true }),
+  ]);
+
+  const { data: pathology, error } = pathologyResult;
 
   if (error || !pathology) {
     notFound();
   }
 
-  // Fetch adjacent pathologies for navigation
-  const { data: allPathologies } = await supabase
-    .from("pathology_classification")
-    .select("slug, code, name")
-    .order("code", { ascending: true });
+  // Convert enum values to lookup maps
+  const enumLabels = {
+    localizations: {} as Record<string, string>,
+    etiologies: {} as Record<string, string>,
+    courses: {} as Record<string, string>,
+    functionalImpairments: {} as Record<string, string>,
+  };
 
+  if (enumsResult.data) {
+    for (const item of enumsResult.data) {
+      switch (item.enum_type) {
+        case "localization":
+          enumLabels.localizations[item.value] = item.label;
+          break;
+        case "etiology":
+          enumLabels.etiologies[item.value] = item.label;
+          break;
+        case "course":
+          enumLabels.courses[item.value] = item.label;
+          break;
+        case "functional_impairment":
+          enumLabels.functionalImpairments[item.value] = item.label;
+          break;
+      }
+    }
+  }
+
+  // Calculate adjacent pathologies for navigation
   let prevPathology = null;
   let nextPathology = null;
 
-  if (allPathologies) {
+  if (allPathologiesResult.data) {
+    const allPathologies = allPathologiesResult.data;
     const currentIndex = allPathologies.findIndex((p) => p.slug === slug);
     if (currentIndex > 0) {
       prevPathology = allPathologies[currentIndex - 1];
@@ -105,6 +134,7 @@ export default async function PathologyPage({ params }: PageProps) {
       pathology={pathology}
       prevPathology={prevPathology}
       nextPathology={nextPathology}
+      enumLabels={enumLabels}
     />
   );
 }

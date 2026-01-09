@@ -87,6 +87,12 @@ const ETIOLOGIES = [
   { value: "ETI-R", label: "Regulatory-induced", description: "Caused by regulatory changes" },
   { value: "ETI-T", label: "Technology-induced", description: "Caused by tech disruption" },
   { value: "ETI-S", label: "Stochastic", description: "Random/bad luck" },
+  {
+    value: "ETI-I",
+    label: "Iatrogenic",
+    description: "Success-induced (own success becomes weakness)",
+  },
+  { value: "ETI-E", label: "External", description: "Shock/trauma from external events" },
 ];
 
 const COURSES = [

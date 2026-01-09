@@ -30,7 +30,15 @@ import { EditPathologyModal } from "./edit-pathology-modal";
 
 // Types
 type PathologyLocalization = "LP" | "SP" | "FP" | "CP" | "MP" | "OP";
-type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S" | "ETI-I";
+type PathologyEtiology =
+  | "ETI-F"
+  | "ETI-M"
+  | "ETI-C"
+  | "ETI-R"
+  | "ETI-T"
+  | "ETI-S"
+  | "ETI-I"
+  | "ETI-E";
 type PathologyCourse = "ACU" | "CHR" | "REL" | "LAT";
 type PathologyFunctionalImpairment = "SEN" | "PER" | "COG" | "AFF" | "EXE" | "VOL" | "MEM" | "IDE";
 
@@ -77,52 +85,22 @@ interface NavPathology {
   name: string;
 }
 
+interface EnumLabels {
+  localizations: Record<string, string>;
+  etiologies: Record<string, string>;
+  courses: Record<string, string>;
+  functionalImpairments: Record<string, string>;
+}
+
 interface PathologyDetailProps {
   pathology: Pathology;
   prevPathology: NavPathology | null;
   nextPathology: NavPathology | null;
+  enumLabels: EnumLabels;
 }
 
-// Display labels
-const LOCALIZATION_LABELS: Record<PathologyLocalization, string> = {
-  LP: "Leadership Pathology",
-  SP: "Structural Pathology",
-  FP: "Financial Pathology",
-  CP: "Cultural Pathology",
-  MP: "Market Pathology",
-  OP: "Operational Pathology",
-};
-
-const ETIOLOGY_LABELS: Record<PathologyEtiology, string> = {
-  "ETI-F": "Founder-induced",
-  "ETI-M": "Market-induced",
-  "ETI-C": "Competition-induced",
-  "ETI-R": "Regulatory-induced",
-  "ETI-T": "Technology-induced",
-  "ETI-S": "Stochastic (random/bad luck)",
-  "ETI-I": "Iatrogenic (success-induced)",
-};
-
-const COURSE_LABELS: Record<PathologyCourse, string> = {
-  ACU: "Acute (sudden onset)",
-  CHR: "Chronic (slow decline)",
-  REL: "Relapsing (crisis cycles)",
-  LAT: "Latent (hidden, manifests later)",
-};
-
-const FUNCTIONAL_IMPAIRMENT_LABELS: Record<PathologyFunctionalImpairment, string> = {
-  SEN: "Sensing (signal detection)",
-  PER: "Perception (signal interpretation)",
-  COG: "Cognition (reasoning)",
-  AFF: "Affect (emotional/cultural)",
-  EXE: "Executive (planning/coordination)",
-  VOL: "Volition (will/motivation)",
-  MEM: "Memory (learning/retention)",
-  IDE: "Identity (purpose/self-understanding)",
-};
-
-// Helper functions
-function getLocalizationIcon(localization: PathologyLocalization) {
+// Helper functions (icons stay hardcoded - can't dynamically import React components)
+function getLocalizationIcon(localization: string) {
   const iconClass = "w-5 h-5";
   switch (localization) {
     case "LP":
@@ -142,7 +120,7 @@ function getLocalizationIcon(localization: PathologyLocalization) {
   }
 }
 
-function getCourseIcon(course: PathologyCourse) {
+function getCourseIcon(course: string) {
   const iconClass = "w-4 h-4";
   switch (course) {
     case "ACU":
@@ -224,7 +202,12 @@ function ListSection({
   );
 }
 
-export function PathologyDetail({ pathology, prevPathology, nextPathology }: PathologyDetailProps) {
+export function PathologyDetail({
+  pathology,
+  prevPathology,
+  nextPathology,
+  enumLabels,
+}: PathologyDetailProps) {
   const [showEditModal, setShowEditModal] = useState(false);
 
   return (
@@ -250,7 +233,7 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
                 className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded border ${getCourseColor(pathology.typical_course)}`}
               >
                 {getCourseIcon(pathology.typical_course)}
-                {COURSE_LABELS[pathology.typical_course]}
+                {enumLabels.courses[pathology.typical_course] || pathology.typical_course}
               </span>
             </div>
 
@@ -280,10 +263,10 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
             <div className="flex flex-wrap gap-3 mb-8">
               <span className="flex items-center gap-2 text-sm px-3 py-1.5 rounded bg-slate-700/50 text-slate-300">
                 {getLocalizationIcon(pathology.localization)}
-                {LOCALIZATION_LABELS[pathology.localization]}
+                {enumLabels.localizations[pathology.localization] || pathology.localization}
               </span>
               <span className="text-sm px-3 py-1.5 rounded bg-slate-700/50 text-slate-300">
-                {ETIOLOGY_LABELS[pathology.primary_etiology]}
+                {enumLabels.etiologies[pathology.primary_etiology] || pathology.primary_etiology}
               </span>
             </div>
 
@@ -514,24 +497,28 @@ export function PathologyDetail({ pathology, prevPathology, nextPathology }: Pat
                     <div>
                       <dt className="text-slate-500">Localization</dt>
                       <dd className="text-slate-300">
-                        {LOCALIZATION_LABELS[pathology.localization]}
+                        {enumLabels.localizations[pathology.localization] || pathology.localization}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-slate-500">Primary Etiology</dt>
                       <dd className="text-slate-300">
-                        {ETIOLOGY_LABELS[pathology.primary_etiology]}
+                        {enumLabels.etiologies[pathology.primary_etiology] ||
+                          pathology.primary_etiology}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-slate-500">Typical Course</dt>
-                      <dd className="text-slate-300">{COURSE_LABELS[pathology.typical_course]}</dd>
+                      <dd className="text-slate-300">
+                        {enumLabels.courses[pathology.typical_course] || pathology.typical_course}
+                      </dd>
                     </div>
                     {pathology.functional_impairment && (
                       <div>
                         <dt className="text-slate-500">Functional Impairment</dt>
                         <dd className="text-slate-300">
-                          {FUNCTIONAL_IMPAIRMENT_LABELS[pathology.functional_impairment]}
+                          {enumLabels.functionalImpairments[pathology.functional_impairment] ||
+                            pathology.functional_impairment}
                         </dd>
                       </div>
                     )}

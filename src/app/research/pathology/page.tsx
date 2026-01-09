@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,6 @@ import {
 import { ContributeModal } from "./contribute-modal";
 
 // Types
-type PathologyLocalization = "LP" | "SP" | "FP" | "CP" | "MP" | "OP";
-type PathologyEtiology = "ETI-F" | "ETI-M" | "ETI-C" | "ETI-R" | "ETI-T" | "ETI-S" | "ETI-I";
-type PathologyCourse = "ACU" | "CHR" | "REL" | "LAT";
-
 interface Pathology {
   id: string;
   code: string;
@@ -40,50 +36,58 @@ interface Pathology {
   name: string;
   alternative_names: string[];
   definition: string;
-  localization: PathologyLocalization;
-  primary_etiology: PathologyEtiology;
-  typical_course: PathologyCourse;
+  localization: string;
+  primary_etiology: string;
+  typical_course: string;
   key_authors: string[];
+  // Additional fields for extended search
+  diagnostic_criteria: string[];
+  symptoms: string[];
+  risk_factors: string[];
+  known_cases: string[];
+  course_description: string | null;
+  etiology_explanation: string | null;
+  prognosis: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Available filter options (for dependent filtering)
-interface AvailableFilterOptions {
-  localizations: { value: PathologyLocalization; label: string; count: number }[];
-  etiologies: { value: PathologyEtiology; label: string; count: number }[];
-  courses: { value: PathologyCourse; label: string; count: number }[];
+// Helper to search within array fields
+function searchInArray(arr: string[] | null | undefined, query: string): boolean {
+  if (!arr) return false;
+  return arr.some((item) => item.toLowerCase().includes(query));
 }
 
-// Display labels
-const LOCALIZATION_LABELS: Record<PathologyLocalization, string> = {
-  LP: "Leadership",
-  SP: "Structural",
-  FP: "Financial",
-  CP: "Cultural",
-  MP: "Market",
-  OP: "Operational",
-};
+// Helper to search within string field
+function searchInString(str: string | null | undefined, query: string): boolean {
+  if (!str) return false;
+  return str.toLowerCase().includes(query);
+}
 
-const ETIOLOGY_LABELS: Record<PathologyEtiology, string> = {
-  "ETI-F": "Founder-induced",
-  "ETI-M": "Market-induced",
-  "ETI-C": "Competition-induced",
-  "ETI-R": "Regulatory-induced",
-  "ETI-T": "Technology-induced",
-  "ETI-S": "Stochastic",
-  "ETI-I": "Iatrogenic",
-};
+// Enum values from API
+interface EnumValue {
+  value: string;
+  label: string;
+  description: string | null;
+  icon_name: string | null;
+}
 
-const COURSE_LABELS: Record<PathologyCourse, string> = {
-  ACU: "Acute",
-  CHR: "Chronic",
-  REL: "Relapsing",
-  LAT: "Latent",
-};
+interface EnumValues {
+  localizations: EnumValue[];
+  etiologies: EnumValue[];
+  courses: EnumValue[];
+  functionalImpairments: EnumValue[];
+}
 
-// Helper function to get localization icon
-function getLocalizationIcon(localization: PathologyLocalization) {
+// Available filter options (for dependent filtering)
+interface AvailableFilterOptions {
+  localizations: { value: string; label: string; count: number }[];
+  etiologies: { value: string; label: string; count: number }[];
+  courses: { value: string; label: string; count: number }[];
+}
+
+// Helper function to get localization icon (icons stay hardcoded - can't dynamically import React components)
+function getLocalizationIcon(localization: string) {
   switch (localization) {
     case "LP":
       return <User className="w-4 h-4" />;
@@ -103,44 +107,55 @@ function getLocalizationIcon(localization: PathologyLocalization) {
 }
 
 // Helper function to get course icon and color
-function getCourseInfo(course: PathologyCourse) {
+function getCourseInfo(course: string, courseLabel?: string) {
   switch (course) {
     case "ACU":
       return {
         icon: <Zap className="w-3 h-3" />,
         color: "bg-red-500/20 text-red-400",
-        label: "Acute",
+        label: courseLabel || "Acute",
       };
     case "CHR":
       return {
         icon: <Clock className="w-3 h-3" />,
         color: "bg-yellow-500/20 text-yellow-400",
-        label: "Chronic",
+        label: courseLabel || "Chronic",
       };
     case "REL":
       return {
         icon: <RefreshCw className="w-3 h-3" />,
         color: "bg-orange-500/20 text-orange-400",
-        label: "Relapsing",
+        label: courseLabel || "Relapsing",
       };
     case "LAT":
       return {
         icon: <EyeOff className="w-3 h-3" />,
         color: "bg-purple-500/20 text-purple-400",
-        label: "Latent",
+        label: courseLabel || "Latent",
       };
     default:
       return {
         icon: <Microscope className="w-3 h-3" />,
         color: "bg-slate-500/20 text-slate-400",
-        label: course,
+        label: courseLabel || course,
       };
   }
 }
 
 // Pathology Card Component
-function PathologyCard({ pathology }: { pathology: Pathology }) {
-  const courseInfo = getCourseInfo(pathology.typical_course);
+function PathologyCard({
+  pathology,
+  enumLabels,
+}: {
+  pathology: Pathology;
+  enumLabels: {
+    localizations: Record<string, string>;
+    etiologies: Record<string, string>;
+    courses: Record<string, string>;
+  };
+}) {
+  const courseLabel = enumLabels.courses[pathology.typical_course];
+  const courseInfo = getCourseInfo(pathology.typical_course, courseLabel);
 
   return (
     <Link href={`/research/pathology/${pathology.slug}`}>
@@ -176,10 +191,10 @@ function PathologyCard({ pathology }: { pathology: Pathology }) {
             {/* Classification badges */}
             <div className="flex flex-wrap gap-2 mb-3">
               <span className="text-xs px-2 py-0.5 rounded bg-slate-700/50 text-slate-400">
-                {LOCALIZATION_LABELS[pathology.localization]}
+                {enumLabels.localizations[pathology.localization] || pathology.localization}
               </span>
               <span className="text-xs px-2 py-0.5 rounded bg-slate-700/50 text-slate-400">
-                {ETIOLOGY_LABELS[pathology.primary_etiology]}
+                {enumLabels.etiologies[pathology.primary_etiology] || pathology.primary_etiology}
               </span>
             </div>
 
@@ -211,6 +226,7 @@ function FilterSidebar({
   onLocalizationChange,
   onEtiologyChange,
   onCourseChange,
+  enumLabels,
 }: {
   availableOptions: AvailableFilterOptions;
   selectedLocalization: string;
@@ -219,6 +235,11 @@ function FilterSidebar({
   onLocalizationChange: (localization: string) => void;
   onEtiologyChange: (etiology: string) => void;
   onCourseChange: (course: string) => void;
+  enumLabels: {
+    localizations: Record<string, string>;
+    etiologies: Record<string, string>;
+    courses: Record<string, string>;
+  };
 }) {
   // State for collapsible sections - folded by default
   const [localizationOpen, setLocalizationOpen] = useState(false);
@@ -237,7 +258,7 @@ function FilterSidebar({
           <span className="flex-1 text-left">Localization</span>
           {selectedLocalization && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400">
-              {LOCALIZATION_LABELS[selectedLocalization as PathologyLocalization]}
+              {enumLabels.localizations[selectedLocalization] || selectedLocalization}
             </span>
           )}
           <ChevronDown
@@ -285,7 +306,7 @@ function FilterSidebar({
           <span className="flex-1 text-left">Etiology</span>
           {selectedEtiology && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400">
-              {ETIOLOGY_LABELS[selectedEtiology as PathologyEtiology]}
+              {enumLabels.etiologies[selectedEtiology] || selectedEtiology}
             </span>
           )}
           <ChevronDown
@@ -332,7 +353,7 @@ function FilterSidebar({
           <span className="flex-1 text-left">Course</span>
           {selectedCourse && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400">
-              {COURSE_LABELS[selectedCourse as PathologyCourse]}
+              {enumLabels.courses[selectedCourse] || selectedCourse}
             </span>
           )}
           <ChevronDown
@@ -352,7 +373,7 @@ function FilterSidebar({
               All Courses
             </button>
             {availableOptions.courses.map((crs) => {
-              const courseInfo = getCourseInfo(crs.value);
+              const courseInfo = getCourseInfo(crs.value, crs.label);
               return (
                 <button
                   key={crs.value}
@@ -382,7 +403,12 @@ function calculateAvailableOptions(
   selectedLocalization: string,
   selectedEtiology: string,
   selectedCourse: string,
-  searchQuery: string
+  searchQuery: string,
+  enumLabels: {
+    localizations: Record<string, string>;
+    etiologies: Record<string, string>;
+    courses: Record<string, string>;
+  }
 ): AvailableFilterOptions {
   // Helper to filter pathologies by specific criteria (excluding one filter)
   const filterPathologies = (
@@ -428,8 +454,8 @@ function calculateAvailableOptions(
   });
   const localizations = Object.entries(localizationCounts)
     .map(([value, count]) => ({
-      value: value as PathologyLocalization,
-      label: LOCALIZATION_LABELS[value as PathologyLocalization],
+      value,
+      label: enumLabels.localizations[value] || value,
       count,
     }))
     .sort((a, b) => b.count - a.count);
@@ -442,8 +468,8 @@ function calculateAvailableOptions(
   });
   const etiologies = Object.entries(etiologyCounts)
     .map(([value, count]) => ({
-      value: value as PathologyEtiology,
-      label: ETIOLOGY_LABELS[value as PathologyEtiology],
+      value,
+      label: enumLabels.etiologies[value] || value,
       count,
     }))
     .sort((a, b) => b.count - a.count);
@@ -456,8 +482,8 @@ function calculateAvailableOptions(
   });
   const courses = Object.entries(courseCounts)
     .map(([value, count]) => ({
-      value: value as PathologyCourse,
-      label: COURSE_LABELS[value as PathologyCourse],
+      value,
+      label: enumLabels.courses[value] || value,
       count,
     }))
     .sort((a, b) => b.count - a.count);
@@ -468,6 +494,7 @@ function calculateAvailableOptions(
 // Main Page Component
 export default function PathologyPage() {
   const [allPathologies, setAllPathologies] = useState<Pathology[]>([]);
+  const [enumValues, setEnumValues] = useState<EnumValues | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -479,18 +506,45 @@ export default function PathologyPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showContributeModal, setShowContributeModal] = useState(false);
 
-  // Fetch all pathologies once
+  // Convert enum arrays to lookup maps
+  const enumLabels = useMemo(() => {
+    if (!enumValues) {
+      return {
+        localizations: {} as Record<string, string>,
+        etiologies: {} as Record<string, string>,
+        courses: {} as Record<string, string>,
+      };
+    }
+    return {
+      localizations: Object.fromEntries(enumValues.localizations.map((e) => [e.value, e.label])),
+      etiologies: Object.fromEntries(enumValues.etiologies.map((e) => [e.value, e.label])),
+      courses: Object.fromEntries(enumValues.courses.map((e) => [e.value, e.label])),
+    };
+  }, [enumValues]);
+
+  // Fetch all pathologies and enum values once
   useEffect(() => {
-    const fetchPathologies = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch("/api/pathologies");
-        if (!response.ok) throw new Error("Failed to fetch pathologies");
+        // Fetch pathologies and enum values in parallel
+        const [pathologiesRes, enumsRes] = await Promise.all([
+          fetch("/api/pathologies"),
+          fetch("/api/pathologies/enums"),
+        ]);
 
-        const data = await response.json();
-        setAllPathologies(data.pathologies);
+        if (!pathologiesRes.ok) throw new Error("Failed to fetch pathologies");
+        if (!enumsRes.ok) throw new Error("Failed to fetch enum values");
+
+        const [pathologiesData, enumsData] = await Promise.all([
+          pathologiesRes.json(),
+          enumsRes.json(),
+        ]);
+
+        setAllPathologies(pathologiesData.pathologies);
+        setEnumValues(enumsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -498,7 +552,7 @@ export default function PathologyPage() {
       }
     };
 
-    fetchPathologies();
+    fetchData();
   }, []);
 
   // Filter pathologies client-side
@@ -506,7 +560,22 @@ export default function PathologyPage() {
     return allPathologies.filter((p) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (!p.name.toLowerCase().includes(query) && !p.definition.toLowerCase().includes(query)) {
+        // Search across multiple fields
+        const matchesSearch =
+          searchInString(p.name, query) ||
+          searchInString(p.definition, query) ||
+          searchInString(p.code, query) ||
+          searchInArray(p.alternative_names, query) ||
+          searchInArray(p.key_authors, query) ||
+          searchInArray(p.diagnostic_criteria, query) ||
+          searchInArray(p.symptoms, query) ||
+          searchInArray(p.risk_factors, query) ||
+          searchInArray(p.known_cases, query) ||
+          searchInString(p.course_description, query) ||
+          searchInString(p.etiology_explanation, query) ||
+          searchInString(p.prognosis, query);
+
+        if (!matchesSearch) {
           return false;
         }
       }
@@ -530,9 +599,17 @@ export default function PathologyPage() {
       selectedLocalization,
       selectedEtiology,
       selectedCourse,
-      searchQuery
+      searchQuery,
+      enumLabels
     );
-  }, [allPathologies, selectedLocalization, selectedEtiology, selectedCourse, searchQuery]);
+  }, [
+    allPathologies,
+    selectedLocalization,
+    selectedEtiology,
+    selectedCourse,
+    searchQuery,
+    enumLabels,
+  ]);
 
   const clearFilters = () => {
     setSelectedLocalization("");
@@ -593,6 +670,7 @@ export default function PathologyPage() {
                   onLocalizationChange={setSelectedLocalization}
                   onEtiologyChange={setSelectedEtiology}
                   onCourseChange={setSelectedCourse}
+                  enumLabels={enumLabels}
                 />
               </div>
             </aside>
@@ -605,7 +683,7 @@ export default function PathologyPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <Input
                     type="text"
-                    placeholder="Search pathologies..."
+                    placeholder="Search by name, symptoms, authors, cases..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -640,6 +718,7 @@ export default function PathologyPage() {
                       setSelectedCourse(c);
                       setShowFilters(false);
                     }}
+                    enumLabels={enumLabels}
                   />
                 </Card>
               )}
@@ -650,7 +729,7 @@ export default function PathologyPage() {
                   <span className="text-slate-500 text-sm">Active filters:</span>
                   {selectedLocalization && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold-500/20 text-gold-400 text-sm">
-                      {LOCALIZATION_LABELS[selectedLocalization as PathologyLocalization]}
+                      {enumLabels.localizations[selectedLocalization] || selectedLocalization}
                       <button onClick={() => setSelectedLocalization("")}>
                         <X className="w-3 h-3" />
                       </button>
@@ -658,7 +737,7 @@ export default function PathologyPage() {
                   )}
                   {selectedEtiology && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold-500/20 text-gold-400 text-sm">
-                      {ETIOLOGY_LABELS[selectedEtiology as PathologyEtiology]}
+                      {enumLabels.etiologies[selectedEtiology] || selectedEtiology}
                       <button onClick={() => setSelectedEtiology("")}>
                         <X className="w-3 h-3" />
                       </button>
@@ -666,7 +745,7 @@ export default function PathologyPage() {
                   )}
                   {selectedCourse && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold-500/20 text-gold-400 text-sm">
-                      {COURSE_LABELS[selectedCourse as PathologyCourse]}
+                      {enumLabels.courses[selectedCourse] || selectedCourse}
                       <button onClick={() => setSelectedCourse("")}>
                         <X className="w-3 h-3" />
                       </button>
@@ -711,7 +790,11 @@ export default function PathologyPage() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredPathologies.map((pathology) => (
-                      <PathologyCard key={pathology.id} pathology={pathology} />
+                      <PathologyCard
+                        key={pathology.id}
+                        pathology={pathology}
+                        enumLabels={enumLabels}
+                      />
                     ))}
                   </div>
 
