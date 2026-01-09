@@ -172,6 +172,9 @@ export async function POST() {
   }
 }
 
+// Stale threshold in hours
+const STALE_HOURS = 6;
+
 // GET to check sync status
 export async function GET() {
   if (!supabaseUrl || !supabaseServiceKey) {
@@ -192,8 +195,14 @@ export async function GET() {
 
   const { count } = await supabase.from("zotero_items").select("*", { count: "exact", head: true });
 
+  const lastSynced = data?.[0]?.last_synced_at || null;
+  const staleThreshold = new Date(Date.now() - STALE_HOURS * 60 * 60 * 1000);
+  const isStale = !lastSynced || new Date(lastSynced) < staleThreshold;
+
   return NextResponse.json({
     itemCount: count || 0,
-    lastSynced: data?.[0]?.last_synced_at || null,
+    lastSynced,
+    stale: isStale,
+    staleThresholdHours: STALE_HOURS,
   });
 }
