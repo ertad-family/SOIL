@@ -4,7 +4,7 @@
 
 ## Vision
 
-SOIL is a research-first project devoted to collecting organizational autopsy data at scale to ignite a completely new scientific field: **Organizational Biology, Health, and Medicine**.
+SOIL is a research-first platform devoted to collecting organizational autopsy data at scale to ignite a completely new scientific field: **Organizational Biology, Health, and Medicine**.
 
 Just as pioneers centuries ago began systematically documenting human deaths and conducting autopsies — eventually giving rise to modern medicine, pathology, and healthcare — SOIL's mission is to do exactly the same for organizations.
 
@@ -12,71 +12,101 @@ Just as pioneers centuries ago began systematically documenting human deaths and
 
 _Transform organizational failure from wasted potential into collective wisdom._
 
+## What SOIL Does
+
+- **Cenotaphery** — A digital cemetery where organizations are memorialized through structured data collection
+- **Interview Wizard** — Guided organizational autopsy interviews capturing failure patterns
+- **Research Center** — Academic research infrastructure built on collected data
+- **3D Navigation** — Immersive dodecahedron portal navigation between platform sections
+- **Community** — Contributors, keepers, and researchers collaborating on organizational health
+
 ## Project Status
 
-**Phase: MVP Development**
-
-We are building the foundational platform for data intake, cenotaph creation, and research infrastructure.
+**Phase: MVP Development** — Core platform for data intake, cenotaph creation, and research infrastructure.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14+ (App Router) + TypeScript
-- **Styling**: Tailwind CSS + Design System (coming)
-- **Backend**: Next.js API Routes (initial) + Supabase
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Hosting**: Vercel
-- **Testing**: Playwright (E2E)
+- **Framework:** Next.js 15 (App Router) + React 19 + TypeScript
+- **3D:** React Three Fiber + Drei + Three.js
+- **Styling:** Tailwind CSS 3.4 + Radix UI primitives
+- **Backend:** Supabase (PostgreSQL, Auth, Storage)
+- **Hosting:** Vercel
+- **Testing:** Playwright (E2E)
 
-## MVP Scope
+## Getting Started
 
-### Phase 1: Core Platform
+### Prerequisites
 
-- **A.** Mother website with sections (Cenotaphery, Research Center, Diagnostics Center, Educational Center, Clinic)
-- **B.** User account management
-- **C.** Interview Framework implementation
-- **D.** Cenotaph creation wizard (6-step process)
+- Node.js 18+
+- npm
 
-### Phase 2: Discovery & Visualization
+### Setup
 
-- **E.** Searchable and filterable directory
-- **F.** 2D Cenotaphery visualization
-- **G.** Individual cenotaph pages
+```bash
+# Clone the repository
+git clone https://github.com/ertad-family/SOIL.git
+cd SOIL
+
+# Install dependencies
+npm install
+
+# Copy environment template and fill in your values
+cp .env.example .env.local
+
+# Start development server
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`.
+
+### Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Production build
+npm run lint         # Run ESLint
+npm run typecheck    # TypeScript type checking
+npm run format       # Format code with Prettier
+npm run test:e2e     # Run Playwright E2E tests
+```
 
 ## Project Structure
 
 ```
-soil/
-├── docs/                    # Strategy & design documents
-├── src/                     # Application source code (coming)
-├── public/                  # Static assets (coming)
-├── tests/                   # Test files (coming)
-└── .github/                 # GitHub Actions (coming)
+src/
+├── app/                    # Pages and API routes
+│   ├── layout.tsx          # Root layout
+│   ├── page.tsx            # Home page
+│   ├── cenotaph/           # Cenotaph creation
+│   ├── cenotaphery/        # Cemetery browsing
+│   ├── interview/          # Interview wizard
+│   ├── research/           # Research center
+│   ├── community/          # Community hub
+│   ├── auth/               # Authentication
+│   └── api/                # API routes
+├── components/
+│   ├── three/              # React Three Fiber 3D components
+│   ├── sections/           # Page section components
+│   ├── layout/             # Global wrappers (AppShell, Header, Footer)
+│   ├── navigation/         # Navigation components
+│   ├── transitions/        # Page transition animations
+│   ├── ui/                 # Design system components
+│   └── forms/              # Form components
+├── contexts/               # React contexts
+└── lib/                    # Utilities
 ```
 
-## Documentation
+## Contributing
 
-- [Master Strategy v3](./docs/SOIL_Master_Strategy_v3.md) - Complete project vision and architecture
-- [Development Ecosystem Strategy](./docs/Development_Ecosystem_Strategy.md) - Open source model and community
-- [Economic Model v2](./docs/Internal_Economic_Model.md) - Respects currency and gamification
-- [User Motivation Mechanics](./docs/user_motivation_mechanics.md) - Engagement and completion
-- [Interview Framework](./docs/interview_framework.md) - Data collection methodology
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-## Getting Started
+## Security
 
-1. Clone the repository
-2. Follow setup instructions in CLAUDE.md for development
-3. Check docs/ for strategic context and design decisions
+To report security vulnerabilities, please see [SECURITY.md](./SECURITY.md).
 
-## For AI Assistants
+## License
 
-See [CLAUDE.md](./CLAUDE.md) for project-specific instructions.
-
-## Repository
-
-- **Repository**: [ertad-family/soil](https://github.com/ertad-family/soil)
-- **Visibility**: Private
-- **Access**: ertad-family organization members
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
 
 ---
 
