@@ -90,9 +90,9 @@ async function analyzeMortalityRelevance(
     return { relevant: [], totalRelevant: 0 };
   }
 
-  const prompt = `You are analyzing academic publication titles to determine if they are related to ORGANIZATIONAL MORTALITY research.
+  const prompt = `You are analyzing academic publication titles to determine if they are related to ORGANIZATIONAL MORTALITY or ORGANIZATIONAL PATHOLOGY research.
 
-ORGANIZATIONAL MORTALITY includes:
+RELEVANT topics include:
 - Business/startup failure and closure
 - Organizational death, decline, or dissolution
 - Company lifespan and survival analysis
@@ -100,19 +100,24 @@ ORGANIZATIONAL MORTALITY includes:
 - Organizational ecology (liability of newness/aging, density dependence)
 - Corporate bankruptcy and restructuring
 - Business discontinuation
+- Organizational pathology, dysfunction, or disease
+- Organizational health assessment and diagnosis
+- Systemic organizational problems and dysfunctions
+- Organizational resilience (in context of failure prevention)
 
-NOT organizational mortality (these are DIFFERENT topics):
+NOT relevant (these are DIFFERENT topics):
 - Entrepreneurial learning (unless specifically about learning from FAILURE)
 - Business success factors
 - Innovation and growth
-- General management/strategy
-- Personal mortality/death (medical)
+- General management/strategy without dysfunction focus
+- Personal mortality/death (medical, biological)
 - Employee turnover (unless organizational-level impact)
 - Career transitions
-- General entrepreneurship without failure focus
+- General entrepreneurship without failure/pathology focus
+- Pure organizational design without diagnostic/pathology aspect
 
 Analyze these publication titles and return a JSON array of 1s and 0s.
-1 = related to organizational mortality
+1 = related to organizational mortality OR pathology
 0 = not related
 
 TITLES:

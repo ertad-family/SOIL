@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { BookOpen, Globe, Sparkles } from "lucide-react";
+import { BookOpen, Globe, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SectionLabel } from "@/components/ui/section-label";
 
 const audiences = [
   {
-    icon: <Sparkles className="w-8 h-8" />,
+    icon: <Sprout className="w-8 h-8" />,
     title: "For Founders",
     description:
-      "Coin your story and transform your experience into knowledge that helps others. Become a volunteer, mentor, or community keeper.",
-    cta: "Coin Your Story",
+      "Donate your story and transform your experience into knowledge that helps others. Become a volunteer, mentor, or community keeper.",
+    cta: "Donate Your Story",
     href: "/organization/create",
     buttonVariant: "dark-primary" as const,
   },

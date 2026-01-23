@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
+import { headers } from "next/headers";
 
 const ZOTERO_API_KEY = process.env.ZOTERO_API_KEY;
 const ZOTERO_GROUP_ID = process.env.ZOTERO_GROUP_ID || "6367540";
@@ -374,6 +375,56 @@ export async function POST() {
       }
     }
 
+    // Step 9: Chain OpenAlex sync to enrich new researchers
+    console.log("Chaining OpenAlex sync for new researchers...");
+    let openalexSummary = null;
+    let mortalitySummary = null;
+    let pathologySummary = null;
+
+    try {
+      const headersList = await headers();
+      const host = headersList.get("host") || "localhost:3000";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const baseUrl = `${protocol}://${host}`;
+
+      // Run OpenAlex sync
+      const openalexResponse = await fetch(`${baseUrl}/api/researchers/sync-openalex`, {
+        method: "POST",
+      });
+      if (openalexResponse.ok) {
+        openalexSummary = await openalexResponse.json();
+        console.log("OpenAlex sync completed:", openalexSummary.summary);
+      } else {
+        console.error("OpenAlex sync failed:", await openalexResponse.text());
+      }
+
+      // Step 10: Chain Mortality Activity sync
+      console.log("Chaining Mortality Activity sync...");
+      const mortalityResponse = await fetch(`${baseUrl}/api/researchers/sync-mortality-activity`, {
+        method: "POST",
+      });
+      if (mortalityResponse.ok) {
+        mortalitySummary = await mortalityResponse.json();
+        console.log("Mortality Activity sync completed:", mortalitySummary.summary);
+      } else {
+        console.error("Mortality Activity sync failed:", await mortalityResponse.text());
+      }
+
+      // Step 11: Chain Pathology citation sync
+      console.log("Chaining Pathology citation sync...");
+      const pathologyResponse = await fetch(`${baseUrl}/api/pathologies/sync-from-zotero`, {
+        method: "POST",
+      });
+      if (pathologyResponse.ok) {
+        pathologySummary = await pathologyResponse.json();
+        console.log("Pathology citation sync completed:", pathologySummary.summary);
+      } else {
+        console.error("Pathology citation sync failed:", await pathologyResponse.text());
+      }
+    } catch (chainError) {
+      console.error("Error in chained syncs:", chainError);
+    }
+
     return NextResponse.json({
       success: true,
       summary: {
@@ -384,6 +435,11 @@ export async function POST() {
         deletedResearchers: deletedCount,
         coauthorConnections: connectionCount,
         errors: errorCount + connectionErrors,
+      },
+      chainedSyncs: {
+        openalex: openalexSummary?.summary || null,
+        mortalityActivity: mortalitySummary?.summary || null,
+        pathologyCitations: pathologySummary?.summary || null,
       },
     });
   } catch (error) {

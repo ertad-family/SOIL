@@ -850,6 +850,29 @@ export default function BibliographyPage() {
 
   const ITEMS_PER_PAGE = 20;
 
+  // Check cache staleness and sync in background if needed
+  useEffect(() => {
+    async function checkAndSync() {
+      try {
+        const statusResponse = await fetch("/api/zotero/sync");
+        if (!statusResponse.ok) return;
+        const status = await statusResponse.json();
+
+        if (status.stale) {
+          console.log("Zotero cache is stale, syncing in background...");
+          // Sync in background - don't await, let it run
+          fetch("/api/zotero/sync", { method: "POST" })
+            .then((res) => res.json())
+            .then((data) => console.log("Background sync complete:", data))
+            .catch((err) => console.error("Background sync error:", err));
+        }
+      } catch (err) {
+        console.error("Error checking sync status:", err);
+      }
+    }
+    checkAndSync();
+  }, []);
+
   // Fetch stats on mount
   useEffect(() => {
     async function fetchStats() {

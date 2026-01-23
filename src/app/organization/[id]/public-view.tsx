@@ -19,6 +19,7 @@ import {
   MessageCircle,
   BookOpen,
   Sparkles,
+  Sprout,
   AlertTriangle,
   ChevronRight,
   LogIn,
@@ -685,13 +686,13 @@ function GetInvolvedSection({
             </Card>
           )}
 
-          {/* Coin Your Story - always shown */}
+          {/* Donate Your Story - always shown */}
           <Card variant="dark-elevated" className="h-full flex flex-col">
             <CardHeader>
               <div className="w-14 h-14 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 mb-4">
-                <Sparkles className="w-8 h-8" />
+                <Sprout className="w-8 h-8" />
               </div>
-              <CardTitle variant="dark">Coin Your Own Story</CardTitle>
+              <CardTitle variant="dark">Donate Your Own Story</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col">
               <p className="text-slate-400 leading-relaxed flex-1">
@@ -701,7 +702,7 @@ function GetInvolvedSection({
               <div className="mt-6">
                 <Link href="/organization/create">
                   <Button variant="marble" size="lg" className="w-full">
-                    Coin Your Story
+                    Donate Your Story
                   </Button>
                 </Link>
               </div>
