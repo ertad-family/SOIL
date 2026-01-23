@@ -1,6 +1,13 @@
 {
   "name": "soil",
   "version": "1.21.0",
+  "description": "Studies of Organizational Illness and Loss — Research platform for organizational autopsy data collection",
+  "license": "MIT",
+  "author": "SOIL Project Contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ertad-family/SOIL.git"
+  },
   "private": true,
   "scripts": {
     "dev": "next dev",
