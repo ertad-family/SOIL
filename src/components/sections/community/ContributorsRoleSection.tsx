@@ -313,7 +313,7 @@ export function ContributorsRoleSection() {
                 </Button>
               </a>
               <a
-                href="https://github.com/ertad-family/soil"
+                href="https://github.com/ertad-family/SOIL"
                 target="_blank"
                 rel="noopener noreferrer"
               >
