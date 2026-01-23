@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlossaryTerm } from "@/components/ui/glossary-term";
 
@@ -38,19 +39,9 @@ export function HeroSection() {
                   variant="dark-primary"
                   size="lg"
                   className="w-full sm:w-auto"
-                  rightIcon={
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      className="w-5 h-5"
-                    >
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                  }
+                  rightIcon={<Sprout className="w-5 h-5" />}
                 >
-                  Coin Your Story
+                  Donate Your Story
                 </Button>
               </Link>
               <Link href="/cenotaphery">
