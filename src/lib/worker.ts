@@ -4,6 +4,7 @@
  */
 
 const WORKER_URL = process.env.WORKER_URL;
+const WORKER_CRON_SECRET = process.env.WORKER_CRON_SECRET;
 
 interface TriggerResult {
   success: boolean;
@@ -17,6 +18,9 @@ interface TriggerResult {
  * Triggers the email worker to process pending verification emails.
  * This is a fire-and-forget operation - if it fails, the daily cron will pick up
  * pending emails on its next run.
+ *
+ * The worker authenticates callers with CRON_SECRET; WORKER_CRON_SECRET must hold
+ * the same value. While it is unset no Authorization header is sent.
  *
  * @returns Promise<TriggerResult> - Result of the trigger attempt
  */
@@ -34,6 +38,9 @@ export async function triggerEmailWorker(): Promise<TriggerResult> {
   try {
     const response = await fetch(endpoint, {
       method: "GET",
+      headers: WORKER_CRON_SECRET
+        ? { Authorization: `Bearer ${WORKER_CRON_SECRET}` }
+        : undefined,
       signal: AbortSignal.timeout(10000), // 10 second timeout
     });
 
